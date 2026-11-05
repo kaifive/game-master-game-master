@@ -56,7 +56,7 @@ Every route is one call to `defineRoute()`:
 export const POST = defineRoute({
   auth: "player",              // "none" | "player" | "admin"
   body: DonateRequest,         // Zod schema from lib/points/model
-  rateLimit: "player-action",
+  rateLimit: "player-action",     // added with spec 06
   handler: ({ body, player, event }) => points.donate(event, player, body),
 });
 ```

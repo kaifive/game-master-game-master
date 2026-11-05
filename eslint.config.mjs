@@ -5,6 +5,9 @@ import tseslint from "typescript-eslint";
 // Import boundaries from docs/conventions/engineering.md, enforced here so
 // they don't depend on anyone remembering them.
 const FIREBASE = ["firebase", "firebase/*", "firebase-admin", "firebase-admin/*"];
+// lib/firebase keeps client, admin and paths as separate entry points so admin
+// code never lands in a phone bundle.
+const DEEP = ["@/lib/*/*", "!@/lib/firebase/*"];
 const msg = {
   firebase:
     "Only lib/firebase/ and repo.firebase.ts files may import Firebase SDKs. Use a repository.",
@@ -45,7 +48,7 @@ const config = [
       "@typescript-eslint/restrict-template-expressions": ["error", { allowNumber: true }],
       "import/no-default-export": "error",
       "no-console": ["error", { allow: ["warn", "error"] }],
-      "no-restricted-imports": restrict([FIREBASE, msg.firebase], [["@/lib/*/*"], msg.deep]),
+      "no-restricted-imports": restrict([FIREBASE, msg.firebase], [DEEP, msg.deep]),
     },
   },
   {
@@ -65,7 +68,7 @@ const config = [
       "lib/**/repo.contract.ts",
       "firebase/tests/**",
     ],
-    rules: { "no-restricted-imports": restrict([["@/lib/*/*"], msg.deep]) },
+    rules: { "no-restricted-imports": restrict([DEEP, msg.deep]) },
   },
   {
     files: ["lib/**/rules.ts", "lib/**/model.ts", "lib/games/**/logic.ts"],
@@ -84,7 +87,7 @@ const config = [
           ],
           msg.pure,
         ],
-        [["@/lib/*/*"], msg.deep],
+        [DEEP, msg.deep],
       ),
     },
   },
