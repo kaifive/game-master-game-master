@@ -6,20 +6,20 @@
 
 ## Summary
 
-The admin's page for running an event: who is here, who is waiting, teams, points, and the switch for what the display shows.
+The admin's page for running an event, built for quick glances rather than constant watching (ADR-010). Works on a phone so the admin can run the night while walking around.
 
 ## In scope (first pass)
 
-- Counts: joined, online now (presence), waiting for approval
-- Lobby: approve, approve all, reject
-- Player list: nickname, team, points, online dot; remove, merge, move team, rename
-- Teams panel (spec 03); manual award and void (spec 04)
-- Display mode switch (spec 05); open and close games
-- Works on a tablet held in one hand
+- Header counts: players, devices online (presence), teams
+- "New since you last looked": new players and team names in one list, with rename, remove and ban inline; one tap marks all seen
+- Players grouped by device; a device with many players stands out
+- Phase switch (individual → team); promote and demote captains; move players
+- Manual award and void (spec 04); display mode switch (spec 05); open and close games
+- Photo triage badge with the pending count, linking to spec 13
 
 ## Open questions
 
-- Should controls have an activity feed ("Mai finished Daily Word, +100")?
+- An activity feed ("Mai finished Daily Word, +100")? Default: yes, last 50 entries from the ledger.
 
 ## Acceptance criteria
 

@@ -16,6 +16,7 @@ code, and update them in the same commit as the code they describe.
 | 7 | [reference/](#reference) | Working with Firebase data, real-time or budgets. |
 | 8 | [DECISIONS.md](DECISIONS.md) | Wondering why something is the way it is. |
 | 9 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | Something is undecided. |
+| 10 | [runbooks/event-checklist.md](runbooks/event-checklist.md) | Before, during and after every event. |
 
 ## Conventions
 

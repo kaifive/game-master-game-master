@@ -1,25 +1,27 @@
-# 03: Teams and captains
+# 03: Teams, phases and captains
 
 **Status:** Draft
 **Backlog:** M1
-**Depends on:** 02
+**Depends on:** 02, 04
 
 ## Summary
 
-Players belong to one team. The admin can create teams, move players and promote one captain per team, whose phone becomes the buzzer in live sessions.
+Events can be individual, team or both (ADR-011). In a `both` event the admin moves from the individual phase to the team phase. The admin promotes players to captains, captains name their teams, and everyone else joins a team in one tap.
 
 ## In scope (first pass)
 
-- Teams from the event file, plus create, rename and delete in controls
-- Players pick a team when joining (or the admin assigns)
-- One captain per team; mirrored to `live/{slug}/captains` for buzz rules
-- Team colors from `--gm-team-N`
-- Balanced auto-assign button
+- Event `scoring` from the config; `phase` switched from controls, with a confirm and a message on every phone
+- Admin promotes a player to captain; the captain's phone asks for a team name (name filter, unique per event)
+- Team colors assigned in order from `--gm-team-N`
+- Players see the list of teams with members and score, and join in one tap with a confirm ("You can't switch later")
+- No self-switching; the admin can move a player or demote a captain
+- Captains are mirrored to `live/{slug}/captains` for buzzer rules
+- Team-only events start in the team phase
 
 ## Open questions
 
-- Q4: can players switch teams themselves?
-- Q5: teams fixed in the file or made on the night?
+- Q16: can a team have only its captain? Is there a max team size?
+- What happens to a team if its captain is removed? Default: the admin picks a new captain.
 
 ## Acceptance criteria
 

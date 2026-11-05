@@ -5,15 +5,24 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | Term | Meaning | In code |
 |------|---------|---------|
 | **Event** | One occasion Khai runs, such as the 2026 Wushu holiday party. Has a slug, a theme and a list of games. | `Event`, `event.slug` |
-| **Slug** | The short URL name of an event, such as `winter-2026`. | `slug` |
+| **Slug** | The short URL name of an event, such as `holiday-2026`. | `slug` |
 | **Library** | The list of every event, past and upcoming, at `/`. | |
-| **Player** | A person in one event, tied to one device. Not a global account. | `Player` |
+| **Device** | A browser with a lasting Firebase anonymous uid. Can hold several players per event. | `deviceUid` |
+| **Player** | A person in one event. Lives on one device; a device can hold several (parent and kids). Not a global account. | `Player`, `playerId` |
+| **Switch player** | Changing which player a shared device is acting as. | |
 | **Nickname** | The name a player shows in an event. Unique within the event. | `player.nickname` |
-| **Device identity** | The Firebase anonymous uid a browser keeps. One device can be one player per event. | `uid` |
-| **Join policy** | How an event admits players: `open`, `approval` or `roster`. | `JoinPolicy` |
+| **Join policy** | How an event admits players: `open` (instant, default) or `approval` (lobby). | `JoinPolicy` |
+| **Join code** | Short code on the QR poster and display, needed to join an event. | `joinCode` |
+| **Name filter** | The check that rejects inappropriate nicknames and team names as they are typed. | `checkName()` |
+| **Generated names** | Nickname mode where players pick from made-up names ("Swift Crane") instead of typing. | `nicknames: "generated"` |
+| **Ban** | Blocking a device from an event. | `device.banned` |
 | **Lobby** | Where players wait for approval under the `approval` policy. | |
-| **Team** | A group of players in an event. Points can go to a team. | `Team` |
-| **Captain** | The player whose phone buzzes for their team in a live session. Promoted by the admin. | `team.captainId` |
+| **Scoring mode** | Whether an event is `individual`, `team` or `both`. | `scoring` |
+| **Phase** | In a `both` event, whether it is in the `individual` or `team` phase. Admin switches it. | `event.phase` |
+| **Team** | A group of players, created by its captain in the team phase. | `Team` |
+| **Captain** | A player the admin promotes to lead a team. Also called team leader. Names the team and buzzes for it. | `team.captainId` |
+| **Team score** | Members' points + donations to the team + team awards. | |
+| **Donation** | A player giving some of their points to a team, with or without joining it. A ledger transfer. | `kind: "donation"` |
 | **Game type** | A generic, reusable game, such as `word-guess` or `jeopardy`. Code, not content. | `GameType` |
 | **Game** | An instance of a game type in one event: type + content + theme variant + scoring. | `Game` |
 | **Solo game** | A game a player plays alone at their own pace. Also called a mini game. | `mode: "solo"` |
@@ -23,14 +32,15 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Judge** | The admin marking a buzz right or wrong. | `judge()` |
 | **Result** | The finished outcome of one player's solo game. One scored result per player per game. | `GameResult` |
 | **Award** | One grant of points, to a player or a team. Always a ledger entry. | `Award` |
-| **Ledger** | The append-only list of every award. Source of truth for points. | `ledger` |
+| **Ledger** | The append-only list of every award, donation and void. Source of truth for points. | `ledger` |
 | **Void** | Cancelling an award by adding a reversing entry. Nothing is deleted. | `voidAward()` |
 | **Total** | A player's or team's points, derived from the ledger. | `total` |
 | **Leaderboard** | Ranked totals, kept as a summary for live screens. | `LeaderboardSummary` |
 | **Photo** | A picture a player uploaded in an event. File in Vercel Blob, record in Firestore. | `Photo` |
 | **Photo challenge** | A solo game type that asks for a photo of something; points on approval. | `type: "photo-challenge"` |
-| **Moderation** | The admin approving or hiding photos. Only approved photos are shown. | `photo.status` |
-| **Recap** | The slideshow and gallery of an event's approved photos and final standings. | `/[event]/recap` |
+| **Triage** | The admin swiping through pending photos: right to approve, left to hide. | `/admin/[event]/photos` |
+| **Photo vote** | Approved photos for one prompt sent to every player to vote for the best. | `/[event]/vote/[game]` |
+| **Recap** | Final standings and approved photos of an event. Admin only. | `/admin/[event]/recap` |
 | **Presence** | Whether a player is connected right now. | `presence` |
 | **Controls** | The admin's page for running an event. | `/admin/[event]` |
 | **Display** | The read-only big-screen page for the room. | `/[event]/display` |

@@ -7,26 +7,34 @@ Move answered ones to the bottom with the answer.
 
 | # | Question | Blocks | Default until answered |
 |---|----------|--------|------------------------|
-| Q1 | What is the exact date of the holiday party? | Backlog timing | Assume Sat 2026-12-05; M4 done by 2026-11-30 |
-| Q2 | Join policy for the party: `approval` (tap to admit each player), `roster` (players claim a name from a list you upload) or `open`? | Spec 02 | `approval` |
-| Q3 | Do solo game points go to the player, their team, or both? | Spec 04 | Both: player total, and team total is the sum of its players' solo points plus team awards |
-| Q4 | Can players switch teams after joining? | Spec 03 | Only the admin can move a player once points exist |
-| Q5 | Are teams fixed in the event file, or created by the admin on the night? | Spec 03 | Admin can do either; event file may list starting teams |
-| Q6 | Which solo games for the party, beyond a word-guess game? | Spec 10+ | Word guess first; pick the second after it ships |
+| Q6 | Which solo games for the party, beyond word guess and photo challenge? | Backlog M2 | Decide after word guess ships |
 | Q7 | Is Jeopardy the only live session type for the party? | Spec 11, 12 | Yes |
-| Q8 | Should players see the full leaderboard on their phones, or only their own rank and team? | Spec 05 | Top 10 plus own rank, refreshed every 15 s (not live) to save bandwidth |
+| Q8 | Should players see the full leaderboard on their phones, or only top 10 and their own rank? | Spec 05 | Top 10 plus own rank, refreshed every 15 s |
 | Q9 | Sound on the display (buzz sound, correct or wrong stings)? | Spec 05, 12 | Yes on display, off on phones |
-| Q10 | Should every photo need your approval before anyone else sees it? Matters if kids are at the party. | Spec 13 | Yes, all photos start hidden until approved |
-| Q11 | Who can see the recap after the event: anyone with the link, or only you? | Spec 13 | Anyone with the event link sees approved photos |
-| Q12 | Should players be able to delete their own photos? | Spec 13 | Yes, until the event ends |
+| Q13 | Party: free-text nicknames through the filter, or generated names? | Spec 02 | Free text with the filter |
+| Q14 | Can a player donate to a team and also be on a different team? | Spec 04 | Yes, any player can donate to any team |
+| Q15 | In the team phase, do solo game points still go to the player (and so count for their team)? | Spec 04 | Yes |
+| Q16 | Can a captain lead a team without anyone else joining? Is there a max team size? | Spec 03 | Yes; no max unless the event sets one |
+| Q17 | Photo vote: can players vote for their own team's photo? | Spec 13 | No |
+| Q18 | Automatic photo screening with AI later? Costs roughly $1 per few hundred photos. | ADR-010 | Not for the party |
+| Q19 | Where should photo backups go? | Runbook | Google Drive folder `Game Master/<slug>` |
 
 ## Answered
 
 | # | Question | Answer |
 |---|----------|--------|
-| A1 | Player accounts? | No accounts; join with a nickname. Guard against duplicate accounts. |
+| A1 | Player accounts? | No accounts; join with a nickname. |
 | A2 | Stack? | Same as Wushu Toolkit, free to run. |
 | A3 | Admins? | Only Khai; a shared login is fine. |
 | A4 | Big screen? | Yes: separate Display and Controls. |
-| A5 | First event and size? | Wushu holiday party, about a month out, about 50 players. |
-| A6 | Domain? | None; use the Vercel domain and QR codes. |
+| A5 | First event and size? | Wushu holiday party, Saturday 2026-12-19, about 50 players. Never more than 100 at once. |
+| A6 | Domain? | None; the Vercel domain and QR codes. |
+| A7 | Join policy? (was Q2) | No approval for every player; Khai can't watch all night. Instant join with a name filter, join code and kick or ban (ADR-010). Lobby stays an option. |
+| A8 | Shared phones? | A parent and kids must be able to play separately on one phone (ADR-009). |
+| A9 | Solo or team points? (was Q3) | Events can be individual, team or both, with an individual phase then a team phase. Captains name teams; players join teams; players can donate points to teams (ADR-011). |
+| A10 | Switch teams? (was Q4) | Players can't switch themselves; joining must be easy. |
+| A11 | Teams fixed in advance? (was Q5) | No; captains create them in the team phase. |
+| A12 | Photo approval? (was Q10) | All photos are saved; only approved ones reach players, through a quick swipe triage. Team photos can go to a player vote. |
+| A13 | Recap visibility? (was Q11) | Admin only. |
+| A14 | Players delete own photos? (was Q12) | No. Once uploaded, only the admin sees or removes it. |
+| A15 | Photo storage over time? | Back up and clear photos after each event; checklist reminder before each event (ADR-012). |

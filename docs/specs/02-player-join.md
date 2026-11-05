@@ -6,21 +6,23 @@
 
 ## Summary
 
-Players join an event from a QR code with only a nickname. Firebase Anonymous Auth gives each device a lasting uid. Layered defenses keep one person from joining many times to farm points.
+Players join an event from a QR code with a nickname and start playing at once. The phone is a device (Firebase anonymous uid) that can hold several players, so families can share one phone (ADR-009). Moderation works without the admin watching the door (ADR-010).
 
 ## In scope (first pass)
 
-- Anonymous sign-in on first visit; uid survives reloads
-- Nickname rules: 2–16 characters, unique per event (case-insensitive), profanity filter
-- Join policies: `open`, `approval` (lobby until admin approves), `roster` (claim a name from the event's list; claimed names lock to that device)
-- Duplicate defenses: one player per uid per event; approval or roster; score once per game; admin remove and merge
-- Rejoin on the same device returns to the same player
-- Lost phone or cleared browser: admin can move a player to a new device
+- Anonymous sign-in on first visit; the device uid survives reloads
+- Join needs the event's join code (in the QR link, so scanning fills it in)
+- Nickname: 2–16 characters, unique per event (case-insensitive), checked by the name filter as it is typed; failing names are rejected with "pick another name"
+- Name filter: a blocklist with normalization (case, spacing, look-alike letters such as 0→o, 1→i), plus a per-event extra list; shared with team names
+- Optional generated names: pick from made-up names ("Swift Crane")
+- Up to `maxPlayersPerDevice` players per device (default 4); "Add player" and "Switch player" on the hub
+- Rejoin on the same device returns to the same players
+- Admin: rename, remove, ban device (bans all its players), move a player to a new device (lost phone)
+- `approval` policy available as an option: lobby with approve all and approve one
 
 ## Open questions
 
-- Q2: join policy for the party (default `approval`)
-- Should a flag show on controls when two players join from the same network within seconds?
+- Q13: free-text names or generated names for the party?
 
 ## Acceptance criteria
 

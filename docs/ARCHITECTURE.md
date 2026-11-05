@@ -1,15 +1,15 @@
 # Architecture
 
-Game Master is one Next.js app with three surfaces, backed by Firebase on the
-free tier. Status: **draft for review**.
+Game Master is one Next.js app with three surfaces, backed by Firebase and
+Vercel Blob on free tiers. Status: **draft for review**.
 
 ## Surfaces
 
 | Surface | Who | Device | Purpose |
 |---------|-----|--------|---------|
-| **Player client** | Players | Their phone | Join, pick a team, play solo games, buzz in live games, see own points |
-| **Controls** | Admin (Khai) | Laptop or tablet | Run the event: approve players, manage teams, run live sessions, judge buzzes, award points |
-| **Display** | The room | TV or projector | Leaderboard, join QR code, Jeopardy board, buzz order. Read-only. |
+| **Player client** | Players | Their phone (can be shared, e.g. parent and kids) | Join, play solo games, join or donate to a team, buzz in live games, take photos, vote |
+| **Controls** | Admin (Khai, or a helper with the passphrase) | Laptop, tablet or phone | Run the event: phases, teams, live sessions, judging, points, photo triage, moderation |
+| **Display** | The room | TV or projector | Leaderboard, join QR code, Jeopardy board, buzz order, photo slideshow. Read-only. |
 
 Controls and Display are separate pages so the TV never shows admin buttons.
 
@@ -19,13 +19,16 @@ Controls and Display are separate pages so the TV never shows admin buttons.
 /                               library: every event, past and upcoming (admin)
 /admin                          admin sign-in
 /admin/[event]                  controls for one event
-/[event]                        player hub: join, team, game list, my points
-/[event]/play/[game]            a solo mini game
+/admin/[event]/photos           photo triage (swipe to approve or hide)
+/admin/[event]/recap            recap: standings and approved photos (admin only)
+/[event]                        player hub: join, switch player, games, team, my points
+/[event]/play/[game]            a solo game
 /[event]/live                   player view of the current live session (buzzer)
+/[event]/vote/[game]            vote on approved photos
 /[event]/display                big-screen display
 ```
 
-- `[event]` is the event's slug, such as `winter-2026`. Short on purpose so
+- `[event]` is the event's slug, such as `holiday-2026`. Short on purpose so
   it fits a QR code and can be typed.
 - Slugs that clash with routes (`admin`, `api`, `_next`) are reserved.
 - Games are children of an event, so the library keeps every event's games
@@ -41,68 +44,107 @@ Controls and Display are separate pages so the TV never shows admin buttons.
         │                Firebase                 │
         │  Firestore: durable records             │
         │    events, players, teams, ledger,      │
-        │    game results                         │
+        │    plays, photo records, votes          │
         │  Realtime DB: live, fast-changing state │
         │    presence, live session, buzzes,      │
         │    leaderboard summary                  │
         │  Anonymous Auth: one uid per device     │
         └─────────────────────────────────────────┘
-                ▲
-   photo upload │ (direct, with a token from /api)
-                ▼
-        ┌─────────────────────────────────────────┐
-        │  Vercel Blob: photo files               │
-        └─────────────────────────────────────────┘
                 ▲                       ▲
-   scored moves │ (route handlers,      │ admin writes
-   join, awards │  firebase-admin)      │ (admin claim)
+   moves, joins │ (route handlers,      │ admin actions
+   donations    │  firebase-admin)      │ (admin claim)
                 │                       │
         ┌───────┴───────────────────────┴─────────┐
         │   Next.js on Vercel                     │
         │   pages + /api route handlers           │
         │   event config from content/events/     │
         └─────────────────────────────────────────┘
-                                ▲
-                                │
-                        Controls (admin)
+                ▲                       ▲
+   photo upload │ (direct, one-time     │
+                │  token from /api)     │  Controls (admin)
+                ▼
+        ┌─────────────────────────────────────────┐
+        │  Vercel Blob: photo files               │
+        └─────────────────────────────────────────┘
 ```
 
 ## Where things live
 
 | Kind of data | Where | Why |
 |--------------|-------|-----|
-| Event definitions: name, dates, theme, which games, game content (word lists, Jeopardy boards) | `content/events/<slug>.ts` in the repo | Versioned, reviewable, easy for AI to author. No admin editor needed for v1. See ADR-003. |
-| Players, teams, approvals | Firestore | Durable, queryable |
-| Points ledger (every award) and totals | Firestore | Durable audit trail; totals are recomputable |
-| Solo game progress and results | Firestore | Durable; one result per player per game |
+| Event definitions: name, dates, theme, scoring mode, games and their content | `content/events/<slug>.ts` in the repo | Versioned, reviewable, easy for AI to author. ADR-003. |
+| Players, teams | Firestore | Durable, queryable |
+| Points ledger (awards, donations, voids) and totals | Firestore | Durable audit trail; totals are recomputable |
+| Solo game plays and results | Firestore | One scored result per player per game |
+| Photo records, votes | Firestore | Queryable for triage, voting and the recap |
+| Photo files | Vercel Blob | Free on Hobby; Firebase Storage needs Blaze. ADR-008. |
 | Presence (who is online) | Realtime Database | `onDisconnect` makes presence free and accurate |
-| Live session state (current round, open or locked, buzzes) | Realtime Database | Low latency, server timestamps, cheap fan-out |
-| Leaderboard summary | Realtime Database | Every screen listens; RTDB bills by bandwidth, not per read. See the budget doc. |
-| Photo files | Vercel Blob | Free on Hobby; Firebase Storage needs Blaze. See ADR-008. |
-| Photo records: owner, game, approval status, blob URL | Firestore | Queryable for moderation and recaps |
+| Live session state (round, buzzes) | Realtime Database | Low latency, server timestamps, cheap fan-out |
+| Leaderboard summary | Realtime Database | Every screen listens; bills by bandwidth, not per read |
 
-## Photos
+## Players and devices
 
-Some games ask players to take a picture (for example a photo challenge:
-"a selfie with your sifu"). Photos also feed an event recap that stays in
-the library.
+Players never create accounts. The phone signs in with Firebase Anonymous
+Auth, which gives the **device** a lasting uid. A device can hold several
+**players** in one event, so a parent and kids can share a phone: each has
+their own nickname, points and plays, and the hub has a "switch player"
+button. ADR-009.
 
-1. The phone takes or picks a photo, shrinks it to 1600 px and re-encodes
-   it as JPEG (which strips location data).
-2. It asks `/api/[event]/photos/upload` for a one-time upload token. The
-   route checks the player is approved, the game accepts photos, and the
-   type and size are allowed.
-3. The phone uploads straight to Vercel Blob, then the server writes the
-   photo record as `pending`.
-4. The admin approves or hides photos in Controls. Points for a photo
-   challenge are awarded on approval.
-5. Approved photos appear on the display slideshow and the event recap.
+## Moderation without watching
 
-See spec 13.
+The admin can't watch the door or the photo feed all night, so nothing
+depends on constant monitoring. ADR-010.
 
-## The two kinds of play
+**Names**
+1. Players join instantly. No lobby by default (`open` policy).
+2. A name filter checks every nickname and team name when it is typed.
+   Names that fail are rejected on the spot with "pick another name".
+3. Events with lots of kids can use generated names instead of free text
+   (`nicknames: "generated"`, such as "Swift Crane").
+4. Joining needs the event's join code, which is on the QR poster and the
+   display, so people who aren't in the room can't join.
+5. The admin can rename, remove or ban a device at any time. Controls
+   shows "new since you last looked", so catching up takes seconds.
+6. The `approval` policy (a lobby) still exists for small events.
 
-### Solo mini games (async)
+**Photos**
+1. Every photo is saved, and starts `pending`.
+2. A photo only reaches other people at a moment the admin starts: a photo
+   vote, or the display slideshow. Until then, nobody else sees it.
+3. Just before such a moment, the admin triages in a batch: a swipe deck,
+   right to approve, left to hide. About a second per photo.
+4. Only approved photos are ever sent to players or the display.
+5. A helper can triage on their own phone with the shared passphrase.
+
+**Fair play**
+1. Each player scores each solo game once.
+2. A device can hold up to 4 players per event (set per event). Controls
+   groups players by device, so a phone with many players stands out.
+3. Points only come from the server (ADR-006).
+4. The admin can remove a player, merge two players, or void points.
+
+## Points, phases and teams
+
+An event is individual only, teams only, or both (`scoring` in the event
+file). For both, the admin moves the event from the **individual phase**
+to the **team phase** in Controls. ADR-011.
+
+- **Individual phase.** Players earn points for themselves.
+- **Team phase.** The admin promotes players to **captains** (team
+  leaders). Each captain names their team (through the name filter).
+  Other players join a team from a list in one tap.
+- **No switching.** Once on a team, a player can't change it. The admin can
+  move them.
+- **Team score** = the members' points + points donated to the team +
+  team awards (live sessions, team photo challenges).
+- **Donations.** Any player can give some or all of their points to any
+  team, with or without joining it. A donation moves points: the player's
+  total goes down, the team's goes up.
+- Both leaderboards exist. The display shows the one that fits the phase.
+
+## The kinds of play
+
+### Solo games
 
 1. Player opens `/[event]/play/[game]`.
 2. The client renders the game from its **game type** and **theme**.
@@ -112,17 +154,31 @@ See spec 13.
    entry, then updates the leaderboard summary.
 5. A player scores each game once. Replays are practice and earn nothing.
 
-### Live sessions (sync)
+### Live sessions
 
 1. Admin starts a **live session** (for example a Jeopardy board) from
    Controls. Its state lives in Realtime Database.
-2. Admin promotes one **captain** per team. Captains' phones show the buzzer.
+2. Each team's **captain** gets the buzzer on their phone.
 3. Admin opens a **round**. Captains buzz. Each buzz is stamped with the
    database server's time, so order is fair regardless of phone clocks.
 4. Controls and Display show the buzz order. Admin marks the first buzz
    right or wrong. Right awards points to the team; wrong passes to the
    next buzz or reopens the round.
 5. Awards go through the same ledger as solo games.
+
+### Photo challenges and votes
+
+1. A photo challenge game lists prompts ("selfie with your sifu"), for
+   players or for teams (the captain submits for the team).
+2. The phone shrinks the photo to 1600 px JPEG (which strips location
+   data), gets a one-time upload token from the server, and uploads
+   straight to Vercel Blob. The server writes the record as `pending`.
+3. Points for submitting are awarded when the admin approves.
+4. The admin can open a **photo vote** on a prompt: approved photos go out
+   to every player, who vote for the best (not their own or their team's).
+   The winner gets bonus points.
+5. All photos stay saved. After the event they are backed up and cleared
+   from Blob (see `runbooks/event-checklist.md`).
 
 ## Game engine
 
@@ -145,48 +201,30 @@ lib/games/<type>/
 A **game** (an instance) in an event config is: a game type + its content +
 an optional theme variant + scoring settings.
 
-## Identity and fair play
-
-Players never create accounts. On first visit the client signs in with
-Firebase Anonymous Auth, which gives the device a lasting uid. Joining an
-event creates a player record for that uid with a nickname.
-
-Duplicate accounts (the same person joining twice to farm points) are
-handled in layers. Details in spec 02.
-
-1. **One player per device per event.** The uid is the key.
-2. **Join approval.** Each event has a join policy. The default for the
-   holiday party is `approval`: new players wait in a lobby until the admin
-   taps approve, so two "Khai"s are easy to spot.
-3. **Score once.** Each solo game pays out once per player, so a second
-   account gains at most one more payout per game, and only if approved.
-4. **Server-side scoring.** Points only come from route handlers and admin
-   actions. Security rules block clients from writing points.
-5. **Admin tools.** Remove a player, merge two players, or void a ledger
-   entry. Totals are recomputed from the ledger.
-
 ## Admin access
 
 One shared passphrase (env var `ADMIN_PASSPHRASE`). Signing in at `/admin`
 sends it to a route handler, which returns a Firebase custom token with an
 `admin: true` claim. Security rules and route handlers check that claim. It
-is meant for convenience, not strong security. See ADR-005.
+is meant for convenience, not strong security, and can be shared with a
+helper. See ADR-005.
 
 ## Scale and cost
 
-Target: 50 players, up to 100 in total, on free tiers. The Realtime
-Database free plan allows 100 simultaneous connections, which is the hard
-ceiling. See `reference/free-tier-budget.md` for the math and what to change
-past 90 people.
+Target: up to 100 players at once, on free tiers. The Realtime Database
+free plan allows 100 simultaneous connections. Connections count per
+device, not per player, so shared phones help. Past about 90 devices,
+player phones connect to Realtime Database only on the live page. See
+`reference/free-tier-budget.md`.
 
 ## Code layout (planned)
 
 ```
 app/
   page.tsx                   library
-  admin/                     sign-in and controls
-  [event]/                   player hub, play/, live/, display/
-  api/                       route handlers (join, move, award, admin)
+  admin/                     sign-in, controls, photo triage, recap
+  [event]/                   player hub, play/, live/, vote/, display/
+  api/                       route handlers (join, move, donate, photos, admin)
 components/
   ui/                        shared primitives
   player/ controls/ display/ per-surface components
@@ -195,10 +233,13 @@ lib/
   events/                    event config types and registry
   games/<type>/              logic, content, renderer per game type
   themes/                    theme tokens, variants, icon sets
-  points/                    ledger and totals
+  players/                   join, devices, name filter
+  points/                    ledger, donations, totals
+  teams/                     captains, joining
   live/                      live session state machine
-  photos/                    resize, upload, records, moderation
+  photos/                    resize, upload, records, triage, votes
   firebase/                  client and admin setup
+scripts/                     export photos, prune event, load test
 tests/                       node:test unit tests
 docs/
 ```

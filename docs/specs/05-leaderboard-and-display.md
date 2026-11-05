@@ -2,18 +2,18 @@
 
 **Status:** Draft
 **Backlog:** M1
-**Depends on:** 04
+**Depends on:** 03, 04
 
 ## Summary
 
-A big-screen page for the room shows the join QR code and a live leaderboard, and switches to the live session view when one is running. Players see a lighter leaderboard on their phones.
+A big-screen page for the room shows the join QR code and a live leaderboard, and switches to the live session or a photo slideshow when one is running. Players see a lighter leaderboard on their phones.
 
 ## In scope (first pass)
 
-- `/[slug]/display`: join QR code and URL, team standings, top players
+- `/[slug]/display`: join QR code, URL and join code; standings that fit the phase (players in the individual phase, teams in the team phase)
 - Animated rank changes; fits 1920×1080 with no scrolling
-- Modes: leaderboard, live session (spec 12), message ("Break, back at 8pm") set from controls
-- Player hub: own points and rank, team rank, top 10, polled every 15 s
+- Modes set from controls: leaderboard, live session (spec 12), photo slideshow (spec 13), message ("Break, back at 8pm")
+- Player hub: own points and rank, team score and rank, top 10, polled every 15 s
 
 ## Open questions
 

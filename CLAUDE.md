@@ -6,7 +6,8 @@ games and host-run live games (Jeopardy-style buzzer rounds), earning points
 for themselves and their team. Khai runs everything from an admin dashboard,
 and a big-screen display shows the leaderboard and live boards.
 
-First event: Wushu holiday party, December 2026, about 50 players.
+First event: Wushu holiday party, Saturday 2026-12-19, about 50 players.
+Up to 100 players at once in later events.
 
 This is an AI-first repo: the docs are the source of truth and the code
 follows them.
@@ -38,6 +39,8 @@ follows them.
 - Ask before anything expensive or irreversible: deploys to production,
   paid services or enabling Firebase Blaze billing, deleting data, changing
   Firebase security rules in production.
+- Before and after every event, follow `docs/runbooks/event-checklist.md`
+  (back up and clear photos so Blob has room).
 - Free to run is a requirement. Check `docs/reference/free-tier-budget.md`
   before adding anything that reads or writes Firebase in a loop.
 

@@ -128,3 +128,68 @@ already deploy to.
   show on the display, in recaps or to other players.
 - Over the free limit, Vercel blocks Blob for 30 days rather than charging.
   The budget doc tracks this; old events can be exported and pruned.
+
+---
+
+## ADR-009: A device can hold several players
+
+**Status:** accepted. Refines ADR-005.
+
+A parent may play, then hand the phone to their kids. Each needs their own
+points and plays.
+
+**Decision:** the anonymous uid identifies a **device**. A **player** is a
+separate record (`players/{playerId}` with `deviceUid`). A device can create
+up to `maxPlayersPerDevice` players per event (default 4). Route handlers
+check that the calling device owns the player it acts for. "Score once per
+game" applies per player.
+
+---
+
+## ADR-010: Moderation never depends on constant watching
+
+**Status:** accepted
+
+The admin can approve people at the start, but not all night as late
+joiners arrive.
+
+**Decision:**
+- Default join policy is `open`: join instantly with the event's join code
+  and a nickname that passes the name filter. Failing names are rejected
+  on the spot. `approval` stays available for small events; `generated`
+  nicknames are available for kid-heavy events.
+- Admin can rename, remove or ban a device at any time; Controls shows
+  what is new since the admin last looked.
+- Photos are saved as `pending` and only reach other people at moments the
+  admin starts (votes, slideshow). The admin triages in a batch just
+  before, with a swipe deck. Only approved photos are ever sent to clients.
+- Automatic image screening (an AI check) is a later option; it costs
+  money, so it needs Khai's go-ahead.
+
+---
+
+## ADR-011: Individual and team phases, with donations
+
+**Status:** accepted
+
+**Decision:**
+- Event `scoring` is `individual`, `team` or `both`. With `both`, the event
+  has a runtime `phase` the admin switches from `individual` to `team`.
+- Captains are players the admin promotes. A captain names the team and is
+  its buzzer in live sessions.
+- Players join a team in one tap and cannot switch; the admin can move them.
+- Team score = members' points + donations to the team + team awards.
+- Donations are ledger transfers from a player to a team, any amount up to
+  the player's total, to any team.
+
+---
+
+## ADR-012: Clear photos between events
+
+**Status:** accepted
+
+**Decision:** after each event, export its photos (zip) to a backup, check
+the count, then delete the files from Vercel Blob. Firestore records stay,
+marked `archived` with where the backup is, so the library keeps its
+history. The steps live in `runbooks/event-checklist.md`, which is checked
+before every event.

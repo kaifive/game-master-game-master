@@ -1,7 +1,7 @@
 # Data model
 
-Every Firebase path. Build paths with `lib/firebase/paths.ts`, never by hand.
-Status: **draft**; each spec finalizes its own part.
+Every Firebase and Blob path. Build paths with `lib/firebase/paths.ts`,
+never by hand. Status: **draft**; each spec finalizes its own part.
 
 ## Repo: event config
 
@@ -9,82 +9,106 @@ Status: **draft**; each spec finalizes its own part.
 
 ```ts
 type EventConfig = {
-  slug: string;              // "winter-2026"
+  slug: string;              // "holiday-2026"
   name: string;              // "Wushu Holiday Party 2026"
   startsAt: string;          // ISO date-time
   endsAt: string;
   theme: ThemeRef;           // { id: "classic", variant?: "holiday", colorMode?: "dark" }
-  joinPolicy: "open" | "approval" | "roster";
-  roster?: string[];         // names, for the roster policy
-  teams?: { id: string; name: string; color: number }[];  // starting teams
+  joinPolicy: "open" | "approval";        // default "open" (ADR-010)
+  nicknames: "free" | "generated";        // default "free"
+  maxPlayersPerDevice: number;            // default 4 (ADR-009)
+  scoring: "individual" | "team" | "both"; // ADR-011
+  maxTeams?: number;
   games: Game[];
 };
 
 type Game = {
   id: string;                // "daily-word-1", unique in the event
-  type: GameType;            // "word-guess" | "jeopardy" | ...
+  type: GameType;            // "word-guess" | "photo-challenge" | "jeopardy" | ...
   title: string;
   mode: "solo" | "live";
+  phase?: "individual" | "team";  // only playable in this phase, if set
   content: unknown;          // validated by the game type's content.ts
   theme?: Partial<ThemeRef>; // per-game override
-  scoring: { points: number; awardTo: "player" | "team" | "both" };
-  opensAt?: string;          // optional schedule
+  scoring: { points: number; awardTo: "player" | "team" };
+  opensAt?: string;
   closesAt?: string;
 };
 ```
+
+The join code is not in the repo. It is generated at first deploy and kept
+in `events/{slug}.joinCode`.
 
 ## Firestore: durable records
 
 ```
 events/{slug}
-  status: "upcoming" | "live" | "ended"     runtime override of the config dates
+  status: "upcoming" | "live" | "ended"   runtime override of config dates
+  phase: "individual" | "team"            when scoring is "both"
+  joinCode: string                        on the QR poster and display
+  adminLastSeenAt: timestamp              for "new since you last looked"
 
-events/{slug}/players/{uid}
+events/{slug}/devices/{uid}
+  banned: boolean
+  playerIds: string[]
+
+events/{slug}/players/{playerId}
+  deviceUid: string
   nickname: string
-  nicknameKey: string        lowercased, trimmed, for uniqueness
-  status: "pending" | "approved" | "removed"
-  teamId: string | null
-  points: number             derived; maintained with each award
+  nicknameKey: string        normalized, for uniqueness and the filter
+  status: "active" | "pending" | "removed"   "pending" only under approval
+  teamId: string | null      set once; only the admin changes it after
+  points: number             own points: awards − donations given
   joinedAt: timestamp
-  mergedInto?: string        uid this player was merged into
+  mergedInto?: string
 
 events/{slug}/nicknames/{nicknameKey}
-  uid: string                makes nicknames unique per event (transaction)
+  playerId: string           unique nicknames per event (transaction)
 
 events/{slug}/teams/{teamId}
   name: string
+  nameKey: string
   color: number              index into --gm-team-N
-  captainId: string | null
-  points: number             derived
+  captainId: string          the player who leads it
+  ownPoints: number          donations received + team awards
+  createdAt: timestamp
+  (team score = ownPoints + sum of members' points; kept in the leaderboard summary)
 
-events/{slug}/ledger/{awardId}      append-only
+events/{slug}/ledger/{entryId}      append-only
+  kind: "award" | "donation" | "void"
+  points: number             always positive; direction comes from kind
   to: { kind: "player" | "team"; id: string }
-  points: number             negative only for a void
-  reason: string             "Won Daily Word 1", "Jeopardy: Forms for 400"
-  source: { kind: "game" | "live" | "manual"; id: string }
-  voids?: string             awardId this entry cancels
+  from?: { kind: "player"; id: string }    donations only
+  reason: string             "Won Daily Word 1", "Donated to Team Dragon"
+  source: { kind: "game" | "live" | "photo" | "vote" | "manual" | "donation"; id: string }
+  voids?: string             entryId this void cancels
   createdAt: timestamp
   createdBy: "server" | "admin"
 
-events/{slug}/plays/{gameId}_{uid}
-  gameId, uid
+events/{slug}/plays/{gameId}_{playerId}
   state: unknown             game type's state, server-owned
   status: "playing" | "finished"
-  scored: boolean            true once this play has paid out
+  scored: boolean
   points: number
   startedAt, finishedAt
-```
 
 events/{slug}/photos/{photoId}
-  uid: string                who took it
-  gameId: string | null      the game that asked for it, if any
-  prompt?: string            the challenge it answers
-  blobUrl: string            Vercel Blob URL
+  playerId: string           who took it
+  teamId: string | null      set for team challenges
+  gameId: string
+  promptId: string
+  blobUrl: string | null     null after the event is pruned
   blobPath: string           events/{slug}/photos/{photoId}.jpg
-  width, height: number
-  bytes: number
+  width, height, bytes
   status: "pending" | "approved" | "hidden"
+  votes: number              derived
   createdAt, reviewedAt
+  archived?: { at: timestamp; backup: string }   ADR-012
+
+events/{slug}/votes/{gameId}_{promptId}_{playerId}
+  photoId: string            one vote per player per prompt
+  createdAt
+```
 
 ## Vercel Blob: files
 
@@ -93,37 +117,38 @@ events/{slug}/photos/{photoId}.jpg     shrunk JPEG, about 300 KB
 ```
 
 Blob URLs are long and unguessable but public to anyone who has one. Only
-show URLs of approved photos to players and the display.
+send URLs of approved photos to players and the display.
 
 ## Realtime Database: live state
 
 ```
 presence/{slug}/{uid}
   online: true               removed by onDisconnect
+  playerId: string | null    the player currently active on this device
   surface: "player" | "display" | "controls"
   lastSeen: server timestamp
 
-leaderboard/{slug}           written only by the server after each award
+leaderboard/{slug}           written only by the server after each ledger entry
   updatedAt
-  players/{uid}: { nickname, teamId, points }
-  teams/{teamId}: { name, color, points }
+  players/{playerId}: { nickname, teamId, points }
+  teams/{teamId}: { name, color, points }     full team score
 
 live/{slug}/session          current live session, or null
   id, gameId, type           "jeopardy"
   status: "lobby" | "playing" | "ended"
-  board: ...                 type-specific public state (revealed cells, etc.)
+  board: ...                 type-specific public state
   round: {
     id: string
     status: "idle" | "open" | "locked" | "judged"
-    prompt: ...              what the display shows
+    prompt: ...
     openedAt: server timestamp
   }
 
-live/{slug}/captains/{teamId}: uid
-  Mirror of team captains so RTDB rules can check them
+live/{slug}/captains/{teamId}: { playerId, uid }
+  Mirror of captains so RTDB rules can check them
   (RTDB rules cannot read Firestore).
 
 live/{slug}/buzzes/{roundId}/{teamId}
-  uid: string
+  playerId: string
   at: server timestamp       set with ServerValue.TIMESTAMP; rules enforce it
 ```
