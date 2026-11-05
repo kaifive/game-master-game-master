@@ -13,6 +13,10 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Nickname** | The name a player shows in an event. Unique within the event. | `player.nickname` |
 | **Join policy** | How an event admits players: `open` (instant, default) or `approval` (lobby). | `JoinPolicy` |
 | **Join code** | Short code on the QR poster and display, needed to join an event. | `joinCode` |
+| **Code** | Any 5-character code a player can enter or scan: an event's join code or a game code. | `code` |
+| **Game code** | A code tied to one game, which either opens it (`open`) or reveals it (`unlock`). | `GameCode` |
+| **Unlock** | Revealing a hidden or locked game with a code, for one player or the whole event. | `unlocks/` |
+| **Quick game** | An event with a single game, whose code opens the game directly. | `kind: "quick"` |
 | **Name filter** | The check that rejects inappropriate nicknames and team names as they are typed. | `checkName()` |
 | **Ban** | Blocking a device from an event. | `device.banned` |
 | **Lobby** | Where players wait for approval under the `approval` policy. | |

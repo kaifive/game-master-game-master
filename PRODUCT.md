@@ -55,6 +55,8 @@ event the host has run.
 
 ## Capabilities and Constraints
 
+- Highly configurable per event: join policy, scoring mode, phases, themes,
+  game visibility and codes are all set per event.
 - Must run free: Firebase Spark and Vercel Hobby limits apply.
 - Every surface reads semantic theme tokens so events and games can be
   reskinned (holiday variant, color modes). Controls use a fixed neutral

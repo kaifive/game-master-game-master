@@ -318,3 +318,27 @@ Khai approved running Impeccable's checker. `.claude/settings.json` (copied
 from `docs/setup/claude-settings.json`) allows the launcher and runs its
 hook at session start, after every edit and at the end of each turn. The
 hook is silent for non-UI files.
+
+---
+
+## ADR-020: Codes for events and games, carried in the URL
+
+**Status:** accepted
+
+Khai wants the platform highly configurable per event: QR codes that jump
+straight into a game, scavenger-hunt codes that unlock games, and quick
+single-game sessions.
+
+**Decision:**
+- Every event has a join code. Any game may also have codes, each with an
+  action: `open` (jump to a listed game) or `unlock` (reveal a hidden or
+  locked game), and for `unlock` a scope: `player` or `event`.
+- A quick game is an event with one game, not a separate concept.
+- Codes are accepted from `/join`, the hub's code box, or `?code=` on any
+  URL. The code in the URL is kept through the join flow.
+- Codes live in the event config (server-only) or are generated into
+  Firestore; a global index maps code to event and game. Codes are never
+  sent to clients; only the server resolves them. Resolution is
+  rate-limited per device.
+- Format: 5 characters, unambiguous alphabet, case-insensitive, unique
+  across live events.
