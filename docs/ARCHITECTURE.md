@@ -16,8 +16,8 @@ Controls and Display are separate pages so the TV never shows admin buttons.
 ## URLs
 
 ```
-/                               library: every event, past and upcoming (admin)
-/admin                          admin sign-in
+/                               home: enter or scan a code (players); link to admin
+/admin                          admin sign-in, then the event library
 /admin/[event]                  controls for one event
 /admin/[event]/photos           photo triage (swipe to approve or hide)
 /admin/[event]/recap            recap: standings and approved photos (admin only)

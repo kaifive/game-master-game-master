@@ -18,6 +18,7 @@ Move answered ones to the bottom with the answer.
 | Q18 | Automatic photo screening with AI later? Costs roughly $1 per few hundred photos. | ADR-010 | Not for the party |
 | Q20 | Can a player use the same unlock code twice, or share it with friends? | Spec 08 | Each player's unlock counts once; sharing a code is allowed (it's a party) |
 | Q21 | Should codes expire after the event ends? | Spec 08 | Yes, codes stop working once the event is `ended` |
+| Q22 | Party start time and time zone? | Spec 01 | 6 to 10 pm, America/Los_Angeles |
 | Q19 | Where should photo backups go? | Runbook | Google Drive folder `Game Master/<slug>` |
 
 ## Answered
@@ -44,4 +45,7 @@ Move answered ones to the bottom with the answer.
 | A19 | Game codes? | All of it: codes that jump straight to a game, codes that unlock hidden games (scavenger hunts), and quick single-game sessions, with the code carried in the URL for QR codes (ADR-020). The platform should be highly configurable per event. |
 | A20 | Holiday party look? | Judges' Table with a winter variant. Games play in any order; scores must scale past three. |
 | A21 | How do event styles plug in? | Generic component slots with defaults; each pack overrides what it needs (ADR-022). |
+| A22 | Ended events? (spec 01) | Show final standings; games closed. Photos and recap stay admin-only. |
+| A23 | Home page? (spec 01) | An "enter a code" page; the library moves to `/admin`. |
+| A24 | Before start? (spec 01) | Players can join early; games unlock at the start (or when opened early). |
 | A15 | Photo storage over time? | Back up and clear photos after each event; checklist reminder before each event (ADR-012). |
