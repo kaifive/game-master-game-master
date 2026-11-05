@@ -43,7 +43,8 @@ rules.ts, model.ts    →  nothing with I/O
 ```
 
 - A feature may import another feature only through its `index.ts`.
-- Only `lib/firebase/` imports Firebase SDKs.
+- Only `lib/firebase/` and each feature's `repo.firebase.ts` import Firebase
+  SDKs (plus contract and rules tests).
 - `components/ui/` imports nothing from `lib/` except `lib/themes` and
   `lib/ui` helpers.
 

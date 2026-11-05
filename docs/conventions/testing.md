@@ -39,6 +39,7 @@ test("S04-AC3: a donation larger than the player's points is rejected", ...)
 ```
 npm test              unit + component (watch with npm test -- --watch)
 npm run test:rules    security rules against the emulator
+npm run test:rules:sandbox  same, for cloud sandboxes whose proxy blocks the Firebase CLI
 npm run test:contract repository contract tests against the emulator
 npm run test:e2e      Playwright against the emulator and a local build
 npm run verify        everything CI runs

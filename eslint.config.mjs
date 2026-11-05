@@ -6,7 +6,8 @@ import tseslint from "typescript-eslint";
 // they don't depend on anyone remembering them.
 const FIREBASE = ["firebase", "firebase/*", "firebase-admin", "firebase-admin/*"];
 const msg = {
-  firebase: "Only lib/firebase/ may import Firebase SDKs. Use a repository instead.",
+  firebase:
+    "Only lib/firebase/ and repo.firebase.ts files may import Firebase SDKs. Use a repository.",
   deep: "Import other features through their index: '@/lib/<feature>'.",
   pure: "rules.ts, model.ts and game logic must stay pure: no I/O, React or Next.",
   ui: "components/ui may only use lib/themes, lib/motion and lib/ui.",
@@ -57,7 +58,13 @@ const config = [
     rules: { "import/no-default-export": "off" },
   },
   {
-    files: ["lib/firebase/**"],
+    // The Firebase adapters, and tests that must talk to Firebase directly.
+    files: [
+      "lib/firebase/**",
+      "lib/**/repo.firebase.ts",
+      "lib/**/repo.contract.ts",
+      "firebase/tests/**",
+    ],
     rules: { "no-restricted-imports": restrict([["@/lib/*/*"], msg.deep]) },
   },
   {

@@ -20,6 +20,7 @@ See `engineering.md` for the module layout, layers and definition of done.
 - Tests next to the code: `rules.test.ts`, `Button.test.tsx`.
 - Route handlers at `app/api/<area>/<action>/route.ts`, built with `defineRoute()`.
 - Firebase paths come from `lib/firebase/paths.ts` only.
+- Firebase SDK imports only in `lib/firebase/` and `repo.firebase.ts` files.
 
 ## Style
 

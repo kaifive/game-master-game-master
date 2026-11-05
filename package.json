@@ -24,9 +24,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "emulators": "firebase emulators:start --project demo-game-master",
+    "test:rules": "firebase emulators:exec --project demo-game-master --only firestore,database \"vitest run --config vitest.rules.config.mts\"",
+    "test:rules:sandbox": "sh scripts/test-rules-sandbox.sh"
   },
   "dependencies": {
+    "firebase": "13.2.0",
+    "firebase-admin": "14.5.0",
     "next": "16.4.5",
     "react": "19.3.1",
     "react-dom": "19.3.1",
@@ -34,6 +39,7 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "6.0.0",
     "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "4.3.4",
     "@testing-library/dom": "10.4.2",
@@ -47,6 +53,7 @@
     "@vitest/coverage-v8": "5.1.0",
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.5",
+    "firebase-tools": "15.35.0",
     "jsdom": "30.1.3",
     "prettier": "3.9.10",
     "prettier-plugin-tailwindcss": "0.8.1",

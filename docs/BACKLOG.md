@@ -12,7 +12,7 @@ A feature item needs its spec at `Ready` before it starts.
 - [x] Review the architecture and standards with Khai; mark them accepted
 - [x] Scaffold Next.js + TypeScript strict + Tailwind v4, Prettier, ESLint with boundary rules
 - [x] Test harness: Vitest + Testing Library + coverage thresholds, Playwright, shared test builders
-- [ ] Firebase emulators wired for dev and tests; `npm run test:rules` with a first rules test
+- [x] Firebase emulators wired for dev and tests; `npm run test:rules` with a first rules test
 - [ ] Shared foundations: `AppError`, `defineRoute()`, `variants()`, `lib/firebase/paths.ts`, logger
 - [ ] Design direction: with Impeccable, mock 2–3 directions for the player hub, a game and the display; Khai picks one; record it in `DESIGN.md`
 - [ ] Theme tokens (player, display and controls layers) and the first UI primitives with tests; `/dev/ui` gallery
