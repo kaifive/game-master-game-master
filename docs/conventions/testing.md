@@ -1,25 +1,50 @@
 # Testing conventions
 
-Runner: `node:test` via `tsx` (`npm test`), as in Wushu Toolkit.
+Test-driven (ADR-015). Write the failing test first, then the code.
 
-## Must have tests
+## Levels
 
-- **Game logic:** every game type's `logic.ts`: create, every move outcome,
-  game over, scoring. Pure functions, so these are fast and exhaustive.
-- **Points:** award, void, totals, rebuilding totals from the ledger.
-- **Live session state machine:** every allowed and rejected transition,
-  buzz ordering, judging.
-- **Parsers:** request bodies and event config validation.
-- **Security rules:** against the Firebase emulator. A player cannot write
-  points, another player's data, or buzz unless they are the captain of
-  their team in an open round.
+| Level | Tool | Location | What |
+|-------|------|----------|------|
+| Unit | Vitest | `lib/**/*.test.ts` | `rules.ts`, game `logic.ts`, `model.ts` schemas, services with in-memory repos |
+| Component | Vitest + Testing Library + jsdom | `components/**/*.test.tsx` | Roles, states, keyboard, theme tokens applied |
+| Contract | Vitest + Firebase emulator | `lib/**/repo.contract.ts` | One suite run against both `repo.memory` and `repo.firebase` |
+| Rules | `@firebase/rules-unit-testing` + emulator | `firebase/tests/` | Every row of `reference/security-rules.md`, allowed and denied |
+| End-to-end | Playwright + emulator | `e2e/` | Whole flows across several browsers: join, play, donate, buzz, triage |
 
-## Should have
+## Naming acceptance criteria
 
-- Route handlers with a fake Firestore or the emulator.
-- A load script (`scripts/load-test.ts`) that simulates N players for M4.
+Specs number their criteria (`AC-1`, `AC-2`). Tests that prove one start
+with the spec and criterion id:
 
-## Manual checks before a party
+```ts
+test("S04-AC3: a donation larger than the player's points is rejected", ...)
+```
 
-Listed in spec acceptance criteria: real iPhone and Android, the display on
-the actual TV, Wi-Fi dropouts.
+`npm run check:ac` fails if any criterion in a `Ready`, `Building` or
+`Done` spec has no test naming it.
+
+## Rules
+
+- Pure logic gets exhaustive tests: every branch, every edge.
+- No test touches the network or the real Firebase project. Emulators only.
+- Time and randomness are injected (`clock`, `seed`), never read directly.
+- Fixtures and builders live in `tests/builders/` (`aPlayer()`,
+  `anEvent()`), shared by every test. Don't hand-build the same object twice.
+- A bug fix starts with a test that reproduces the bug.
+- Tests must be deterministic. A flaky test is fixed or deleted the same day.
+
+## Commands
+
+```
+npm test              unit + component (watch with npm test -- --watch)
+npm run test:rules    security rules against the emulator
+npm run test:contract repository contract tests against the emulator
+npm run test:e2e      Playwright against the emulator and a local build
+npm run verify        everything CI runs
+```
+
+## Manual checks before an event
+
+Real iPhone and Android, the display on the actual TV, the venue Wi-Fi.
+These are in `runbooks/event-checklist.md`.

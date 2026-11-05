@@ -14,7 +14,6 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Join policy** | How an event admits players: `open` (instant, default) or `approval` (lobby). | `JoinPolicy` |
 | **Join code** | Short code on the QR poster and display, needed to join an event. | `joinCode` |
 | **Name filter** | The check that rejects inappropriate nicknames and team names as they are typed. | `checkName()` |
-| **Generated names** | Nickname mode where players pick from made-up names ("Swift Crane") instead of typing. | `nicknames: "generated"` |
 | **Ban** | Blocking a device from an event. | `device.banned` |
 | **Lobby** | Where players wait for approval under the `approval` policy. | |
 | **Scoring mode** | Whether an event is `individual`, `team` or `both`. | `scoring` |

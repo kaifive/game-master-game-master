@@ -193,3 +193,72 @@ the count, then delete the files from Vercel Blob. Firestore records stay,
 marked `archived` with where the backup is, so the library keeps its
 history. The steps live in `runbooks/event-checklist.md`, which is checked
 before every event.
+
+---
+
+## ADR-013: Nicknames are a plain text box
+
+**Status:** accepted. Supersedes the generated-names option in ADR-010.
+
+**Decision:** players type their own name. The name filter, kick, rename
+and ban from ADR-010 still apply. There is no generated-names mode.
+
+---
+
+## ADR-014: Only captains control live games
+
+**Status:** accepted
+
+Teams have different sizes, and some members share a phone, so "every
+phone is a buzzer" would favor big teams.
+
+**Decision:** in live sessions only each team's captain has controls
+(buzzer, answers). Every other player sees the current clue and their
+team's status. The admin can change a team's captain at any time, for
+example if the captain's phone dies.
+
+---
+
+## ADR-015: Test-driven, with tests at three levels
+
+**Status:** accepted. Replaces the `node:test` choice from the first
+testing convention.
+
+**Decision:**
+- **Vitest** for unit and component tests (with Testing Library and
+  jsdom), and V8 coverage with enforced thresholds.
+- **Firebase Emulator Suite** for security rules and repository contract
+  tests (`@firebase/rules-unit-testing`).
+- **Playwright** for end-to-end tests. One test can open many browsers at
+  once, so "three captains buzz, admin judges, display updates" is a
+  single test.
+- Work is test-first: acceptance criteria → failing tests → code →
+  refactor. Every acceptance criterion has a test that names it.
+- `npm run verify` runs every gate and must pass before a commit lands
+  on `main`. CI runs it on every pull request.
+
+Vitest replaces `node:test` because component tests need a DOM and a
+mature React testing setup.
+
+---
+
+## ADR-016: Feature modules with layers, shared schemas, thin routes
+
+**Status:** accepted. Replaces "hand-written parsers" in the first code
+convention.
+
+**Decision:**
+- Code is grouped by feature (`lib/points`, `lib/teams`, ...). Each module
+  has the same layers: model (types and schemas), rules (pure logic),
+  repo (interface plus Firebase and in-memory versions), service (server
+  use cases), client (hooks), and one public `index.ts`.
+- **Zod** schemas in `model.ts` define every shape that crosses a boundary.
+  Types are inferred from them, and the client and server share the same
+  schema, so a shape is written once.
+- Services depend on repository interfaces, never on Firebase directly.
+  Unit tests use the in-memory repos; contract tests run the same suite
+  against both versions so they can't drift apart.
+- Every route handler is built with one `defineRoute()` helper that does
+  auth, body validation, rate limiting and error mapping. Route files
+  only call a service.
+- Import boundaries are enforced by ESLint, not by memory.

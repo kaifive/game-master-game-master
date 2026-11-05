@@ -99,13 +99,11 @@ depends on constant monitoring. ADR-010.
 1. Players join instantly. No lobby by default (`open` policy).
 2. A name filter checks every nickname and team name when it is typed.
    Names that fail are rejected on the spot with "pick another name".
-3. Events with lots of kids can use generated names instead of free text
-   (`nicknames: "generated"`, such as "Swift Crane").
-4. Joining needs the event's join code, which is on the QR poster and the
+3. Joining needs the event's join code, which is on the QR poster and the
    display, so people who aren't in the room can't join.
-5. The admin can rename, remove or ban a device at any time. Controls
+4. The admin can rename, remove or ban a device at any time. Controls
    shows "new since you last looked", so catching up takes seconds.
-6. The `approval` policy (a lobby) still exists for small events.
+5. The `approval` policy (a lobby) still exists for small events.
 
 **Photos**
 1. Every photo is saved, and starts `pending`.
@@ -158,7 +156,10 @@ to the **team phase** in Controls. ADR-011.
 
 1. Admin starts a **live session** (for example a Jeopardy board) from
    Controls. Its state lives in Realtime Database.
-2. Each team's **captain** gets the buzzer on their phone.
+2. Each team's **captain** gets the buzzer on their phone. Only captains
+   control live games, so teams of different sizes, or with members
+   sharing phones, are on equal footing. Other members watch the clue on
+   their phones and the display. ADR-014.
 3. Admin opens a **round**. Captains buzz. Each buzz is stamped with the
    database server's time, so order is fair regardless of phone clocks.
 4. Controls and Display show the buzz order. Admin marks the first buzz

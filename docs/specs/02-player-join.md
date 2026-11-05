@@ -14,7 +14,6 @@ Players join an event from a QR code with a nickname and start playing at once. 
 - Join needs the event's join code (in the QR link, so scanning fills it in)
 - Nickname: 2–16 characters, unique per event (case-insensitive), checked by the name filter as it is typed; failing names are rejected with "pick another name"
 - Name filter: a blocklist with normalization (case, spacing, look-alike letters such as 0→o, 1→i), plus a per-event extra list; shared with team names
-- Optional generated names: pick from made-up names ("Swift Crane")
 - Up to `maxPlayersPerDevice` players per device (default 4); "Add player" and "Switch player" on the hub
 - Rejoin on the same device returns to the same players
 - Admin: rename, remove, ban device (bans all its players), move a player to a new device (lost phone)
@@ -22,7 +21,7 @@ Players join an event from a QR code with a nickname and start playing at once. 
 
 ## Open questions
 
-- Q13: free-text names or generated names for the party?
+- None open. Names are a plain text box (ADR-013).
 
 ## Acceptance criteria
 

@@ -1,41 +1,40 @@
 # Code conventions
 
+See `engineering.md` for the module layout, layers and definition of done.
+
 ## TypeScript
 
-- `strict` on. No `any`; use `unknown` and narrow.
-- Named exports. Default exports only where Next.js requires them (pages,
-  layouts, route handlers).
-- Domain types live next to their module (`lib/points/types.ts`), named
-  with glossary terms.
-- Validate everything that crosses a trust boundary (request bodies,
-  database reads, event config) with small hand-written parsers. No schema
-  library unless an ADR adds one.
-
-## Boundaries
-
-- `lib/games/<type>/logic.ts` is pure: no React, no Firebase, no `Date.now()`
-  (pass time in), no randomness without a seed.
-- Only `lib/firebase/admin.ts` imports `firebase-admin`, and it starts with
-  `import "server-only"`.
-- Only route handlers and server actions write points, results or approvals.
-- Client components call Firebase through `lib/firebase/client.ts` for reads,
-  listeners, presence and buzzes. Nothing else.
+- `strict`, plus `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes`.
+- No `any`, no non-null `!`, no `as` casts except in tests and at
+  validated boundaries.
+- Types come from Zod schemas where data crosses a boundary
+  (`type Award = z.infer<typeof Award>`). Don't write a type and a
+  schema for the same shape.
+- Named exports. Default exports only where Next.js requires them.
+- Discriminated unions over boolean flags (`status: "open" | "locked"`).
+- Use glossary terms for names, exactly.
 
 ## Files and naming
 
 - Files: `kebab-case.ts`; components: `PascalCase.tsx`.
-- One game type per folder under `lib/games/`.
-- Route handlers under `app/api/<area>/<action>/route.ts`.
-- Firebase paths are built by helpers in `lib/firebase/paths.ts`, never by
-  string concatenation at call sites. See `reference/data-model.md`.
+- Tests next to the code: `rules.test.ts`, `Button.test.tsx`.
+- Route handlers at `app/api/<area>/<action>/route.ts`, built with `defineRoute()`.
+- Firebase paths come from `lib/firebase/paths.ts` only.
 
-## Errors
+## Style
 
-- Route handlers return `{ error: string, code: string }` with a fitting
-  status. Messages are plain sentences safe to show players.
-- Never log secrets, tokens or the admin passphrase.
+- Prettier formats everything; don't argue with it.
+- Functions do one thing. Over about 40 lines, split it.
+- Comments say why, not what.
+- No dead code, no commented-out code, no TODOs without a backlog item.
 
 ## Dependencies
 
 Keep the list short. Each new runtime dependency needs a reason in the
-commit message. No heavy UI, state management or animation libraries.
+commit message, and a size check for anything that ships to phones. No
+heavy UI, state management or animation libraries.
+
+## Secrets
+
+Only through environment variables, documented in `.env.example`. Never
+logged, never committed.

@@ -20,7 +20,9 @@ code, and update them in the same commit as the code they describe.
 
 ## Conventions
 
-- [code.md](conventions/code.md): TypeScript, folders, naming, boundaries
+- [engineering.md](conventions/engineering.md): quality bar, module layout, layers, definition of done
+- [ai-workflow.md](conventions/ai-workflow.md): the test-first loop from backlog item to commit
+- [code.md](conventions/code.md): TypeScript, naming, style
 - [git.md](conventions/git.md): commits, branches, authorship
 - [testing.md](conventions/testing.md): what to test and how
 - [docs.md](conventions/docs.md): how to write and update specs, ADRs and the glossary
@@ -36,5 +38,6 @@ code, and update them in the same commit as the code they describe.
 
 1. Docs are the source of truth. If code and docs disagree, stop and ask.
 2. Don't build from a `Draft` spec. Get it to `Ready` first.
-3. Use glossary terms exactly. Add a term before using a new one.
-4. Never rewrite an ADR. Add a new one that supersedes it.
+3. Test first. Follow `conventions/ai-workflow.md` for every item.
+4. Use glossary terms exactly. Add a term before using a new one.
+5. Never rewrite an ADR. Add a new one that supersedes it.

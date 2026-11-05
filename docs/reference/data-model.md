@@ -15,7 +15,6 @@ type EventConfig = {
   endsAt: string;
   theme: ThemeRef;           // { id: "classic", variant?: "holiday", colorMode?: "dark" }
   joinPolicy: "open" | "approval";        // default "open" (ADR-010)
-  nicknames: "free" | "generated";        // default "free"
   maxPlayersPerDevice: number;            // default 4 (ADR-009)
   scoring: "individual" | "team" | "both"; // ADR-011
   maxTeams?: number;

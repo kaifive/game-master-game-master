@@ -24,6 +24,13 @@ follows them.
 
 ## Standing rules
 
+- **Test first, every time.** Follow `docs/conventions/ai-workflow.md`:
+  failing tests named after acceptance criteria, then code, then refactor.
+  Nothing is done until `npm run verify` passes and the definition of done
+  in `docs/conventions/engineering.md` is met.
+- **DRY and reuse.** Search `lib/` and `components/` before writing
+  anything new. One schema per shape, one component per pattern.
+
 - Docs change with the code. If behavior changes, update its spec in the
   same commit.
 - Architecture decisions go in `docs/DECISIONS.md` as ADRs. Change one by
@@ -52,8 +59,20 @@ Spark plan. No Cloud Functions (they need Blaze); server logic lives in
 Next.js route handlers using `firebase-admin`. Photo files go to Vercel Blob
 (Firebase Storage needs Blaze; ADR-008). No heavy UI libraries.
 
+## Commands (once scaffolded)
+
+```
+npm run dev        local dev server against the Firebase emulators
+npm test           unit + component tests (Vitest)
+npm run test:rules security rules (emulator)
+npm run test:e2e   end-to-end (Playwright)
+npm run verify     every gate CI runs; must pass before commit
+```
+
 ## Conventions
 
+- Engineering standards: `docs/conventions/engineering.md`
+- AI workflow: `docs/conventions/ai-workflow.md`
 - Code: `docs/conventions/code.md`
 - Git: `docs/conventions/git.md`
 - Testing: `docs/conventions/testing.md`

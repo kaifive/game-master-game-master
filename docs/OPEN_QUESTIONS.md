@@ -11,10 +11,9 @@ Move answered ones to the bottom with the answer.
 | Q7 | Is Jeopardy the only live session type for the party? | Spec 11, 12 | Yes |
 | Q8 | Should players see the full leaderboard on their phones, or only top 10 and their own rank? | Spec 05 | Top 10 plus own rank, refreshed every 15 s |
 | Q9 | Sound on the display (buzz sound, correct or wrong stings)? | Spec 05, 12 | Yes on display, off on phones |
-| Q13 | Party: free-text nicknames through the filter, or generated names? | Spec 02 | Free text with the filter |
 | Q14 | Can a player donate to a team and also be on a different team? | Spec 04 | Yes, any player can donate to any team |
 | Q15 | In the team phase, do solo game points still go to the player (and so count for their team)? | Spec 04 | Yes |
-| Q16 | Can a captain lead a team without anyone else joining? Is there a max team size? | Spec 03 | Yes; no max unless the event sets one |
+| Q16 | Can a captain lead a team without anyone else joining? | Spec 03 | Yes |
 | Q17 | Photo vote: can players vote for their own team's photo? | Spec 13 | No |
 | Q18 | Automatic photo screening with AI later? Costs roughly $1 per few hundred photos. | ADR-010 | Not for the party |
 | Q19 | Where should photo backups go? | Runbook | Google Drive folder `Game Master/<slug>` |
@@ -37,4 +36,7 @@ Move answered ones to the bottom with the answer.
 | A12 | Photo approval? (was Q10) | All photos are saved; only approved ones reach players, through a quick swipe triage. Team photos can go to a player vote. |
 | A13 | Recap visibility? (was Q11) | Admin only. |
 | A14 | Players delete own photos? (was Q12) | No. Once uploaded, only the admin sees or removes it. |
+| A16 | Nickname style? (was Q13) | A plain text box; no generated names (ADR-013). |
+| A17 | Who controls live games? | Only team captains, since teams have different sizes and phone counts (ADR-014). No max team size. |
+| A18 | Code quality bar? | Production grade: test-driven, reusable components, DRY, enforced by tooling (ADR-015, ADR-016). |
 | A15 | Photo storage over time? | Back up and clear photos after each event; checklist reminder before each event (ADR-012). |

@@ -5,15 +5,21 @@ A feature item needs its spec at `Ready` before it starts.
 
 **Party: Saturday 2026-12-19.** Dates below are targets.
 
-## M0: Foundations (by Nov 12)
+## M0: Foundations (by Nov 14)
 
 - [x] Docs skeleton: architecture, glossary, decisions, conventions, spec list
-- [ ] Review the architecture with Khai; mark it accepted
-- [ ] Scaffold Next.js + TypeScript strict + Tailwind v4; `npm run check`, `npm test`, `npm run build`
-- [ ] Firebase project on Spark: Anonymous Auth, Firestore, Realtime Database; env vars documented
-- [ ] Vercel Blob store on Hobby; token env var documented
-- [ ] Security rules for both databases, with tests against the emulator
-- [ ] First Vercel deploy (preview only; ask before production)
+- [x] Engineering standards, test strategy and AI workflow (ADR-015, ADR-016)
+- [ ] Review the architecture and standards with Khai; mark them accepted
+- [ ] Scaffold Next.js + TypeScript strict + Tailwind v4, Prettier, ESLint with boundary rules
+- [ ] Test harness: Vitest + Testing Library + coverage thresholds, Playwright, shared test builders
+- [ ] Firebase emulators wired for dev and tests; `npm run test:rules` with a first rules test
+- [ ] Shared foundations: `AppError`, `defineRoute()`, `variants()`, `lib/firebase/paths.ts`, logger
+- [ ] Theme tokens and the first UI primitives with tests; `/dev/ui` gallery
+- [ ] `npm run check:ac` (acceptance-criteria-to-test check) and `npm run verify`
+- [ ] GitHub Actions CI running `verify` and e2e on every PR; PR template; git hooks
+- [ ] `.claude/commands/` for `/next`, `/spec`, `/verify`
+- [ ] Firebase project on Spark: Anonymous Auth, Firestore, Realtime Database; env vars in `.env.example`
+- [ ] Vercel project and Blob store on Hobby; preview deploys per PR (ask before production)
 
 ## M1: Core event loop (by Nov 26)
 
