@@ -9,7 +9,7 @@ A feature item needs its spec at `Ready` before it starts.
 
 - [x] Docs skeleton: architecture, glossary, decisions, conventions, spec list
 - [x] Engineering standards, test strategy and AI workflow (ADR-015, ADR-016)
-- [ ] Review the architecture and standards with Khai; mark them accepted
+- [x] Review the architecture and standards with Khai; mark them accepted
 - [ ] Scaffold Next.js + TypeScript strict + Tailwind v4, Prettier, ESLint with boundary rules
 - [ ] Test harness: Vitest + Testing Library + coverage thresholds, Playwright, shared test builders
 - [ ] Firebase emulators wired for dev and tests; `npm run test:rules` with a first rules test
