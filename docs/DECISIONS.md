@@ -393,3 +393,21 @@ its own versions, and games use the event's component or the default.
 
 Packs get full freedom where CSS isn't enough (a score card on a real
 handle), and the contract suites stop that freedom from breaking games.
+
+---
+
+## ADR-023: Public Firebase config is committed; secrets live in Vercel
+
+**Status:** accepted
+
+**Decision:**
+- The Firebase web config (`NEXT_PUBLIC_FIREBASE_*`) is committed in
+  `.env.production`. These values ship to every phone anyway; committing
+  them means previews and production build without manual setup.
+- Local development uses `.env.development`, which points the app at the
+  emulators and the `demo-game-master` project, never production.
+- Secrets (`FIREBASE_SERVICE_ACCOUNT`, `ADMIN_PASSPHRASE`,
+  `BLOB_READ_WRITE_TOKEN`) are only ever set in Vercel or `.env.local`
+  (ignored by git). Errors about them name the variable, never the value.
+- Real protection comes from security rules and server-side checks, not
+  from hiding the web config.
