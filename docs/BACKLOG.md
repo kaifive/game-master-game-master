@@ -14,7 +14,7 @@ A feature item needs its spec at `Ready` before it starts.
 - [ ] Test harness: Vitest + Testing Library + coverage thresholds, Playwright, shared test builders
 - [ ] Firebase emulators wired for dev and tests; `npm run test:rules` with a first rules test
 - [ ] Shared foundations: `AppError`, `defineRoute()`, `variants()`, `lib/firebase/paths.ts`, logger
-- [ ] Design direction: with Impeccable, mock 2–3 directions for the player hub, a game and the display; Khai picks one; record it in `DESIGN.md`
+- [ ] Design direction: Khai picks the holiday party's style pack from the options; record the admin look and the style-pack contract in `DESIGN.md`, the pack in `docs/styles/<pack>.md`
 - [ ] Theme tokens (player, display and controls layers) and the first UI primitives with tests; `/dev/ui` gallery
 - [ ] Spec 14, motion primitives: tokens, `useFlip`, `CountUp`, `BarRace`, `PointsBurst`, `Confetti`, reduced-motion fallbacks; in the gallery
 - [ ] `npm run check:ac` (acceptance-criteria-to-test check) and `npm run verify`
@@ -62,3 +62,4 @@ A feature item needs its spec at `Ready` before it starts.
 - In-app editor for events and game content
 - More live session types (Jackbox-style prompts, polls)
 - Custom domain
+- More style packs from the earlier design options

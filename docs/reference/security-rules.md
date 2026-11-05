@@ -28,6 +28,7 @@ means `request.auth.uid == resource.data.deviceUid`.
 |------|------|-------|
 | `presence/{slug}/{uid}` | admin | that uid, only `{online, playerId, surface, lastSeen}` |
 | `leaderboard/{slug}` | anyone | server |
+| `live/{slug}/settings` | anyone | admin |
 | `live/{slug}/session` | anyone | admin, server |
 | `live/{slug}/captains` | anyone | admin, server |
 | `moments/{slug}` | anyone | server |

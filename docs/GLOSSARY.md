@@ -50,8 +50,11 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Presence** | Whether a player is connected right now. | `presence` |
 | **Controls** | The admin's page for running an event. | `/admin/[event]` |
 | **Display** | The read-only big-screen page for the room. | `/[event]/display` |
-| **Theme** | The look of an event or game: color tokens, color mode, icon set, decorations. | `Theme` |
-| **Variant** | A named version of a theme, such as `holiday`. | `theme.variant` |
+| **Style pack** | A complete look an event can pick: tokens, fonts, slot skins, icons, motion presets. Applies to the player client and TV. | `StylePack`, `style.pack` |
+| **Slot** | A named part a style pack skins, such as `tile` or `toast`. Components render the same DOM in every pack. | |
+| **Theme** | The resolved look on screen: a style pack + variant + color mode. The admin layer has its own fixed theme. | `Theme` |
+| **Variant** | A named override on top of a style pack, such as `holiday`. | `style.variant` |
+| **Admin layer** | Library, sign-in, controls, triage and recap. One standard look for every event. | |
 | **Color mode** | Light or dark within a theme. | `colorMode` |
 | **Renderer** | The React view of a game type. Uses theme tokens only. | `Renderer.tsx` |
 | **Logic** | The pure functions of a game type: create, apply move, is over, score. | `logic.ts` |

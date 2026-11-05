@@ -1,14 +1,24 @@
 # UI conventions
 
-One look across the player client, controls and display, while letting each
-event and game reskin itself through themes (spec 09).
+Two design layers (ADR-021):
+
+- **Admin layer** (library, sign-in, controls, photo triage, recap): one
+  standard, calm, SaaS-style look for every event. Never changes per event.
+- **Event layer** (player client and TV display): each event picks a
+  **style pack**, such as Sticker Book or One-Hour Photo, plus an optional
+  variant (holiday) and a color mode. The phones and the TV always share
+  the event's style.
 
 ## Design direction
 
-**Fun, with a point of view. Never generic.** Game Master should feel like
-a game show and a party, not a SaaS dashboard. The visual direction is
-chosen by Khai from options (backlog M0) and recorded in `DESIGN.md` at the
-repo root. Until then, no surface gets final styling.
+**Event styles: fun, with a point of view. Never generic.** Each style pack
+should feel like a game show and a party, not a SaaS dashboard. Style packs
+are documented in `docs/styles/<pack>.md`; `DESIGN.md` at the repo root
+records the admin look and the style-pack contract.
+
+**Admin: standard and quiet.** System font stack, cool neutrals, one accent,
+dense lists, clear states. Familiar on purpose, so Khai can run the night
+without thinking about the interface.
 
 Design work uses the **Impeccable** skill (`.claude/skills/impeccable`,
 ADR-017). It reads `PRODUCT.md` and `DESIGN.md`. Impeccable's mode for
@@ -19,7 +29,7 @@ each surface:
 | Display | Experience | A stage. Big, bold, animated, made to be watched. |
 | Solo games, buzzer, photo vote | Experience | The game is the screen. Play and feedback lead. |
 | Player hub, join | Operate, with personality | Fast and obvious, but still part of the party. |
-| Controls | Operate | Dense, calm, precise. Fun lives in small details only. |
+| Controls, library, triage | Operate | Standard SaaS. Dense, calm, precise, same for every event. |
 
 Banned "AI slop" tells (Impeccable's detector checks for most of these):
 one default sans for everything, purple-to-blue gradients, cards nested in
@@ -65,10 +75,35 @@ Names are stable; values change per theme and color mode.
 --gm-radius, --gm-font-display, --gm-font-body
 ```
 
-Controls use a fixed neutral theme so the admin view never changes with the
-event's theme. **Player and display surfaces both use the event's theme**,
-through the same tokens, so a holiday variant reskins the TV as fully as
-the phones.
+The admin layer uses one fixed neutral theme. **Player and display
+surfaces both use the event's style pack**, through the same tokens, so a
+style or a holiday variant reskins the TV as fully as the phones.
+
+## Style packs
+
+A style pack is everything that makes an event look like itself, and
+nothing that changes behavior (ADR-021):
+
+| Part | What it sets |
+|------|--------------|
+| Tokens | Every `--gm-*` value above, for light and dark |
+| Fonts | Display and data faces (body text stays Atkinson Hyperlegible for legibility) |
+| Skins | CSS for a fixed list of slots: `surface`, `button`, `card`, `tile`, `badge`, `bar`, `toast`, `keyboard-key`, `buzzer`, `qr-panel` |
+| Icons | The semantic icon set (`correct`, `present`, `trophy`, ...) |
+| Motion | Which celebration each moment plays (the slap, the flash, the burst) and its timing |
+| Decorations | Optional ornaments for the display and hub edges |
+
+Rules:
+- Components render the same DOM in every pack; a pack changes how slots
+  look, never what they contain or how they behave. A pack that needs a
+  new slot adds it to this list for every pack.
+- A pack ships light and dark, and its variants (holiday) are token and
+  icon overrides on top of it.
+- Each pack's CSS and fonts load only for events that use it.
+- Every pack appears in the `/dev/ui` gallery and passes the same contrast
+  and color-blind checks.
+- The color mode is a default in the event file and can be switched live
+  from Controls, so the TV can match the room on the night.
 
 The display adds a size layer on top of the theme: `--gm-display-scale`,
 display type sizes (`--gm-display-text-*`) and stage tokens
