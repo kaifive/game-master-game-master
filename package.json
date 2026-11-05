@@ -31,7 +31,8 @@
     "check:ac": "tsx scripts/check-ac/run.ts",
     "verify:static": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run check:ac",
     "verify": "npm run verify:static && npm run test:rules && npm run build",
-    "verify:sandbox": "npm run verify:static && npm run test:rules:sandbox && npm run build"
+    "verify:sandbox": "npm run verify:static && npm run test:rules:sandbox && npm run build",
+    "prepare": "simple-git-hooks || true"
   },
   "dependencies": {
     "firebase": "13.2.0",
@@ -59,13 +60,26 @@
     "eslint-config-next": "16.4.5",
     "firebase-tools": "15.35.0",
     "jsdom": "30.1.3",
+    "lint-staged": "17.6.0",
     "prettier": "3.9.10",
     "prettier-plugin-tailwindcss": "0.8.1",
+    "simple-git-hooks": "2.14.0",
     "tailwindcss": "4.3.4",
     "tsx": "4.23.15",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.1",
     "vite": "8.3.5",
     "vitest": "5.1.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npx lint-staged",
+    "pre-push": "npm run typecheck && npm test"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,mts,mjs}": [
+      "prettier --write",
+      "eslint --fix --max-warnings 0"
+    ],
+    "*.{json,css,yml,yaml}": "prettier --write"
   }
 }

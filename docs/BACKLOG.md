@@ -18,7 +18,7 @@ A feature item needs its spec at `Ready` before it starts.
 - [ ] Theme tokens (player, display and controls layers) and the first UI primitives with tests; `/dev/ui` gallery
 - [ ] Spec 14, motion primitives: tokens, `useFlip`, `CountUp`, `BarRace`, `PointsBurst`, `Confetti`, reduced-motion fallbacks; in the gallery
 - [x] `npm run check:ac` (acceptance-criteria-to-test check) and `npm run verify`
-- [ ] GitHub Actions CI running `verify` and e2e on every PR; PR template; git hooks
+- [x] GitHub Actions CI running `verify` and e2e on every PR; PR template; git hooks
 - [ ] `.claude/commands/` for `/next`, `/spec`, `/verify`
 - [ ] Firebase project on Spark: Anonymous Auth, Firestore, Realtime Database; env vars in `.env.example`
 - [ ] Vercel project and Blob store on Hobby; preview deploys per PR (ask before production)
