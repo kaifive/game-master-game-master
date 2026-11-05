@@ -3,10 +3,13 @@
 import "@fontsource/oswald/500.css";
 import "@fontsource/oswald/700.css";
 import "./judges-table.css";
-import { TileMark, keyName, tileName } from "@/components/slots/defaults";
+import { fireConfetti } from "@/components/motion/confetti";
+import { TileMark, keyName, tileName, useCelebrationTimer } from "@/components/slots/defaults";
 import { useTheme } from "@/components/theme";
+import type { MomentKind } from "@/lib/motion";
 import type {
   BannerProps,
+  CelebrationProps,
   KeyProps,
   LeaderboardRowProps,
   ProgressProps,
@@ -289,7 +292,66 @@ function LeaderboardRow({ rank, name, score, team, highlight }: LeaderboardRowPr
   );
 }
 
-/** Judges' Table's own slot components (S09-AC11); the rest are defaults. */
+export type JudgesTableAnimation = "flip" | "snow-drift" | "shake" | "callout";
+
+/** Which animation Judges' Table plays for each moment (S14-AC8). */
+export const JT_ANIMATIONS: Record<MomentKind, JudgesTableAnimation> = {
+  "game-finished": "flip",
+  points: "callout",
+  "rank-change": "callout",
+  "lead-change": "snow-drift",
+  "team-created": "callout",
+  "big-donation": "snow-drift",
+  "judged-right": "flip",
+  "judged-wrong": "shake",
+  "phase-change": "snow-drift",
+  "photo-winner": "flip",
+  "final-standings": "flip",
+};
+
+/** Score cards flip up; on big moments the snow drifts and a gold-and-white flurry falls. */
+function Celebration({ moment, onDone }: CelebrationProps) {
+  const theme = useTheme();
+  const animation = JT_ANIMATIONS[moment.kind];
+  const colors = [theme?.tokens.gold ?? "#e5b553", "#ffffff"];
+  useCelebrationTimer(
+    onDone,
+    animation === "flip" || animation === "snow-drift"
+      ? () => void fireConfetti({ colors, shapes: ["circle"] })
+      : null,
+  );
+  return (
+    <div
+      role="status"
+      data-slot="celebration"
+      data-animation={animation}
+      className={cx(
+        "pointer-events-none fixed inset-0 z-50 grid place-items-center p-6",
+        animation === "snow-drift" &&
+          "jt-snowfall motion-safe:animate-[jt-drift_var(--gm-motion-stage)_linear]",
+      )}
+    >
+      <div
+        className={cx(
+          "grid justify-items-center gap-3 rounded-lg bg-gm-surface px-6 py-5 text-center shadow-2xl",
+          animation === "shake" &&
+            "motion-safe:animate-[gm-shake_var(--gm-motion-base)_ease-in-out]",
+          animation === "callout" &&
+            "motion-safe:animate-[gm-pop_var(--gm-motion-base)_var(--gm-ease-emphasized)]",
+        )}
+      >
+        {moment.value !== undefined && animation !== "shake" && (
+          <ScoreCard label={moment.text} value={moment.value} state="highlight" size="lg" />
+        )}
+        <p className="m-0 font-gm-display text-3xl font-bold tracking-wide text-gm-text uppercase">
+          {moment.text}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** Judges' Table's own slot components (S09-AC11, S14-AC8); the rest are defaults. */
 export const judgesTableSlots: Partial<SlotComponents> = {
   Surface,
   Banner,
@@ -299,4 +361,5 @@ export const judgesTableSlots: Partial<SlotComponents> = {
   Progress,
   Toast,
   LeaderboardRow,
+  Celebration,
 };

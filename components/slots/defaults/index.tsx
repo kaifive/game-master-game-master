@@ -17,6 +17,9 @@ import {
   type ToastProps,
 } from "@/lib/themes";
 import { cx, variants } from "@/lib/ui";
+import { Celebration } from "./celebration";
+
+export { Celebration, DEFAULT_ANIMATIONS, useCelebrationTimer } from "./celebration";
 
 /**
  * Default slot components (ADR-022), styled only by theme tokens. A style
@@ -356,4 +359,5 @@ export const DEFAULT_SLOTS: SlotComponents = {
   LeaderboardRow,
   Buzzer,
   CodeEntry,
+  Celebration,
 };

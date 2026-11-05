@@ -118,8 +118,7 @@ const { ScoreCard } = useSlots();      // Judges' Table: a paddle on a handle
 | `LeaderboardRow` | One rank row on the TV and hub |
 | `Buzzer` | The captain's buzzer |
 | `CodeEntry` | Entering a game or event code |
-
-`Celebration` (the animation for a moment) joins this list with spec 14.
+| `Celebration` | Plays one stage moment (spec 14); calls `onDone` once |
 
 Rules:
 - Each slot has one **props contract** (a TypeScript type), one
@@ -168,7 +167,7 @@ about should be *seen* happening. Spec 14 has the full list of moments.
 - Durations and easings come from motion tokens, never ad-hoc values:
   `--gm-motion-fast` (150 ms), `--gm-motion-base` (300 ms),
   `--gm-motion-slow` (600 ms), `--gm-motion-stage` (1200 ms, display only),
-  `--gm-ease-out`, `--gm-ease-spring`. Themes may tune them.
+  `--gm-ease-out`, `--gm-ease-emphasized`. Themes may tune them.
 - Motion explains change: things move *from* where they were *to* where
   they are. Nothing pops in or out without a transition.
 - Reduced motion (`prefers-reduced-motion`): position changes become
@@ -188,10 +187,13 @@ used everywhere.
 | `<CountUp>` | Numbers roll up to their new value |
 | `<BarRace>` | Animated bar chart for leaderboards; bars grow and swap places |
 | `<PointsBurst>` | A floating "+100" from where points were earned |
-| `<Confetti>` / `celebrate()` | Themed confetti bursts (holiday variant: snowflakes) |
-| `<Reveal>` | Staggered entrance for lists, boards and results |
-| `<Shake>`, `<Pulse>` | Wrong-answer shake, buzz-in pulse |
-| `<ToastChain>` | Stacked, auto-expiring toasts for small moments on the display |
+| `useCelebrate()` | Sends a moment to the toast chain or the stage, by kind and surface |
+| `<ToastChainView>` | At most four auto-expiring toasts, newest on top; pauses during stage moments |
+| `<MomentsStage>` | Plays stage moments one at a time through the `Celebration` slot |
+| `fireConfetti()` | Token-colored confetti; loads `canvas-confetti` on first use; skips for reduced motion |
+
+All of these live under `<MomentsProvider surface="player" | "display">`. Replay
+every one in every pack at `/dev/ui/motion`.
 
 ## Components (planned)
 

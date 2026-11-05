@@ -46,6 +46,7 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Recap** | Final standings and approved photos of an event. Admin only. | `/admin/[event]/recap` |
 | **Moment** | Something worth celebrating on the display (a lead change, a game finished). Written by the server. | `moments/{slug}` |
 | **Toast chain** | The stack of small, auto-expiring toasts on the display for frequent moments. | `<ToastChain>` |
+| **Stage** | The lane for big, rare moments: one at a time, full celebration. Small moments go to the toast chain. | `laneFor()` |
 | **Celebration** | The animation and sound played for a moment or a finished game. | `celebrate()` |
 | **Presence** | Whether a player is connected right now. | `presence` |
 | **Controls** | The admin's page for running an event. | `/admin/[event]` |

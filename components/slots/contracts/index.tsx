@@ -1,7 +1,10 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test, vi } from "vitest";
+import { fireConfetti } from "@/components/motion/confetti";
+import { MOMENT_KINDS } from "@/lib/motion";
 import type { SlotComponents, SlotName } from "@/lib/themes";
+import { setReducedMotion } from "@/tests/motion";
 
 /**
  * Contract suites (ADR-022): every version of a slot, default or from a
@@ -215,6 +218,49 @@ const suites: { [N in SlotName]: Suite<N> } = {
       expect(onSubmit).toHaveBeenCalledWith("ABCDE");
       expect(screen.getByRole("alert")).toHaveTextContent("That code isn't valid.");
       expectMotionSafe(container);
+    });
+  },
+  Celebration: (Celebration) => {
+    const moment = {
+      id: "m1",
+      kind: "judged-right" as const,
+      text: "Team Crane is right",
+      value: 400,
+    };
+    test("announces the moment, then calls onDone exactly once", () => {
+      vi.useFakeTimers();
+      const onDone = vi.fn();
+      const { container } = render(
+        <Celebration moment={moment} surface="display" onDone={onDone} />,
+      );
+      expect(screen.getByRole("status")).toHaveTextContent("Team Crane is right");
+      expect(
+        container.querySelector("[data-animation]")?.getAttribute("data-animation"),
+      ).toBeTruthy();
+      expectMotionSafe(container);
+      act(() => {
+        vi.advanceTimersByTime(5000);
+      });
+      expect(onDone).toHaveBeenCalledOnce();
+      vi.useRealTimers();
+    });
+    test("S14-AC10: with reduced motion, plays no confetti, flips or shakes, and finishes quickly", () => {
+      vi.useFakeTimers();
+      setReducedMotion(true);
+      vi.mocked(fireConfetti).mockClear();
+      for (const kind of MOMENT_KINDS) {
+        const onDone = vi.fn();
+        const { unmount } = render(
+          <Celebration moment={{ ...moment, kind }} surface="player" onDone={onDone} />,
+        );
+        act(() => {
+          vi.advanceTimersByTime(500);
+        });
+        expect(onDone).toHaveBeenCalledOnce();
+        unmount();
+      }
+      expect(fireConfetti).not.toHaveBeenCalled();
+      vi.useRealTimers();
     });
   },
 };

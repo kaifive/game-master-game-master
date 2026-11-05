@@ -53,3 +53,41 @@ body {
   outline: 3px solid var(--gm-accent);
   outline-offset: 2px;
 }
+
+/* Shared keyframes for components/motion (spec 14); used only behind motion-safe. */
+@keyframes gm-burst {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-48px) scale(1.15);
+    opacity: 0;
+  }
+}
+
+@keyframes gm-pop {
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes gm-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-10px);
+  }
+  40%,
+  80% {
+    transform: translateX(10px);
+  }
+}

@@ -1,6 +1,6 @@
 # 14: Motion and celebrations
 
-**Status:** Draft (acceptance criteria proposed, waiting for Khai's yes)
+**Status:** Done
 **Backlog:** M0 (primitives), then each feature uses them
 **Depends on:** 09
 
@@ -30,7 +30,7 @@ primitives (ADR-018) so every screen moves the same way, themed per event
 ## Behavior
 
 - Motion timing comes from tokens every pack defines: `motion-fast`,
-  `motion-base`, `motion-slow`, `motion-stage`, `ease-out`, `ease-spring`.
+  `motion-base`, `motion-slow`, `motion-stage`, `ease-out`, `ease-emphasized`.
 - Primitives in `lib/motion` (pure math and the moment queue) and
   `components/motion` (React): `useFlip`, `CountUp`, `BarRace`,
   `PointsBurst`, `ToastChain`, and `celebrate()`.
@@ -47,17 +47,26 @@ primitives (ADR-018) so every screen moves the same way, themed per event
 
 ## Acceptance criteria
 
-- [ ] AC-1: Every pack and the admin theme define every motion token; a missing one fails the tests.
-- [ ] AC-2: When a list reorders, `useFlip` moves each item from its old position to its new one, so rows glide instead of jumping.
-- [ ] AC-3: `CountUp` rolls a number from its old value to its new one over the token duration and always ends on the exact value.
-- [ ] AC-4: `BarRace` sizes each bar by its share of the top score, glides rows to their new rank and counts scores up, and reads to screen readers as a ranked list.
-- [ ] AC-5: `PointsBurst` floats "+N" up from where points were earned, announces the points once to screen readers, and removes itself when done.
-- [ ] AC-6: `ToastChain` shows at most 4 toasts, newest on top, each for about 5 seconds; extras wait their turn, and the chain pauses while a stage moment plays.
-- [ ] AC-7: Stage moments play one at a time, in the order they arrived; a moment that arrives during another waits for it.
-- [ ] AC-8: The `Celebration` slot has a contract suite; the default and Judges' Table's version both pass it, and each moment kind plays its pack's animation.
-- [ ] AC-9: The confetti library is not in any page's first download; it loads when the first celebration fires, uses theme colors, and fires fewer particles on phones than on the TV.
-- [ ] AC-10: With reduced motion on, rows snap or fade instead of gliding, numbers jump to their final value, and no confetti, flips or shakes play.
-- [ ] AC-11: A `/dev/ui/motion` gallery page replays every primitive and every moment in every pack, variant and mode.
+- [x] AC-1: Every pack and the admin theme define every motion token; a missing one fails the tests.
+- [x] AC-2: When a list reorders, `useFlip` moves each item from its old position to its new one, so rows glide instead of jumping.
+- [x] AC-3: `CountUp` rolls a number from its old value to its new one over the token duration and always ends on the exact value.
+- [x] AC-4: `BarRace` sizes each bar by its share of the top score, glides rows to their new rank and counts scores up, and reads to screen readers as a ranked list.
+- [x] AC-5: `PointsBurst` floats "+N" up from where points were earned, announces the points once to screen readers, and removes itself when done.
+- [x] AC-6: `ToastChain` shows at most 4 toasts, newest on top, each for about 5 seconds; extras wait their turn, and the chain pauses while a stage moment plays.
+- [x] AC-7: Stage moments play one at a time, in the order they arrived; a moment that arrives during another waits for it.
+- [x] AC-8: The `Celebration` slot has a contract suite; the default and Judges' Table's version both pass it, and each moment kind plays its pack's animation.
+- [x] AC-9: The confetti library is not in any page's first download; it loads when the first celebration fires, uses theme colors, and fires fewer particles on phones than on the TV.
+- [x] AC-10: With reduced motion on, rows snap or fade instead of gliding, numbers jump to their final value, and no confetti, flips or shakes play.
+- [x] AC-11: A `/dev/ui/motion` gallery page replays every primitive and every moment in every pack, variant and mode.
+
+## How it's built
+
+- Pure logic: `lib/motion` (moment kinds and lanes, count-up math, FLIP deltas, bar shares, the toast-chain and stage reducers).
+- Motion tokens are part of the theme contract (`lib/themes/model.ts`); `useMotion()` reads them, `useReducedMotion()` follows the device setting.
+- Primitives: `components/motion` (`useFlip`, `CountUp`, `BarRace`, `PointsBurst`, `MomentsProvider`, `ToastChainView`, `MomentsStage`, `fireConfetti`).
+- `Celebration` slot: default in `components/slots/defaults/celebration.tsx` (confetti, shake or callout per moment); Judges' Table's in `components/packs/judges-table/slots.tsx` (score-card flip, snow drift, shake or callout).
+- Bar labels pick black or white per team color (`readableInk`), tested to 4.5:1 in every pack.
+- Gallery: `/dev/ui/motion`.
 
 ## Tests
 
