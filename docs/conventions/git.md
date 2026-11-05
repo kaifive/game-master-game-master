@@ -8,8 +8,8 @@
 - Message: short imperative subject (`Add points ledger`), blank line, then
   why if it isn't obvious.
 - Docs that describe the change go in the same commit as the code.
-- Work on a branch per milestone or feature; merge to `main` through a PR.
-  Docs-only changes may go straight to `main`.
+- Every change reaches `main` through a PR, docs included: a ruleset on
+  `main` requires the `Verify` and `End-to-end` checks.
 - Never force-push `main`.
 - Khai's standing permission: when Claude opens a PR, it turns on GitHub
   auto-merge (merge commit) so the PR merges by itself once the required
