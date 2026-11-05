@@ -9,17 +9,17 @@ A feature item needs its spec at `Ready` before it starts.
 
 - [x] Docs skeleton: architecture, glossary, decisions, conventions, spec list
 - [x] Engineering standards, test strategy and AI workflow (ADR-015, ADR-016)
-- [ ] Review the architecture and standards with Khai; mark them accepted
-- [ ] Scaffold Next.js + TypeScript strict + Tailwind v4, Prettier, ESLint with boundary rules
-- [ ] Test harness: Vitest + Testing Library + coverage thresholds, Playwright, shared test builders
-- [ ] Firebase emulators wired for dev and tests; `npm run test:rules` with a first rules test
-- [ ] Shared foundations: `AppError`, `defineRoute()`, `variants()`, `lib/firebase/paths.ts`, logger
+- [x] Review the architecture and standards with Khai; mark them accepted
+- [x] Scaffold Next.js + TypeScript strict + Tailwind v4, Prettier, ESLint with boundary rules
+- [x] Test harness: Vitest + Testing Library + coverage thresholds, Playwright, shared test builders
+- [x] Firebase emulators wired for dev and tests; `npm run test:rules` with a first rules test
+- [x] Shared foundations: `AppError`, `defineRoute()`, `variants()`, `lib/firebase/paths.ts`, logger
 - [ ] Design direction: Khai picks the holiday party's style pack from the options; record the admin look and the style-pack contract in `DESIGN.md`, the pack in `docs/styles/<pack>.md`
-- [ ] Theme tokens (player, display and controls layers) and the first UI primitives with tests; `/dev/ui` gallery
+- [ ] Style-pack contract, admin theme and the first pack's tokens; first UI primitives with tests; `/dev/ui` gallery showing every pack
 - [ ] Spec 14, motion primitives: tokens, `useFlip`, `CountUp`, `BarRace`, `PointsBurst`, `Confetti`, reduced-motion fallbacks; in the gallery
-- [ ] `npm run check:ac` (acceptance-criteria-to-test check) and `npm run verify`
-- [ ] GitHub Actions CI running `verify` and e2e on every PR; PR template; git hooks
-- [ ] `.claude/commands/` for `/next`, `/spec`, `/verify`
+- [x] `npm run check:ac` (acceptance-criteria-to-test check) and `npm run verify`
+- [x] GitHub Actions CI running `verify` and e2e on every PR; PR template; git hooks
+- [x] `.claude/commands/` for `/next`, `/spec`, `/verify`
 - [ ] Firebase project on Spark: Anonymous Auth, Firestore, Realtime Database; env vars in `.env.example`
 - [ ] Vercel project and Blob store on Hobby; preview deploys per PR (ask before production)
 

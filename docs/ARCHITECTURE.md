@@ -1,7 +1,7 @@
 # Architecture
 
 Game Master is one Next.js app with three surfaces, backed by Firebase and
-Vercel Blob on free tiers. Status: **draft for review**.
+Vercel Blob on free tiers. Status: **accepted** (2026-11-05).
 
 ## Surfaces
 

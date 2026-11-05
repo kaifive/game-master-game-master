@@ -1,0 +1,12 @@
+rules_version = '2';
+
+// Who can read and write what: docs/reference/security-rules.md.
+// Everything is denied unless a feature opens it up below, with tests in
+// firebase/tests/. Route handlers use firebase-admin and bypass these rules.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -59,15 +59,20 @@ Spark plan. No Cloud Functions (they need Blaze); server logic lives in
 Next.js route handlers using `firebase-admin`. Photo files go to Vercel Blob
 (Firebase Storage needs Blaze; ADR-008). No heavy UI libraries.
 
-## Commands (once scaffolded)
+## Commands
 
 ```
-npm run dev        local dev server against the Firebase emulators
+npm run dev        local dev server
+npm run emulators  Firebase emulators (auth, Firestore, Realtime Database)
 npm test           unit + component tests (Vitest)
 npm run test:rules security rules (emulator)
 npm run test:e2e   end-to-end (Playwright)
 npm run verify     every gate CI runs; must pass before commit
+npm run verify:sandbox   same, in cloud sessions where the proxy blocks the Firebase CLI
 ```
+
+Chain checks with `&&` or run `npm run verify`; never pipe a check into
+`tail` or `grep`, which hides its exit code.
 
 ## Design
 
