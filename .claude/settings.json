@@ -1,0 +1,48 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sh .claude/skills/impeccable/scripts/impeccable *)",
+      "Bash(.claude/skills/impeccable/scripts/impeccable *)",
+      "Bash(sh \"$CLAUDE_PROJECT_DIR/.claude/skills/impeccable/scripts/impeccable\" *)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -f \"$CLAUDE_PROJECT_DIR/.claude/skills/impeccable/scripts/impeccable\" ] || IMPECCABLE_HOOK_HARNESS=vscode sh \"$CLAUDE_PROJECT_DIR/.claude/skills/impeccable/scripts/impeccable\" hook",
+            "timeout": 5,
+            "statusMessage": "Preparing design checks"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -f \"$CLAUDE_PROJECT_DIR/.claude/skills/impeccable/scripts/impeccable\" ] || IMPECCABLE_HOOK_HARNESS=vscode sh \"$CLAUDE_PROJECT_DIR/.claude/skills/impeccable/scripts/impeccable\" hook",
+            "timeout": 5,
+            "statusMessage": "Checking UI changes"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -f \"$CLAUDE_PROJECT_DIR/.claude/skills/impeccable/scripts/impeccable\" ] || IMPECCABLE_HOOK_HARNESS=vscode sh \"$CLAUDE_PROJECT_DIR/.claude/skills/impeccable/scripts/impeccable\" hook",
+            "timeout": 30,
+            "statusMessage": "Design deep pass"
+          }
+        ]
+      }
+    ]
+  }
+}
