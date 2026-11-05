@@ -11,3 +11,7 @@
 - Work on a branch per milestone or feature; merge to `main` through a PR.
   Docs-only changes may go straight to `main`.
 - Never force-push `main`.
+- Khai's standing permission: when Claude opens a PR, it turns on GitHub
+  auto-merge (merge commit) so the PR merges by itself once the required
+  checks (`Verify`, `End-to-end`) pass. Claude doesn't need to watch it.
+  If CI fails, the PR stays open and Claude fixes it.

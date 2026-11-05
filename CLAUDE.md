@@ -43,6 +43,8 @@ follows them.
   links, no "Generated with" footers. Commit as Khai Nguyen
   <tuongkhai.nguyen@gmail.com>.
 - Small commits, one per backlog item.
+- Open a PR per feature branch and turn on auto-merge; it merges when CI is
+  green (`docs/conventions/git.md`).
 - Ask before anything expensive or irreversible: deploys to production,
   paid services or enabling Firebase Blaze billing, deleting data, changing
   Firebase security rules in production.

@@ -69,3 +69,15 @@ From then on, every pull request gets its own preview link.
 - The Vercel project URL.
 - That `FIREBASE_SERVICE_ACCOUNT` and `ADMIN_PASSPHRASE` are set (never the
   values themselves).
+
+## Let PRs merge themselves when CI passes
+
+GitHub auto-merge needs two repo settings (Claude can't change them):
+
+1. **Settings → General → Pull Requests → Allow auto-merge** (tick it).
+2. **Settings → Rules → Rulesets → New branch ruleset** (or **Branches →
+   Add branch protection rule**), target `main`, turn on **Require status
+   checks to pass**, add `Verify` and `End-to-end`, and save. Leave
+   "require approvals" off so Claude's PRs can merge without a review.
+
+Then Claude turns on auto-merge for each PR it opens.
