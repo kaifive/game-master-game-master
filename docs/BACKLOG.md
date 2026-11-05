@@ -17,7 +17,7 @@ A feature item needs its spec at `Ready` before it starts.
 - [ ] Design direction: with Impeccable, mock 2–3 directions for the player hub, a game and the display; Khai picks one; record it in `DESIGN.md`
 - [ ] Theme tokens (player, display and controls layers) and the first UI primitives with tests; `/dev/ui` gallery
 - [ ] Spec 14, motion primitives: tokens, `useFlip`, `CountUp`, `BarRace`, `PointsBurst`, `Confetti`, reduced-motion fallbacks; in the gallery
-- [ ] `npm run check:ac` (acceptance-criteria-to-test check) and `npm run verify`
+- [x] `npm run check:ac` (acceptance-criteria-to-test check) and `npm run verify`
 - [ ] GitHub Actions CI running `verify` and e2e on every PR; PR template; git hooks
 - [ ] `.claude/commands/` for `/next`, `/spec`, `/verify`
 - [ ] Firebase project on Spark: Anonymous Auth, Firestore, Realtime Database; env vars in `.env.example`
