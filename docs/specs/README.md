@@ -5,7 +5,7 @@ Statuses are explained in `../conventions/docs.md`.
 
 | # | Spec | Milestone | Status |
 |---|------|-----------|--------|
-| 01 | [Events and routing](01-events-and-routing.md) | M1 | Draft |
+| 01 | [Events and routing](01-events-and-routing.md) | M1 | Done |
 | 02 | [Player join and identity](02-player-join.md) | M1 | Draft |
 | 03 | [Teams, phases and captains](03-teams-and-captains.md) | M1 | Draft |
 | 04 | [Points ledger](04-points-ledger.md) | M1 | Draft |

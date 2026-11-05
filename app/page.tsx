@@ -1,8 +1,16 @@
-// Placeholder until spec 01 (the event library) is built.
-export default function HomePage() {
+import { HomeCodeEntry } from "@/components/events/home";
+import { AdminRoot } from "@/components/theme";
+
+/** The bare site: players enter or scan a code (spec 01). */
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
   return (
-    <main>
-      <h1>Game Master</h1>
-    </main>
+    <AdminRoot>
+      <HomeCodeEntry error={error} />
+    </AdminRoot>
   );
 }

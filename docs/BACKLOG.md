@@ -26,13 +26,13 @@ A feature item needs its spec at `Ready` before it starts.
 
 ## M1: Core event loop (by Nov 26)
 
-- [ ] Spec 01, events and routing: event config type, registry, library page, reserved slugs
+- [x] Spec 01, events and routing: event files, manual status, code-box home, `/join`, event pages in their pack, final standings, not-found pages
 - [ ] Spec 06, admin auth: passphrase sign-in, admin claim, guarded routes
 - [ ] Spec 02, player join: devices, several players per device, join code, name filter, kick and ban
 - [ ] Spec 04, points ledger: awards, donations, voids, totals, rebuild
 - [ ] Spec 03, teams: phases, captains, team names, one-tap join
 - [ ] Spec 05, leaderboard and display
-- [ ] Spec 07, controls: players by device, "new since you looked", phases, manual awards
+- [ ] Spec 07, controls (includes the event library at `/admin`, Start and End): players by device, "new since you looked", phases, manual awards
 
 ## M2: Solo games and photos (by Dec 6)
 

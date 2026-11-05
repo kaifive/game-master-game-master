@@ -30,7 +30,7 @@ function Surface({ children, className }: SurfaceProps) {
     <div
       data-slot="surface"
       data-decoration={snow ? "snow" : undefined}
-      className={cx("min-h-full text-gm-text", snow ? "jt-snow" : "bg-gm-bg", className)}
+      className={cx("text-gm-text", snow ? "jt-snow" : "bg-gm-bg", className)}
     >
       {children}
     </div>

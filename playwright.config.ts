@@ -25,6 +25,8 @@ export default defineConfig({
     command: `npm run build && npm run start -- --port ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
+    // No Firebase in CI or locally: every event shows as upcoming.
+    env: { GM_ALLOW_NO_FIREBASE: "1" },
     timeout: 180_000,
   },
 });

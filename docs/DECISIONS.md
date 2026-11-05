@@ -411,3 +411,17 @@ handle), and the contract suites stop that freedom from breaking games.
   (ignored by git). Errors about them name the variable, never the value.
 - Real protection comes from security rules and server-side checks, not
   from hiding the web config.
+
+---
+
+## ADR-024: Events start and end by hand
+
+**Status:** accepted
+
+Khai doesn't want the clock deciding when games open or close.
+
+**Decision:** an event's status is `upcoming` until the admin presses
+Start, `live` until the admin presses End, then `ended`. It is stored in
+`events/{slug}.status`; with nothing stored, the event is `upcoming`. The
+event file's schedule is shown to players ("Saturday, Dec 19 · 4:30 PM
+EST") and never changes the status.

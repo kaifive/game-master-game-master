@@ -18,7 +18,6 @@ Move answered ones to the bottom with the answer.
 | Q18 | Automatic photo screening with AI later? Costs roughly $1 per few hundred photos. | ADR-010 | Not for the party |
 | Q20 | Can a player use the same unlock code twice, or share it with friends? | Spec 08 | Each player's unlock counts once; sharing a code is allowed (it's a party) |
 | Q21 | Should codes expire after the event ends? | Spec 08 | Yes, codes stop working once the event is `ended` |
-| Q22 | Party start time and time zone? | Spec 01 | 6 to 10 pm, America/Los_Angeles |
 | Q19 | Where should photo backups go? | Runbook | Google Drive folder `Game Master/<slug>` |
 
 ## Answered
@@ -48,4 +47,5 @@ Move answered ones to the bottom with the answer.
 | A22 | Ended events? (spec 01) | Show final standings; games closed. Photos and recap stay admin-only. |
 | A23 | Home page? (spec 01) | An "enter a code" page; the library moves to `/admin`. |
 | A24 | Before start? (spec 01) | Players can join early; games unlock at the start (or when opened early). |
+| A25 | Party time? (was Q22) | Saturday Dec 19, 4:30 pm Eastern. No automatic start or end: Khai starts and ends it by hand (ADR-024). |
 | A15 | Photo storage over time? | Back up and clear photos after each event; checklist reminder before each event (ADR-012). |
