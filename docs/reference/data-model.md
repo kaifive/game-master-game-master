@@ -11,8 +11,8 @@ never by hand. Status: **draft**; each spec finalizes its own part.
 type EventConfig = {
   slug: string;              // "holiday-2026"
   name: string;              // "Wushu Holiday Party 2026"
-  startsAt: string;          // ISO date-time
-  endsAt: string;
+  timeZone: string;          // IANA, e.g. "America/New_York"
+  schedule: { start: string; end?: string };  // ISO with offset; shown only, never acted on (ADR-024)
   style: StyleRef;           // { pack: "one-hour-photo", variant?: "holiday", colorMode: "dark" } (ADR-021)
   joinPolicy: "open" | "approval";        // default "open" (ADR-010)
   kind: "event" | "quick";                // quick = one game, code opens it (ADR-020)
@@ -52,7 +52,7 @@ in `events/{slug}.joinCode`.
 
 ```
 events/{slug}
-  status: "upcoming" | "live" | "ended"   runtime override of config dates
+  status: "upcoming" | "live" | "ended"   set only by the admin (Start, End); missing = upcoming
   phase: "individual" | "team"            when scoring is "both"
   joinCode: string                        on the QR poster and display
   adminLastSeenAt: timestamp              for "new since you last looked"

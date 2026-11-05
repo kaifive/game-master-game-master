@@ -1,12 +1,12 @@
 # 01: Events and routing
 
-**Status:** Draft (acceptance criteria proposed, waiting for Khai's yes)
+**Status:** Building
 **Backlog:** M1
 **Depends on:** 09 (style packs)
 
 ## Summary
 
-Each event is a config file in `content/events/` (ADR-003), served at `/[slug]` in its own style pack, with its games as children. An event is upcoming, live or ended, from its dates or an admin override. Players who land on the bare site get a code box that takes them to the right event. The admin event library moves to the admin area (spec 07), behind sign-in (spec 06).
+Each event is a config file in `content/events/` (ADR-003), served at `/[slug]` in its own style pack, with its games as children. An event is upcoming until the admin starts it, live until the admin ends it, then ended (ADR-024); its scheduled time is shown, never acted on. Players who land on the bare site get a code box that takes them to the right event. The admin event library moves to the admin area (spec 07), behind sign-in (spec 06).
 
 ## User stories
 
@@ -18,9 +18,9 @@ Each event is a config file in `content/events/` (ADR-003), served at `/[slug]` 
 
 ## Behavior
 
-- **Event file:** slug, name, `timeZone`, `startsAt`, `endsAt`, `style` (pack, variant, color mode), `kind` (`event` or `quick`), join code, join policy, scoring mode, games. Codes in the file stay on the server.
-- **Status:** `upcoming` before `startsAt`, `live` until `endsAt`, then `ended`. An admin override (`events/{slug}.status`, set from Controls in spec 07) wins.
-- **Upcoming:** the page shows when it opens (in the event's time zone) and the games, locked. Players may join early (join flow: spec 02).
+- **Event file:** slug, name, `timeZone`, `schedule` (start, optional end: shown only), `style` (pack, variant, color mode), `kind` (`event` or `quick`), join code, join policy, scoring mode, games. Codes in the file stay on the server.
+- **Status:** stored in `events/{slug}.status` and changed only by the admin (Start and End in Controls, spec 07). With nothing stored, an event is `upcoming`. The clock never changes it.
+- **Upcoming:** the page shows when it's scheduled (in the event's time zone) and the games, locked. Players may join early (join flow: spec 02).
 - **Live:** the player hub (filled in by specs 02, 03, 08).
 - **Ended:** "Thanks for playing" with final team and player standings from the leaderboard summary, or a short note when there are none. Games are closed.
 - **Quick event:** an event with one game; `/[slug]` is that game.
@@ -37,11 +37,11 @@ Each event is a config file in `content/events/` (ADR-003), served at `/[slug]` 
 
 ## Acceptance criteria
 
-- [ ] AC-1: Every file in `content/events/` passes validation: slug format, not reserved, matches its file name, `endsAt` after `startsAt`, a valid time zone, a valid style (spec 09), a join code in the code format, unique game ids. A broken file fails the tests with a message naming the file and field.
-- [ ] AC-2: An event's status is `upcoming` before it starts, `live` until it ends and `ended` after; an admin override wins over the dates.
+- [ ] AC-1: Every file in `content/events/` passes validation: slug format, not reserved, matches its file name, a scheduled start (and an end after it, if given), a valid time zone, a valid style (spec 09), a join code in the code format, unique game ids. A broken file fails the tests with a message naming the file and field.
+- [ ] AC-2: An event is `upcoming` until the admin starts it, `live` until the admin ends it, and `ended` after; with nothing stored it is `upcoming`, and the scheduled time never changes the status.
 - [ ] AC-3: An unknown event or game shows a friendly not-found page with a way home.
 - [ ] AC-4: Every event page renders in the event's style pack and color mode, with its banner showing the event name and date in the event's time zone.
-- [ ] AC-5: An upcoming event shows when it opens and lists its games as locked.
+- [ ] AC-5: An upcoming event shows when it's scheduled and lists its games as locked.
 - [ ] AC-6: An ended event shows "Thanks for playing" with final team and player standings from the leaderboard summary, and a short note when there are none; its games can't be opened.
 - [ ] AC-7: A quick event's page is its one game.
 - [ ] AC-8: The home page shows the code box and an Admin link; submitting a code goes to `/join?code=` with the code uppercased.
@@ -59,4 +59,4 @@ Joining and nicknames (02), the admin library and status override UI (06, 07), g
 
 ## Open questions
 
-- Q22: Party start time and time zone? Default 6 to 10 pm, America/Los_Angeles.
+- None open. Party: Saturday 2026-12-19, scheduled 4:30 pm America/New_York, started and ended by hand.
