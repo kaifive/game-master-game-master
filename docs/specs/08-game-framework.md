@@ -15,6 +15,8 @@ The contract every game type follows (ADR-007): pure logic, a content shape, and
 - `POST /api/[slug]/games/[gameId]/move` runs logic server-side and stores `plays/{gameId}_{uid}`
 - Score once per player per game; replays are practice
 - Open and close times; admin can open or close any game
+- Game codes (ADR-020): `open` codes jump straight to a game; `unlock` codes reveal hidden or locked games, per player or for the whole event; codes from `/join`, the hub's code box or `?code=`; rate-limited; codes never sent to clients
+- Admin: see each game's codes and their hiding-place labels, generate or rotate a code, show a code on the TV
 - Player hub game list with done, new and locked states
 
 ## Open questions

@@ -19,6 +19,8 @@ means `request.auth.uid == resource.data.deviceUid`.
 | `plays/{gameId}_{playerId}` | owner device, admin | server |
 | `photos/{photoId}` | admin; owner device; anyone signed in only if `approved` | server |
 | `votes/*` | admin | server |
+| `unlocks/*` | owner device (its players' unlocks), anyone signed in (`event` unlocks), admin | server |
+| `codes/*` (top level) | nobody | server |
 
 ## Realtime Database
 

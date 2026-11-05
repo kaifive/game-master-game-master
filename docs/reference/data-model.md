@@ -15,6 +15,7 @@ type EventConfig = {
   endsAt: string;
   theme: ThemeRef;           // { id: "classic", variant?: "holiday", colorMode?: "dark" }
   joinPolicy: "open" | "approval";        // default "open" (ADR-010)
+  kind: "event" | "quick";                // quick = one game, code opens it (ADR-020)
   maxPlayersPerDevice: number;            // default 4 (ADR-009)
   scoring: "individual" | "team" | "both"; // ADR-011
   maxTeams?: number;
@@ -32,6 +33,15 @@ type Game = {
   scoring: { points: number; awardTo: "player" | "team" };
   opensAt?: string;
   closesAt?: string;
+  visibility: "listed" | "hidden";         // hidden games appear only once unlocked
+  codes?: GameCode[];                      // server-only; never sent to clients
+};
+
+type GameCode = {
+  code?: string;                           // fixed code, or generated when left out
+  action: "open" | "unlock";
+  unlockScope?: "player" | "event";        // for unlock
+  label?: string;                          // where it's hidden, for the admin: "under the snack table"
 };
 ```
 
@@ -46,6 +56,17 @@ events/{slug}
   phase: "individual" | "team"            when scoring is "both"
   joinCode: string                        on the QR poster and display
   adminLastSeenAt: timestamp              for "new since you last looked"
+
+events/{slug}/unlocks/{gameId}_{playerId | "event"}
+  via: string                code that unlocked it
+  at: timestamp
+
+codes/{code}                 global index, server-only
+  slug: string
+  target: { kind: "event" } | { kind: "game"; gameId: string }
+  action: "join" | "open" | "unlock"
+  unlockScope?: "player" | "event"
+  active: boolean            false once the event ends
 
 events/{slug}/devices/{uid}
   banned: boolean

@@ -26,7 +26,11 @@ Controls and Display are separate pages so the TV never shows admin buttons.
 /[event]/live                   player view of the current live session (buzzer)
 /[event]/vote/[game]            vote on approved photos
 /[event]/display                big-screen display
+/join?code=ABCDE                enter or scan any code; finds its event and game
 ```
+
+Any page accepts `?code=` so a QR code can carry a code straight in. See
+"Codes" below.
 
 - `[event]` is the event's slug, such as `holiday-2026`. Short on purpose so
   it fits a QR code and can be typed.
@@ -120,6 +124,29 @@ depends on constant monitoring. ADR-010.
    groups players by device, so a phone with many players stands out.
 3. Points only come from the server (ADR-006).
 4. The admin can remove a player, merge two players, or void points.
+
+## Codes
+
+Events are meant to be configured per occasion, and codes are one of the
+main dials. ADR-020.
+
+- **Event code:** joins the event (ADR-010).
+- **Game code:** optional, per game. What it does is set per game:
+  - `open`: the game is listed for everyone; the code is a shortcut that
+    jumps straight to it (a QR code at a station, the TV during Jeopardy).
+  - `unlock`: the game is hidden or locked until a code is entered. Unlocks
+    can count for that player only (a scavenger hunt: each player must find
+    the code) or for the whole event (the host reveals it on the TV).
+- **Quick games:** an event with a single game. Its code opens the game
+  directly, so a pickup game needs no event setup beyond one small file.
+- A code can arrive three ways: typed on `/join`, typed in the hub's
+  "Enter a code" box, or in the URL as `?code=` from a QR code. A code in
+  the URL survives the join flow, so a new player lands in the right game
+  after picking a name.
+- Codes are 5 characters from an alphabet without look-alikes (no 0/O,
+  1/I/L), case-insensitive. Codes are checked by the server only; the list
+  of codes never reaches a phone, so a scavenger code can't be read from
+  the page. Attempts are rate-limited per device.
 
 ## Points, phases and teams
 
@@ -236,6 +263,7 @@ lib/
   games/<type>/              logic, content, renderer per game type
   themes/                    theme tokens, variants, icon sets
   players/                   join, devices, name filter
+  codes/                     code generation, lookup, unlocks
   points/                    ledger, donations, totals
   teams/                     captains, joining
   live/                      live session state machine
