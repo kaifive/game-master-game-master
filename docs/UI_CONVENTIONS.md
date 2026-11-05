@@ -105,7 +105,9 @@ about should be *seen* happening. Spec 14 has the full list of moments.
 - Reduced motion (`prefers-reduced-motion`): position changes become
   quick fades, counters jump to the final number, no confetti or shaking.
 - Celebrations are bigger on the display than on phones. Phones get a
-  short burst; the TV gets the full show.
+  short burst; the TV gets the full show, but only for big moments.
+  Individual achievements on the TV are small toasts in a toast chain
+  (spec 14), so a busy night doesn't drown the leaderboard.
 - Sound plays on the display only, never on player phones (Q9).
 
 **Shared primitives** (`lib/motion`, `components/motion`): one of each,
@@ -120,6 +122,7 @@ used everywhere.
 | `<Confetti>` / `celebrate()` | Themed confetti bursts (holiday variant: snowflakes) |
 | `<Reveal>` | Staggered entrance for lists, boards and results |
 | `<Shake>`, `<Pulse>` | Wrong-answer shake, buzz-in pulse |
+| `<ToastChain>` | Stacked, auto-expiring toasts for small moments on the display |
 
 ## Components (planned)
 
