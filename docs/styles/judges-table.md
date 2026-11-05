@@ -1,6 +1,6 @@
 # Judges' Table
 
-**Status:** chosen for the Wushu Holiday Party (variant: winter). Built in M0.
+**Status:** built (spec 09). Chosen for the Wushu Holiday Party (variant: winter). See it at `/dev/ui`.
 **Mockup:** https://claude.ai/artifact/13AtXvXkS99XL8SqDTJoQt
 **Impeccable direction contract:** `.impeccable/surfaces/app-event.md`
 

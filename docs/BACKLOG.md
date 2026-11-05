@@ -15,7 +15,8 @@ A feature item needs its spec at `Ready` before it starts.
 - [x] Firebase emulators wired for dev and tests; `npm run test:rules` with a first rules test
 - [x] Shared foundations: `AppError`, `defineRoute()`, `variants()`, `lib/firebase/paths.ts`, logger
 - [x] Design direction: Judges' Table, winter variant, for the holiday party (`docs/styles/judges-table.md`, ADR-022)
-- [ ] Spec 09, style packs: slot registry and contracts, defaults, admin theme, Judges' Table winter pack, `/dev/ui` gallery; `DESIGN.md` written from the build at the end
+- [x] Spec 09, style packs: slot registry and contracts, defaults, admin theme, Judges' Table winter pack, `/dev/ui` gallery
+- [ ] Impeccable finish review and `DESIGN.md` (via its documenter), once the first player and TV screens exist
 - [ ] Spec 14, motion primitives: tokens, `useFlip`, `CountUp`, `BarRace`, `PointsBurst`, `Confetti`, reduced-motion fallbacks; in the gallery
 - [x] `npm run check:ac` (acceptance-criteria-to-test check) and `npm run verify`
 - [x] GitHub Actions CI running `verify` and e2e on every PR; PR template; git hooks

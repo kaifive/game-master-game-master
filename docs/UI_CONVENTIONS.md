@@ -118,7 +118,8 @@ const { ScoreCard } = useSlots();      // Judges' Table: a paddle on a handle
 | `LeaderboardRow` | One rank row on the TV and hub |
 | `Buzzer` | The captain's buzzer |
 | `CodeEntry` | Entering a game or event code |
-| `Celebration` | The animation for a moment (spec 14) |
+
+`Celebration` (the animation for a moment) joins this list with spec 14.
 
 Rules:
 - Each slot has one **props contract** (a TypeScript type), one
