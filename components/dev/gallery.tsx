@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useSlots } from "@/components/slots/registry";
+import type { Moment } from "@/lib/motion";
 
 const noop = () => undefined;
 
@@ -16,6 +18,7 @@ function Item({ name, children }: { name: string; children: React.ReactNode }) {
 /** One gallery section: every slot, in the surrounding pack or admin theme. */
 export function GallerySlots({ title }: { title: string }) {
   const s = useSlots();
+  const [playing, setPlaying] = useState<Moment | null>(null);
   return (
     <section aria-label={title}>
       <s.Surface className="grid gap-6 p-4">
@@ -86,6 +89,31 @@ export function GallerySlots({ title }: { title: string }) {
           <div className="w-full max-w-xs">
             <s.CodeEntry onSubmit={noop} error="That code isn't valid." />
           </div>
+        </Item>
+        <Item name="Celebration">
+          <s.Button
+            tone="secondary"
+            onClick={() => {
+              setPlaying({
+                id: String(Date.now()),
+                kind: "judged-right",
+                text: "Team Crane is right",
+                value: 400,
+              });
+            }}
+          >
+            Play a celebration
+          </s.Button>
+          {playing && (
+            <s.Celebration
+              key={playing.id}
+              moment={playing}
+              surface="display"
+              onDone={() => {
+                setPlaying(null);
+              }}
+            />
+          )}
         </Item>
       </s.Surface>
     </section>

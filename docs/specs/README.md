@@ -18,4 +18,4 @@ Statuses are explained in `../conventions/docs.md`.
 | 11 | [Live session engine](11-live-sessions.md) | M3 | Draft |
 | 12 | [Buzzer and Jeopardy](12-buzzer-jeopardy.md) | M3 | Draft |
 | 13 | [Photos, triage, votes and recap](13-photos-and-recap.md) | M2 | Draft |
-| 14 | [Motion and celebrations](14-motion-and-celebrations.md) | M0–M1 | Draft |
+| 14 | [Motion and celebrations](14-motion-and-celebrations.md) | M0 | Done |

@@ -4,6 +4,12 @@ const fonts = {
   radius: "5px",
   "font-display": "Oswald, 'Arial Narrow', sans-serif",
   "font-body": "'Atkinson Hyperlegible', system-ui, sans-serif",
+  "motion-fast": "150ms",
+  "motion-base": "300ms",
+  "motion-slow": "600ms",
+  "motion-stage": "1400ms",
+  "ease-out": "cubic-bezier(0.16, 1, 0.3, 1)",
+  "ease-emphasized": "cubic-bezier(0.22, 1, 0.36, 1)",
 };
 
 /** docs/styles/judges-table.md */

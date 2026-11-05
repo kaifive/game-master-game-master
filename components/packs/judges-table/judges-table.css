@@ -43,3 +43,30 @@
     opacity: 1;
   }
 }
+
+@keyframes jt-drift {
+  from {
+    background-position:
+      0 -46px,
+      13px -27px;
+  }
+  to {
+    background-position:
+      0 0,
+      13px 19px;
+  }
+}
+
+/* Falling snow only, no ground: used over the page during big moments. */
+.jt-snowfall {
+  background-image:
+    radial-gradient(#ffffff 1.6px, transparent 2px),
+    radial-gradient(#ffffff 1.1px, transparent 1.5px);
+  background-size:
+    46px 46px,
+    27px 27px;
+  background-position:
+    0 0,
+    13px 19px;
+  opacity: 0.85;
+}

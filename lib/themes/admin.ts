@@ -4,6 +4,12 @@ const fonts = {
   radius: "6px",
   "font-display": "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
   "font-body": "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+  "motion-fast": "150ms",
+  "motion-base": "300ms",
+  "motion-slow": "600ms",
+  "motion-stage": "1200ms",
+  "ease-out": "cubic-bezier(0.16, 1, 0.3, 1)",
+  "ease-emphasized": "cubic-bezier(0.22, 1, 0.36, 1)",
 };
 
 const teams = {

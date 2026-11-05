@@ -6,6 +6,7 @@ import {
   checkContrast,
   contrastRatio,
   missingTokens,
+  readableInk,
   resolveTheme,
   toCssVars,
   validateStyleRef,
@@ -122,6 +123,22 @@ describe("S09-AC6: text contrast in every pack, variant and mode", () => {
 
   test.each(["light", "dark"] as const)("the admin theme passes (%s)", (mode) => {
     expect(checkContrast(ADMIN_THEME[mode], CONTRAST_PAIRS)).toEqual([]);
+  });
+});
+
+describe("readableInk", () => {
+  test("picks dark text on light colors and white on dark ones", () => {
+    expect(readableInk("#e5b553")).toBe("#111111");
+    expect(readableInk("#1b54c9")).toBe("#ffffff");
+  });
+  test("every team color in every pack gets ink that meets 4.5:1", () => {
+    for (const { pack, variant, mode } of combos) {
+      const t = resolveTheme(pack, variant, mode).tokens;
+      for (let n = 1; n <= 8; n++) {
+        const bg = t[`team-${n}`]!;
+        expect(contrastRatio(readableInk(bg), bg)).toBeGreaterThanOrEqual(4.5);
+      }
+    }
   });
 });
 

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { Moment } from "@/lib/motion";
 
 /**
  * Generic component slots (ADR-022). Games and pages ask for a slot by name;
@@ -46,6 +47,12 @@ export type CodeEntryProps = {
   error?: string;
   defaultValue?: string;
 };
+/** Plays one stage moment, then calls onDone exactly once (spec 14). */
+export type CelebrationProps = {
+  moment: Moment;
+  surface: "player" | "display";
+  onDone: () => void;
+};
 
 export type SlotComponents = {
   Surface: (p: SurfaceProps) => ReactNode;
@@ -60,6 +67,7 @@ export type SlotComponents = {
   LeaderboardRow: (p: LeaderboardRowProps) => ReactNode;
   Buzzer: (p: BuzzerProps) => ReactNode;
   CodeEntry: (p: CodeEntryProps) => ReactNode;
+  Celebration: (p: CelebrationProps) => ReactNode;
 };
 
 export type SlotName = keyof SlotComponents;
@@ -77,6 +85,7 @@ export const SLOT_NAMES = [
   "LeaderboardRow",
   "Buzzer",
   "CodeEntry",
+  "Celebration",
 ] as const satisfies readonly SlotName[];
 
 /** Codes are 5 characters, uppercase, from an alphabet with no look-alikes (ADR-020). */

@@ -42,7 +42,17 @@ export const CORE_COLOR_TOKENS = [
   "team-8",
 ] as const;
 
-export const CORE_OTHER_TOKENS = ["radius", "font-display", "font-body"] as const;
+/** Motion timing every pack defines (spec 14). */
+export const MOTION_TOKENS = [
+  "motion-fast",
+  "motion-base",
+  "motion-slow",
+  "motion-stage",
+  "ease-out",
+  "ease-emphasized",
+] as const;
+
+export const CORE_OTHER_TOKENS = ["radius", "font-display", "font-body", ...MOTION_TOKENS] as const;
 export const CORE_TOKENS = [...CORE_COLOR_TOKENS, ...CORE_OTHER_TOKENS] as const;
 export type CoreToken = (typeof CORE_TOKENS)[number];
 

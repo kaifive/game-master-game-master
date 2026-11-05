@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { SlotsProvider } from "@/components/slots/registry";
 import {
   ADMIN_THEME,
@@ -12,11 +12,9 @@ import {
   type StyleRef,
   type Theme,
 } from "@/lib/themes";
+import { ThemeContext } from "./context";
 
-const ThemeContext = createContext<Theme | null>(null);
-
-/** The resolved theme of the nearest root, for pack components that need decorations or mode. */
-export const useTheme = () => useContext(ThemeContext);
+export { useTheme } from "./context";
 
 export type StyleRootProps = {
   styleRef: StyleRef;
@@ -65,8 +63,19 @@ export function AdminRoot({
   colorMode?: ColorMode;
   children: ReactNode;
 }) {
+  const theme = useMemo<Theme>(
+    () => ({
+      pack: "admin",
+      variant: undefined,
+      mode: colorMode,
+      tokens: ADMIN_THEME[colorMode],
+      icons: {},
+      decorations: [],
+    }),
+    [colorMode],
+  );
   return (
-    <ThemeContext.Provider value={null}>
+    <ThemeContext.Provider value={theme}>
       <div
         data-theme-root="admin"
         data-color-mode={colorMode}

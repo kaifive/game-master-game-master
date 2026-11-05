@@ -80,6 +80,10 @@ export function contrastRatio(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
+/** Black or white, whichever reads better on a #rrggbb background. */
+export const readableInk = (bg: string): string =>
+  contrastRatio("#111111", bg) >= contrastRatio("#ffffff", bg) ? "#111111" : "#ffffff";
+
 export type ContrastFailure = ContrastPair & { ratio: number };
 
 export function checkContrast(tokens: TokenSet, pairs: ContrastPair[]): ContrastFailure[] {
