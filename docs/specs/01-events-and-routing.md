@@ -1,6 +1,6 @@
 # 01: Events and routing
 
-**Status:** Building
+**Status:** Done
 **Backlog:** M1
 **Depends on:** 09 (style packs)
 
@@ -37,17 +37,25 @@ Each event is a config file in `content/events/` (ADR-003), served at `/[slug]` 
 
 ## Acceptance criteria
 
-- [ ] AC-1: Every file in `content/events/` passes validation: slug format, not reserved, matches its file name, a scheduled start (and an end after it, if given), a valid time zone, a valid style (spec 09), a join code in the code format, unique game ids. A broken file fails the tests with a message naming the file and field.
-- [ ] AC-2: An event is `upcoming` until the admin starts it, `live` until the admin ends it, and `ended` after; with nothing stored it is `upcoming`, and the scheduled time never changes the status.
-- [ ] AC-3: An unknown event or game shows a friendly not-found page with a way home.
-- [ ] AC-4: Every event page renders in the event's style pack and color mode, with its banner showing the event name and date in the event's time zone.
-- [ ] AC-5: An upcoming event shows when it's scheduled and lists its games as locked.
-- [ ] AC-6: An ended event shows "Thanks for playing" with final team and player standings from the leaderboard summary, and a short note when there are none; its games can't be opened.
-- [ ] AC-7: A quick event's page is its one game.
-- [ ] AC-8: The home page shows the code box and an Admin link; submitting a code goes to `/join?code=` with the code uppercased.
-- [ ] AC-9: `/join` sends an event's join code to that event (keeping the code), and an unknown code back home with "We couldn't find that code".
-- [ ] AC-10: Join codes never appear in any page's HTML or client bundle.
-- [ ] AC-11: The Wushu Holiday Party event file exists (Judges' Table, winter variant, dark mode) and its page renders at phone, tablet and TV sizes without sideways scroll.
+- [x] AC-1: Every file in `content/events/` passes validation: slug format, not reserved, matches its file name, a scheduled start (and an end after it, if given), a valid time zone, a valid style (spec 09), a join code in the code format, unique game ids. A broken file fails the tests with a message naming the file and field.
+- [x] AC-2: An event is `upcoming` until the admin starts it, `live` until the admin ends it, and `ended` after; with nothing stored it is `upcoming`, and the scheduled time never changes the status.
+- [x] AC-3: An unknown event or game shows a friendly not-found page with a way home.
+- [x] AC-4: Every event page renders in the event's style pack and color mode, with its banner showing the event name and date in the event's time zone.
+- [x] AC-5: An upcoming event shows when it's scheduled and lists its games as locked.
+- [x] AC-6: An ended event shows "Thanks for playing" with final team and player standings from the leaderboard summary, and a short note when there are none; its games can't be opened.
+- [x] AC-7: A quick event's page is its one game.
+- [x] AC-8: The home page shows the code box and an Admin link; submitting a code goes to `/join?code=` with the code uppercased.
+- [x] AC-9: `/join` sends an event's join code to that event (keeping the code), and an unknown code back home with "We couldn't find that code".
+- [x] AC-10: Join codes never appear in any page's HTML or client bundle.
+- [x] AC-11: The Wushu Holiday Party event file exists (Judges' Table, winter variant, dark mode) and its page renders at phone, tablet and TV sizes without sideways scroll.
+
+## How it's built
+
+- Event files: `content/events/<slug>.ts`, listed in `content/events/index.ts`. Schema and rules: `lib/events` (`EventConfig`, `validateEvent`, `eventStatus`, `formatSchedule`, `resolveJoin`, `toPublicEvent`).
+- Server-only entry `lib/events/server.ts`: `getEvent`, `allEvents`, `eventRuntime()` (status and final standings from Firebase, or an empty in-memory store without Firebase outside production or with `GM_ALLOW_NO_FIREBASE=1`).
+- Pages get a `PublicEvent` (an allowlist without codes or game content).
+- Routes: `app/page.tsx` (code box), `app/join/page.tsx`, `app/[event]/layout.tsx` (the event's pack), `app/[event]/page.tsx`, `app/[event]/play/[game]/page.tsx`, not-found pages.
+- Views: `components/events`.
 
 ## Tests
 

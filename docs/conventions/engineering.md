@@ -42,7 +42,8 @@ components/           →  lib/<feature>/model, client
 rules.ts, model.ts    →  nothing with I/O
 ```
 
-- A feature may import another feature only through its `index.ts`.
+- A feature may import another feature only through its `index.ts`, or its
+  `server.ts` for server-only pieces (lookups that touch secrets or Firebase).
 - Only `lib/firebase/` and each feature's `repo.firebase.ts` import Firebase
   SDKs (plus contract and rules tests).
 - `components/ui/` imports nothing from `lib/` except `lib/themes` and

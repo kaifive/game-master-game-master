@@ -7,7 +7,7 @@ import tseslint from "typescript-eslint";
 const FIREBASE = ["firebase", "firebase/*", "firebase-admin", "firebase-admin/*"];
 // lib/firebase keeps client, admin and paths as separate entry points so admin
 // code never lands in a phone bundle.
-const DEEP = ["@/lib/*/*", "!@/lib/firebase/*"];
+const DEEP = ["@/lib/*/*", "!@/lib/firebase/*", "!@/lib/*/server"];
 const msg = {
   firebase:
     "Only lib/firebase/ and repo.firebase.ts files may import Firebase SDKs. Use a repository.",
@@ -90,6 +90,11 @@ const config = [
         [DEEP, msg.deep],
       ),
     },
+  },
+  {
+    // Repository contract and rules tests reach into feature internals on purpose.
+    files: ["firebase/tests/**"],
+    rules: { "no-restricted-imports": "off" },
   },
   {
     files: ["components/ui/**"],

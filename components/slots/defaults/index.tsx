@@ -30,7 +30,7 @@ const fmt = (n: number) => n.toLocaleString("en-US");
 
 export function Surface({ children, className }: SurfaceProps) {
   return (
-    <div data-slot="surface" className={cx("min-h-full bg-gm-bg text-gm-text", className)}>
+    <div data-slot="surface" className={cx("bg-gm-bg text-gm-text", className)}>
       {children}
     </div>
   );
