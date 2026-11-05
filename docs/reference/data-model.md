@@ -13,7 +13,7 @@ type EventConfig = {
   name: string;              // "Wushu Holiday Party 2026"
   startsAt: string;          // ISO date-time
   endsAt: string;
-  theme: ThemeRef;           // { id: "classic", variant?: "holiday", colorMode?: "dark" }
+  style: StyleRef;           // { pack: "one-hour-photo", variant?: "holiday", colorMode: "dark" } (ADR-021)
   joinPolicy: "open" | "approval";        // default "open" (ADR-010)
   kind: "event" | "quick";                // quick = one game, code opens it (ADR-020)
   maxPlayersPerDevice: number;            // default 4 (ADR-009)
@@ -29,7 +29,7 @@ type Game = {
   mode: "solo" | "live";
   phase?: "individual" | "team";  // only playable in this phase, if set
   content: unknown;          // validated by the game type's content.ts
-  theme?: Partial<ThemeRef>; // per-game override
+  style?: { variant?: string };  // per-game variant override; the pack is the event's
   scoring: { points: number; awardTo: "player" | "team" };
   opensAt?: string;
   closesAt?: string;
@@ -152,6 +152,11 @@ leaderboard/{slug}           written only by the server after each ledger entry
   updatedAt
   players/{playerId}: { nickname, teamId, points }
   teams/{teamId}: { name, color, points }     full team score
+
+live/{slug}/settings         admin-set, live display settings
+  colorMode: "light" | "dark"   overrides the event file's default, on phones and TV
+  displayMode: "leaderboard" | "live" | "slideshow" | "message"
+  message?: string
 
 live/{slug}/session          current live session, or null
   id, gameId, type           "jeopardy"

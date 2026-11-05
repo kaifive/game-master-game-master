@@ -223,9 +223,10 @@ lib/games/<type>/
 - **Logic** is pure, so it runs on the server for scoring and can be unit
   tested without a browser.
 - **Renderer** and **Display** can be upgraded or swapped without touching logic.
-- **Theme** supplies colors, color mode, icon set and decorations through
-  CSS variables and an icon map, to phones and the TV alike. A holiday
-  variant is a theme, not a code change. See spec 09.
+- **Style pack** supplies tokens, fonts, slot skins, icons and motion
+  presets, to phones and the TV alike. Each event picks its own pack; a
+  holiday variant sits on top of it. The admin layer has one fixed,
+  standard look. See spec 09 and ADR-021.
 
 A **game** (an instance) in an event config is: a game type + its content +
 an optional theme variant + scoring settings.
@@ -261,7 +262,8 @@ content/events/              one config file per event
 lib/
   events/                    event config types and registry
   games/<type>/              logic, content, renderer per game type
-  themes/                    theme tokens, variants, icon sets
+  themes/                    style packs: tokens, skins, icons, motion presets, variants;
+                             plus the fixed admin theme
   players/                   join, devices, name filter
   codes/                     code generation, lookup, unlocks
   points/                    ledger, donations, totals

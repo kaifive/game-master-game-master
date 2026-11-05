@@ -64,8 +64,9 @@ event the host has run.
 - Phones at 375 px wide; display at 1920 × 1080 readable from 5 m; controls
   usable on a phone.
 - Terminology is fixed in `docs/GLOSSARY.md`.
-- Undecided: the visual direction (to be chosen by Khai from options;
-  recorded in DESIGN.md once chosen).
+- Each event picks its own style pack for phones and TV; admin screens
+  share one standard look (ADR-021).
+- Undecided: the first style pack, for the holiday party.
 
 ## Brand Commitments
 

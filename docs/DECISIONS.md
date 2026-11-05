@@ -342,3 +342,29 @@ single-game sessions.
   rate-limited per device.
 - Format: 5 characters, unambiguous alphabet, case-insensitive, unique
   across live events.
+
+---
+
+## ADR-021: Each event picks a style pack; the admin layer is standard
+
+**Status:** accepted. Refines ADR-007 and ADR-017: there is no single
+platform look for players.
+
+Khai wants each event to have its own design style, chosen for that event,
+with standard SaaS-style admin screens and the TV matching the phones.
+
+**Decision:**
+- The player client and TV display use the event's **style pack**: tokens,
+  fonts, skins for a fixed list of slots, icons, motion presets and
+  decorations, in light and dark, with variants such as `holiday` on top.
+- The admin layer (library, sign-in, controls, triage, recap) uses one
+  fixed, standard, calm look for every event.
+- Components and game renderers are written once against the slots and
+  semantic tokens. A pack changes appearance only, never DOM or behavior,
+  so adding a pack never touches game code.
+- Each pack's CSS and fonts load only for events that use it.
+- Color mode defaults from the event file and can be switched live from
+  Controls (`live/{slug}/settings`), for phones and TV together.
+- v1 builds the admin look and one pack, chosen for the holiday party.
+  The design options already shown (Sticker Book, Tile Rack, One-Hour
+  Photo, Memphis Party) are candidates for later packs.
