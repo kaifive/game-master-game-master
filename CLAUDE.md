@@ -69,6 +69,12 @@ npm run test:e2e   end-to-end (Playwright)
 npm run verify     every gate CI runs; must pass before commit
 ```
 
+## Design
+
+Fun and playful, never generic. Use the Impeccable skill
+(`/impeccable ...`) for all UI work; it reads `PRODUCT.md` and `DESIGN.md`
+at the repo root. See `docs/UI_CONVENTIONS.md` and ADR-017.
+
 ## Conventions
 
 - Engineering standards: `docs/conventions/engineering.md`

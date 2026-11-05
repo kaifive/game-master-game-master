@@ -262,3 +262,27 @@ convention.
   auth, body validation, rate limiting and error mapping. Route files
   only call a service.
 - Import boundaries are enforced by ESLint, not by memory.
+
+---
+
+## ADR-017: Design with Impeccable; PRODUCT.md and DESIGN.md at the root
+
+**Status:** accepted
+
+Khai wants a fun look that doesn't read as generic AI output.
+
+**Decision:**
+- Vendor the open-source **Impeccable** skill (Apache 2.0, by Paul Bakaus)
+  into `.claude/skills/impeccable`, with its agents in `.claude/agents`.
+  Upstream commit in `.claude/skills/impeccable/UPSTREAM`. Every session
+  gets its commands: `shape`, `critique`, `audit`, `polish`, `delight`, ...
+- `PRODUCT.md` (product truth) and `DESIGN.md` (the chosen visual system)
+  live at the repo root, where Impeccable reads them.
+- Its checker is a downloaded binary. It is **not** run automatically
+  (no hooks) until Khai approves running it. Without it, the skill reads
+  `PRODUCT.md` and `DESIGN.md` directly.
+- **Taste Skill** was considered and not adopted: it targets marketing
+  websites built around real photography and is about 40 MB with assets.
+
+Updating Impeccable: copy `plugin/skills/impeccable` from upstream over the
+folder, update `UPSTREAM`, review the diff.

@@ -3,6 +3,30 @@
 One look across the player client, controls and display, while letting each
 event and game reskin itself through themes (spec 09).
 
+## Design direction
+
+**Fun, with a point of view. Never generic.** Game Master should feel like
+a game show and a party, not a SaaS dashboard. The visual direction is
+chosen by Khai from options (backlog M0) and recorded in `DESIGN.md` at the
+repo root. Until then, no surface gets final styling.
+
+Design work uses the **Impeccable** skill (`.claude/skills/impeccable`,
+ADR-017). It reads `PRODUCT.md` and `DESIGN.md`. Impeccable's mode for
+each surface:
+
+| Surface | Mode | What that means |
+|---------|------|-----------------|
+| Display | Experience | A stage. Big, bold, animated, made to be watched. |
+| Solo games, buzzer, photo vote | Experience | The game is the screen. Play and feedback lead. |
+| Player hub, join | Operate, with personality | Fast and obvious, but still part of the party. |
+| Controls | Operate | Dense, calm, precise. Fun lives in small details only. |
+
+Banned "AI slop" tells (Impeccable's detector checks for most of these):
+one default sans for everything, purple-to-blue gradients, cards nested in
+cards, gray text on colored backgrounds, a rounded icon tile above every
+heading, eyebrow labels above headings, emoji used as icons, glassmorphism
+by default, centered everything, identical card grids.
+
 ## Principles
 
 1. **Phone first for players.** One hand, one thumb, standing in a noisy
@@ -42,7 +66,14 @@ Names are stable; values change per theme and color mode.
 ```
 
 Controls use a fixed neutral theme so the admin view never changes with the
-event's theme. Player and display surfaces use the event's theme.
+event's theme. **Player and display surfaces both use the event's theme**,
+through the same tokens, so a holiday variant reskins the TV as fully as
+the phones.
+
+The display adds a size layer on top of the theme: `--gm-display-scale`,
+display type sizes (`--gm-display-text-*`) and stage tokens
+(`--gm-stage-bg`, `--gm-stage-spotlight`, `--gm-stage-confetti-*`) that
+each theme and variant can set. Display components never use player sizes.
 
 ## Icons
 

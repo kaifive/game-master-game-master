@@ -1,0 +1,6 @@
+.claude/skills/impeccable/scripts/bin/
+.impeccable/
+node_modules/
+.next/
+.env*
+!.env.example

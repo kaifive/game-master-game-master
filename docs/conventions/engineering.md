@@ -91,6 +91,8 @@ An item is done when all of these are true:
       tests with coverage, rules tests, AC check, build.
 - [ ] E2E test added or updated for any user-visible flow.
 - [ ] Works at 375 px wide (player), 1024 px (controls), 1920 px (display).
+- [ ] UI changes pass `/impeccable critique` and `/impeccable audit` with no
+      P0 or P1 findings, and match `DESIGN.md`.
 - [ ] Docs updated: spec, data model, glossary, ADR if a decision changed.
 - [ ] Backlog item checked off in the same commit.
 

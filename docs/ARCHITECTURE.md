@@ -189,15 +189,16 @@ Every game type is split into parts that never mix:
 lib/games/<type>/
   logic.ts       pure functions: create, applyMove, isOver, score. No React, no I/O.
   content.ts     the shape of its content (word list, board) and validation
-  Renderer.tsx   React view. Reads theme tokens only; never hard-codes colors or icons.
+  Renderer.tsx   player view. Reads theme tokens only; never hard-codes colors or icons.
+  Display.tsx    optional TV view (Jeopardy board, live results). Same tokens, display scale.
 ```
 
 - **Logic** is pure, so it runs on the server for scoring and can be unit
   tested without a browser.
-- **Renderer** can be upgraded or swapped without touching logic.
+- **Renderer** and **Display** can be upgraded or swapped without touching logic.
 - **Theme** supplies colors, color mode, icon set and decorations through
-  CSS variables and an icon map. A holiday variant is a theme, not a code
-  change. See spec 09.
+  CSS variables and an icon map, to phones and the TV alike. A holiday
+  variant is a theme, not a code change. See spec 09.
 
 A **game** (an instance) in an event config is: a game type + its content +
 an optional theme variant + scoring settings.

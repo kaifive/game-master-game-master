@@ -14,7 +14,8 @@ A feature item needs its spec at `Ready` before it starts.
 - [ ] Test harness: Vitest + Testing Library + coverage thresholds, Playwright, shared test builders
 - [ ] Firebase emulators wired for dev and tests; `npm run test:rules` with a first rules test
 - [ ] Shared foundations: `AppError`, `defineRoute()`, `variants()`, `lib/firebase/paths.ts`, logger
-- [ ] Theme tokens and the first UI primitives with tests; `/dev/ui` gallery
+- [ ] Design direction: with Impeccable, mock 2–3 directions for the player hub, a game and the display; Khai picks one; record it in `DESIGN.md`
+- [ ] Theme tokens (player, display and controls layers) and the first UI primitives with tests; `/dev/ui` gallery
 - [ ] `npm run check:ac` (acceptance-criteria-to-test check) and `npm run verify`
 - [ ] GitHub Actions CI running `verify` and e2e on every PR; PR template; git hooks
 - [ ] `.claude/commands/` for `/next`, `/spec`, `/verify`
