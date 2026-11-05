@@ -15,6 +15,13 @@ route handlers using `firebase-admin`, which bypass rules.
 | `teams/*` | anyone signed in | admin, server |
 | `ledger/*` | admin | server only (admin awards go through a route) |
 | `plays/{gameId}_{uid}` | that player, admin | server |
+| `photos/{photoId}` | admin; owner; anyone signed in if `approved` | server |
+
+## Vercel Blob
+
+Only the server can issue upload tokens (`/api/[event]/photos/upload`),
+one per photo, limited to `image/jpeg`, 2 MB and the exact
+`events/{slug}/photos/{photoId}.jpg` path. Deleting blobs is server-only.
 
 ## Realtime Database
 

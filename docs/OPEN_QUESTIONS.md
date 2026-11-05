@@ -16,6 +16,9 @@ Move answered ones to the bottom with the answer.
 | Q7 | Is Jeopardy the only live session type for the party? | Spec 11, 12 | Yes |
 | Q8 | Should players see the full leaderboard on their phones, or only their own rank and team? | Spec 05 | Top 10 plus own rank, refreshed every 15 s (not live) to save bandwidth |
 | Q9 | Sound on the display (buzz sound, correct or wrong stings)? | Spec 05, 12 | Yes on display, off on phones |
+| Q10 | Should every photo need your approval before anyone else sees it? Matters if kids are at the party. | Spec 13 | Yes, all photos start hidden until approved |
+| Q11 | Who can see the recap after the event: anyone with the link, or only you? | Spec 13 | Anyone with the event link sees approved photos |
+| Q12 | Should players be able to delete their own photos? | Spec 13 | Yes, until the event ends |
 
 ## Answered
 

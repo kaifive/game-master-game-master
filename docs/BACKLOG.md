@@ -11,6 +11,7 @@ Target: everything through M4 done a week before the holiday party (see Q1).
 - [ ] Review the architecture with Khai; mark it accepted
 - [ ] Scaffold Next.js + TypeScript strict + Tailwind v4; `npm run check`, `npm test`, `npm run build`
 - [ ] Firebase project on Spark: Anonymous Auth, Firestore, Realtime Database; env vars documented
+- [ ] Vercel Blob store on Hobby; token env var documented
 - [ ] Security rules for both databases, with tests against the emulator
 - [ ] First Vercel deploy (preview only; ask before production)
 
@@ -29,6 +30,7 @@ Target: everything through M4 done a week before the holiday party (see Q1).
 - [ ] Spec 08, game framework: game type contract, move route, results, score once
 - [ ] Spec 09, theming: tokens, color modes, variants, icon sets; holiday variant
 - [ ] Spec 10, word guess: the first solo game
+- [ ] Spec 13, photos: upload, moderation, photo challenge game, display slideshow, recap
 - [ ] Second solo game (pick with Khai, see Q6)
 
 ## M3: Live sessions
@@ -48,5 +50,6 @@ Target: everything through M4 done a week before the holiday party (see Q1).
 
 - In-app editor for events and game content
 - Results archive page per past event
+- Export an event's photos as a zip; prune old events from Blob
 - More live session types (Jackbox-style prompts, polls)
 - Custom domain

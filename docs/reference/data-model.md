@@ -75,6 +75,26 @@ events/{slug}/plays/{gameId}_{uid}
   startedAt, finishedAt
 ```
 
+events/{slug}/photos/{photoId}
+  uid: string                who took it
+  gameId: string | null      the game that asked for it, if any
+  prompt?: string            the challenge it answers
+  blobUrl: string            Vercel Blob URL
+  blobPath: string           events/{slug}/photos/{photoId}.jpg
+  width, height: number
+  bytes: number
+  status: "pending" | "approved" | "hidden"
+  createdAt, reviewedAt
+
+## Vercel Blob: files
+
+```
+events/{slug}/photos/{photoId}.jpg     shrunk JPEG, about 300 KB
+```
+
+Blob URLs are long and unguessable but public to anyone who has one. Only
+show URLs of approved photos to players and the display.
+
 ## Realtime Database: live state
 
 ```

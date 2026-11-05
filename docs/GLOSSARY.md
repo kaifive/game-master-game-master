@@ -27,6 +27,10 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Void** | Cancelling an award by adding a reversing entry. Nothing is deleted. | `voidAward()` |
 | **Total** | A player's or team's points, derived from the ledger. | `total` |
 | **Leaderboard** | Ranked totals, kept as a summary for live screens. | `LeaderboardSummary` |
+| **Photo** | A picture a player uploaded in an event. File in Vercel Blob, record in Firestore. | `Photo` |
+| **Photo challenge** | A solo game type that asks for a photo of something; points on approval. | `type: "photo-challenge"` |
+| **Moderation** | The admin approving or hiding photos. Only approved photos are shown. | `photo.status` |
+| **Recap** | The slideshow and gallery of an event's approved photos and final standings. | `/[event]/recap` |
 | **Presence** | Whether a player is connected right now. | `presence` |
 | **Controls** | The admin's page for running an event. | `/admin/[event]` |
 | **Display** | The read-only big-screen page for the room. | `/[event]/display` |

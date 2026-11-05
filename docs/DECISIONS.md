@@ -99,3 +99,32 @@ are fixed by voiding, never by deleting.
 theme tokens and icon names only. A seasonal version of a game is a theme
 variant, not new code. Scored solo games run their logic on the server, so
 answers never reach the client.
+
+---
+
+## ADR-008: Photos go to Vercel Blob, records to Firestore
+
+**Status:** accepted
+
+Some games ask players to take pictures, and photos are kept for an event
+recap and the library.
+
+Cloud Storage for Firebase now requires the Blaze plan, which breaks
+ADR-002. Vercel Blob is free on Hobby (1 GB stored, 10 GB transfer and
+2,000 uploads a month at the time of writing) and lives on the platform we
+already deploy to.
+
+**Decision:**
+- Photo files go to Vercel Blob under `events/{slug}/photos/{photoId}.jpg`.
+- Each photo has a Firestore record (`events/{slug}/photos/{photoId}`) with
+  its owner, game, status and blob URL. The record is the source of truth;
+  a blob without a record is garbage.
+- Phones shrink and re-encode photos before upload (longest side 1600 px,
+  JPEG about 300 KB). Re-encoding also strips location data.
+- Phones upload directly to Blob with a short-lived token from a route
+  handler that checks the player, game, file type and size. Files never
+  pass through our function.
+- Photos are `pending` until the admin approves them. Only approved photos
+  show on the display, in recaps or to other players.
+- Over the free limit, Vercel blocks Blob for 30 days rather than charging.
+  The budget doc tracks this; old events can be exported and pruned.

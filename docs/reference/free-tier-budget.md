@@ -15,6 +15,23 @@ re-check Firebase and Vercel pricing pages before each event.
 | Firestore | 1 GiB stored | Fine |
 | Anonymous Auth | Free | Fine |
 | Vercel Hobby | Non-commercial use; generous function limits | Fine for a private party |
+| Vercel Blob (Hobby) | 1 GB stored, 10 GB transfer, 2,000 uploads per month | **Over the limit, Blob is blocked for 30 days, not billed** |
+
+## Photos
+
+At about 300 KB per photo:
+
+| | Photos | Stored | Uploads used |
+|---|--------|--------|--------------|
+| Holiday party: 50 players × 5 photos | 250 | ~75 MB | 250 of 2,000 |
+| Library after ~12 events this size | 3,000 | ~900 MB | near the 1 GB cap |
+
+Showing a 250-photo slideshow on the display 10 times uses about 750 MB of
+transfer. Comfortable.
+
+Rules: always shrink on the phone first; cap at 2 MB per file; cap photos
+per player per game. Before the library nears 1 GB, export old events
+(zip download) and prune them.
 
 ## Estimate: holiday party, 50 players, 3 hours
 

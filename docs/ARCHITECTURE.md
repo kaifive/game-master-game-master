@@ -47,6 +47,12 @@ Controls and Display are separate pages so the TV never shows admin buttons.
         │    leaderboard summary                  │
         │  Anonymous Auth: one uid per device     │
         └─────────────────────────────────────────┘
+                ▲
+   photo upload │ (direct, with a token from /api)
+                ▼
+        ┌─────────────────────────────────────────┐
+        │  Vercel Blob: photo files               │
+        └─────────────────────────────────────────┘
                 ▲                       ▲
    scored moves │ (route handlers,      │ admin writes
    join, awards │  firebase-admin)      │ (admin claim)
@@ -72,6 +78,27 @@ Controls and Display are separate pages so the TV never shows admin buttons.
 | Presence (who is online) | Realtime Database | `onDisconnect` makes presence free and accurate |
 | Live session state (current round, open or locked, buzzes) | Realtime Database | Low latency, server timestamps, cheap fan-out |
 | Leaderboard summary | Realtime Database | Every screen listens; RTDB bills by bandwidth, not per read. See the budget doc. |
+| Photo files | Vercel Blob | Free on Hobby; Firebase Storage needs Blaze. See ADR-008. |
+| Photo records: owner, game, approval status, blob URL | Firestore | Queryable for moderation and recaps |
+
+## Photos
+
+Some games ask players to take a picture (for example a photo challenge:
+"a selfie with your sifu"). Photos also feed an event recap that stays in
+the library.
+
+1. The phone takes or picks a photo, shrinks it to 1600 px and re-encodes
+   it as JPEG (which strips location data).
+2. It asks `/api/[event]/photos/upload` for a one-time upload token. The
+   route checks the player is approved, the game accepts photos, and the
+   type and size are allowed.
+3. The phone uploads straight to Vercel Blob, then the server writes the
+   photo record as `pending`.
+4. The admin approves or hides photos in Controls. Points for a photo
+   challenge are awarded on approval.
+5. Approved photos appear on the display slideshow and the event recap.
+
+See spec 13.
 
 ## The two kinds of play
 
@@ -170,6 +197,7 @@ lib/
   themes/                    theme tokens, variants, icon sets
   points/                    ledger and totals
   live/                      live session state machine
+  photos/                    resize, upload, records, moderation
   firebase/                  client and admin setup
 tests/                       node:test unit tests
 docs/

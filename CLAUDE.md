@@ -46,7 +46,8 @@ follows them.
 Next.js (App Router) + TypeScript strict + Tailwind CSS v4 on Vercel Hobby.
 Firebase: Anonymous Auth, Firestore, Realtime Database, all on the free
 Spark plan. No Cloud Functions (they need Blaze); server logic lives in
-Next.js route handlers using `firebase-admin`. No heavy UI libraries.
+Next.js route handlers using `firebase-admin`. Photo files go to Vercel Blob
+(Firebase Storage needs Blaze; ADR-008). No heavy UI libraries.
 
 ## Conventions
 

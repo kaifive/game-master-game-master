@@ -17,3 +17,4 @@ Statuses are explained in `../conventions/docs.md`.
 | 10 | [Word guess](10-word-guess.md) | M2 | Draft |
 | 11 | [Live session engine](11-live-sessions.md) | M3 | Draft |
 | 12 | [Buzzer and Jeopardy](12-buzzer-jeopardy.md) | M3 | Draft |
+| 13 | [Photos and recap](13-photos-and-recap.md) | M2 | Draft |
