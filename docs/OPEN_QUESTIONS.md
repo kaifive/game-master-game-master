@@ -42,4 +42,6 @@ Move answered ones to the bottom with the answer.
 | A17 | Who controls live games? | Only team captains, since teams have different sizes and phone counts (ADR-014). No max team size. |
 | A18 | Code quality bar? | Production grade: test-driven, reusable components, DRY, enforced by tooling (ADR-015, ADR-016). |
 | A19 | Game codes? | All of it: codes that jump straight to a game, codes that unlock hidden games (scavenger hunts), and quick single-game sessions, with the code carried in the URL for QR codes (ADR-020). The platform should be highly configurable per event. |
+| A20 | Holiday party look? | Judges' Table with a winter variant. Games play in any order; scores must scale past three. |
+| A21 | How do event styles plug in? | Generic component slots with defaults; each pack overrides what it needs (ADR-022). |
 | A15 | Photo storage over time? | Back up and clear photos after each event; checklist reminder before each event (ADR-012). |

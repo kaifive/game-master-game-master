@@ -368,3 +368,28 @@ with standard SaaS-style admin screens and the TV matching the phones.
 - v1 builds the admin look and one pack, chosen for the holiday party.
   The design options already shown (Sticker Book, Tile Rack, One-Hour
   Photo, Memphis Party) are candidates for later packs.
+
+---
+
+## ADR-022: Generic component slots, resolved per pack with defaults
+
+**Status:** accepted. Supersedes the "same DOM in every pack" rule in
+ADR-021; the rest of ADR-021 stands.
+
+Khai's model: components have generic names, each event's style supplies
+its own versions, and games use the event's component or the default.
+
+**Decision:**
+- Games and pages use **slots** (`ScoreCard`, `Tile`, `Toast`, ...) through
+  a registry (`useSlots()`), never a styled component directly.
+- Each slot has one props contract, one default component styled only by
+  tokens, and one contract test suite.
+- A style pack may provide its own component for any slot; the registry
+  returns it, or the default when the pack has none.
+- Every override must pass the slot's contract suite (props, roles,
+  states, keyboard, reduced motion), so a pack can change how a slot looks
+  and moves but never what it means or does.
+- Pack components load only for events that use the pack.
+
+Packs get full freedom where CSS isn't enough (a score card on a real
+handle), and the contract suites stop that freedom from breaking games.

@@ -66,7 +66,7 @@ event the host has run.
 - Terminology is fixed in `docs/GLOSSARY.md`.
 - Each event picks its own style pack for phones and TV; admin screens
   share one standard look (ADR-021).
-- Undecided: the first style pack, for the holiday party.
+- First style pack: Judges' Table, winter variant, for the holiday party.
 
 ## Brand Commitments
 

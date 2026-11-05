@@ -88,15 +88,48 @@ nothing that changes behavior (ADR-021):
 |------|--------------|
 | Tokens | Every `--gm-*` value above, for light and dark |
 | Fonts | Display and data faces (body text stays Atkinson Hyperlegible for legibility) |
-| Skins | CSS for a fixed list of slots: `surface`, `button`, `card`, `tile`, `badge`, `bar`, `toast`, `keyboard-key`, `buzzer`, `qr-panel` |
+| Components | Its own version of any **slot** (below), or nothing, to use the default |
 | Icons | The semantic icon set (`correct`, `present`, `trophy`, ...) |
 | Motion | Which celebration each moment plays (the slap, the flash, the burst) and its timing |
 | Decorations | Optional ornaments for the display and hub edges |
 
+### Slots: generic components a pack can replace (ADR-022)
+
+Games and pages never import a styled component directly. They ask for a
+slot by its generic name, and the event's pack answers with its own
+component or the default:
+
+```tsx
+const { ScoreCard } = useSlots();      // Judges' Table: a paddle on a handle
+<ScoreCard value={150} state="scored" label="Gift Guess" />
+```
+
+| Slot | Used for |
+|------|----------|
+| `Surface` | Screen ground and texture (snow, carpet, grid paper) |
+| `Banner` | The event band at the top of hub, games and TV |
+| `Button` | Primary and secondary actions |
+| `Panel` | A grouped area (join panel, results table frame) |
+| `ScoreCard` | One score or result (hub rows, toasts, game end) |
+| `Tile` | A letter or piece in a game grid, with its state |
+| `Key` | On-screen keyboard key, with its state |
+| `Progress` | Games done out of total |
+| `Toast` | One item in the toast chain |
+| `LeaderboardRow` | One rank row on the TV and hub |
+| `Buzzer` | The captain's buzzer |
+| `CodeEntry` | Entering a game or event code |
+| `Celebration` | The animation for a moment (spec 14) |
+
 Rules:
-- Components render the same DOM in every pack; a pack changes how slots
-  look, never what they contain or how they behave. A pack that needs a
-  new slot adds it to this list for every pack.
+- Each slot has one **props contract** (a TypeScript type), one
+  **default component**, and one **contract test suite**. Every pack's
+  version must pass the same suite: same props, roles, states, keyboard
+  behavior and reduced-motion handling. A pack changes how a slot looks and
+  moves, never what it means or does.
+- Packs override only what they need; everything else falls back to the
+  default, which is styled entirely by tokens.
+- A new slot is added here, with its contract and default, before any pack
+  uses it.
 - A pack ships light and dark, and its variants (holiday) are token and
   icon overrides on top of it.
 - Each pack's CSS and fonts load only for events that use it.

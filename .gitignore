@@ -1,5 +1,7 @@
 .claude/skills/impeccable/scripts/bin/
-.impeccable/
+.impeccable/*
+!.impeccable/surfaces/
+!.impeccable/config.json
 node_modules/
 .next/
 .env*
