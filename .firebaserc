@@ -1,1 +1,6 @@
-{ "projects": { "default": "demo-game-master" } }
+{
+  "projects": {
+    "default": "demo-game-master",
+    "prod": "game-master-2caae"
+  }
+}

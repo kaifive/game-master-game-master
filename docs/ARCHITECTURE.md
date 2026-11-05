@@ -275,7 +275,7 @@ lib/
   live/                      live session state machine
   motion/                    moment lanes and queues, count-up and FLIP math
   photos/                    resize, upload, records, triage, votes
-  firebase/                  client and admin setup
+  firebase/                  config (env), client (browser), admin (server-only), paths
 scripts/                     export photos, prune event, load test
 tests/                       node:test unit tests
 docs/

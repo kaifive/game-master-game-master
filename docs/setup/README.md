@@ -52,10 +52,8 @@ At vercel.com:
    to the project. That adds `BLOB_READ_WRITE_TOKEN` by itself.
 3. **Project → Settings → Environment Variables**, for **Production** and
    **Preview**:
-   - `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`,
-     `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_APP_ID`,
-     `NEXT_PUBLIC_FIREBASE_DATABASE_URL`: the five values from Firebase
-     step 5.
+   - The five public Firebase values are already committed in
+     `.env.production` (ADR-023), so they don't need adding here.
    - `FIREBASE_SERVICE_ACCOUNT`: open the downloaded JSON file, copy all of
      it, paste it as the value.
    - `ADMIN_PASSPHRASE`: the passphrase you'll share with helpers.

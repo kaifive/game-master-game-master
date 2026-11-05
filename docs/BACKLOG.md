@@ -21,7 +21,7 @@ A feature item needs its spec at `Ready` before it starts.
 - [x] `npm run check:ac` (acceptance-criteria-to-test check) and `npm run verify`
 - [x] GitHub Actions CI running `verify` and e2e on every PR; PR template; git hooks
 - [x] `.claude/commands/` for `/next`, `/spec`, `/verify`
-- [ ] Firebase project on Spark: Anonymous Auth, Firestore, Realtime Database; env vars in `.env.example`
+- [x] Firebase project on Spark: Anonymous Auth, Firestore, Realtime Database; env vars in `.env.example`; client and admin wiring (`lib/firebase`)
 - [ ] Vercel project and Blob store on Hobby; preview deploys per PR (ask before production)
 
 ## M1: Core event loop (by Nov 26)
