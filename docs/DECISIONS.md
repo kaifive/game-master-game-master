@@ -307,3 +307,14 @@ Khai wants smooth leaderboard transitions and confetti when games finish.
 - The server writes **moments** to `moments/{slug}` in Realtime Database
   so the display can celebrate things as they happen.
 - Every primitive has a reduced-motion fallback and a test for it.
+
+---
+
+## ADR-019: Impeccable checker turned on
+
+**Status:** accepted. Supersedes the "not run automatically" part of ADR-017.
+
+Khai approved running Impeccable's checker. `.claude/settings.json` (copied
+from `docs/setup/claude-settings.json`) allows the launcher and runs its
+hook at session start, after every edit and at the end of each turn. The
+hook is silent for non-UI files.
