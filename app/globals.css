@@ -1,3 +1,55 @@
 @import "tailwindcss";
 
-/* Theme tokens arrive with spec 09 once the design direction is chosen. */
+/*
+ * Theme tokens arrive as --gm-* custom properties from <StyleRoot> or
+ * <AdminRoot> (spec 09). These map them to Tailwind utilities, so
+ * components write bg-gm-surface or text-gm-text-muted and never a raw color.
+ */
+@theme inline {
+  --color-gm-bg: var(--gm-bg);
+  --color-gm-surface: var(--gm-surface);
+  --color-gm-surface-raised: var(--gm-surface-raised);
+  --color-gm-border: var(--gm-border);
+  --color-gm-text: var(--gm-text);
+  --color-gm-text-muted: var(--gm-text-muted);
+  --color-gm-text-on-accent: var(--gm-text-on-accent);
+  --color-gm-accent: var(--gm-accent);
+  --color-gm-accent-hover: var(--gm-accent-hover);
+  --color-gm-success: var(--gm-success);
+  --color-gm-warning: var(--gm-warning);
+  --color-gm-danger: var(--gm-danger);
+  --color-gm-tile-correct: var(--gm-tile-correct);
+  --color-gm-tile-correct-ink: var(--gm-tile-correct-ink);
+  --color-gm-tile-present: var(--gm-tile-present);
+  --color-gm-tile-present-ink: var(--gm-tile-present-ink);
+  --color-gm-tile-absent: var(--gm-tile-absent);
+  --color-gm-tile-absent-ink: var(--gm-tile-absent-ink);
+  --color-gm-tile-empty: var(--gm-tile-empty);
+  --color-gm-buzzer: var(--gm-buzzer);
+  --color-gm-buzzer-ink: var(--gm-buzzer-ink);
+  --color-gm-buzzer-locked: var(--gm-buzzer-locked);
+  --font-gm-display: var(--gm-font-display);
+  --font-gm-body: var(--gm-font-body);
+  --radius-gm: var(--gm-radius);
+}
+
+body {
+  margin: 0;
+}
+
+[data-theme-root] {
+  background: var(--gm-bg);
+  color: var(--gm-text);
+  font-family: var(--gm-font-body);
+  min-height: 100%;
+}
+
+[data-theme-root] ::selection {
+  background: var(--gm-accent);
+  color: var(--gm-text-on-accent);
+}
+
+[data-theme-root] :focus-visible {
+  outline: 3px solid var(--gm-accent);
+  outline-offset: 2px;
+}

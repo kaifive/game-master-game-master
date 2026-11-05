@@ -54,6 +54,8 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Slot** | A generic component name, such as `ScoreCard` or `Tile`, with one props contract and a default. A style pack may supply its own version. | `useSlots()` |
 | **Theme** | The resolved look on screen: a style pack + variant + color mode. The admin layer has its own fixed theme. | `Theme` |
 | **Variant** | A named override on top of a style pack, such as `holiday`. | `style.variant` |
+| **StyleRoot** | The root of every player and TV page: applies the event's pack, variant and color mode and provides its slots. | `<StyleRoot>` |
+| **AdminRoot** | The root of every admin page: the fixed admin theme and default slots. | `<AdminRoot>` |
 | **Admin layer** | Library, sign-in, controls, triage and recap. One standard look for every event. | |
 | **Color mode** | Light or dark within a theme. | `colorMode` |
 | **Renderer** | The React view of a game type. Uses theme tokens only. | `Renderer.tsx` |

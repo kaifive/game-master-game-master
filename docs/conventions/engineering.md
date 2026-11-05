@@ -47,6 +47,10 @@ rules.ts, model.ts    →  nothing with I/O
   SDKs (plus contract and rules tests).
 - `components/ui/` imports nothing from `lib/` except `lib/themes` and
   `lib/ui` helpers.
+- Games and pages get styled components only through `useSlots()`; a
+  pack's components (`components/packs/<pack>/`) are imported only by its
+  own folder and `components/packs/loaders.ts` (tested in
+  `components/packs/isolation.test.tsx`).
 
 ## Route handlers
 

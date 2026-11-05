@@ -256,7 +256,10 @@ app/
   [event]/                   player hub, play/, live/, vote/, display/
   api/                       route handlers (join, move, donate, photos, admin)
 components/
-  ui/                        shared primitives
+  slots/                     slot defaults, contract suites, registry (useSlots)
+  theme/                     StyleRoot (event pages), AdminRoot (admin pages)
+  packs/<pack>/              a style pack's own slot components; loaded only via packs/loaders.ts
+  ui/                        shared primitives that aren't slots
   player/ controls/ display/ per-surface components
 content/events/              one config file per event
 lib/
