@@ -286,3 +286,24 @@ Khai wants a fun look that doesn't read as generic AI output.
 
 Updating Impeccable: copy `plugin/skills/impeccable` from upstream over the
 folder, update `UPSTREAM`, review the diff.
+
+---
+
+## ADR-018: Motion system with shared primitives; canvas-confetti allowed
+
+**Status:** accepted
+
+Khai wants smooth leaderboard transitions and confetti when games finish.
+
+**Decision:**
+- One motion system: tokens for durations and easings, and shared
+  primitives in `lib/motion` and `components/motion` (spec 14). No
+  component animates on its own terms.
+- Built on CSS transitions and the Web Animations API (FLIP for
+  reordering). No general animation library such as Framer Motion; it is
+  large for phones and the primitives cover our needs.
+- One exception: **canvas-confetti** (about 6 KB gzipped, handles reduced
+  motion, no dependencies), loaded only when a celebration fires.
+- The server writes **moments** to `moments/{slug}` in Realtime Database
+  so the display can celebrate things as they happen.
+- Every primitive has a reduced-motion fallback and a test for it.

@@ -150,4 +150,12 @@ live/{slug}/captains/{teamId}: { playerId, uid }
 live/{slug}/buzzes/{roundId}/{teamId}
   playerId: string
   at: server timestamp       set with ServerValue.TIMESTAMP; rules enforce it
+
+moments/{slug}/{momentId}    written by the server; the display animates these
+  kind: "game-finished" | "lead-change" | "big-donation" | "team-created"
+      | "photo-winner" | "phase-change"
+  text: string               "Mai finished Daily Word: +100"
+  playerId?, teamId?, points?
+  at: server timestamp
+  Only the last 50 are kept; the display listens to the newest.
 ```

@@ -11,7 +11,9 @@ A big-screen page for the room shows the join QR code and a live leaderboard, an
 ## In scope (first pass)
 
 - `/[slug]/display`: join QR code, URL and join code; standings that fit the phase (players in the individual phase, teams in the team phase)
-- Animated rank changes; fits 1920×1080 with no scrolling
+- Animated with the shared motion primitives (spec 14): bars race and swap places, rows glide to new ranks, scores count up, a lead change gets a callout
+- Points-over-time graph for the top players or teams, with lines that draw in as points arrive
+- Fits 1920×1080 with no scrolling
 - Modes set from controls: leaderboard, live session (spec 12), photo slideshow (spec 13), message ("Break, back at 8pm")
 - Player hub: own points and rank, team score and rank, top 10, polled every 15 s
 

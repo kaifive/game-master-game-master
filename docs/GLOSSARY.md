@@ -40,6 +40,8 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Triage** | The admin swiping through pending photos: right to approve, left to hide. | `/admin/[event]/photos` |
 | **Photo vote** | Approved photos for one prompt sent to every player to vote for the best. | `/[event]/vote/[game]` |
 | **Recap** | Final standings and approved photos of an event. Admin only. | `/admin/[event]/recap` |
+| **Moment** | Something worth celebrating on the display (a lead change, a game finished). Written by the server. | `moments/{slug}` |
+| **Celebration** | The animation and sound played for a moment or a finished game. | `celebrate()` |
 | **Presence** | Whether a player is connected right now. | `presence` |
 | **Controls** | The admin's page for running an event. | `/admin/[event]` |
 | **Display** | The read-only big-screen page for the room. | `/[event]/display` |

@@ -88,11 +88,38 @@ can swap `trophy` for a snowflake without code changes.
 - **Offline:** a banner when presence drops; actions queue or disable.
 - **Error:** one plain sentence and a retry.
 
-## Motion and sound
+## Motion and celebrations
 
-- Respect `prefers-reduced-motion`.
-- Animate rank changes on the leaderboard so changes are noticeable.
-- Sound plays on the display only, never on player phones (see Q9).
+Motion is part of the fun, not decoration. Every change a player cares
+about should be *seen* happening. Spec 14 has the full list of moments.
+
+**Rules**
+- Animate only `transform` and `opacity` (plus canvas for particles).
+  60 fps on a mid-range phone.
+- Durations and easings come from motion tokens, never ad-hoc values:
+  `--gm-motion-fast` (150 ms), `--gm-motion-base` (300 ms),
+  `--gm-motion-slow` (600 ms), `--gm-motion-stage` (1200 ms, display only),
+  `--gm-ease-out`, `--gm-ease-spring`. Themes may tune them.
+- Motion explains change: things move *from* where they were *to* where
+  they are. Nothing pops in or out without a transition.
+- Reduced motion (`prefers-reduced-motion`): position changes become
+  quick fades, counters jump to the final number, no confetti or shaking.
+- Celebrations are bigger on the display than on phones. Phones get a
+  short burst; the TV gets the full show.
+- Sound plays on the display only, never on player phones (Q9).
+
+**Shared primitives** (`lib/motion`, `components/motion`): one of each,
+used everywhere.
+
+| Primitive | Does |
+|-----------|------|
+| `useFlip()` | Rows glide to their new rank when order changes (FLIP technique) |
+| `<CountUp>` | Numbers roll up to their new value |
+| `<BarRace>` | Animated bar chart for leaderboards; bars grow and swap places |
+| `<PointsBurst>` | A floating "+100" from where points were earned |
+| `<Confetti>` / `celebrate()` | Themed confetti bursts (holiday variant: snowflakes) |
+| `<Reveal>` | Staggered entrance for lists, boards and results |
+| `<Shake>`, `<Pulse>` | Wrong-answer shake, buzz-in pulse |
 
 ## Components (planned)
 

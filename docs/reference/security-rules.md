@@ -28,6 +28,7 @@ means `request.auth.uid == resource.data.deviceUid`.
 | `leaderboard/{slug}` | anyone | server |
 | `live/{slug}/session` | anyone | admin, server |
 | `live/{slug}/captains` | anyone | admin, server |
+| `moments/{slug}` | anyone | server |
 | `live/{slug}/buzzes/{roundId}/{teamId}` | anyone | `auth.uid == captains/{teamId}/uid`, once, while the round is open, `at == now` |
 
 ## Vercel Blob
