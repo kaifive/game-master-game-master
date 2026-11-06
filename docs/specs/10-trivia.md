@@ -40,6 +40,7 @@ The play's `state`: the drawn question ids, choice order per question, the curre
 - [x] AC-7: The party's event file has a trivia game with a placeholder pool, and word guess is gone from it.
 - [x] AC-8: Answers show as a 2×2 grid when there are at most 4 short or picture answers, and as a list otherwise.
 - [x] AC-9: Questions and answers can show images, each with alt text.
+- [x] AC-15: Each question's clock starts clean, never shows more than its seconds, moves smoothly, and freezes where it is once an answer is tapped.
 - [x] AC-14: The next question is requested as soon as the server confirms the answer and shows when the 1-second pause ends, counted from the tap; its clock starts when it shows.
 - [x] AC-13: A tapped answer shows right or wrong at once from the question's key, before the server replies (the reply confirms it), the answers lock, and the whole button takes the tap, not just its text.
 - [x] AC-12: On a phone, answers are at least 80 px tall and the Start button at least 56 px.

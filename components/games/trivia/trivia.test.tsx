@@ -212,3 +212,51 @@ describe("TriviaGame tap feedback", () => {
     expect(button).toHaveClass("touch-manipulation", "[&_*]:pointer-events-none");
   });
 });
+
+describe("TriviaGame clock", () => {
+  const bar = () => screen.getByRole("progressbar", { name: "Time left" });
+  const share = () => Number(bar().firstElementChild?.getAttribute("data-share"));
+
+  test("S10-AC15: never shows more than the question's seconds", () => {
+    show(question({ msLeft: 15_700, seconds: 15 }));
+    expect(bar()).toHaveAttribute("aria-valuenow", "15");
+    expect(share()).toBe(1);
+  });
+
+  test("S10-AC15: counts down in small steps and freezes where it is when you tap", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const onMove = vi.fn();
+    show({ ...question({ msLeft: 10_000, seconds: 10 }), key: answerKey(1, 2) }, { onMove });
+    act(() => {
+      vi.advanceTimersByTime(2_050);
+    });
+    expect(share()).toBeCloseTo(0.8, 1);
+    await userEvent
+      .setup({ advanceTimers: vi.advanceTimersByTime })
+      .click(screen.getByRole("button", { name: "8" }));
+    const frozen = share();
+    act(() => {
+      vi.advanceTimersByTime(1_500);
+    });
+    expect(share()).toBe(frozen);
+    expect(frozen).toBeLessThan(0.85);
+  });
+
+  test("S10-AC15: each new question starts its clock clean", () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { rerender } = show(question({ msLeft: 10_000, seconds: 10 }));
+    act(() => {
+      vi.advanceTimersByTime(6_000);
+    });
+    expect(share()).toBeLessThan(0.5);
+    rerender(
+      <TriviaGame
+        view={question({ number: 3, msLeft: 10_000, seconds: 10 })}
+        busy={false}
+        onMove={vi.fn()}
+        onTimeUp={vi.fn()}
+      />,
+    );
+    expect(share()).toBe(1);
+  });
+});

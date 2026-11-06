@@ -16,31 +16,6 @@ const Picture = ({ image, className }: { image: Media; className?: string }) => 
   />
 );
 
-/** Counts down locally from the server's msLeft, and says when time is up. */
-function useCountdown(msLeft: number, running: boolean, onDone: () => void) {
-  const [left, setLeft] = useState(msLeft);
-  const done = useRef(onDone);
-  useEffect(() => {
-    done.current = onDone;
-  }, [onDone]);
-  useEffect(() => {
-    if (!running) return;
-    const end = Date.now() + msLeft;
-    const timer = setInterval(() => {
-      const next = Math.max(0, end - Date.now());
-      setLeft(next);
-      if (next === 0) {
-        clearInterval(timer);
-        done.current();
-      }
-    }, 200);
-    return () => {
-      clearInterval(timer);
-    };
-  }, [msLeft, running]);
-  return running ? left : msLeft;
-}
-
 function choiceTone(view: Asked, i: number, picked: number | null) {
   if (view.kind !== "answered") {
     // While the server checks it, the tapped answer lights up and the rest step back (S10-AC13).
@@ -105,10 +80,49 @@ function ChoiceButton({
   );
 }
 
-/** Seconds left as a draining bar, plus the number for anyone who can't see the bar. */
-function TimerBar({ left, seconds }: { left: number; seconds: number }) {
+const TICK_MS = 100;
+
+/**
+ * The question's clock (S10-AC5, AC15). Keyed by question, so each one starts
+ * clean. It never shows more than the question's seconds, glides between
+ * ticks, and freezes where it is once an answer is tapped.
+ */
+function Countdown({
+  msLeft,
+  seconds,
+  running,
+  onDone,
+}: {
+  msLeft: number;
+  seconds: number;
+  running: boolean;
+  onDone: () => void;
+}) {
+  const total = seconds * 1000;
+  const [left, setLeft] = useState(() => Math.min(msLeft, total));
+  const current = useRef(left);
+  const done = useRef(onDone);
+  useEffect(() => {
+    done.current = onDone;
+  }, [onDone]);
+  useEffect(() => {
+    if (!running) return;
+    const end = Date.now() + current.current;
+    const timer = setInterval(() => {
+      const next = Math.max(0, end - Date.now());
+      current.current = next;
+      setLeft(next);
+      if (next === 0) {
+        clearInterval(timer);
+        done.current();
+      }
+    }, TICK_MS);
+    return () => {
+      clearInterval(timer);
+    };
+  }, [running]);
   const secs = Math.ceil(left / 1000);
-  const share = Math.max(0, Math.min(1, left / (seconds * 1000)));
+  const share = Math.max(0, Math.min(1, left / total));
   return (
     <div className="flex items-center gap-3">
       <div
@@ -120,8 +134,14 @@ function TimerBar({ left, seconds }: { left: number; seconds: number }) {
         className="h-3 flex-1 overflow-hidden rounded-full bg-gm-surface-raised"
       >
         <div
-          className={cx("h-full rounded-full", secs <= 5 ? "bg-gm-danger" : "bg-gm-accent")}
-          style={{ width: `${String(share * 100)}%` }}
+          data-share={share.toFixed(3)}
+          className={cx(
+            "h-full w-full origin-left rounded-full",
+            running &&
+              "transition-transform duration-100 ease-linear motion-reduce:transition-none",
+            secs <= 5 ? "bg-gm-danger" : "bg-gm-accent",
+          )}
+          style={{ transform: `scaleX(${String(share)})` }}
         />
       </div>
       <span className="w-10 text-right font-gm-display text-xl font-bold tabular-nums">
@@ -180,7 +200,6 @@ export function TriviaGame({ view: raw, onMove, onTimeUp, busy }: GameRendererPr
   const [pick, setPicked] = useState<{ question: number; choice: number; at: number } | null>(null);
   const picked = asking && pick?.question === serverView.number ? pick.choice : null;
   const view = picked === null ? serverView : judgedLocally(serverView, picked);
-  const left = useCountdown(serverView.msLeft, asking && picked === null, onTimeUp);
   // The next question waits for the server's reply, so its step is always current.
   useAdvance(
     serverView.kind === "answered",
@@ -205,7 +224,13 @@ export function TriviaGame({ view: raw, onMove, onTimeUp, busy }: GameRendererPr
         <p className="m-0 text-sm font-bold tracking-wide text-gm-text-muted uppercase">
           Question {view.number} of {view.total}
         </p>
-        <TimerBar left={left} seconds={view.seconds} />
+        <Countdown
+          key={serverView.number}
+          msLeft={serverView.msLeft}
+          seconds={view.seconds}
+          running={asking && picked === null}
+          onDone={onTimeUp}
+        />
       </div>
       <h2 className="m-0 font-gm-display text-2xl font-bold">{view.prompt}</h2>
       {view.image && <Picture image={view.image} className="mx-auto max-h-56" />}
