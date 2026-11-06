@@ -19,9 +19,11 @@ async function devStatus(): Promise<string | undefined> {
   }
 }
 
-/** Where event status and standings come from (see `backend()`). */
+const shared = globalThis as typeof globalThis & { __gmMemoryEvents?: MemoryEventRuntimeRepo };
+
+/** Where event status and standings come from (see `backend()`). One memory store per process. */
 export function eventRuntime(): EventRuntimeRepo {
   return backend() === "firebase"
     ? firebaseEventRuntime()
-    : new MemoryEventRuntimeRepo({}, {}, devStatus);
+    : (shared.__gmMemoryEvents ??= new MemoryEventRuntimeRepo({}, {}, devStatus));
 }

@@ -1,0 +1,425 @@
+"use client";
+
+import Link from "next/link";
+import { useCallback, useEffect, useId, useState } from "react";
+import type { EventStatus } from "@/lib/events";
+import { AdminButton, Card, field, StatusBadge } from "./ui";
+
+type Player = { id: string; nickname: string; points: number; restarts: number; joinedAt: number };
+type View = { status: EventStatus; players: Player[] };
+type Game = { id: string; title: string };
+type Action =
+  | { action: "start" | "end" | "reopen" | "rebuild" }
+  | { action: "adjust"; playerId: string; points: number; reason: string }
+  | { action: "restart" | "remove" | "ban"; playerId: string }
+  | { action: "reset"; playerId: string; gameId: string }
+  | { action: "clear"; confirm: string };
+
+const REFRESH_MS = 15_000;
+
+function ago(ms: number, now: number) {
+  const mins = Math.round((now - ms) / 60_000);
+  if (ms === 0 || mins < 1) return "just now";
+  return mins < 60 ? `${String(mins)} min ago` : `${String(Math.round(mins / 60))} h ago`;
+}
+
+/** A button that asks once more before doing something hard to undo. */
+function Confirm({
+  label,
+  sure,
+  onConfirm,
+  tone = "danger",
+  disabled,
+}: {
+  label: string;
+  sure: string;
+  onConfirm: () => void;
+  tone?: "primary" | "danger";
+  disabled?: boolean;
+}) {
+  const [asking, setAsking] = useState(false);
+  if (!asking)
+    return (
+      <AdminButton
+        tone={tone === "danger" ? "danger" : "primary"}
+        disabled={disabled ?? false}
+        onClick={() => {
+          setAsking(true);
+        }}
+      >
+        {label}
+      </AdminButton>
+    );
+  return (
+    <span className="inline-flex flex-wrap gap-2">
+      <AdminButton
+        tone="danger"
+        disabled={disabled ?? false}
+        onClick={() => {
+          setAsking(false);
+          onConfirm();
+        }}
+      >
+        {sure}
+      </AdminButton>
+      <AdminButton
+        tone="secondary"
+        onClick={() => {
+          setAsking(false);
+        }}
+      >
+        Cancel
+      </AdminButton>
+    </span>
+  );
+}
+
+function PlayerTools({
+  player,
+  games,
+  run,
+  busy,
+}: {
+  player: Player;
+  games: Game[];
+  run: (a: Action) => void;
+  busy: boolean;
+}) {
+  const id = useId();
+  const [points, setPoints] = useState("");
+  const [reason, setReason] = useState("");
+  const [gameId, setGameId] = useState(games[0]?.id ?? "");
+  const amount = Number(points);
+  return (
+    <div className="grid gap-4 border-t border-gm-border bg-gm-bg p-3">
+      <form
+        className="grid gap-2 sm:grid-cols-[8rem_1fr_auto]"
+        onSubmit={(e) => {
+          e.preventDefault();
+          run({ action: "adjust", playerId: player.id, points: amount, reason });
+          setPoints("");
+          setReason("");
+        }}
+      >
+        <label className="sr-only" htmlFor={`${id}-pts`}>
+          Points to add (negative to take away)
+        </label>
+        <input
+          id={`${id}-pts`}
+          inputMode="numeric"
+          placeholder="+50 or -20"
+          value={points}
+          onChange={(e) => {
+            setPoints(e.target.value);
+          }}
+          className={field}
+        />
+        <label className="sr-only" htmlFor={`${id}-why`}>
+          Reason
+        </label>
+        <input
+          id={`${id}-why`}
+          placeholder="Reason, like Best costume"
+          maxLength={120}
+          value={reason}
+          onChange={(e) => {
+            setReason(e.target.value);
+          }}
+          className={field}
+        />
+        <AdminButton type="submit" disabled={busy || !Number.isInteger(amount) || amount === 0}>
+          Change points
+        </AdminButton>
+      </form>
+      <div className="flex flex-wrap items-center gap-2">
+        <AdminButton
+          tone="secondary"
+          disabled={busy}
+          onClick={() => {
+            run({ action: "restart", playerId: player.id });
+          }}
+        >
+          Give another restart
+        </AdminButton>
+        <label className="sr-only" htmlFor={`${id}-game`}>
+          Game to reset
+        </label>
+        <select
+          id={`${id}-game`}
+          value={gameId}
+          onChange={(e) => {
+            setGameId(e.target.value);
+          }}
+          className={`${field} w-auto`}
+        >
+          {games.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.title}
+            </option>
+          ))}
+        </select>
+        <Confirm
+          label="Reset game"
+          sure="Reset it"
+          disabled={busy || !gameId}
+          onConfirm={() => {
+            run({ action: "reset", playerId: player.id, gameId });
+          }}
+        />
+        <Confirm
+          label="Remove"
+          sure={`Remove ${player.nickname}`}
+          disabled={busy}
+          onConfirm={() => {
+            run({ action: "remove", playerId: player.id });
+          }}
+        />
+        <Confirm
+          label="Ban phone"
+          sure="Ban this phone"
+          disabled={busy}
+          onConfirm={() => {
+            run({ action: "ban", playerId: player.id });
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/** The host's page for one event: Start and End, players and their fix-ups, and tools (spec 07). */
+export function Controls({
+  slug,
+  name,
+  games,
+  initial,
+}: {
+  slug: string;
+  name: string;
+  games: Game[];
+  initial: View;
+}) {
+  const [view, setView] = useState(initial);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [confirmText, setConfirmText] = useState("");
+  const [now, setNow] = useState(() => Date.now());
+  const searchId = useId();
+
+  const refresh = useCallback(async () => {
+    const res = await fetch(`/api/admin/events/${slug}`).catch(() => null);
+    if (res?.ok) setView((await res.json()) as View);
+    setNow(Date.now());
+  }, [slug]);
+
+  useEffect(() => {
+    const timer = setInterval(() => void refresh(), REFRESH_MS);
+    return () => {
+      clearInterval(timer);
+    };
+  }, [refresh]);
+
+  const run = (action: Action) => {
+    setBusy(true);
+    setError(null);
+    void fetch(`/api/admin/events/${slug}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(action),
+    })
+      .then(async (res) => {
+        const body = (await res.json().catch(() => null)) as (View & { error?: string }) | null;
+        if (res.ok && body) setView(body);
+        else setError(body?.error ?? "That didn't work. Try again.");
+      })
+      .catch(() => {
+        setError("We couldn't reach the server. Try again.");
+      })
+      .finally(() => {
+        setBusy(false);
+        setNow(Date.now());
+      });
+  };
+
+  const shown = view.players.filter((p) =>
+    p.nickname.toLowerCase().includes(search.trim().toLowerCase()),
+  );
+
+  return (
+    <main className="mx-auto grid w-full max-w-3xl gap-4 px-4 py-6">
+      <div className="grid gap-1">
+        <Link href="/admin" className="text-sm font-bold text-gm-accent">
+          ← All events
+        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="m-0 text-2xl font-bold">{name}</h1>
+          <StatusBadge status={view.status} />
+        </div>
+        <p className="m-0 flex flex-wrap gap-3 text-sm">
+          <Link href={`/${slug}`} target="_blank" className="font-bold text-gm-accent">
+            Party page ↗
+          </Link>
+          <Link href={`/${slug}/display`} target="_blank" className="font-bold text-gm-accent">
+            TV display ↗
+          </Link>
+        </p>
+      </div>
+
+      {error && (
+        <p
+          role="alert"
+          className="m-0 rounded-gm border border-gm-danger bg-gm-surface px-3 py-2 text-sm font-bold text-gm-danger"
+        >
+          {error}
+        </p>
+      )}
+
+      <Card title="Event">
+        <div className="flex flex-wrap items-center gap-3">
+          {view.status === "upcoming" && (
+            <AdminButton
+              disabled={busy}
+              onClick={() => {
+                run({ action: "start" });
+              }}
+            >
+              Start the event
+            </AdminButton>
+          )}
+          {view.status === "live" && (
+            <Confirm
+              label="End the event"
+              sure="Yes, end it"
+              disabled={busy}
+              onConfirm={() => {
+                run({ action: "end" });
+              }}
+            />
+          )}
+          {view.status === "ended" && (
+            <Confirm
+              label="Reopen"
+              sure="Yes, reopen it"
+              tone="primary"
+              disabled={busy}
+              onConfirm={() => {
+                run({ action: "reopen" });
+              }}
+            />
+          )}
+          <p className="m-0 text-sm text-gm-text-muted">
+            {view.status === "upcoming" &&
+              "Games open when you start (except ones that are always open)."}
+            {view.status === "live" && "Games are open."}
+            {view.status === "ended" && "Games are closed and final standings show."}
+          </p>
+        </div>
+      </Card>
+
+      <Card title={`Players (${String(view.players.length)})`}>
+        <div className="grid gap-3">
+          <label htmlFor={searchId} className="sr-only">
+            Find a player
+          </label>
+          <input
+            id={searchId}
+            type="search"
+            placeholder="Find a player"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+            }}
+            className={field}
+          />
+          {shown.length === 0 ? (
+            <p className="m-0 text-gm-text-muted">
+              {view.players.length === 0 ? "No players yet." : "No one by that name."}
+            </p>
+          ) : (
+            <ul aria-label="Players" className="m-0 grid list-none gap-2 p-0">
+              {shown.map((p) => (
+                <li key={p.id} className="overflow-hidden rounded-gm border border-gm-border">
+                  <button
+                    type="button"
+                    aria-expanded={open === p.id}
+                    onClick={() => {
+                      setOpen(open === p.id ? null : p.id);
+                    }}
+                    className="flex min-h-12 w-full items-center justify-between gap-3 bg-gm-surface px-3 py-2 text-left"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate font-bold">{p.nickname}</span>
+                      <span className="block text-xs text-gm-text-muted">
+                        Joined {ago(p.joinedAt, now)}
+                        {p.restarts > 0 && ` · started over ${String(p.restarts)}×`}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-lg font-bold tabular-nums">{p.points}</span>
+                  </button>
+                  {open === p.id && <PlayerTools player={p} games={games} run={run} busy={busy} />}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </Card>
+
+      <Card title="Tools">
+        <div className="grid gap-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <AdminButton
+              tone="secondary"
+              disabled={busy}
+              onClick={() => {
+                run({ action: "rebuild" });
+              }}
+            >
+              Rebuild points
+            </AdminButton>
+            <p className="m-0 text-sm text-gm-text-muted">
+              Recounts everyone&apos;s points if totals look wrong.
+            </p>
+          </div>
+          {view.status === "upcoming" && (
+            <form
+              className="grid gap-2 rounded-gm border border-gm-danger p-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                run({ action: "clear", confirm: confirmText });
+                setConfirmText("");
+              }}
+            >
+              <p className="m-0 font-bold text-gm-danger">Clear test data</p>
+              <p className="m-0 text-sm text-gm-text-muted">
+                Deletes every player, score and the leaderboard for this event. It can&apos;t be
+                undone. Type CLEAR to confirm.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <label className="sr-only" htmlFor={`${searchId}-clear`}>
+                  Type CLEAR
+                </label>
+                <input
+                  id={`${searchId}-clear`}
+                  value={confirmText}
+                  onChange={(e) => {
+                    setConfirmText(e.target.value);
+                  }}
+                  className={`${field} w-40`}
+                />
+                <AdminButton
+                  type="submit"
+                  tone="danger"
+                  disabled={busy || confirmText.trim() !== "CLEAR"}
+                >
+                  Clear test data
+                </AdminButton>
+              </div>
+            </form>
+          )}
+        </div>
+      </Card>
+    </main>
+  );
+}

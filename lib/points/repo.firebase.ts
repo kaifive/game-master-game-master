@@ -75,6 +75,10 @@ export class FirebasePointsRepo implements PointsRepo {
   async setTotal(slug: string, playerId: string, total: number) {
     await this.admin.firestore.doc(fs.player(slug, playerId)).update({ points: total });
   }
+
+  async clear(slug: string) {
+    await this.admin.firestore.recursiveDelete(this.admin.firestore.collection(fs.ledger(slug)));
+  }
 }
 
 /** The leaderboard summary in the Realtime Database, one row per write. */
@@ -124,6 +128,10 @@ export class FirebaseBoardRepo implements BoardRepo {
     const value = Object.fromEntries(rows.map(({ id, ...v }) => [id, v]));
     await this.admin.rtdb.ref(rtdb.leaderboardPlayers(slug)).set(value);
     await this.touch(slug);
+  }
+
+  async clear(slug: string) {
+    await this.admin.rtdb.ref(rtdb.leaderboard(slug)).remove();
   }
 }
 

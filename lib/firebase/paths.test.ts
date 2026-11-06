@@ -13,6 +13,9 @@ describe("Firestore paths", () => {
     expect(fs.team("holiday-2026", "t1")).toBe("events/holiday-2026/teams/t1");
     expect(fs.ledgerEntry("holiday-2026", "e1")).toBe("events/holiday-2026/ledger/e1");
     expect(fs.ledger("holiday-2026")).toBe("events/holiday-2026/ledger");
+    expect(fs.devices("holiday-2026")).toBe("events/holiday-2026/devices");
+    expect(fs.nicknames("holiday-2026")).toBe("events/holiday-2026/nicknames");
+    expect(fs.plays("holiday-2026")).toBe("events/holiday-2026/plays");
     expect(fs.play("holiday-2026", "word-1", "p1")).toBe("events/holiday-2026/plays/word-1_p1");
     expect(fs.photo("holiday-2026", "ph1")).toBe("events/holiday-2026/photos/ph1");
     expect(fs.vote("holiday-2026", "photo-1", "pr1", "p1")).toBe(

@@ -76,6 +76,12 @@ export class MemoryPointsRepo implements PointsRepo {
     this.totals.set(`${slug}/${playerId}`, total);
     return Promise.resolve();
   }
+
+  clear(slug: string) {
+    this.ledgers.delete(slug);
+    for (const k of [...this.totals.keys()]) if (k.startsWith(`${slug}/`)) this.totals.delete(k);
+    return Promise.resolve();
+  }
 }
 
 /** In-memory leaderboard summary. */
@@ -115,6 +121,12 @@ export class MemoryBoardRepo implements BoardRepo {
 
   replace(slug: string, rows: BoardRow[]) {
     this.rows.set(slug, new Map(rows.map((r) => [r.id, r])));
+    return Promise.resolve();
+  }
+
+  clear(slug: string) {
+    this.rows.delete(slug);
+    this.recent.delete(slug);
     return Promise.resolve();
   }
 }

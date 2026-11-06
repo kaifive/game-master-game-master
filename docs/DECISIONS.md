@@ -490,6 +490,20 @@ kids without a phone can't play on their own.
 
 ---
 
+## ADR-028: Admin sessions are a signed cookie
+
+**Status:** accepted. Replaces the custom-token part of ADR-005.
+
+Security rules stay deny-all for clients, and every admin action is a
+route handler, so nothing needs a Firebase admin claim. A signed cookie is
+simpler, works without Firebase (tests, local runs), and can't be read by
+page scripts.
+
+**Decision:** `POST /api/admin/session` checks `ADMIN_PASSPHRASE` and sets
+`gm_admin`: an expiry and an HMAC-SHA256 signature keyed from the
+passphrase. HttpOnly, SameSite=Lax, Secure outside local runs, 7 days.
+Changing the passphrase signs everyone out. Sign-in is rate-limited per IP.
+
 ## ADR-029: Trivia sends each question's answer, scrambled, for instant feedback
 
 **Status:** accepted. Narrows spec 08's "the phone never sees an answer it hasn't played" for trivia.

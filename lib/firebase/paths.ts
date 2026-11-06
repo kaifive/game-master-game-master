@@ -21,7 +21,10 @@ const event = (s: string) => `events/${slug(s)}`;
 /** Firestore: durable records. */
 export const fs = {
   event,
+  devices: (s: string) => `${event(s)}/devices`,
   device: (s: string, uid: string) => `${event(s)}/devices/${id(uid)}`,
+  nicknames: (s: string) => `${event(s)}/nicknames`,
+  plays: (s: string) => `${event(s)}/plays`,
   players: (s: string) => `${event(s)}/players`,
   player: (s: string, playerId: string) => `${event(s)}/players/${id(playerId)}`,
   nickname: (s: string, key: string) => `${event(s)}/nicknames/${id(key)}`,

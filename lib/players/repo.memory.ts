@@ -1,8 +1,13 @@
 import type { PlayerSummary } from "./model";
-import type { NewPlayer, PlayerRepo, StoredDevice } from "./repo";
+import type { AdminPlayer, NewPlayer, PlayerRepo, StoredDevice } from "./repo";
 import { joinErrors } from "./repo.errors";
 
-type Player = PlayerSummary & { deviceUid: string; status: "active" | "forfeited" };
+type Player = PlayerSummary & {
+  deviceUid: string;
+  status: "active" | "forfeited" | "removed";
+  joinedAt: number;
+  seq: number;
+};
 type Device = { banned: boolean; playerId: string | null; restarts: number };
 type EventData = {
   devices: Map<string, Device>;
@@ -56,7 +61,15 @@ export class MemoryPlayerRepo implements PlayerRepo {
   ) {
     const d = this.data(slug);
     const id = `p${String(this.nextId++).padStart(4, "0")}`;
-    d.players.set(id, { id, nickname, deviceUid: uid, status: "active" });
+    // Clock time for the admin; the id's counter breaks ties within one millisecond.
+    d.players.set(id, {
+      id,
+      nickname,
+      deviceUid: uid,
+      status: "active",
+      joinedAt: Date.now(),
+      seq: this.nextId,
+    });
     d.nicknames.set(key, id);
     d.devices.set(uid, { ...device, playerId: id, restarts });
     return { id, nickname };
@@ -85,5 +98,51 @@ export class MemoryPlayerRepo implements PlayerRepo {
       for (const [key, id] of d.nicknames) if (id === old.id) d.nicknames.delete(key);
     }
     return Promise.resolve(this.add(slug, uid, device, player, device.restarts + 1));
+  }
+
+  list(slug: string): Promise<AdminPlayer[]> {
+    const d = this.data(slug);
+    return Promise.resolve(
+      [...d.players.values()]
+        .filter((p) => p.status === "active")
+        .sort((a, b) => b.joinedAt - a.joinedAt || b.seq - a.seq)
+        .map((p) => ({
+          id: p.id,
+          nickname: p.nickname,
+          deviceUid: p.deviceUid,
+          restarts: this.stored(slug, p.deviceUid).restarts,
+          joinedAt: p.joinedAt,
+        })),
+    );
+  }
+
+  remove(slug: string, playerId: string) {
+    const d = this.data(slug);
+    const p = d.players.get(playerId);
+    if (p) {
+      d.players.set(playerId, { ...p, status: "removed" });
+      for (const [key, id] of d.nicknames) if (id === playerId) d.nicknames.delete(key);
+      const device = d.devices.get(p.deviceUid);
+      if (device?.playerId === playerId) d.devices.set(p.deviceUid, { ...device, playerId: null });
+    }
+    return Promise.resolve();
+  }
+
+  async ban(slug: string, uid: string) {
+    const device = this.stored(slug, uid);
+    if (device.playerId) await this.remove(slug, device.playerId);
+    this.data(slug).devices.set(uid, { ...this.stored(slug, uid), banned: true, playerId: null });
+  }
+
+  grantRestart(slug: string, uid: string) {
+    const device = this.stored(slug, uid);
+    if (this.data(slug).devices.has(uid))
+      this.data(slug).devices.set(uid, { ...device, restarts: Math.max(0, device.restarts - 1) });
+    return Promise.resolve();
+  }
+
+  clear(slug: string) {
+    this.events.delete(slug);
+    return Promise.resolve();
   }
 }

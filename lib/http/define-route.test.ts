@@ -100,4 +100,13 @@ describe("defineRoute", () => {
     const route = defineRoute({ status: 201, handler: () => ({ id: "p1" }) });
     expect((await route(new Request("http://test"), ctx)).status).toBe(201);
   });
+
+  test("passes through a response the handler built, such as one setting a cookie", async () => {
+    const route = defineRoute({
+      handler: () => new Response(null, { status: 204, headers: { "set-cookie": "a=b" } }),
+    });
+    const res = await route(new Request("http://x/"), { params: Promise.resolve({}) });
+    expect(res.status).toBe(204);
+    expect(res.headers.get("set-cookie")).toBe("a=b");
+  });
 });

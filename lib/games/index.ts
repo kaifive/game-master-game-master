@@ -4,3 +4,5 @@ export { answerKey, readAnswerKey, type ChoiceView, type TriviaView } from "./tr
 export type { Media, TriviaContent } from "./trivia/content";
 export { gamesApi } from "./client";
 export type { PlayStatus } from "./repo";
+export type { PlayChange, PlayRecord, PlayRepo } from "./repo";
+export { MemoryPlayRepo } from "./repo.memory";

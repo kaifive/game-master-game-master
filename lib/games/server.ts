@@ -42,3 +42,4 @@ export const playsFor = (slug: Slug, uid: string, playerId: string | null) =>
   hubPlays(deps(), requireEvent(slug), uid, playerId ?? "");
 
 export { instructionsFor, playable, StartBody, MoveBody } from "./service";
+export { playRepo } from "./runtime";

@@ -8,3 +8,15 @@ export {
   type DisplayStandings,
   type PhoneStandings,
 } from "./client";
+export {
+  awardGame,
+  awardPoints,
+  displayStandings,
+  phoneStandings,
+  pointsOf,
+  rebuild,
+  removeFromBoard,
+  voidPoints,
+  type PointsDeps,
+  type Recipient,
+} from "./service";

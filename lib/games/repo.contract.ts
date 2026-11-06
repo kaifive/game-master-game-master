@@ -73,4 +73,17 @@ export function playRepoContract(make: () => Promise<PlayRepo>) {
     );
     expect((await repo.get(SLUG, "trivia", "p1"))?.state).toEqual({ n: 5 });
   });
+
+  test("S07-AC6 S07-AC8 S07-AC9: lists every play, removes one, and clears an event", async () => {
+    const repo = await make();
+    await repo.update(SLUG, "trivia", "p1", () => record("trivia", "p1"));
+    await repo.update(SLUG, "trivia", "p2", () => record("trivia", "p2"));
+    await repo.update("spring-2027", "trivia", "p1", () => record("trivia", "p1"));
+    expect((await repo.all(SLUG)).map((p) => p.playerId).sort()).toEqual(["p1", "p2"]);
+    await repo.remove(SLUG, "trivia", "p1");
+    expect(await repo.get(SLUG, "trivia", "p1")).toBeNull();
+    await repo.clear(SLUG);
+    expect(await repo.all(SLUG)).toEqual([]);
+    expect(await repo.all("spring-2027")).toHaveLength(1);
+  });
 }

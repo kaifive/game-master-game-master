@@ -20,6 +20,8 @@ export interface PointsRepo {
   entries(slug: string): Promise<LedgerEntry[]>;
   /** For rebuild: sets a player's running total. */
   setTotal(slug: string, playerId: string, total: number): Promise<void>;
+  /** Deletes the event's ledger (S07-AC9); totals go with the players. */
+  clear(slug: string): Promise<void>;
 }
 
 /** The leaderboard summary in the Realtime Database, updated one row at a time. */
@@ -31,4 +33,6 @@ export interface BoardRepo {
   read(slug: string): Promise<Board>;
   /** For rebuild: replaces every row. */
   replace(slug: string, rows: BoardRow[]): Promise<void>;
+  /** Deletes the event's whole summary (S07-AC9). */
+  clear(slug: string): Promise<void>;
 }

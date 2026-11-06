@@ -32,4 +32,20 @@ export class MemoryPlayRepo implements PlayRepo {
     this.queue = run.catch(() => undefined);
     return run;
   }
+
+  all(slug: string) {
+    return Promise.resolve(
+      [...this.plays.entries()].filter(([k]) => k.startsWith(`${slug}/`)).map(([, p]) => p),
+    );
+  }
+
+  remove(slug: string, gameId: string, playerId: string) {
+    this.plays.delete(key(slug, gameId, playerId));
+    return Promise.resolve();
+  }
+
+  clear(slug: string) {
+    for (const k of [...this.plays.keys()]) if (k.startsWith(`${slug}/`)) this.plays.delete(k);
+    return Promise.resolve();
+  }
 }

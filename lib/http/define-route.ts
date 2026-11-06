@@ -58,6 +58,8 @@ export function defineRoute<
       >[0]["body"];
       const params = await context.params;
       const result = await config.handler({ body, auth, params, request });
+      // A handler may build its own response, such as one that sets a cookie.
+      if (result instanceof Response) return result;
       return Response.json(result ?? null, { status: config.status ?? 200 });
     } catch (err) {
       if (isAppError(err)) return errorResponse(err);

@@ -130,4 +130,66 @@ export function playerRepoContract(seed: Seed) {
     const owners = await Promise.all(phones.map((uid) => repo.device(SLUG, uid)));
     expect(owners.filter((d) => d.player)).toHaveLength(1);
   });
+
+  test("S07-AC3: lists active players newest first, with their phone and restarts", async () => {
+    const repo = await seed({});
+    const mai = await repo.join(SLUG, "deviceA1", named("Mai"));
+    const bao = await repo.join(SLUG, "deviceB1", named("Bao"));
+    await repo.restart(SLUG, "deviceB1", named("Lan"), 1);
+    const list = await repo.list(SLUG);
+    expect(list.map((p) => [p.nickname, p.deviceUid, p.restarts])).toEqual([
+      ["Lan", "deviceB1", 1],
+      ["Mai", "deviceA1", 0],
+    ]);
+    expect(list.some((p) => p.id === bao.id)).toBe(false);
+    expect(list.find((p) => p.id === mai.id)?.joinedAt).toBeTypeOf("number");
+  });
+
+  test("S07-AC7: removing a player frees their name and lets their phone join again", async () => {
+    const repo = await seed({});
+    const mai = await repo.join(SLUG, "deviceA1", named("Mai"));
+    await repo.remove(SLUG, mai.id);
+    expect(await repo.list(SLUG)).toEqual([]);
+    expect((await repo.device(SLUG, "deviceA1")).player).toBeNull();
+    await expect(repo.join(SLUG, "deviceB1", named("Mai"))).resolves.toBeTruthy();
+    await expect(repo.join(SLUG, "deviceA1", named("Bao"))).resolves.toBeTruthy();
+  });
+
+  test("S07-AC7: banning a phone removes its player and stops it joining", async () => {
+    const repo = await seed({});
+    await repo.join(SLUG, "deviceA1", named("Mai"));
+    await repo.ban(SLUG, "deviceA1");
+    expect(await repo.list(SLUG)).toEqual([]);
+    expect(await repo.device(SLUG, "deviceA1")).toMatchObject({ banned: true, player: null });
+    expect(await failure(repo.join(SLUG, "deviceA1", named("Bao")))).toEqual({
+      code: "FORBIDDEN",
+      reason: "banned",
+    });
+  });
+
+  test("S07-AC5: giving a restart lets the phone start over once more", async () => {
+    const repo = await seed({});
+    await repo.join(SLUG, "deviceA1", named("Mai"));
+    await repo.restart(SLUG, "deviceA1", named("Bao"), 1);
+    await repo.grantRestart(SLUG, "deviceA1");
+    expect((await repo.device(SLUG, "deviceA1")).restarts).toBe(0);
+    await expect(repo.restart(SLUG, "deviceA1", named("Lan"), 1)).resolves.toBeTruthy();
+    await repo.grantRestart(SLUG, "deviceZ9"); // a phone with nothing: no harm
+    expect((await repo.device(SLUG, "deviceZ9")).restarts).toBe(0);
+  });
+
+  test("S07-AC9: clearing an event deletes its players, phones and names", async () => {
+    const repo = await seed({});
+    await repo.join(SLUG, "deviceA1", named("Mai"));
+    await repo.join("spring-2027", "deviceA1", named("Mai"));
+    await repo.clear(SLUG);
+    expect(await repo.list(SLUG)).toEqual([]);
+    expect(await repo.device(SLUG, "deviceA1")).toEqual({
+      banned: false,
+      player: null,
+      restarts: 0,
+    });
+    await expect(repo.join(SLUG, "deviceB1", named("Mai"))).resolves.toBeTruthy();
+    expect(await repo.list("spring-2027")).toHaveLength(1);
+  });
 }
