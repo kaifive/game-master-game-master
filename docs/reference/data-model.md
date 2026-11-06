@@ -17,6 +17,7 @@ type EventConfig = {
   joinPolicy: "open" | "approval";        // default "open" (ADR-010)
   kind: "event" | "quick";                // quick = one game, code opens it (ADR-020)
   maxPlayersPerDevice: number;            // default 4 (ADR-009)
+  blockedNames?: string[];                // extra name-filter words, server-only (spec 02)
   scoring: "individual" | "team" | "both"; // ADR-011
   maxTeams?: number;
   games: Game[];
@@ -75,7 +76,7 @@ events/{slug}/devices/{uid}
 events/{slug}/players/{playerId}
   deviceUid: string
   nickname: string
-  nicknameKey: string        normalized, for uniqueness and the filter
+  nicknameKey: string        lower case; accents, spaces and ' - . _ removed (spec 02)
   status: "active" | "pending" | "removed"   "pending" only under approval
   teamId: string | null      set once; only the admin changes it after
   points: number             own points: awards − donations given

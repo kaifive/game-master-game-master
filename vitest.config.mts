@@ -31,7 +31,8 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["lib/**/*.{ts,tsx}", "components/**/*.tsx"],
-      exclude: ["**/*.test.*", "**/repo.contract.ts", "**/index.ts"],
+      // Firebase adapters run against the emulators (npm run test:rules), not here.
+      exclude: ["**/*.test.*", "**/repo.contract.ts", "**/repo.firebase.ts", "**/index.ts"],
       reporter: ["text-summary", "html"],
       // Targets from docs/conventions/engineering.md.
       thresholds: {

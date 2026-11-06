@@ -50,11 +50,13 @@ export const EventConfig = z.object({
   joinPolicy: z.enum(["open", "approval"]),
   scoring: z.enum(["individual", "team", "both"]),
   maxPlayersPerDevice: z.number().int().min(1).max(8),
+  /** Extra words the name filter blocks for this event (spec 02). */
+  blockedNames: z.array(z.string().min(1)).optional(),
   games: z.array(GameConfig),
 });
 export type EventConfig = z.infer<typeof EventConfig>;
 
 /** What a page may show about an event: everything except codes. */
-export type PublicEvent = Omit<EventConfig, "joinCode" | "games"> & {
+export type PublicEvent = Omit<EventConfig, "joinCode" | "games" | "blockedNames"> & {
   games: Omit<GameConfig, "codes" | "content">[];
 };

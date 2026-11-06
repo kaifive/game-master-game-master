@@ -57,12 +57,15 @@ function GameList({ event, status }: { event: PublicEvent; status: EventStatus }
   );
 }
 
-/** Before the host starts the party (S01-AC5). */
-export function UpcomingView({ event }: { event: PublicEvent }) {
+type HubSlot = { event: PublicEvent; hub?: React.ReactNode };
+
+/** Before the host starts the party (S01-AC5). `hub` is the player hub (spec 02). */
+export function UpcomingView({ event, hub }: HubSlot) {
   return (
     <>
       <EventBanner event={event} status="upcoming" />
       <Body>
+        {hub}
         <p className="m-0 text-lg">
           Scheduled for {formatSchedule(event)}. Games open when the host starts the party.
         </p>
@@ -73,11 +76,12 @@ export function UpcomingView({ event }: { event: PublicEvent }) {
 }
 
 /** While the party is on: the hub, filled in by specs 02, 03 and 08. */
-export function LiveView({ event }: { event: PublicEvent }) {
+export function LiveView({ event, hub }: HubSlot) {
   return (
     <>
       <EventBanner event={event} status="live" />
       <Body>
+        {hub}
         <GameList event={event} status="live" />
       </Body>
     </>

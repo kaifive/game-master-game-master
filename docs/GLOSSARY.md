@@ -17,7 +17,7 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Game code** | A code tied to one game, which either opens it (`open`) or reveals it (`unlock`). | `GameCode` |
 | **Unlock** | Revealing a hidden or locked game with a code, for one player or the whole event. | `unlocks/` |
 | **Quick game** | An event with a single game, whose code opens the game directly. | `kind: "quick"` |
-| **Name filter** | The check that rejects inappropriate nicknames and team names as they are typed. | `checkName()` |
+| **Name filter** | The check that rejects inappropriate nicknames and team names as they are typed. | `checkNickname()`, `isBlockedName()` |
 | **Ban** | Blocking a device from an event. | `device.banned` |
 | **Lobby** | Where players wait for approval under the `approval` policy. | |
 | **Scoring mode** | Whether an event is `individual`, `team` or `both`. | `scoring` |
