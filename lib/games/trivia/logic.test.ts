@@ -79,15 +79,32 @@ describe("trivia", () => {
     expect(trivia.tick(late, content, at(99_999))).toBe(late);
   });
 
-  it("S10-AC6: points are the share of right answers; the result shows correct of total", () => {
+  it("S10-AC6: a right answer earns half for being right and up to half for speed", () => {
     let s = start();
-    s = next(answerRight(s, 1000), 1000);
-    s = next(answerRight(s, 2000), 2000);
-    s = next(answerWrong(s, 3000), 3000);
+    s = next(answerRight(s, 0), 0); // instant: the whole share
+    s = next(answerRight(s, 7500), 7500); // half the time left: three quarters
+    s = next(answerWrong(s, 8000), 8000); // wrong: nothing
     expect(trivia.isOver(s)).toBe(true);
-    expect(trivia.view(s, content, at(3000))).toEqual({ kind: "done", right: 2, total: 3 });
-    expect(trivia.score(s, 100)).toBe(67);
+    expect(trivia.view(s, content, at(8000))).toEqual({
+      kind: "done",
+      right: 2,
+      total: 3,
+      avgSeconds: 3.8,
+    });
+    expect(trivia.score(s, 100)).toBe(58); // 100 × (1 + 0.75 + 0) ÷ 3
     expect(trivia.score(s, 0)).toBe(0);
+  });
+
+  it("S10-AC6: a perfect, instant run earns everything; right at the buzzer earns half", () => {
+    let fast = start();
+    for (let i = 0; i < 3; i++) fast = next(answerRight(fast, 0), 0);
+    expect(trivia.score(fast, 100)).toBe(100);
+    let late = start();
+    for (let i = 1; i <= 3; i++) late = next(answerRight(late, i * 15_000), i * 15_000);
+    expect(trivia.score(late, 100)).toBe(50);
+    let none = start();
+    for (let i = 0; i < 3; i++) none = next(answerWrong(none, 0), 0);
+    expect(trivia.view(none, content, at(0))).toMatchObject({ right: 0, avgSeconds: null });
   });
 
   it("each question gets a fresh deadline when shown", () => {
@@ -151,7 +168,7 @@ describe("trivia", () => {
   it("builds its instructions from the content's numbers", () => {
     expect(trivia.instructions(content).lines.join(" ")).toMatch(/3 quick questions.*15 seconds/);
     expect(trivia.instructions({ questions: pool(6).questions }).lines.join(" ")).toMatch(
-      /5 quick.*15 seconds/,
+      /5 quick.*10 seconds/,
     );
   });
 });

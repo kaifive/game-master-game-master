@@ -8,7 +8,7 @@ const img = (name: string, alt: string) => ({ src: `/events/holiday-2026/${name}
  */
 export const holidayTrivia: TriviaContent = {
   questionsPerPlay: 5,
-  secondsPerQuestion: 15,
+  secondsPerQuestion: 10,
   questions: [
     {
       id: "snowflake-points",

@@ -29,8 +29,9 @@ The contract every game type follows (ADR-007): pure logic, a content shape, and
 6. **Score once:** when a play ends, its points are fixed and `scored: true` is set in the same transaction. Spec 04 turns that into a ledger award; until spec 04 ships, the points show on the result screen only.
 7. A game is playable while the event is `live`, or before the start too when the game is `alwaysOpen` (for testing or warm-ups), by a player on the calling device. Every game closes when the event ends. Before the start it shows "This game opens when the host starts the party."; after the end, "This game has closed."
 8. The hub's game list shows each game as **Play**, **Continue** (started), **Done · +N** (finished), **Best N · Again** (finished, replayable) or **Locked** (not open), for the active player.
-10. **Footer:** every event page has a bottom bar with the active player (to the hub's player switcher) and **Games**. Leaving a run in progress asks first: the clock keeps running, so the current question may count as wrong.
-11. **Header total:** the event banner shows the active player's total, the sum of their best scores (until spec 04's ledger), instead of the Live badge. When a run sets a new best, a "+N" chip flies from the score to the total, which then counts up. Under reduced motion it just updates.
+10. **Footer:** every event page has a bottom bar with the player's name and **Games**. The name opens a player panel: who's playing, their total, and **Not you? Start over** (spec 02). Once joined, the party page shows no player card. Leaving a run in progress asks first: the clock keeps running, so the current question may count as wrong.
+11. **Header:** a game page shows the game's title in the banner instead of the event name, for more room.
+12. **Header total:** the event banner shows the active player's total, the sum of their best scores (until spec 04's ledger), instead of the Live badge. When a run sets a new best, a "+N" chip flies from the score to the total, which then counts up. Under reduced motion it just updates.
 9. The game page shows which player is playing and lets the hub's switcher change it.
 
 ## Data
@@ -75,6 +76,7 @@ Player phone, in the event's pack: game header (title, "Playing as"), the instru
 - [x] AC-12: In a replayable event, a finished game offers Play again, which starts a new run; the game's score is the best run, never lowered by a worse one.
 - [x] AC-13: An `alwaysOpen` game can be played before the event starts; every game closes when it ends.
 - [x] AC-14: Event pages have a footer with the active player and Games; leaving a run in progress asks first.
+- [x] AC-16: A game page's banner shows the game's title instead of the event name.
 - [x] AC-15: The header shows the active player's total (sum of best scores) instead of the Live badge; a new best flies from the result to the total, which then counts up (instant under reduced motion).
 
 ## Tests

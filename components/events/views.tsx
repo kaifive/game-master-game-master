@@ -13,9 +13,10 @@ import type { HubPlays, Instructions } from "@/lib/games";
 type Game = PublicEvent["games"][number];
 
 /** The event's banner, with the active player's total where the Live badge was (S08-AC15). */
-function EventBanner({ event }: { event: PublicEvent }) {
+/** The banner, with the active player's total; a game page names the game instead (S08-AC16). */
+function EventBanner({ event, title }: { event: PublicEvent; title?: string }) {
   const { Banner } = useSlots();
-  return <Banner title={event.name} aside={<TotalScore />} />;
+  return <Banner title={title ?? event.name} aside={<TotalScore />} />;
 }
 
 const Body = ({ children }: { children: React.ReactNode }) => (
@@ -71,14 +72,9 @@ function GameList({ event, status }: { event: PublicEvent; status: EventStatus }
   );
 }
 
-/** The player hub, when the page has this phone's players (spec 02). */
-function Hub({ event }: { event: PublicEvent }) {
-  if (!useOptionalDevice()) return null;
-  return (
-    <div id="players" className="scroll-mt-4">
-      <PlayerHub hasTeams={event.scoring !== "individual"} />
-    </div>
-  );
+/** Joining, when the page has this phone's device (spec 02). */
+function Hub() {
+  return useOptionalDevice() ? <PlayerHub /> : null;
 }
 
 /** Before the host starts the party (S01-AC5), with the player hub (spec 02). */
@@ -87,7 +83,7 @@ export function UpcomingView({ event }: { event: PublicEvent }) {
     <>
       <EventBanner event={event} />
       <Body>
-        <Hub event={event} />
+        <Hub />
         <p className="m-0 text-lg">
           {listed(event).some((g) => g.alwaysOpen)
             ? "Some games are open now. The rest open when the host starts them."
@@ -105,7 +101,7 @@ export function LiveView({ event }: { event: PublicEvent }) {
     <>
       <EventBanner event={event} />
       <Body>
-        <Hub event={event} />
+        <Hub />
         <GameList event={event} status="live" />
       </Body>
     </>
@@ -186,9 +182,8 @@ export function GameView({
 }) {
   return (
     <>
-      <EventBanner event={event} />
+      <EventBanner event={event} title={game.title} />
       <Body>
-        <h2 className="m-0 font-gm-display text-3xl font-bold">{game.title}</h2>
         {gameOpen(status, game) && play ? (
           <GamePlayer
             gameId={game.id}

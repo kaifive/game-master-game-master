@@ -10,14 +10,14 @@ A multiple-choice quiz on the player's phone: a question, a few answers, a timer
 
 ## Behavior
 
-1. Content (`lib/games/trivia/content.ts`): a **pool** of `questions` (1–200), `questionsPerPlay` (default 5) and `secondsPerQuestion` (5–60, default 15). A question is `{ id, prompt, image?, choices (2–6), answer }`; a choice is text, an image, or both. Images are `{ src, alt }`, from `public/` (a path starting with `/`) or an `https://` URL, and always have alt text.
+1. Content (`lib/games/trivia/content.ts`): a **pool** of `questions` (1–200), `questionsPerPlay` (default 5) and `secondsPerQuestion` (5–60, default 10). A question is `{ id, prompt, image?, choices (2–6), answer }`; a choice is text, an image, or both. Images are `{ src, alt }`, from `public/` (a path starting with `/`) or an `https://` URL, and always have alt text.
 2. Each play draws `questionsPerPlay` different questions from the pool, in an order and with answer orders shuffled from the play's seed, so neighbours get different questions and replays of the party can't be memorized.
-3. One question at a time with a countdown. Tapping an answer locks it in. The server checks it and shows right or wrong and the correct answer for 2 seconds, then the next question (or the score) comes on its own. A tap anywhere skips the wait. The wait runs on the phone, so a phone that leaves waits on the answer instead of losing the questions after it.
+3. One question at a time with a countdown. Tapping an answer locks it in. The server checks it and shows right or wrong and the correct answer for 1 second, then the next question (or the score) comes on its own. There is no Next button and no tap to skip, so a stray tap can't land on the next question. The wait runs on the phone, so a phone that leaves waits on the answer instead of losing the questions after it.
 4. Time runs on the server: a question's deadline is set when it is shown. An answer after the deadline (plus 2 s grace for the network) counts as wrong, and so does running out of time. Leaving and coming back doesn't stop the clock.
-5. Points: `round(soloGamePoints × correct ÷ questionsPerPlay)`.
+5. Points: each question is worth an equal share of `soloGamePoints`. A right answer earns half its share for being right and up to half again for speed (all of it when instant, half at the buzzer). A perfect, instant run earns everything, which gives a reason to replay.
 6. Answers show as a **2×2 grid** when there are at most 4 and each is short (16 characters or fewer) or a picture; otherwise as a **list**.
-7. The result screen shows correct out of total, and the points counting up (spec 08).
-8. Instructions (default): "5 quick questions. You have 15 seconds for each. Tap an answer to lock it in. Points for every right answer." built from the content's numbers.
+7. The result screen shows correct out of total and the average seconds taken on right answers, and the points counting up (spec 08).
+8. Instructions (default): "5 quick questions. You have 10 seconds for each." / "Tap an answer to lock it in. You can't change it." / "Right answers score points. Faster answers score more." built from the content's numbers.
 
 ## Data
 
@@ -26,8 +26,8 @@ The play's `state`: the drawn question ids, choice order per question, the curre
 ## UI
 
 - Question card: "Question 3 of 5", the prompt in the pack's display font, its image if any, answers as large buttons (at least 56 px tall) in a grid or list, and a draining timer bar with the seconds left (red for the last 5).
-- After an answer: the chosen answer marked right or wrong (✓ and ✗ as well as color), the correct one marked, and **Next**. "Time's up" if none was chosen. No sound.
-- Result: points counting up, "4 of 5 right", back to the hub.
+- After an answer: the chosen answer marked right or wrong (✓ and ✗ as well as color), the correct one marked, and a short line ("Right!", "Not quite.", "Time's up.") smaller than the question. "Time's up" if none was chosen. No sound.
+- Result: points counting up, "4 of 5 right · 3.2 s average", Play again in a replayable event.
 
 ## Acceptance criteria
 
@@ -36,11 +36,11 @@ The play's `state`: the drawn question ids, choice order per question, the curre
 - [x] AC-3: Each play draws `questionsPerPlay` different questions from the pool and shuffles answer order, both from the play's seed, and both stay the same on resume.
 - [x] AC-4: An answer is checked on the server and the reply shows whether it was right and which choice was correct.
 - [x] AC-5: An answer after the deadline plus 2 s, or no answer in time, counts as wrong, and the timer keeps running while the player is away.
-- [x] AC-6: Points are `round(soloGamePoints × correct ÷ questionsPerPlay)`, and the result shows correct out of total.
+- [x] AC-6: A right answer earns half its share for being right and up to half for speed (instant earns all, the buzzer half), and the result shows correct out of total and the average time.
 - [x] AC-7: The party's event file has a trivia game with a placeholder pool, and word guess is gone from it.
 - [x] AC-8: Answers show as a 2×2 grid when there are at most 4 short or picture answers, and as a list otherwise.
 - [x] AC-9: Questions and answers can show images, each with alt text.
-- [x] AC-10: After an answer shows for 2 seconds, the next question (or the score) comes on its own; a tap skips the wait, and it moves on only once.
+- [x] AC-10: After an answer shows for 1 second, the next question (or the score) comes on its own, once; there is no Next button and a tap doesn't skip ahead.
 
 ## Tests
 
@@ -51,7 +51,7 @@ The play's `state`: the drawn question ids, choice order per question, the curre
 ## Out of scope
 
 - Real party questions (Khai adds them later).
-- Speed bonus, streaks.
+- Streaks.
 - Live trivia on the TV (that's Jeopardy, spec 12).
 
 ## Open questions

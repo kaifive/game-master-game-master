@@ -11,7 +11,8 @@ export async function flyPoints(from: Element, text: string, reduced: boolean): 
   chip.textContent = text;
   chip.setAttribute("aria-hidden", "true");
   chip.className =
-    "pointer-events-none fixed z-50 rounded-full bg-gm-accent px-3 py-1 font-gm-display text-2xl font-bold text-gm-text-on-accent shadow-lg";
+    // Inverted text and background: readable on the banner and the page alike.
+    "pointer-events-none fixed z-50 rounded-full bg-gm-text px-3 py-1 font-gm-display text-2xl font-bold text-gm-bg shadow-lg ring-2 ring-gm-bg";
   chip.style.left = `${String(a.left + a.width / 2)}px`;
   chip.style.top = `${String(a.top + a.height / 2)}px`;
   document.body.append(chip);

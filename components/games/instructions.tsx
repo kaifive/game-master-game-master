@@ -21,25 +21,40 @@ export function InstructionsDialog({
     box.current?.querySelector("button")?.focus();
   }, []);
   return (
-    <div className="fixed inset-0 z-40 grid place-items-center bg-black/60 p-4">
+    <div className="fixed inset-0 z-40 grid place-items-end bg-black/70 p-3 sm:place-items-center sm:p-4">
       <div
         ref={box}
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${id}-title`}
-        className="grid w-full max-w-md gap-4 rounded-gm border border-gm-border bg-gm-surface p-5 text-gm-text shadow-xl"
+        className="w-full max-w-md overflow-hidden rounded-gm bg-gm-surface text-gm-text shadow-2xl ring-1 ring-gm-border"
       >
-        <h2 id={`${id}-title`} className="m-0 font-gm-display text-2xl font-bold">
-          {instructions.title}
-        </h2>
-        <ul className="m-0 grid gap-2 pl-5 text-lg">
-          {instructions.lines.map((line) => (
-            <li key={line}>{line}</li>
+        <div className="border-b-4 border-gm-accent px-5 pt-5 pb-4">
+          <p className="m-0 text-xs font-bold tracking-[0.16em] text-gm-text-muted uppercase">
+            Before you start
+          </p>
+          <h2 id={`${id}-title`} className="m-0 font-gm-display text-3xl font-bold">
+            {instructions.title}
+          </h2>
+        </div>
+        <ol className="m-0 grid list-none gap-3 px-5 py-5">
+          {instructions.lines.map((line, i) => (
+            <li key={line} className="grid grid-cols-[2rem_1fr] items-start gap-3">
+              <span
+                aria-hidden="true"
+                className="grid size-8 place-items-center rounded-full bg-gm-surface-raised font-gm-display text-lg font-bold text-gm-accent"
+              >
+                {i + 1}
+              </span>
+              <span className="pt-0.5 text-lg leading-snug">{line}</span>
+            </li>
           ))}
-        </ul>
-        <Button onClick={onStart} disabled={busy ?? false}>
-          {busy ? "Starting…" : "Start"}
-        </Button>
+        </ol>
+        <div className="grid px-5 pb-5">
+          <Button onClick={onStart} disabled={busy ?? false}>
+            {busy ? "Starting…" : "Start"}
+          </Button>
+        </div>
       </div>
     </div>
   );

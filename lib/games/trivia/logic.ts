@@ -20,8 +20,11 @@ export type TriviaState = {
   phase: "question" | "answered" | "done";
   deadline: number;
   /** One per question asked: the original choice index, or null when time ran out. */
-  answers: { choice: number | null; right: boolean }[];
+  /** msLeft is the time left when it was answered: faster earns more (S10-AC6). */
+  answers: { choice: number | null; right: boolean; msLeft: number }[];
   step: number;
+  /** Copied from the content at the start, so scoring needs only the state. */
+  secondsPerQuestion: number;
 };
 
 export type ChoiceView = { text?: string | undefined; image?: Media | undefined };
@@ -38,7 +41,13 @@ type Asked = {
 export type TriviaView =
   | ({ kind: "question" } & Asked)
   | ({ kind: "answered"; chosen: number | null; correct: number; right: boolean } & Asked)
-  | { kind: "done"; right: number; total: number };
+  | {
+      kind: "done";
+      right: number;
+      total: number;
+      /** Average seconds taken on right answers, or null with none right. */
+      avgSeconds: number | null;
+    };
 
 const Move = z.discriminatedUnion("type", [
   z.object({ type: z.literal("answer"), choice: z.number().int().nonnegative() }),
@@ -66,6 +75,28 @@ function layoutOf(choices: ChoiceView[]): "grid" | "list" {
 
 const fail = (message: string): MoveResult<TriviaState> => ({ ok: false, message });
 
+/**
+ * Each question is worth an equal share. A right answer earns half its share
+ * for being right and up to half again for speed: instant earns it all, at
+ * the buzzer earns half (S10-AC6).
+ */
+function scoreOf(s: TriviaState, points: number, questions: number): number {
+  if (questions === 0) return 0;
+  const total = s.secondsPerQuestion * 1000;
+  const earned = s.answers.reduce(
+    (sum, a) => sum + (a.right ? 0.5 + 0.5 * Math.min(1, a.msLeft / total) : 0),
+    0,
+  );
+  return Math.round((points * earned) / questions);
+}
+
+function averageSeconds(s: TriviaState, c: TriviaContent): number | null {
+  const right = s.answers.filter((a) => a.right);
+  if (right.length === 0) return null;
+  const taken = right.reduce((sum, a) => sum + (seconds(c) * 1000 - a.msLeft), 0) / right.length;
+  return Math.round(taken / 100) / 10;
+}
+
 /** Trivia (spec 10): a few questions drawn from a pool, one at a time, against the clock. */
 export const trivia: GameLogic<TriviaContent, TriviaState, TriviaView> = {
   content: TriviaContent,
@@ -75,7 +106,7 @@ export const trivia: GameLogic<TriviaContent, TriviaState, TriviaView> = {
     lines: [
       `${String(perPlay(c))} quick questions. You have ${String(seconds(c))} seconds for each.`,
       "Tap an answer to lock it in. You can't change it.",
-      "Points for every right answer.",
+      "Right answers score points. Faster answers score more.",
     ],
   }),
 
@@ -97,6 +128,7 @@ export const trivia: GameLogic<TriviaContent, TriviaState, TriviaView> = {
       deadline: now + seconds(c) * 1000,
       answers: [],
       step: 0,
+      secondsPerQuestion: seconds(c),
     };
   },
 
@@ -105,7 +137,7 @@ export const trivia: GameLogic<TriviaContent, TriviaState, TriviaView> = {
     return {
       ...s,
       phase: "answered",
-      answers: [...s.answers, { choice: null, right: false }],
+      answers: [...s.answers, { choice: null, right: false, msLeft: 0 }],
       step: s.step + 1,
     };
   },
@@ -116,6 +148,7 @@ export const trivia: GameLogic<TriviaContent, TriviaState, TriviaView> = {
         kind: "done",
         right: s.answers.filter((a) => a.right).length,
         total: s.picks.length,
+        avgSeconds: averageSeconds(s, c),
       };
     const { question, order } = current(s, c);
     const choices = order.map((i) => toView(question.choices[i] as Choice));
@@ -155,7 +188,10 @@ export const trivia: GameLogic<TriviaContent, TriviaState, TriviaView> = {
         state: {
           ...s,
           phase: "answered",
-          answers: [...s.answers, { choice, right: choice === question.answer }],
+          answers: [
+            ...s.answers,
+            { choice, right: choice === question.answer, msLeft: Math.max(0, s.deadline - now) },
+          ],
           step: s.step + 1,
         },
       };
@@ -177,9 +213,6 @@ export const trivia: GameLogic<TriviaContent, TriviaState, TriviaView> = {
   },
 
   isOver: (s) => s.phase === "done",
-  score: (s, points) =>
-    s.picks.length === 0
-      ? 0
-      : Math.round((points * s.answers.filter((a) => a.right).length) / s.picks.length),
+  score: (s, points) => scoreOf(s, points, s.picks.length),
   step: (s) => s.step,
 };

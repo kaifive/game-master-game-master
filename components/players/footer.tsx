@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSlots } from "@/components/slots/registry";
 import { useOptionalDevice } from "./device";
+import { PlayerSheet } from "./player-sheet";
 
 const tab =
   "flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-gm px-3 font-gm-display text-lg font-bold text-gm-text no-underline";
@@ -13,11 +14,12 @@ const tab =
  * The bottom bar on event pages: who's playing and the way back to the
  * games. Leaving a game in progress asks first (S08-AC14).
  */
-export function PlayerFooter() {
+export function PlayerFooter({ hasTeams }: { hasTeams: boolean }) {
   const device = useOptionalDevice();
   const router = useRouter();
   const { Button } = useSlots();
   const [pending, setPending] = useState<string | null>(null);
+  const [sheet, setSheet] = useState(false);
   if (!device?.active) return null;
   const hub = `/${device.slug}`;
 
@@ -35,15 +37,30 @@ export function PlayerFooter() {
         className="fixed inset-x-0 bottom-0 z-30 border-t border-gm-border bg-gm-surface/95 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur"
       >
         <div className="mx-auto flex max-w-xl gap-2">
-          <Link href={`${hub}#players`} onClick={go(`${hub}#players`)} className={tab}>
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            onClick={() => {
+              setSheet(true);
+            }}
+            className={tab}
+          >
             <span aria-hidden="true">👤</span>
             <span className="truncate">{device.active.nickname}</span>
-          </Link>
+          </button>
           <Link href={hub} onClick={go(hub)} className={`${tab} bg-gm-surface-raised`}>
             <span aria-hidden="true">☰</span> Games
           </Link>
         </div>
       </nav>
+      {sheet && (
+        <PlayerSheet
+          hasTeams={hasTeams}
+          onClose={() => {
+            setSheet(false);
+          }}
+        />
+      )}
       {pending && device.leaveWarning && (
         <div className="fixed inset-0 z-40 grid place-items-center bg-black/60 p-4">
           <div

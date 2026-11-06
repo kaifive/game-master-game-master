@@ -23,7 +23,7 @@ Players join an event from a QR code with a nickname and start playing at once. 
 5. The name filter (`lib/players/filter.ts`) normalizes before matching: lower case, accents removed, look-alikes mapped (0→o, 1→i, 3→e, 4→a, 5→s, 7→t, @→a, $→s, !→i), separators removed, repeated letters collapsed. Strong words are blocked anywhere in the name; short ambiguous words are blocked only as a whole word, so "Cassie" and "Dickens" pass. An event may add its own words (`blockedNames`), which stay on the server. The phone checks the shared list as the name is typed; the server checks again, with the event's words too. A blocked name gets "Pick another name."
 6. Joining works while the event is `upcoming` or `live`, not once it is `ended`.
 7. A device has **one player** per event (ADR-027). Joining again with another name is refused: "This phone already has a player. Start over to play as someone new."
-8. The hub shows "Playing as <name>" and, while the phone has restarts left, **Not you? Start over**. It confirms first: "<name>'s N points will be lost[, including any given to teams]. This phone can only start over once at this party." (the team part only when the event has teams). Then a name box (no code); the old player is forfeited (off the leaderboard, name freed) and the new one becomes the phone's player. `restartsPerDevice` in the event file sets the limit (the party: 1).
+8. Once joined, the footer shows the player's name; tapping it opens a player panel with **Not you? Start over** while the phone has restarts left. It confirms first: "<name>'s N points will be lost[, including any given to teams]. This phone can only start over once at this party." (the team part only when the event has teams). Then a name box (no code); the old player is forfeited (off the leaderboard, name freed) and the new one becomes the phone's player. `restartsPerDevice` in the event file sets the limit (the party: 1).
 9. Reopening the event on the same device shows its player with no new join.
 12. Team captains can't start over (spec 03 marks captains; until then nobody is one).
 10. A banned device (`devices/{uid}.banned`, set from Controls in spec 07) can't join and sees "This phone can't join this event."
@@ -56,7 +56,7 @@ Without Firebase (CI e2e, local runs with no emulators) the server uses in-memor
 
 ## UI
 
-Player phone, in the event's style pack, above the game list on the upcoming and live pages: a `Panel` with a name box (and code box when needed), the live filter message, and the join `Button`. After joining, a "Playing as" line with "Not you? Start over" while restarts are left.
+Player phone, in the event's style pack, above the game list on the upcoming and live pages: a `Panel` with a name box (and code box when needed), the live filter message, and the join `Button`. After joining, the hub shows nothing; the footer name opens the player panel (spec 08).
 
 ## Edge cases
 

@@ -7,7 +7,14 @@ import { holiday2026 } from "@/content/events/holiday-2026";
 import { toPublicEvent, type FinalStandings } from "@/lib/events";
 import { DeviceProvider } from "@/components/players/device";
 import { HomeCodeEntry } from "./home";
-import { EndedView, EventNotFound, LiveView, QuickEventView, UpcomingView } from "./views";
+import {
+  EndedView,
+  EventNotFound,
+  GameView,
+  LiveView,
+  QuickEventView,
+  UpcomingView,
+} from "./views";
 
 const push = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -105,7 +112,7 @@ describe("S01-AC7: a quick event's page is its one game", () => {
   test("shows the game itself, not a list", () => {
     const quick = { ...event, kind: "quick" as const, games: [event.games[0]!] };
     inPack(<QuickEventView event={quick} status="live" />);
-    expect(screen.getByRole("heading", { level: 2, name: "Holiday Trivia" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Holiday Trivia" })).toBeInTheDocument();
     expect(screen.queryByRole("list", { name: "Tonight's games" })).toBeNull();
   });
 });
@@ -164,5 +171,13 @@ describe("S08-AC7: the hub lists each game for the active player", () => {
     expect(within(list).getByText("Continue →")).toBeInTheDocument();
     expect(within(list).getByText("Play →")).toBeInTheDocument();
     vi.unstubAllGlobals();
+  });
+});
+
+describe("S08-AC16: a game page names the game in the banner", () => {
+  test("the banner shows the game's title, not the event's name", () => {
+    inPack(<GameView event={event} game={event.games[0]!} status="upcoming" />);
+    expect(screen.getByRole("heading", { level: 1, name: "Holiday Trivia" })).toBeInTheDocument();
+    expect(screen.queryByText("Nova Wushu Holiday Party")).toBeNull();
   });
 });
