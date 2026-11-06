@@ -85,5 +85,10 @@
       "eslint --fix --max-warnings 0"
     ],
     "*.{json,css,yml,yaml}": "prettier --write"
+  },
+  "overrides": {
+    "jwks-rsa": {
+      "jose": "5.10.0"
+    }
   }
 }

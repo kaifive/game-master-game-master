@@ -425,3 +425,23 @@ Start, `live` until the admin presses End, then `ended`. It is stored in
 `events/{slug}.status`; with nothing stored, the event is `upcoming`. The
 event file's schedule is shown to players ("Saturday, Dec 19 · 4:30 PM
 EST") and never changes the status.
+
+---
+
+## ADR-025: Server dependencies must load without require(esm)
+
+**Status:** accepted
+
+Production crashed on every server-rendered page: `firebase-admin/auth`
+loads `jwks-rsa`, which `require()`s `jose` 6, an ES-module-only package.
+Vercel's Node runtime can't `require()` ES modules, though local Node 22 can.
+
+**Decision:**
+- `package.json` `overrides` pins `jose` 5.10.0 (which still ships
+  CommonJS) under `jwks-rsa`. `jwks-rsa` only uses `importJWK` and
+  `exportSPKI`, which are the same in 5 and 6.
+- `lib/firebase/admin-load.test.ts` loads each `firebase-admin` entry point
+  with `--no-experimental-require-module`, so a dependency bump that brings
+  the problem back fails CI.
+- Remove the override once Vercel's runtime supports `require(esm)` or
+  `jwks-rsa` stops using `require()`; the test says when it's safe.
