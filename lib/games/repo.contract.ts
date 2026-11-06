@@ -10,6 +10,8 @@ const record = (gameId: string, playerId: string, state: unknown = { n: 0 }): Pl
   state,
   status: "playing",
   points: 0,
+  best: 0,
+  runs: 1,
   scored: false,
 });
 
@@ -25,6 +27,7 @@ export function playRepoContract(make: () => Promise<PlayRepo>) {
       ...record("trivia", "p1", { n: 1 }),
       status: "finished" as const,
       points: 80,
+      best: 80,
       scored: true,
     };
     await repo.update(SLUG, "trivia", "p1", () => finished);

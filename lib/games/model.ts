@@ -34,7 +34,15 @@ export type AnyGameLogic = GameLogic<unknown, unknown, unknown>;
 export const defineGame = <C, S, V>(logic: GameLogic<C, S, V>) => logic as unknown as AnyGameLogic;
 
 /** What the phone gets back from starting a game or making a move. */
-export type PlayResponse = { view: unknown; status: PlayStatus; points: number; step: number };
+export type PlayResponse = {
+  view: unknown;
+  status: PlayStatus;
+  /** This run's points. */
+  points: number;
+  /** The best finished run, which is what counts (S08-AC12). */
+  best: number;
+  step: number;
+};
 
 /** A player's plays by game id, for the hub (S08-AC7). */
-export type HubPlays = Record<string, { status: PlayStatus; points: number }>;
+export type HubPlays = Record<string, { status: PlayStatus; best: number; runs: number }>;

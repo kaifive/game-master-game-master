@@ -15,8 +15,12 @@ export const gamesApi = {
       `/api/events/${slug}/plays?playerId=${encodeURIComponent(playerId)}`,
       token,
     ),
-  start: (slug: string, gameId: string, token: string, playerId: string) =>
-    apiCall<PlayResponse>(`/api/events/${slug}/games/${gameId}/play`, token, post({ playerId })),
+  start: (slug: string, gameId: string, token: string, playerId: string, again = false) =>
+    apiCall<PlayResponse>(
+      `/api/events/${slug}/games/${gameId}/play`,
+      token,
+      post(again ? { playerId, again } : { playerId }),
+    ),
   move: (
     slug: string,
     gameId: string,

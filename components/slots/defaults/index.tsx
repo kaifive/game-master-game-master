@@ -36,7 +36,7 @@ export function Surface({ children, className }: SurfaceProps) {
   );
 }
 
-export function Banner({ title, subtitle, live, level = 1 }: BannerProps) {
+export function Banner({ title, subtitle, live, level = 1, aside }: BannerProps) {
   const H = level === 1 ? "h1" : "h2";
   return (
     <header
@@ -47,11 +47,14 @@ export function Banner({ title, subtitle, live, level = 1 }: BannerProps) {
         <H className="m-0 font-gm-display text-xl font-bold">{title}</H>
         {subtitle && <p className="m-0 text-sm opacity-90">{subtitle}</p>}
       </div>
-      {live && (
-        <span className="ml-auto rounded-full bg-gm-surface px-3 py-0.5 text-xs font-bold tracking-widest text-gm-accent">
-          LIVE
-        </span>
-      )}
+      <div className="ml-auto flex items-center gap-2">
+        {live && (
+          <span className="rounded-full bg-gm-surface px-3 py-0.5 text-xs font-bold tracking-widest text-gm-accent">
+            LIVE
+          </span>
+        )}
+        {aside}
+      </div>
     </header>
   );
 }

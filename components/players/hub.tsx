@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useId, useState } from "react";
 import { useSlots } from "@/components/slots/registry";
 import { checkNickname, MESSAGES, NICKNAME_MAX } from "@/lib/players";
@@ -116,14 +117,16 @@ function JoinForm({
 /** Join, add and switch players on this phone (spec 02). Needs a DeviceProvider. */
 export function PlayerHub({ maxPlayers }: { maxPlayers: number }) {
   const { Panel, Button } = useSlots();
-  const { load, code, players, active, join, retry, choose: setActive } = useDevice();
+  const { load, players, active, join, retry, choose: setActive } = useDevice();
+  // The join code from a QR link (`?code=`), if the phone arrived that way.
+  const code = useSearchParams().get("code") ?? undefined;
   const [mode, setMode] = useState<"view" | "switch" | "add">("view");
   const choose = (id: string) => {
     setActive(id);
     setMode("view");
   };
   const joinThenShow = async (nickname: string, typed: string | undefined) => {
-    const failed = await join(nickname, typed);
+    const failed = await join(nickname, typed ?? code);
     if (!failed) setMode("view");
     return failed;
   };

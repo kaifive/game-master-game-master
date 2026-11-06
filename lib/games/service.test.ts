@@ -9,8 +9,9 @@ import type { TriviaView } from "./trivia/logic";
 
 const event: EventConfig = {
   ...holiday2026,
+  // Plain games here; each test turns on replayable or alwaysOpen as it needs.
   games: [
-    ...holiday2026.games,
+    ...holiday2026.games.map((g) => ({ ...g, replayable: false, alwaysOpen: false })),
     {
       id: "own-rules",
       type: "trivia",
@@ -141,14 +142,62 @@ describe("game service", () => {
     expect(await hubPlays(deps, event, UID, playerId)).toEqual({ plays: {} });
     await start();
     expect(await hubPlays(deps, event, UID, playerId)).toEqual({
-      plays: { trivia: { status: "playing", points: 0 } },
+      plays: { trivia: { status: "playing", best: 0, runs: 1 } },
     });
     const done = await playThrough();
     expect((await hubPlays(deps, event, UID, playerId)).plays.trivia).toEqual({
       status: "finished",
-      points: done.points,
+      best: done.points,
+      runs: 1,
     });
     expect((await failure(hubPlays(deps, event, "deviceB1", playerId))).status).toBe(403);
+  });
+
+  it("S08-AC12: a replayable game starts a new run on request and keeps the best score", async () => {
+    const replay: EventConfig = {
+      ...event,
+      games: event.games.map((g) => (g.id === "trivia" ? { ...g, replayable: true } : g)),
+    };
+    const again = () => startPlay(deps, replay, UID, "trivia", { playerId, again: true });
+    const done = await playThrough();
+    const best = done.best;
+    expect(best).toBe(done.points);
+    // A second run that scores 0 (every answer timed out) never lowers the best.
+    let res = await again();
+    expect(res).toMatchObject({ status: "playing", points: 0, best });
+    while (res.status === "playing") {
+      clock += 60_000;
+      res = await makeMove(deps, replay, UID, "trivia", {
+        playerId,
+        step: res.step,
+        move: { type: "next" },
+      });
+    }
+    expect(res).toMatchObject({ status: "finished", points: 0, best });
+    expect((await hubPlays(deps, replay, UID, playerId)).plays.trivia).toEqual({
+      status: "finished",
+      best,
+      runs: 2,
+    });
+    // Without replayable, `again` just shows the result.
+    expect((await startPlay(deps, event, UID, "trivia", { playerId, again: true })).status).toBe(
+      "finished",
+    );
+  });
+
+  it("S08-AC13: an alwaysOpen game can be played before the start; every game closes at the end", async () => {
+    const open: EventConfig = {
+      ...event,
+      games: event.games.map((g) => (g.id === "trivia" ? { ...g, alwaysOpen: true } : g)),
+    };
+    status = "upcoming";
+    expect((await startPlay(deps, open, UID, "trivia", { playerId })).status).toBe("playing");
+    expect((await failure(startPlay(deps, event, UID, "trivia", { playerId }))).status).toBe(403);
+    status = "ended";
+    expect(await failure(startPlay(deps, open, UID, "trivia", { playerId }))).toEqual({
+      status: 403,
+      message: "This game has closed.",
+    });
   });
 
   it("S08-AC9: instructions are the event's own or the game type's", () => {

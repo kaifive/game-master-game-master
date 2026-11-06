@@ -8,7 +8,13 @@ export type PlayRecord = {
   seed: number;
   state: unknown;
   status: PlayStatus;
+  /** This run's points; fixed when it ends. */
   points: number;
+  /** The best finished run: the player's score for this game (S08-AC12). */
+  best: number;
+  /** How many runs have started. */
+  runs: number;
+  /** At least one run has finished. */
   scored: boolean;
 };
 

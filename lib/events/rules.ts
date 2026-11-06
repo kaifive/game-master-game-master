@@ -119,6 +119,8 @@ export function toPublicEvent(e: EventConfig): PublicEvent {
       visibility: g.visibility,
       scoring: g.scoring,
       ...(g.phase ? { phase: g.phase } : {}),
+      ...(g.replayable ? { replayable: true } : {}),
+      ...(g.alwaysOpen ? { alwaysOpen: true } : {}),
       ...(g.style ? { style: g.style } : {}),
     })),
   };
@@ -174,3 +176,7 @@ export const pointsFor = (
   e: Pick<EventConfig, "soloGamePoints">,
   g: Pick<GameConfig, "mode" | "scoring">,
 ): number => (g.mode === "solo" ? e.soloGamePoints : (g.scoring.points ?? 0));
+
+/** Whether a game can be played now: while live, or before the start if alwaysOpen (S08-AC13). */
+export const gameOpen = (status: EventStatus, g: Pick<GameConfig, "alwaysOpen">): boolean =>
+  status === "live" || (status === "upcoming" && g.alwaysOpen === true);
