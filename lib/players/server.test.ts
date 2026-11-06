@@ -32,7 +32,7 @@ describe("player routes", () => {
     const { player } = (await res.json()) as { player: { id: string; nickname: string } };
     expect(player.nickname).toBe("Route Mai");
     const device = await getDevice("routephone01");
-    expect(await device.json()).toEqual({ banned: false, players: [player] });
+    expect(await device.json()).toEqual({ banned: false, player, restartsLeft: 1 });
   });
 
   it("S02-AC11: refuses calls without a device token", async () => {

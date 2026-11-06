@@ -10,7 +10,12 @@ import { deviceView, joinEvent, type PlayerDeps } from "./service";
 
 function deps(): PlayerDeps {
   const runtime = eventRuntime();
-  return { players: playersRuntime().repo, status: (slug) => runtime.status(slug) };
+  return {
+    players: playersRuntime().repo,
+    status: (slug) => runtime.status(slug),
+    // Teams and captains arrive with spec 03; until then nobody is a captain.
+    isCaptain: () => Promise.resolve(false),
+  };
 }
 
 /** The player store, for other features' services. */

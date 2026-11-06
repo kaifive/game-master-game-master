@@ -76,7 +76,7 @@ function Hub({ event }: { event: PublicEvent }) {
   if (!useOptionalDevice()) return null;
   return (
     <div id="players" className="scroll-mt-4">
-      <PlayerHub maxPlayers={event.maxPlayersPerDevice} />
+      <PlayerHub hasTeams={event.scoring !== "individual"} />
     </div>
   );
 }

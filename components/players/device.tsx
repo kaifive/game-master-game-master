@@ -3,11 +3,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { gamesApi, type HubPlays } from "@/lib/games";
 import {
-  activePlayer,
   deviceToken,
   playersApi,
   type DeviceView,
   type Identity,
+  type JoinBody,
   type PlayerSummary,
 } from "@/lib/players";
 
@@ -17,17 +17,18 @@ export type DeviceLoad =
 type DeviceState = {
   slug: string;
   load: DeviceLoad;
-  players: PlayerSummary[];
+  /** The phone's one player (ADR-027), or null before joining. */
   active: PlayerSummary | null;
-  /** The active player's plays, and their total: the sum of best scores (S08-AC15). */
+  /** The player's plays, and their total: the sum of best scores (S08-AC15). */
   plays: HubPlays;
   total: number;
   refreshPlays: () => Promise<void>;
   /** A fresh token proving which device this is. */
   token: () => Promise<string>;
-  choose: (id: string) => void;
-  /** Joins a player; returns an error message, or null when it worked. */
+  /** Joins; returns an error message, or null when it worked. */
   join: (nickname: string, code: string | undefined) => Promise<string | null>;
+  /** Starts over as a new player, forfeiting the old one (S02-AC7). */
+  restart: (nickname: string) => Promise<string | null>;
   retry: () => void;
   /** Set while leaving would cost the player something, such as a running clock (S08-AC14). */
   leaveWarning: string | null;
@@ -39,7 +40,7 @@ const DeviceContext = createContext<DeviceState | null>(null);
 const totalOf = (plays: HubPlays) => Object.values(plays).reduce((sum, p) => sum + p.best, 0);
 
 /**
- * This phone's players in one event (spec 02), shared by every event page:
+ * This phone's player in one event (spec 02), shared by every event page:
  * the header total, the hub, the game list, game pages and the footer.
  */
 export function DeviceProvider({
@@ -52,7 +53,6 @@ export function DeviceProvider({
   children: React.ReactNode;
 }) {
   const [load, setLoad] = useState<DeviceLoad>({ kind: "loading" });
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [plays, setPlays] = useState<HubPlays>({});
   const [leaveWarning, setLeaveWarning] = useState<string | null>(null);
   const token = useCallback(() => deviceToken(identity), [identity]);
@@ -61,19 +61,9 @@ export function DeviceProvider({
     [slug, token],
   );
 
-  const apply = useCallback(
-    (res: Awaited<ReturnType<typeof fetchDevice>>) => {
-      if (!res.ok) {
-        setLoad({ kind: "error", message: res.message });
-        return;
-      }
-      setLoad({ kind: "ready", device: res.data });
-      const saved = activePlayer.read(slug);
-      const players = res.data.players;
-      setActiveId(players.find((p) => p.id === saved)?.id ?? players[0]?.id ?? null);
-    },
-    [slug],
-  );
+  const apply = useCallback((res: Awaited<ReturnType<typeof fetchDevice>>) => {
+    setLoad(res.ok ? { kind: "ready", device: res.data } : { kind: "error", message: res.message });
+  }, []);
 
   useEffect(() => {
     const alive = { current: true };
@@ -85,8 +75,7 @@ export function DeviceProvider({
     };
   }, [fetchDevice, apply]);
 
-  const players = useMemo(() => (load.kind === "ready" ? load.device.players : []), [load]);
-  const active = players.find((p) => p.id === activeId) ?? players[0] ?? null;
+  const active = load.kind === "ready" ? load.device.player : null;
   const activeKey = active?.id ?? null;
 
   const refreshPlays = useCallback(async () => {
@@ -109,55 +98,31 @@ export function DeviceProvider({
   }, [slug, token, activeKey]);
 
   const value = useMemo<DeviceState>(() => {
-    const choose = (id: string) => {
-      activePlayer.write(slug, id);
-      setActiveId(id);
+    const send = async (body: JoinBody) => {
+      const res = await playersApi.join(slug, await token(), body);
+      if (!res.ok) return res.message;
+      setPlays({});
+      apply(await fetchDevice());
+      return null;
     };
     return {
       slug,
       load,
-      players,
       active,
       plays: activeKey ? plays : {},
       total: activeKey ? totalOf(plays) : 0,
       refreshPlays,
       token,
-      choose,
       leaveWarning,
       setLeaveWarning,
       retry: () => {
         setLoad({ kind: "loading" });
         void fetchDevice().then(apply);
       },
-      join: async (nickname, code) => {
-        const res = await playersApi.join(slug, await token(), {
-          nickname,
-          ...(code ? { code } : {}),
-        });
-        if (!res.ok) return res.message;
-        const player = res.data.player;
-        setLoad((l) =>
-          l.kind === "ready" && !l.device.players.some((p) => p.id === player.id)
-            ? { kind: "ready", device: { ...l.device, players: [...l.device.players, player] } }
-            : l,
-        );
-        choose(player.id);
-        return null;
-      },
+      join: (nickname, code) => send({ nickname, ...(code ? { code } : {}) }),
+      restart: (nickname) => send({ nickname, restart: true }),
     };
-  }, [
-    slug,
-    load,
-    players,
-    active,
-    activeKey,
-    plays,
-    refreshPlays,
-    token,
-    leaveWarning,
-    fetchDevice,
-    apply,
-  ]);
+  }, [slug, load, active, activeKey, plays, refreshPlays, token, leaveWarning, fetchDevice, apply]);
 
   return <DeviceContext.Provider value={value}>{children}</DeviceContext.Provider>;
 }

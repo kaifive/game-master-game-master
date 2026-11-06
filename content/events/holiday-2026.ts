@@ -10,7 +10,7 @@ export const holiday2026: EventConfig = {
   joinCode: "WUSH7",
   joinPolicy: "open",
   scoring: "both",
-  maxPlayersPerDevice: 4,
+  restartsPerDevice: 1,
   soloGamePoints: 100,
   // Games can be played again; each player's best run counts. Decide before the party.
   replayable: true,

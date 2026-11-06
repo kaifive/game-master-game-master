@@ -148,7 +148,7 @@ describe("S08-AC7: the hub lists each game for the active player", () => {
                     "ornament-hunt": { status: "playing", best: 0, runs: 1 },
                   },
                 }
-              : { banned: false, players: [{ id: "p1", nickname: "Mai" }] },
+              : { banned: false, player: { id: "p1", nickname: "Mai" }, restartsLeft: 1 },
           ),
         ),
       ),

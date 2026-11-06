@@ -55,7 +55,7 @@ export function instructionsFor(event: EventConfig, gameId: string): Instruction
 
 async function ownsPlayer(deps: GameDeps, event: EventConfig, uid: string, playerId: string) {
   const device = await deps.players.device(event.slug, uid);
-  if (device.banned || !device.players.some((p) => p.id === playerId))
+  if (device.banned || device.player?.id !== playerId)
     throw new AppError("FORBIDDEN", "That player isn't on this phone.");
 }
 

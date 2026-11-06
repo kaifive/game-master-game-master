@@ -14,7 +14,7 @@ type EventConfig = {
   style: StyleRef;           // { pack: "one-hour-photo", variant?: "holiday", colorMode: "dark" } (ADR-021)
   joinPolicy: "open" | "approval";        // default "open" (ADR-010)
   kind: "event" | "quick";                // quick = one game, code opens it (ADR-020)
-  maxPlayersPerDevice: number;            // default 4 (ADR-009)
+  restartsPerDevice: number;              // one player per phone; how often it may start over (ADR-027)
   soloGamePoints: number;                 // every solo game is worth this (spec 08)
   replayable?: boolean;                   // every game can be played again; best run counts (ADR-026)
   blockedNames?: string[];                // extra name-filter words, server-only (spec 02)
@@ -73,13 +73,15 @@ codes/{code}                 global index, server-only
 
 events/{slug}/devices/{uid}
   banned: boolean
-  playerIds: string[]
+  playerId: string           the phone's current player (ADR-027)
+  restarts: number           times it has started over
+  playerIds: string[]        every player it has had
 
 events/{slug}/players/{playerId}
   deviceUid: string
   nickname: string
   nicknameKey: string        lower case; accents, spaces and ' - . _ removed (spec 02)
-  status: "active" | "pending" | "removed"   "pending" only under approval
+  status: "active" | "pending" | "removed" | "forfeited"   "forfeited" after starting over
   teamId: string | null      set once; only the admin changes it after
   points: number             own points: awards − donations given
   joinedAt: timestamp

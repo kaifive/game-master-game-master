@@ -54,7 +54,8 @@ export const EventConfig = z
     joinCode: z.string(),
     joinPolicy: z.enum(["open", "approval"]),
     scoring: z.enum(["individual", "team", "both"]),
-    maxPlayersPerDevice: z.number().int().min(1).max(8),
+    /** One player per phone; how many times a phone may start over as someone new (ADR-027). */
+    restartsPerDevice: z.number().int().min(0).max(10),
     /** Every solo game can be played again; each player's best run counts (S08-AC12). */
     replayable: z.boolean().optional(),
     /** What every solo game is worth; a game scores its share of it (S08-AC10). */

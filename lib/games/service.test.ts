@@ -42,8 +42,7 @@ beforeEach(async () => {
     now: () => clock,
     seed: () => 42,
   };
-  playerId = (await players.join(event.slug, UID, { nickname: "Mai", key: "mai", maxPerDevice: 4 }))
-    .id;
+  playerId = (await players.join(event.slug, UID, { nickname: "Mai", key: "mai" })).id;
 });
 
 async function failure(promise: Promise<unknown>) {

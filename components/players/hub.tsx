@@ -114,26 +114,31 @@ function JoinForm({
   );
 }
 
-/** Join, add and switch players on this phone (spec 02). Needs a DeviceProvider. */
-export function PlayerHub({ maxPlayers }: { maxPlayers: number }) {
+/** What starting over costs, in plain words (S02-AC7). Donations only come up when the event has teams. */
+export function forfeitMessage(
+  name: string,
+  points: number,
+  hasTeams: boolean,
+  restartsLeft: number,
+) {
+  const lost = hasTeams
+    ? `${name}'s ${String(points)} points will be lost, including any given to teams.`
+    : `${name}'s ${String(points)} points will be lost.`;
+  const left = restartsLeft === 1 ? "once" : `${String(restartsLeft)} times`;
+  return `${lost} This phone can only start over ${left} at this party.`;
+}
+
+/** Join, or start over as someone new (spec 02). One player per phone (ADR-027). */
+export function PlayerHub({ hasTeams }: { hasTeams: boolean }) {
   const { Panel, Button } = useSlots();
-  const { load, players, active, join, retry, choose: setActive } = useDevice();
+  const { load, active, total, join, restart, retry } = useDevice();
+  const [mode, setMode] = useState<"view" | "confirm" | "restart">("view");
   // The join code from a QR link (`?code=`), if the phone arrived that way.
   const code = useSearchParams().get("code") ?? undefined;
-  const [mode, setMode] = useState<"view" | "switch" | "add">("view");
-  const choose = (id: string) => {
-    setActive(id);
-    setMode("view");
-  };
-  const joinThenShow = async (nickname: string, typed: string | undefined) => {
-    const failed = await join(nickname, typed ?? code);
-    if (!failed) setMode("view");
-    return failed;
-  };
 
   if (load.kind === "loading")
     return (
-      <Panel label="Your players">
+      <Panel label="Your player">
         <p aria-busy="true" className="m-0 text-gm-text-muted">
           Getting your phone ready…
         </p>
@@ -142,7 +147,7 @@ export function PlayerHub({ maxPlayers }: { maxPlayers: number }) {
 
   if (load.kind === "error")
     return (
-      <Panel label="Your players">
+      <Panel label="Your player">
         <div className="grid gap-3">
           <Alert>{load.message}</Alert>
           <div>
@@ -154,76 +159,79 @@ export function PlayerHub({ maxPlayers }: { maxPlayers: number }) {
 
   if (load.device.banned)
     return (
-      <Panel label="Your players">
+      <Panel label="Your player">
         <p className="m-0 font-bold">{MESSAGES.banned}</p>
       </Panel>
     );
 
-  if (players.length === 0)
+  if (!active)
     return (
       <Panel label="Join the party">
-        <JoinForm title="Join the party" askCode={!code} onJoin={joinThenShow} />
+        <JoinForm
+          title="Join the party"
+          askCode={!code}
+          onJoin={(nickname, typed) => join(nickname, typed ?? code)}
+        />
       </Panel>
     );
 
-  if (mode === "add")
+  const { restartsLeft } = load.device;
+  const back = () => {
+    setMode("view");
+  };
+
+  if (mode === "restart")
     return (
-      <Panel label="Add a player">
+      <Panel label="Start over">
         <JoinForm
-          title="Add a player"
+          title="Start over"
           askCode={false}
-          onJoin={joinThenShow}
-          onCancel={() => {
-            setMode("view");
+          onCancel={back}
+          onJoin={async (nickname) => {
+            const failed = await restart(nickname);
+            if (!failed) back();
+            return failed;
           }}
         />
       </Panel>
     );
 
   return (
-    <Panel label="Your players">
+    <Panel label="Your player">
       <div className="grid gap-3">
         <p className="m-0 text-lg">
-          Playing as <strong className="font-gm-display text-2xl">{active?.nickname}</strong>
+          Playing as <strong className="font-gm-display text-2xl">{active.nickname}</strong>
         </p>
-        {mode === "switch" ? (
-          <ul aria-label="Players on this phone" className="m-0 flex list-none flex-wrap gap-2 p-0">
-            {players.map((p) => (
-              <li key={p.id}>
-                <Button
-                  tone={p.id === active?.id ? "primary" : "secondary"}
-                  onClick={() => {
-                    choose(p.id);
-                  }}
-                >
-                  {p.nickname}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {players.length > 1 && (
+        {mode === "confirm" ? (
+          <div role="alertdialog" aria-label="Start over?" className="grid gap-3">
+            <p className="m-0 font-bold">
+              {forfeitMessage(active.nickname, total, hasTeams, restartsLeft)}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={back}>Keep {active.nickname}</Button>
               <Button
                 tone="secondary"
                 onClick={() => {
-                  setMode("switch");
+                  setMode("restart");
                 }}
               >
-                Switch player
+                Start over
               </Button>
-            )}
-            {players.length < maxPlayers && (
-              <Button
-                tone="secondary"
-                onClick={() => {
-                  setMode("add");
-                }}
-              >
-                Add player
-              </Button>
-            )}
+            </div>
           </div>
+        ) : (
+          restartsLeft > 0 && (
+            <div>
+              <Button
+                tone="secondary"
+                onClick={() => {
+                  setMode("confirm");
+                }}
+              >
+                Not you? Start over
+              </Button>
+            </div>
+          )
         )}
       </div>
     </Panel>

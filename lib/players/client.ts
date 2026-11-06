@@ -4,7 +4,6 @@ import { MESSAGES } from "./rules";
 /** Browser helpers for joining (spec 02): device tokens, the player API and the active player. */
 
 const DEVICE_KEY = "gm.device";
-const activeKey = (slug: string) => `gm.active.${slug}`;
 
 // Local storage can be missing or throw (private mode); nothing here must depend on it.
 function read(key: string): string | null {
@@ -69,12 +68,4 @@ export const playersApi = {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     }),
-};
-
-/** Which of the device's players is playing, kept on this phone (S02-AC7). */
-export const activePlayer = {
-  read: (slug: string) => read(activeKey(slug)),
-  write: (slug: string, id: string) => {
-    write(activeKey(slug), id);
-  },
 };

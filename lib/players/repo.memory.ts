@@ -1,10 +1,12 @@
-import type { DeviceView, PlayerSummary } from "./model";
-import type { NewPlayer, PlayerRepo } from "./repo";
+import type { PlayerSummary } from "./model";
+import type { NewPlayer, PlayerRepo, StoredDevice } from "./repo";
 import { joinErrors } from "./repo.errors";
 
+type Player = PlayerSummary & { deviceUid: string; status: "active" | "forfeited" };
+type Device = { banned: boolean; playerId: string | null; restarts: number };
 type EventData = {
-  devices: Map<string, { banned: boolean; playerIds: string[] }>;
-  players: Map<string, PlayerSummary & { deviceUid: string }>;
+  devices: Map<string, Device>;
+  players: Map<string, Player>;
   nicknames: Map<string, string>;
 };
 
@@ -15,7 +17,7 @@ export class MemoryPlayerRepo implements PlayerRepo {
 
   constructor(seed: { banned?: { slug: string; uid: string }[] } = {}) {
     for (const { slug, uid } of seed.banned ?? [])
-      this.data(slug).devices.set(uid, { banned: true, playerIds: [] });
+      this.data(slug).devices.set(uid, { banned: true, playerId: null, restarts: 0 });
   }
 
   private data(slug: string): EventData {
@@ -27,32 +29,61 @@ export class MemoryPlayerRepo implements PlayerRepo {
     return d;
   }
 
-  device(slug: string, uid: string): Promise<DeviceView> {
-    const d = this.data(slug);
-    const device = d.devices.get(uid);
-    const players = (device?.playerIds ?? []).flatMap((id) => {
-      const p = d.players.get(id);
-      return p ? [{ id: p.id, nickname: p.nickname }] : [];
-    });
-    return Promise.resolve({ banned: device?.banned ?? false, players });
+  private stored(slug: string, uid: string): Device {
+    return this.data(slug).devices.get(uid) ?? { banned: false, playerId: null, restarts: 0 };
   }
 
-  join(slug: string, uid: string, { nickname, key, maxPerDevice }: NewPlayer) {
+  private current(slug: string, device: Device): PlayerSummary | null {
+    const p = device.playerId ? this.data(slug).players.get(device.playerId) : undefined;
+    return p && p.status === "active" ? { id: p.id, nickname: p.nickname } : null;
+  }
+
+  device(slug: string, uid: string): Promise<StoredDevice> {
+    const device = this.stored(slug, uid);
+    return Promise.resolve({
+      banned: device.banned,
+      player: this.current(slug, device),
+      restarts: device.restarts,
+    });
+  }
+
+  private add(
+    slug: string,
+    uid: string,
+    device: Device,
+    { nickname, key }: NewPlayer,
+    restarts: number,
+  ) {
     const d = this.data(slug);
-    const device = d.devices.get(uid) ?? { banned: false, playerIds: [] };
-    if (device.banned) return Promise.reject(joinErrors.banned());
-    const owner = d.nicknames.get(key);
-    if (owner !== undefined) {
-      const mine = device.playerIds.includes(owner) ? d.players.get(owner) : undefined;
-      return mine
-        ? Promise.resolve({ id: mine.id, nickname: mine.nickname })
-        : Promise.reject(joinErrors.taken());
-    }
-    if (device.playerIds.length >= maxPerDevice) return Promise.reject(joinErrors.full());
     const id = `p${String(this.nextId++).padStart(4, "0")}`;
-    d.players.set(id, { id, nickname, deviceUid: uid });
+    d.players.set(id, { id, nickname, deviceUid: uid, status: "active" });
     d.nicknames.set(key, id);
-    d.devices.set(uid, { ...device, playerIds: [...device.playerIds, id] });
-    return Promise.resolve({ id, nickname });
+    d.devices.set(uid, { ...device, playerId: id, restarts });
+    return { id, nickname };
+  }
+
+  join(slug: string, uid: string, player: NewPlayer) {
+    const device = this.stored(slug, uid);
+    if (device.banned) return Promise.reject(joinErrors.banned());
+    const mine = this.current(slug, device);
+    if (mine && this.data(slug).nicknames.get(player.key) === mine.id) return Promise.resolve(mine);
+    if (mine) return Promise.reject(joinErrors.hasPlayer());
+    if (this.data(slug).nicknames.has(player.key)) return Promise.reject(joinErrors.taken());
+    return Promise.resolve(this.add(slug, uid, device, player, device.restarts));
+  }
+
+  restart(slug: string, uid: string, player: NewPlayer, maxRestarts: number) {
+    const d = this.data(slug);
+    const device = this.stored(slug, uid);
+    if (device.banned) return Promise.reject(joinErrors.banned());
+    if (device.restarts >= maxRestarts) return Promise.reject(joinErrors.noRestarts());
+    const old = device.playerId ? d.players.get(device.playerId) : undefined;
+    const owner = d.nicknames.get(player.key);
+    if (owner !== undefined && owner !== old?.id) return Promise.reject(joinErrors.taken());
+    if (old) {
+      d.players.set(old.id, { ...old, status: "forfeited" });
+      for (const [key, id] of d.nicknames) if (id === old.id) d.nicknames.delete(key);
+    }
+    return Promise.resolve(this.add(slug, uid, device, player, device.restarts + 1));
   }
 }

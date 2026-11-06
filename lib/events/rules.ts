@@ -70,7 +70,7 @@ export function toPublicEvent(e: EventConfig): PublicEvent {
     kind: e.kind,
     joinPolicy: e.joinPolicy,
     scoring: e.scoring,
-    maxPlayersPerDevice: e.maxPlayersPerDevice,
+    restartsPerDevice: e.restartsPerDevice,
     soloGamePoints: e.soloGamePoints,
     games: e.games.map((g) => ({
       id: g.id,

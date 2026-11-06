@@ -133,7 +133,7 @@ already deploy to.
 
 ## ADR-009: A device can hold several players
 
-**Status:** accepted. Refines ADR-005.
+**Status:** superseded by ADR-027. Refined ADR-005.
 
 A parent may play, then hand the phone to their kids. Each needs their own
 points and plays.
@@ -416,7 +416,7 @@ handle), and the contract suites stop that freedom from breaking games.
 
 ## ADR-024: Events start and end by hand
 
-**Status:** accepted
+**Status:** accepted; the "schedule shown" part is superseded by ADR-026.
 
 Khai doesn't want the clock deciding when games open or close.
 
@@ -464,3 +464,26 @@ mislead.
   fails validation.
 - Whether games can be played again is one setting for the whole event
   (`replayable`), not per game.
+
+---
+
+## ADR-027: One player per phone; starting over forfeits
+
+**Status:** accepted. Supersedes ADR-009.
+
+Several players per phone made it too easy to make extra players and farm
+games that can't be replayed. Khai prefers one player per phone, even though
+kids without a phone can't play on their own.
+
+**Decision:**
+- A phone (device) has one player per event. There is no Add player or
+  Switch player.
+- "Start over" replaces the phone's player with a new one. The old player
+  is forfeited: off the leaderboard, their points lost (including points
+  donated to teams, once spec 04 exists), and their name freed. The phone
+  confirms first, and mentions donations only when the event has teams.
+- Each event sets `restartsPerDevice` (the party: 1). A phone that has used
+  them can't start over again. Joining for the first time needs the join
+  code; starting over doesn't.
+- Team captains can't start over (spec 03), so a team is never left
+  without its captain.
