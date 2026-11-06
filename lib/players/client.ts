@@ -41,7 +41,11 @@ export async function deviceToken(identity: Identity): Promise<string> {
 
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; message: string };
 
-async function call<T>(url: string, token: string, init: RequestInit = {}): Promise<ApiResult<T>> {
+export async function apiCall<T>(
+  url: string,
+  token: string,
+  init: RequestInit = {},
+): Promise<ApiResult<T>> {
   try {
     const headers = new Headers(init.headers);
     headers.set("authorization", `Bearer ${token}`);
@@ -58,9 +62,9 @@ async function call<T>(url: string, token: string, init: RequestInit = {}): Prom
 }
 
 export const playersApi = {
-  device: (slug: string, token: string) => call<DeviceView>(`/api/events/${slug}/device`, token),
+  device: (slug: string, token: string) => apiCall<DeviceView>(`/api/events/${slug}/device`, token),
   join: (slug: string, token: string, body: JoinBody) =>
-    call<{ player: PlayerSummary }>(`/api/events/${slug}/players`, token, {
+    apiCall<{ player: PlayerSummary }>(`/api/events/${slug}/players`, token, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),

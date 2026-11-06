@@ -1,8 +1,6 @@
 import "server-only";
-import { AppError } from "@/lib/errors";
 import { backend } from "@/lib/backend";
-import type { EventConfig } from "@/lib/events";
-import { eventRuntime, getEvent } from "@/lib/events/server";
+import { eventRuntime, requireEvent } from "@/lib/events/server";
 import { deviceUid } from "./identity";
 import type { Identity, JoinBody } from "./model";
 import { playersRuntime } from "./runtime";
@@ -15,11 +13,8 @@ function deps(): PlayerDeps {
   return { players: playersRuntime().repo, status: (slug) => runtime.status(slug) };
 }
 
-function requireEvent(slug: string | string[] | undefined): EventConfig {
-  const event = typeof slug === "string" ? getEvent(slug) : undefined;
-  if (!event) throw new AppError("NOT_FOUND", "We couldn't find that event.");
-  return event;
-}
+/** The player store, for other features' services. */
+export const playerRepo = () => playersRuntime().repo;
 
 /** Route `auth`: the calling phone's device uid. */
 export const requireDevice = (request: Request) => deviceUid(request, playersRuntime().verify);

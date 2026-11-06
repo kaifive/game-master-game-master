@@ -17,6 +17,7 @@ type EventConfig = {
   joinPolicy: "open" | "approval";        // default "open" (ADR-010)
   kind: "event" | "quick";                // quick = one game, code opens it (ADR-020)
   maxPlayersPerDevice: number;            // default 4 (ADR-009)
+  soloGamePoints: number;                 // every solo game is worth this (spec 08)
   blockedNames?: string[];                // extra name-filter words, server-only (spec 02)
   scoring: "individual" | "team" | "both"; // ADR-011
   maxTeams?: number;
@@ -25,13 +26,14 @@ type EventConfig = {
 
 type Game = {
   id: string;                // "daily-word-1", unique in the event
-  type: GameType;            // "word-guess" | "photo-challenge" | "jeopardy" | ...
+  type: GameType;            // "trivia" | "photo-challenge" | "jeopardy" | ...
   title: string;
   mode: "solo" | "live";
   phase?: "individual" | "team";  // only playable in this phase, if set
   content: unknown;          // validated by the game type's content.ts
   style?: { variant?: string };  // per-game variant override; the pack is the event's
-  scoring: { points: number; awardTo: "player" | "team" };
+  scoring: { points?: number; awardTo: "player" | "team" };  // solo games take soloGamePoints
+  instructions?: { title: string; lines: string[] };  // replaces the type's default box
   opensAt?: string;
   closesAt?: string;
   visibility: "listed" | "hidden";         // hidden games appear only once unlocked
@@ -107,7 +109,9 @@ events/{slug}/ledger/{entryId}      append-only
   createdBy: "server" | "admin"
 
 events/{slug}/plays/{gameId}_{playerId}
-  state: unknown             game type's state, server-owned
+  gameId, playerId, deviceUid
+  seed: number               the play's randomness (question draw, answer order)
+  state: string              game type's state as JSON text, server-owned
   status: "playing" | "finished"
   scored: boolean
   points: number

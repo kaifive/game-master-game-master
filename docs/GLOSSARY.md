@@ -26,7 +26,7 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Captain** | A player the admin promotes to lead a team. Also called team leader. Names the team and buzzes for it. | `team.captainId` |
 | **Team score** | Members' points + donations to the team + team awards. | |
 | **Donation** | A player giving some of their points to a team, with or without joining it. A ledger transfer. | `kind: "donation"` |
-| **Game type** | A generic, reusable game, such as `word-guess` or `jeopardy`. Code, not content. | `GameType` |
+| **Game type** | A generic, reusable game, such as `trivia` or `jeopardy`. Code, not content. | `GameType` |
 | **Game** | An instance of a game type in one event: type + content + theme variant + scoring. | `Game` |
 | **Solo game** | A game a player plays alone at their own pace. Also called a mini game. | `mode: "solo"` |
 | **Live session** | A game the admin runs for the whole room at once, such as Jeopardy. | `LiveSession` |
@@ -61,3 +61,5 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Color mode** | Light or dark within a theme. | `colorMode` |
 | **Renderer** | The React view of a game type. Uses theme tokens only. | `Renderer.tsx` |
 | **Logic** | The pure functions of a game type: create, apply move, is over, score. | `logic.ts` |
+| **Play** | One player's single run at one solo game. Server-owned; scored once when it ends. | `PlayRecord`, `plays/{gameId}_{playerId}` |
+| **Instructions box** | The rules shown before a game starts; the play begins when it is closed. | `Instructions` |

@@ -36,9 +36,10 @@ A feature item needs its spec at `Ready` before it starts.
 
 ## M2: Solo games and photos (by Dec 6)
 
-- [ ] Spec 08, game framework: game type contract, move route, results, score once
+- [x] Spec 08, game framework: game type contract, move route, results, score once (points reach the ledger with spec 04)
 - [ ] Spec 09, theming: tokens, color modes, variants, icon sets; holiday variant
-- [ ] Spec 10, word guess: the first solo game
+- [x] Spec 10, trivia: the first solo game (replaces word guess)
+- [ ] Spec 15, game codes and hidden games (split from spec 08)
 - [ ] Spec 13, photos: upload, swipe triage, photo challenge, photo vote, slideshow
 - [ ] Photo export and prune scripts (ADR-012)
 

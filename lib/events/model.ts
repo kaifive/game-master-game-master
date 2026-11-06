@@ -6,7 +6,7 @@ import { StyleRef } from "@/lib/themes";
 export const CODE_PATTERN = /^[A-HJKMNP-Z2-9]{5}$/;
 
 /** Game types the platform knows (spec 08 adds their logic). */
-export const GAME_TYPES = ["word-guess", "photo-challenge", "jeopardy"] as const;
+export const GAME_TYPES = ["trivia", "photo-challenge", "jeopardy"] as const;
 
 export const EVENT_STATUSES = ["upcoming", "live", "ended"] as const;
 export const EventStatus = z.enum(EVENT_STATUSES);
@@ -28,10 +28,15 @@ export const GameConfig = z.object({
   visibility: z.enum(["listed", "hidden"]),
   content: z.unknown(),
   style: z.object({ variant: z.string().optional() }).optional(),
+  /** Solo games take the event's soloGamePoints and may not set points (S08-AC10). */
   scoring: z.object({
-    points: z.number().int().nonnegative(),
+    points: z.number().int().nonnegative().optional(),
     awardTo: z.enum(["player", "team"]),
   }),
+  /** Replaces the game type's default instructions box (S08-AC9). */
+  instructions: z
+    .object({ title: z.string().min(1), lines: z.array(z.string().min(1)).min(1) })
+    .optional(),
   codes: z.array(GameCode).optional(),
 });
 export type GameConfig = z.infer<typeof GameConfig>;
@@ -50,6 +55,8 @@ export const EventConfig = z.object({
   joinPolicy: z.enum(["open", "approval"]),
   scoring: z.enum(["individual", "team", "both"]),
   maxPlayersPerDevice: z.number().int().min(1).max(8),
+  /** What every solo game is worth; a game scores its share of it (S08-AC10). */
+  soloGamePoints: z.number().int().min(0).max(10_000),
   /** Extra words the name filter blocks for this event (spec 02). */
   blockedNames: z.array(z.string().min(1)).optional(),
   games: z.array(GameConfig),
@@ -58,5 +65,5 @@ export type EventConfig = z.infer<typeof EventConfig>;
 
 /** What a page may show about an event: everything except codes. */
 export type PublicEvent = Omit<EventConfig, "joinCode" | "games" | "blockedNames"> & {
-  games: Omit<GameConfig, "codes" | "content">[];
+  games: Omit<GameConfig, "codes" | "content" | "instructions">[];
 };
