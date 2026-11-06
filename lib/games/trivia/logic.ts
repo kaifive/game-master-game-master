@@ -38,8 +38,22 @@ type Asked = {
   seconds: number;
   msLeft: number;
 };
+/**
+ * The question's answer, lightly scrambled, so the phone can say right or
+ * wrong the moment it's tapped (ADR-029). Not a secret: the server still
+ * checks every answer and keeps the score.
+ */
+export const answerKey = (displayIndex: number, number: number) =>
+  (displayIndex * 7 + number * 13 + 11).toString(36);
+
+/** The answer a key stands for, or null if the key isn't one. */
+export function readAnswerKey(key: string, number: number, choices: number): number | null {
+  const n = parseInt(key, 36) - number * 13 - 11;
+  return Number.isInteger(n / 7) && n / 7 >= 0 && n / 7 < choices ? n / 7 : null;
+}
+
 export type TriviaView =
-  | ({ kind: "question" } & Asked)
+  | ({ kind: "question"; key: string } & Asked)
   | ({ kind: "answered"; chosen: number | null; correct: number; right: boolean } & Asked)
   | {
       kind: "done";
@@ -163,7 +177,12 @@ export const trivia: GameLogic<TriviaContent, TriviaState, TriviaView> = {
       seconds: seconds(c),
       msLeft: Math.max(0, s.deadline - now),
     };
-    if (s.phase === "question") return { kind: "question", ...asked };
+    if (s.phase === "question")
+      return {
+        kind: "question",
+        ...asked,
+        key: answerKey(order.indexOf(question.answer), asked.number),
+      };
     const answer = s.answers[s.index];
     const chosen = answer?.choice ?? null;
     return {
