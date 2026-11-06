@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSlots } from "@/components/slots/registry";
 import type { ChoiceView, Media, TriviaView } from "@/lib/games";
 import { cx } from "@/lib/ui";
@@ -124,6 +124,34 @@ function TimerBar({ left, seconds }: { left: number; seconds: number }) {
   );
 }
 
+/** How long the answer shows before the next question comes on its own (S10-AC10). */
+export const REVEAL_MS = 2000;
+
+/**
+ * Moves on once per question: after REVEAL_MS, or sooner on a tap. The wait
+ * runs on the phone, so a phone that leaves waits here (S10-AC10).
+ */
+function useAdvance(answered: boolean, question: number, next: () => void) {
+  const sent = useRef<number | null>(null);
+  const latest = useRef(next);
+  useEffect(() => {
+    latest.current = next;
+  }, [next]);
+  const advance = useCallback(() => {
+    if (sent.current === question) return;
+    sent.current = question;
+    latest.current();
+  }, [question]);
+  useEffect(() => {
+    if (!answered) return;
+    const timer = setTimeout(advance, REVEAL_MS);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [answered, advance]);
+  return advance;
+}
+
 const FEEDBACK = { right: "Right!", wrong: "Not quite.", late: "Time's up." };
 
 /** Trivia on the phone (spec 10): question, answers in a grid or list, a timer, then feedback. */
@@ -133,6 +161,9 @@ export function TriviaGame({ view: raw, onMove, onTimeUp, busy }: GameRendererPr
   const asking = view.kind === "question";
   const left = useCountdown(view.msLeft, asking, onTimeUp);
   const last = view.number === view.total;
+  const advance = useAdvance(view.kind === "answered", view.number, () => {
+    onMove({ type: "next" });
+  });
   const feedback =
     view.kind === "answered"
       ? view.right
@@ -143,7 +174,11 @@ export function TriviaGame({ view: raw, onMove, onTimeUp, busy }: GameRendererPr
       : null;
 
   return (
-    <section aria-label="Trivia" className="grid gap-4">
+    <section
+      aria-label="Trivia"
+      className="grid gap-4"
+      onClick={view.kind === "answered" ? advance : undefined}
+    >
       <div className="grid gap-2">
         <p className="m-0 text-sm font-bold tracking-wide text-gm-text-muted uppercase">
           Question {view.number} of {view.total}
@@ -178,14 +213,12 @@ export function TriviaGame({ view: raw, onMove, onTimeUp, busy }: GameRendererPr
           <p role="status" className="m-0 text-center font-gm-display text-2xl font-bold">
             {feedback}
           </p>
-          <Button
-            disabled={busy}
-            onClick={() => {
-              onMove({ type: "next" });
-            }}
-          >
+          <Button disabled={busy} onClick={advance}>
             {last ? "See score" : "Next"}
           </Button>
+          <p className="m-0 text-center text-sm text-gm-text-muted">
+            {last ? "Your score is coming up" : "Next question coming up"} · tap to skip
+          </p>
         </div>
       )}
     </section>

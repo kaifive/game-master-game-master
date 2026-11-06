@@ -12,7 +12,7 @@ A multiple-choice quiz on the player's phone: a question, a few answers, a timer
 
 1. Content (`lib/games/trivia/content.ts`): a **pool** of `questions` (1–200), `questionsPerPlay` (default 5) and `secondsPerQuestion` (5–60, default 15). A question is `{ id, prompt, image?, choices (2–6), answer }`; a choice is text, an image, or both. Images are `{ src, alt }`, from `public/` (a path starting with `/`) or an `https://` URL, and always have alt text.
 2. Each play draws `questionsPerPlay` different questions from the pool, in an order and with answer orders shuffled from the play's seed, so neighbours get different questions and replays of the party can't be memorized.
-3. One question at a time with a countdown. Tapping an answer locks it in. The server checks it and shows right or wrong and the correct answer, then **Next** (on the last question, **See score**).
+3. One question at a time with a countdown. Tapping an answer locks it in. The server checks it and shows right or wrong and the correct answer for 2 seconds, then the next question (or the score) comes on its own. A tap anywhere skips the wait. The wait runs on the phone, so a phone that leaves waits on the answer instead of losing the questions after it.
 4. Time runs on the server: a question's deadline is set when it is shown. An answer after the deadline (plus 2 s grace for the network) counts as wrong, and so does running out of time. Leaving and coming back doesn't stop the clock.
 5. Points: `round(soloGamePoints × correct ÷ questionsPerPlay)`.
 6. Answers show as a **2×2 grid** when there are at most 4 and each is short (16 characters or fewer) or a picture; otherwise as a **list**.
@@ -40,6 +40,7 @@ The play's `state`: the drawn question ids, choice order per question, the curre
 - [x] AC-7: The party's event file has a trivia game with a placeholder pool, and word guess is gone from it.
 - [x] AC-8: Answers show as a 2×2 grid when there are at most 4 short or picture answers, and as a list otherwise.
 - [x] AC-9: Questions and answers can show images, each with alt text.
+- [x] AC-10: After an answer shows for 2 seconds, the next question (or the score) comes on its own; a tap skips the wait, and it moves on only once.
 
 ## Tests
 

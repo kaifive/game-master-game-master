@@ -10,8 +10,9 @@ import type { TriviaView } from "./trivia/logic";
 const event: EventConfig = {
   ...holiday2026,
   // Plain games here; each test turns on replayable or alwaysOpen as it needs.
+  replayable: false,
   games: [
-    ...holiday2026.games.map((g) => ({ ...g, replayable: false, alwaysOpen: false })),
+    ...holiday2026.games.map((g) => ({ ...g, alwaysOpen: false })),
     {
       id: "own-rules",
       type: "trivia",
@@ -154,10 +155,7 @@ describe("game service", () => {
   });
 
   it("S08-AC12: a replayable game starts a new run on request and keeps the best score", async () => {
-    const replay: EventConfig = {
-      ...event,
-      games: event.games.map((g) => (g.id === "trivia" ? { ...g, replayable: true } : g)),
-    };
+    const replay: EventConfig = { ...event, replayable: true };
     const again = () => startPlay(deps, replay, UID, "trivia", { playerId, again: true });
     const done = await playThrough();
     const best = done.best;

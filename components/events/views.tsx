@@ -7,13 +7,7 @@ import { useOptionalDevice } from "@/components/players/device";
 import { PlayerHub } from "@/components/players/hub";
 import { TotalScore } from "@/components/players/total-score";
 import { useSlots } from "@/components/slots/registry";
-import {
-  formatSchedule,
-  gameOpen,
-  type EventStatus,
-  type FinalStandings,
-  type PublicEvent,
-} from "@/lib/events";
+import { gameOpen, type EventStatus, type FinalStandings, type PublicEvent } from "@/lib/events";
 import type { HubPlays, Instructions } from "@/lib/games";
 
 type Game = PublicEvent["games"][number];
@@ -21,7 +15,7 @@ type Game = PublicEvent["games"][number];
 /** The event's banner, with the active player's total where the Live badge was (S08-AC15). */
 function EventBanner({ event }: { event: PublicEvent }) {
   const { Banner } = useSlots();
-  return <Banner title={event.name} subtitle={formatSchedule(event)} aside={<TotalScore />} />;
+  return <Banner title={event.name} aside={<TotalScore />} />;
 }
 
 const Body = ({ children }: { children: React.ReactNode }) => (
@@ -31,10 +25,10 @@ const Body = ({ children }: { children: React.ReactNode }) => (
 const listed = (event: PublicEvent) => event.games.filter((g) => g.visibility === "listed");
 
 /** Play, Continue, Done · +N, or Best N · Again for replayable games (S08-AC7, AC12). */
-function playLabel(g: Game, play: HubPlays[string] | undefined): string {
+function playLabel(replayable: boolean, play: HubPlays[string] | undefined): string {
   if (!play) return "Play →";
   if (play.status === "playing") return "Continue →";
-  return g.replayable ? `Best ${String(play.best)} · Again →` : `Done · +${String(play.best)}`;
+  return replayable ? `Best ${String(play.best)} · Again →` : `Done · +${String(play.best)}`;
 }
 
 function GameList({ event, status }: { event: PublicEvent; status: EventStatus }) {
@@ -62,7 +56,7 @@ function GameList({ event, status }: { event: PublicEvent; status: EventStatus }
                 className="flex min-h-13 items-center justify-between gap-3 py-2 font-bold text-gm-text no-underline"
               >
                 {g.title}
-                <span className="text-gm-accent">{playLabel(g, plays[g.id])}</span>
+                <span className="text-gm-accent">{playLabel(event.replayable, plays[g.id])}</span>
               </Link>
             ) : (
               <div className="flex min-h-13 items-center justify-between gap-3 py-2 font-bold">
@@ -95,10 +89,9 @@ export function UpcomingView({ event }: { event: PublicEvent }) {
       <Body>
         <Hub event={event} />
         <p className="m-0 text-lg">
-          Scheduled for {formatSchedule(event)}.{" "}
           {listed(event).some((g) => g.alwaysOpen)
-            ? "Some games are open now; the rest open when the host starts the party."
-            : "Games open when the host starts the party."}
+            ? "Some games are open now. The rest open when the host starts them."
+            : "Waiting for the host to start the games."}
         </p>
         <GameList event={event} status="upcoming" />
       </Body>
@@ -201,7 +194,7 @@ export function GameView({
             gameId={game.id}
             type={game.type}
             instructions={play.instructions}
-            replayable={game.replayable === true}
+            replayable={event.replayable}
           />
         ) : (
           <p className="m-0 text-gm-text-muted">{GAME_STATE[status]}</p>

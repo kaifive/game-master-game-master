@@ -5,8 +5,6 @@ import { holidayTrivia } from "./holiday-2026-trivia";
 export const holiday2026: EventConfig = {
   slug: "holiday-2026",
   name: "Nova Wushu Holiday Party",
-  timeZone: "America/New_York",
-  schedule: { start: "2026-12-19T16:30:00-05:00" },
   style: { pack: "judges-table", variant: "winter", colorMode: "dark" },
   kind: "event",
   joinCode: "WUSH7",
@@ -14,6 +12,8 @@ export const holiday2026: EventConfig = {
   scoring: "both",
   maxPlayersPerDevice: 4,
   soloGamePoints: 100,
+  // Games can be played again; each player's best run counts. Decide before the party.
+  replayable: true,
   games: [
     {
       id: "trivia",
@@ -23,9 +23,7 @@ export const holiday2026: EventConfig = {
       visibility: "listed",
       content: holidayTrivia,
       scoring: { awardTo: "player" },
-      // Open now for testing, and replayable with the best score kept.
-      // Decide both before the party (runbooks/event-checklist.md).
-      replayable: true,
+      // Open now for testing. Decide before the party (runbooks/event-checklist.md).
       alwaysOpen: true,
     },
     {

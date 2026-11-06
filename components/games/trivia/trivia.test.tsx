@@ -2,7 +2,7 @@ import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import type { TriviaView } from "@/lib/games";
-import { TriviaGame, triviaSummary } from "./trivia";
+import { REVEAL_MS, TriviaGame, triviaSummary } from "./trivia";
 
 type Asked = Extract<TriviaView, { kind: "question" }>;
 const question = (extra: Partial<Asked> = {}): Asked => ({
@@ -108,5 +108,28 @@ describe("TriviaGame timer", () => {
     const bar = screen.getByRole("progressbar", { name: "Time left" });
     expect(bar).toHaveAttribute("aria-valuenow", "9");
     expect(screen.getByText("9s")).toBeInTheDocument();
+  });
+});
+
+describe("TriviaGame pacing", () => {
+  test("S10-AC10: the next question comes on its own after the answer shows", () => {
+    vi.useFakeTimers();
+    const onMove = vi.fn();
+    show({ ...question(), kind: "answered", chosen: 1, correct: 1, right: true }, { onMove });
+    expect(onMove).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(REVEAL_MS);
+    });
+    expect(onMove).toHaveBeenCalledExactlyOnceWith({ type: "next" });
+  });
+
+  test("S10-AC10: a tap anywhere skips the wait, and moves on only once", async () => {
+    const onMove = vi.fn();
+    show({ ...question(), kind: "answered", chosen: 1, correct: 1, right: true }, { onMove });
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("heading", { name: "How many legs does a spider have?" }));
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(onMove).toHaveBeenCalledExactlyOnceWith({ type: "next" });
+    expect(screen.getByText(/tap to skip/)).toBeInTheDocument();
   });
 });

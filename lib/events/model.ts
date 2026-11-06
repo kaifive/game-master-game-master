@@ -33,8 +33,6 @@ export const GameConfig = z.object({
     points: z.number().int().nonnegative().optional(),
     awardTo: z.enum(["player", "team"]),
   }),
-  /** Players may play again; their best run counts (S08-AC12). */
-  replayable: z.boolean().optional(),
   /** Playable before the host starts the event, too (S08-AC13). Every game closes at the end. */
   alwaysOpen: z.boolean().optional(),
   /** Replaces the game type's default instructions box (S08-AC9). */
@@ -46,28 +44,33 @@ export const GameConfig = z.object({
 export type GameConfig = z.infer<typeof GameConfig>;
 
 /** One event, as written in content/events/<slug>.ts (ADR-003). */
-export const EventConfig = z.object({
-  slug: Slug,
-  name: z.string().min(1),
-  timeZone: z.string(),
-  /** Shown to players only; never starts or ends anything (ADR-024). */
-  schedule: z.object({ start: z.string(), end: z.string().optional() }),
-  style: StyleRef,
-  kind: z.enum(["event", "quick"]),
-  /** Server-only (ADR-020): never send to a client. */
-  joinCode: z.string(),
-  joinPolicy: z.enum(["open", "approval"]),
-  scoring: z.enum(["individual", "team", "both"]),
-  maxPlayersPerDevice: z.number().int().min(1).max(8),
-  /** What every solo game is worth; a game scores its share of it (S08-AC10). */
-  soloGamePoints: z.number().int().min(0).max(10_000),
-  /** Extra words the name filter blocks for this event (spec 02). */
-  blockedNames: z.array(z.string().min(1)).optional(),
-  games: z.array(GameConfig),
-});
+export const EventConfig = z
+  .object({
+    slug: Slug,
+    name: z.string().min(1),
+    style: StyleRef,
+    kind: z.enum(["event", "quick"]),
+    /** Server-only (ADR-020): never send to a client. */
+    joinCode: z.string(),
+    joinPolicy: z.enum(["open", "approval"]),
+    scoring: z.enum(["individual", "team", "both"]),
+    maxPlayersPerDevice: z.number().int().min(1).max(8),
+    /** Every solo game can be played again; each player's best run counts (S08-AC12). */
+    replayable: z.boolean().optional(),
+    /** What every solo game is worth; a game scores its share of it (S08-AC10). */
+    soloGamePoints: z.number().int().min(0).max(10_000),
+    /** Extra words the name filter blocks for this event (spec 02). */
+    blockedNames: z.array(z.string().min(1)).optional(),
+    games: z.array(GameConfig),
+  })
+  .strict();
 export type EventConfig = z.infer<typeof EventConfig>;
 
 /** What a page may show about an event: everything except codes. */
-export type PublicEvent = Omit<EventConfig, "joinCode" | "games" | "blockedNames"> & {
+export type PublicEvent = Omit<
+  EventConfig,
+  "joinCode" | "games" | "blockedNames" | "replayable"
+> & {
+  replayable: boolean;
   games: Omit<GameConfig, "codes" | "content" | "instructions">[];
 };

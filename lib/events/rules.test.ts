@@ -5,7 +5,6 @@ import type { EventConfig } from "./model";
 import {
   eventStatus,
   findByJoinCode,
-  formatSchedule,
   pointsFor,
   RESERVED_SLUGS,
   resolveJoin,
@@ -16,8 +15,6 @@ import {
 const valid: EventConfig = {
   slug: "test-party",
   name: "Test Party",
-  timeZone: "America/New_York",
-  schedule: { start: "2026-12-19T16:30:00-05:00" },
   style: { pack: "judges-table", variant: "winter", colorMode: "dark" },
   kind: "event",
   joinCode: "XMAS7",
@@ -63,13 +60,6 @@ describe("S01-AC1: event files are validated", () => {
     ["slug format", { slug: "Test Party" }, /slug/],
     ["reserved slug", { slug: "admin" }, /reserved/],
     ["slug matches file", { slug: "other" }, /file name/],
-    [
-      "end after start",
-      { schedule: { start: "2026-12-19T16:30:00-05:00", end: "2026-12-19T15:00:00-05:00" } },
-      /end/,
-    ],
-    ["unparseable start", { schedule: { start: "Dec 19" } }, /schedule\.start/],
-    ["time zone", { timeZone: "Mars/Olympus" }, /timeZone/],
     ["style", { style: { pack: "nope", colorMode: "dark" } }, /style/],
     ["join code format", { joinCode: "AB0" }, /joinCode/],
     ["duplicate game ids", { games: [valid.games[0]!, valid.games[0]!] }, /"quiz" is used twice/],
@@ -133,18 +123,14 @@ describe("S01-AC2: events start and end by hand", () => {
     expect(eventStatus("paused")).toBe("upcoming");
   });
 
-  test("the schedule never changes the status", () => {
-    const past = { ...valid, schedule: { start: "2020-01-01T00:00:00Z" } };
-    expect(eventStatus(undefined)).toBe("upcoming");
-    expect(validateEvent("test-party", past)).toEqual([]);
+  test("ADR-026: event files have no dates; a stray schedule is rejected", () => {
+    expect(
+      validateEvent("test-party", { ...valid, schedule: { start: "2026-12-19T16:30:00-05:00" } }),
+    ).toEqual([expect.stringMatching(/Unrecognized key/)]);
   });
 });
 
-describe("schedule and codes", () => {
-  test("S01-AC4: formats the schedule in the event's time zone", () => {
-    expect(formatSchedule(valid)).toBe("Saturday, Dec 19 · 4:30 PM EST");
-  });
-
+describe("codes", () => {
   test("finds an event by its join code, ignoring case and spaces", () => {
     expect(findByJoinCode(" xmas7 ", { "test-party": valid })?.slug).toBe("test-party");
     expect(findByJoinCode("NOPE1", { "test-party": valid })).toBeUndefined();

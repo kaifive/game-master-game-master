@@ -21,23 +21,23 @@ const inPack = (node: ReactNode) =>
   render(<PackRoot styleRef={holiday2026.style}>{node}</PackRoot>);
 
 describe("S01-AC4: event pages show the event's banner in its own style", () => {
-  test("the banner names the event and its schedule in the event's time zone", () => {
+  test("the banner names the event, with no date (ADR-026)", () => {
     const { container } = inPack(<UpcomingView event={event} />);
     expect(
       screen.getByRole("heading", { level: 1, name: "Nova Wushu Holiday Party" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Saturday, Dec 19 · 4:30 PM EST")).toBeInTheDocument();
+    expect(screen.queryByText(/Dec 19|PM|AM/)).toBeNull();
     expect(
       container.querySelector('[data-pack="judges-table"][data-color-mode="dark"]'),
     ).not.toBeNull();
   });
 });
 
-describe("S01-AC5: an upcoming event shows when it's scheduled and its games, locked", () => {
+describe("S01-AC5: an upcoming event waits for the host and lists its games, locked", () => {
   test("lists every listed game as locked, with no links", () => {
     const closed = { ...event, games: event.games.map((g) => ({ ...g, alwaysOpen: false })) };
     inPack(<UpcomingView event={closed} />);
-    expect(screen.getByText(/Games open when the host starts the party/)).toBeInTheDocument();
+    expect(screen.getByText("Waiting for the host to start the games.")).toBeInTheDocument();
     const list = screen.getByRole("list", { name: "Tonight's games" });
     for (const g of event.games) expect(within(list).getByText(g.title)).toBeInTheDocument();
     expect(within(list).queryAllByRole("link")).toHaveLength(0);

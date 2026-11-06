@@ -445,3 +445,22 @@ Vercel's Node runtime can't `require()` ES modules, though local Node 22 can.
   the problem back fails CI.
 - Remove the override once Vercel's runtime supports `require(esm)` or
   `jwks-rsa` stops using `require()`; the test says when it's safe.
+
+---
+
+## ADR-026: No dates on events; replay is an event setting
+
+**Status:** accepted. Supersedes the "shown to players" part of ADR-024.
+
+Khai runs everything from the admin dashboard, so dates on screen only
+mislead.
+
+**Decision:**
+- Event files have no `schedule` or `timeZone`, and no page shows a date or
+  time. Before the start, players see "Waiting for the host to start the
+  games." Games open and close only when the admin starts and ends the event
+  (ADR-024), or before the start for an `alwaysOpen` game.
+- Event files are strict: an unknown field (a leftover `schedule`, a typo)
+  fails validation.
+- Whether games can be played again is one setting for the whole event
+  (`replayable`), not per game.
