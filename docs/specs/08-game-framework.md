@@ -1,6 +1,6 @@
 # 08: Game framework
 
-**Status:** Draft
+**Status:** Done
 **Backlog:** M2
 **Depends on:** 01, 02
 
@@ -23,6 +23,8 @@ The contract every game type follows (ADR-007): pure logic, a content shape, and
    - `isOver(state)`, and `score(state, scoring)` → points earned.
 3. A play is one player's run at one game: `plays/{gameId}_{playerId}` (`reference/data-model.md`). The server owns its state.
 4. **One play per player per game.** No practice replays. Opening a game you've finished shows your result.
+4a. **Instructions first.** Every game opens with an instructions box (the game type's default, or the event file's `instructions` for that game). The play, and any timer, starts only when the player closes it with **Start**. A resumed play skips it.
+4b. **Same points for every solo game.** The event file sets `soloGamePoints` (the party uses 100); every solo game is worth that, and a solo game may not set its own `scoring.points`. A game's score is its share of those points.
 5. Leaving mid-game and coming back resumes the same play. Anything timed keeps running while you're away.
 6. **Score once:** when a play ends, its points are fixed and `scored: true` is set in the same transaction. Spec 04 turns that into a ledger award; until spec 04 ships, the points show on the result screen only.
 7. A game is playable only while the event is `live`, by a player on the calling device. Before the start it shows "This game opens when the host starts the party."; after the end, "This game has closed."
@@ -45,7 +47,7 @@ All need the device token (spec 02) and an active player on that device.
 
 ## UI
 
-Player phone, in the event's pack: game header (title, "Playing as"), the game's renderer, and a result screen with the pack's `ScoreCard` and a celebration moment (spec 14) when points land. Back to the hub at any time.
+Player phone, in the event's pack: game header (title, "Playing as"), the instructions box, the game's renderer, and a result screen where the points count up from 0 to the final score (`CountUp`, spec 14; instant under reduced motion). Back to the hub at any time.
 
 ## Edge cases
 
@@ -56,21 +58,24 @@ Player phone, in the event's pack: game header (title, "Playing as"), the game's
 
 ## Acceptance criteria
 
-- [ ] AC-1: Every game in an event file is validated against its type's content schema, with errors naming the file, game and field.
-- [ ] AC-2: The move route runs the game's logic on the server; the phone's view never contains an answer it hasn't played.
-- [ ] AC-3: A player has one play per game: starting again resumes it, and a finished play shows its result instead of a new game.
-- [ ] AC-4: A play's points are fixed once, when it ends (`scored: true`), and never change after.
-- [ ] AC-5: A move for an old step (double tap) changes nothing and returns the current view.
-- [ ] AC-6: Games can be played only while the event is live, by a player on the calling device.
-- [ ] AC-7: The hub lists each game as Play, Continue, Done · +N or Locked for the active player.
-- [ ] AC-8: The memory and Firebase play repos pass the same contract.
+- [x] AC-1: Every game in an event file is validated against its type's content schema, with errors naming the file, game and field.
+- [x] AC-2: The move route runs the game's logic on the server; the phone's view never contains an answer it hasn't played.
+- [x] AC-3: A player has one play per game: starting again resumes it, and a finished play shows its result instead of a new game.
+- [x] AC-4: A play's points are fixed once, when it ends (`scored: true`), and never change after.
+- [x] AC-5: A move for an old step (double tap) changes nothing and returns the current view.
+- [x] AC-6: Games can be played only while the event is live, by a player on the calling device.
+- [x] AC-7: The hub lists each game as Play, Continue, Done · +N or Locked for the active player.
+- [x] AC-8: The memory and Firebase play repos pass the same contract.
+- [x] AC-9: Every game opens with an instructions box (the type's default or the event's own), and the play and its timer start only when it is closed with Start; a resumed play skips it.
+- [x] AC-10: Every solo game is worth the event's `soloGamePoints`; an event file that sets points on a solo game fails validation.
+- [x] AC-11: The result screen counts the points up from 0 to the final score.
 
 ## Tests
 
 - Unit: registry and content validation, the play service with memory repos and a fake clock.
 - Contract: `lib/games/repo.contract.ts` against memory and Firestore emulator.
 - Component: hub game states, game page shell.
-- E2E: join, play trivia to the end, see the result, reopen it.
+- E2E: join, play trivia to the end, see the result, reopen it. E2E runs without Firebase; a `gm-dev-status` cookie sets an event's status, honored only by the in-memory backend.
 
 ## Out of scope
 

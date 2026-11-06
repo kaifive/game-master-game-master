@@ -1,10 +1,12 @@
 import { describe, expect, test } from "vitest";
 import { EVENTS } from "@/content/events";
+import { holiday2026 } from "@/content/events/holiday-2026";
 import type { EventConfig } from "./model";
 import {
   eventStatus,
   findByJoinCode,
   formatSchedule,
+  pointsFor,
   RESERVED_SLUGS,
   resolveJoin,
   toPublicEvent,
@@ -22,15 +24,19 @@ const valid: EventConfig = {
   joinPolicy: "open",
   scoring: "both",
   maxPlayersPerDevice: 4,
+  soloGamePoints: 100,
   games: [
     {
-      id: "daily-word",
-      type: "word-guess",
-      title: "Daily Word",
+      id: "quiz",
+      type: "trivia",
+      title: "Quiz",
       mode: "solo",
       visibility: "listed",
-      content: {},
-      scoring: { points: 100, awardTo: "player" },
+      content: {
+        questions: [{ id: "q1", prompt: "2 + 2?", choices: ["4", "5"], answer: 0 }],
+        questionsPerPlay: 1,
+      },
+      scoring: { awardTo: "player" },
     },
     {
       id: "jeopardy",
@@ -66,13 +72,38 @@ describe("S01-AC1: event files are validated", () => {
     ["time zone", { timeZone: "Mars/Olympus" }, /timeZone/],
     ["style", { style: { pack: "nope", colorMode: "dark" } }, /style/],
     ["join code format", { joinCode: "AB0" }, /joinCode/],
-    ["duplicate game ids", { games: [valid.games[0]!, valid.games[0]!] }, /daily-word/],
+    ["duplicate game ids", { games: [valid.games[0]!, valid.games[0]!] }, /"quiz" is used twice/],
     ["unknown game type", { games: [{ ...valid.games[0]!, type: "chess" }] }, /type/],
   ] as const)("rejects a bad %s, naming the file and field", (_name, patch, message) => {
     const file = "slug" in patch && patch.slug !== "other" ? patch.slug : "test-party";
     const errors = validateEvent(file, { ...valid, ...patch });
     expect(errors.join("\n")).toMatch(message);
     expect(errors[0]).toContain(`content/events/${file}.ts`);
+  });
+
+  test("S08-AC1: each game's content is checked against its type, naming the game and field", () => {
+    const bad = {
+      ...valid.games[0]!,
+      content: {
+        questions: [{ id: "q1", prompt: "?", choices: ["A", "B"], answer: 5 }],
+        questionsPerPlay: 1,
+      },
+    };
+    expect(validateEvent("test-party", { ...valid, games: [bad] })).toEqual([
+      expect.stringMatching(
+        /^content\/events\/test-party\.ts: games\.quiz\.content\.questions\.0\.answer: /,
+      ),
+    ]);
+  });
+
+  test("S08-AC10: solo games share soloGamePoints and can't set their own", () => {
+    const own = { ...valid.games[0]!, scoring: { points: 50, awardTo: "player" as const } };
+    expect(validateEvent("test-party", { ...valid, games: [own] }).join()).toMatch(
+      /games\.quiz\.scoring\.points: solo games all use soloGamePoints/,
+    );
+    expect(pointsFor(valid, valid.games[0]!)).toBe(100);
+    expect(pointsFor(valid, { mode: "live", scoring: { points: 30, awardTo: "team" } })).toBe(30);
+    expect(pointsFor(valid, { mode: "live", scoring: { awardTo: "team" } })).toBe(0);
   });
 
   test("reserves the app's own routes", () => {
@@ -147,5 +178,17 @@ describe("S01-AC10: what pages get never includes codes or game content", () => 
     expect(text).not.toContain("XMAS7");
     expect(text).not.toContain("HUNT9");
     expect(text).not.toContain("STAFF");
+  });
+});
+
+describe("S10-AC7: the party has trivia, not word guess", () => {
+  test("a trivia game with a pool of placeholder questions", () => {
+    const trivia = holiday2026.games.find((g) => g.type === "trivia");
+    expect(trivia).toMatchObject({ id: "trivia", mode: "solo" });
+    expect((trivia?.content as { questions: unknown[] }).questions.length).toBeGreaterThanOrEqual(
+      10,
+    );
+    expect(holiday2026.games.map((g) => g.type as string)).not.toContain("word-guess");
+    expect(holiday2026.soloGamePoints).toBe(100);
   });
 });

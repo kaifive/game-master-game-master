@@ -5,6 +5,7 @@ import { PackRoot } from "@/components/packs/judges-table/root";
 import { holiday2026 } from "@/content/events/holiday-2026";
 import { isAppError } from "@/lib/errors";
 import { checkNickname, codeMatches, MemoryPlayerRepo, MESSAGES } from "@/lib/players";
+import { DeviceProvider } from "./device";
 import { PlayerHub } from "./hub";
 
 vi.mock("@/components/motion/confetti", () => ({ fireConfetti: vi.fn() }));
@@ -44,7 +45,9 @@ function fakeServer(banned: string[] = []) {
 const hub = (props: { code?: string } = {}) =>
   render(
     <PackRoot styleRef={holiday2026.style}>
-      <PlayerHub slug={SLUG} identity="dev" maxPlayers={2} {...props} />
+      <DeviceProvider slug={SLUG} identity="dev" {...props}>
+        <PlayerHub maxPlayers={2} />
+      </DeviceProvider>
     </PackRoot>,
   );
 

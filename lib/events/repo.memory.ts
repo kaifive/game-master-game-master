@@ -6,10 +6,12 @@ export class MemoryEventRuntimeRepo implements EventRuntimeRepo {
   constructor(
     private readonly statuses: Record<string, string> = {},
     private readonly leaderboards: Record<string, unknown> = {},
+    /** A status for every event, such as a test's cookie. Wins over `statuses`. */
+    private readonly override: () => Promise<string | undefined> = () => Promise.resolve(undefined),
   ) {}
 
-  status(slug: string) {
-    return Promise.resolve(eventStatus(this.statuses[slug]));
+  async status(slug: string) {
+    return eventStatus((await this.override()) ?? this.statuses[slug]);
   }
 
   finalStandings(slug: string) {

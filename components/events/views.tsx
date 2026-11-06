@@ -1,6 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { GamePlayer } from "@/components/games/game-player";
+import { DeviceProvider, useOptionalDevice } from "@/components/players/device";
+import { PlayerHub } from "@/components/players/hub";
 import { useSlots } from "@/components/slots/registry";
 import {
   formatSchedule,
@@ -8,6 +12,11 @@ import {
   type FinalStandings,
   type PublicEvent,
 } from "@/lib/events";
+import { gamesApi, type HubPlays, type Instructions } from "@/lib/games";
+import type { Identity } from "@/lib/players";
+
+/** How the page's phone identifies itself, from the server (spec 02). */
+export type DeviceProps = { identity: Identity; code?: string };
 
 type Game = PublicEvent["games"][number];
 
@@ -22,7 +31,35 @@ const Body = ({ children }: { children: React.ReactNode }) => (
 
 const listed = (event: PublicEvent) => event.games.filter((g) => g.visibility === "listed");
 
+/** The active player's plays, for Play / Continue / Done (S08-AC7). */
+function usePlays(): HubPlays {
+  const device = useOptionalDevice();
+  const [plays, setPlays] = useState<HubPlays>({});
+  const slug = device?.slug;
+  const token = device?.token;
+  const playerId = device?.active?.id;
+  useEffect(() => {
+    if (!slug || !token || !playerId) return;
+    const alive = { current: true };
+    void token()
+      .then((t) => gamesApi.plays(slug, t, playerId))
+      .then((res) => {
+        if (alive.current) setPlays(res.ok ? res.data.plays : {});
+      });
+    return () => {
+      alive.current = false;
+    };
+  }, [slug, token, playerId]);
+  return plays;
+}
+
+function playLabel(play: HubPlays[string] | undefined): string {
+  if (!play) return "Play →";
+  return play.status === "finished" ? `Done · +${String(play.points)}` : "Continue →";
+}
+
 function GameList({ event, status }: { event: PublicEvent; status: EventStatus }) {
+  const plays = usePlays();
   return (
     <section aria-labelledby="games-heading" className="grid gap-2">
       <h2
@@ -40,9 +77,7 @@ function GameList({ event, status }: { event: PublicEvent; status: EventStatus }
                 className="flex min-h-13 items-center justify-between gap-3 py-2 font-bold text-gm-text no-underline"
               >
                 {g.title}
-                <span aria-hidden="true" className="text-gm-accent">
-                  Play →
-                </span>
+                <span className="text-gm-accent">{playLabel(plays[g.id])}</span>
               </Link>
             ) : (
               <div className="flex min-h-13 items-center justify-between gap-3 py-2 font-bold">
@@ -57,32 +92,45 @@ function GameList({ event, status }: { event: PublicEvent; status: EventStatus }
   );
 }
 
-type HubSlot = { event: PublicEvent; hub?: React.ReactNode };
+type WithDevice = { event: PublicEvent; device?: DeviceProps };
 
-/** Before the host starts the party (S01-AC5). `hub` is the player hub (spec 02). */
-export function UpcomingView({ event, hub }: HubSlot) {
+/** The player hub and everything under it share this phone's players (spec 02). */
+function WithPlayers({ event, device, children }: WithDevice & { children: React.ReactNode }) {
+  if (!device) return children;
+  return (
+    <DeviceProvider slug={event.slug} identity={device.identity} code={device.code}>
+      <PlayerHub maxPlayers={event.maxPlayersPerDevice} />
+      {children}
+    </DeviceProvider>
+  );
+}
+
+/** Before the host starts the party (S01-AC5), with the player hub (spec 02). */
+export function UpcomingView({ event, device }: WithDevice) {
   return (
     <>
       <EventBanner event={event} status="upcoming" />
       <Body>
-        {hub}
-        <p className="m-0 text-lg">
-          Scheduled for {formatSchedule(event)}. Games open when the host starts the party.
-        </p>
-        <GameList event={event} status="upcoming" />
+        <WithPlayers event={event} {...(device ? { device } : {})}>
+          <p className="m-0 text-lg">
+            Scheduled for {formatSchedule(event)}. Games open when the host starts the party.
+          </p>
+          <GameList event={event} status="upcoming" />
+        </WithPlayers>
       </Body>
     </>
   );
 }
 
 /** While the party is on: the hub, filled in by specs 02, 03 and 08. */
-export function LiveView({ event, hub }: HubSlot) {
+export function LiveView({ event, device }: WithDevice) {
   return (
     <>
       <EventBanner event={event} status="live" />
       <Body>
-        {hub}
-        <GameList event={event} status="live" />
+        <WithPlayers event={event} {...(device ? { device } : {})}>
+          <GameList event={event} status="live" />
+        </WithPlayers>
       </Body>
     </>
   );
@@ -152,18 +200,27 @@ export function GameView({
   event,
   game,
   status,
+  play,
 }: {
   event: PublicEvent;
   game: Game;
   status: EventStatus;
+  /** Set for a playable solo game (spec 08). */
+  play?: { device: DeviceProps; instructions: Instructions };
 }) {
   return (
     <>
       <EventBanner event={event} status={status} />
       <Body>
         <h2 className="m-0 font-gm-display text-3xl font-bold">{game.title}</h2>
-        <p className="m-0 text-gm-text-muted">{GAME_STATE[status]}</p>
-        {event.kind === "event" && (
+        {status === "live" && play ? (
+          <DeviceProvider slug={event.slug} identity={play.device.identity}>
+            <GamePlayer gameId={game.id} type={game.type} instructions={play.instructions} />
+          </DeviceProvider>
+        ) : (
+          <p className="m-0 text-gm-text-muted">{GAME_STATE[status]}</p>
+        )}
+        {event.kind === "event" && !(status === "live" && play) && (
           <Link href={`/${event.slug}`} className="font-bold text-gm-accent">
             All games
           </Link>

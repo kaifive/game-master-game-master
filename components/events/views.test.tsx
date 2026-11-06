@@ -55,9 +55,9 @@ describe("S01-AC5: an upcoming event shows when it's scheduled and its games, lo
 describe("a live event", () => {
   test("links each game to its page", () => {
     inPack(<LiveView event={event} />);
-    expect(screen.getByRole("link", { name: /Daily Word/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Holiday Trivia/ })).toHaveAttribute(
       "href",
-      "/holiday-2026/play/daily-word",
+      "/holiday-2026/play/trivia",
     );
   });
 });
@@ -78,7 +78,7 @@ describe("S01-AC6: an ended event shows final standings", () => {
       screen.getByRole("listitem", { name: "1. Team Crane, 2,010 points" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("listitem", { name: "1. Mai, 540 points" })).toBeInTheDocument();
-    expect(screen.queryAllByRole("link", { name: /Daily Word/ })).toHaveLength(0);
+    expect(screen.queryAllByRole("link", { name: /Holiday Trivia/ })).toHaveLength(0);
   });
 
   test("says so when there are no standings", () => {
@@ -91,7 +91,7 @@ describe("S01-AC7: a quick event's page is its one game", () => {
   test("shows the game itself, not a list", () => {
     const quick = { ...event, kind: "quick" as const, games: [event.games[0]!] };
     inPack(<QuickEventView event={quick} status="live" />);
-    expect(screen.getByRole("heading", { level: 2, name: "Daily Word" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Holiday Trivia" })).toBeInTheDocument();
     expect(screen.queryByRole("list", { name: "Tonight's games" })).toBeNull();
   });
 });
@@ -117,5 +117,33 @@ describe("S01-AC8: the home page takes a code", () => {
   test("shows an error after an unknown code", () => {
     render(<HomeCodeEntry error="code" />);
     expect(screen.getByRole("alert")).toHaveTextContent("We couldn't find that code");
+  });
+});
+
+describe("S08-AC7: the hub lists each game for the active player", () => {
+  test("Play, Continue and Done · +N", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) =>
+        Promise.resolve(
+          Response.json(
+            url.includes("/plays")
+              ? {
+                  plays: {
+                    trivia: { status: "finished", points: 80 },
+                    "ornament-hunt": { status: "playing", points: 0 },
+                  },
+                }
+              : { banned: false, players: [{ id: "p1", nickname: "Mai" }] },
+          ),
+        ),
+      ),
+    );
+    inPack(<LiveView event={event} device={{ identity: "dev" }} />);
+    const list = screen.getByRole("list", { name: "Tonight's games" });
+    expect(await within(list).findByText("Done · +80")).toBeInTheDocument();
+    expect(within(list).getByText("Continue →")).toBeInTheDocument();
+    expect(within(list).getByText("Play →")).toBeInTheDocument();
+    vi.unstubAllGlobals();
   });
 });

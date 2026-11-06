@@ -48,7 +48,7 @@ by default, centered everything, identical card grids.
    only. No hex values or Tailwind palette colors (`bg-red-500`) outside
    `lib/themes/`.
 5. **Color is never the only signal.** Every color state also has an icon,
-   shape or label (for example word-guess tiles: correct, present, absent).
+   shape or label (for example trivia answers: ✓ right, ✗ wrong).
 
 ## Sizes by surface
 

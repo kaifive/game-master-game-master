@@ -1,28 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { useSlots } from "@/components/slots/registry";
-import {
-  activePlayer,
-  checkNickname,
-  deviceToken,
-  MESSAGES,
-  NICKNAME_MAX,
-  playersApi,
-  type DeviceView,
-  type Identity,
-} from "@/lib/players";
-
-type Props = {
-  slug: string;
-  identity: Identity;
-  /** The code from `?code=`, if the phone arrived through a QR link. */
-  code?: string;
-  maxPlayers: number;
-};
-
-type Load =
-  { kind: "loading" } | { kind: "error"; message: string } | { kind: "ready"; device: DeviceView };
+import { checkNickname, MESSAGES, NICKNAME_MAX } from "@/lib/players";
+import { useDevice } from "./device";
 
 const field =
   "min-h-11 w-full min-w-0 rounded-gm border-2 border-gm-border bg-gm-surface px-3 text-lg text-gm-text";
@@ -132,75 +113,19 @@ function JoinForm({
   );
 }
 
-/** Join, add and switch players on this phone (spec 02). */
-export function PlayerHub({ slug, identity, code, maxPlayers }: Props) {
+/** Join, add and switch players on this phone (spec 02). Needs a DeviceProvider. */
+export function PlayerHub({ maxPlayers }: { maxPlayers: number }) {
   const { Panel, Button } = useSlots();
-  const [load, setLoad] = useState<Load>({ kind: "loading" });
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const { load, code, players, active, join, retry, choose: setActive } = useDevice();
   const [mode, setMode] = useState<"view" | "switch" | "add">("view");
-
-  const fetchDevice = useCallback(
-    async () => playersApi.device(slug, await deviceToken(identity)),
-    [slug, identity],
-  );
-
-  const apply = useCallback(
-    (res: Awaited<ReturnType<typeof fetchDevice>>) => {
-      if (!res.ok) {
-        setLoad({ kind: "error", message: res.message });
-        return;
-      }
-      setLoad({ kind: "ready", device: res.data });
-      const saved = activePlayer.read(slug);
-      const players = res.data.players;
-      setActiveId(players.find((p) => p.id === saved)?.id ?? players[0]?.id ?? null);
-    },
-    [slug],
-  );
-
-  useEffect(() => {
-    let current = true;
-    void fetchDevice().then((res) => {
-      if (current) apply(res);
-    });
-    return () => {
-      current = false;
-    };
-  }, [fetchDevice, apply]);
-
-  const retry = () => {
-    setLoad({ kind: "loading" });
-    void fetchDevice().then(apply);
-  };
-
   const choose = (id: string) => {
-    activePlayer.write(slug, id);
-    setActiveId(id);
+    setActive(id);
     setMode("view");
   };
-
-  const join = async (nickname: string, typedCode: string | undefined) => {
-    const joinCode = typedCode ?? code;
-    const res = await playersApi.join(slug, await deviceToken(identity), {
-      nickname,
-      ...(joinCode ? { code: joinCode } : {}),
-    });
-    if (!res.ok) return res.message;
-    setLoad((l) =>
-      l.kind === "ready"
-        ? {
-            kind: "ready",
-            device: {
-              ...l.device,
-              players: l.device.players.some((p) => p.id === res.data.player.id)
-                ? l.device.players
-                : [...l.device.players, res.data.player],
-            },
-          }
-        : l,
-    );
-    choose(res.data.player.id);
-    return null;
+  const joinThenShow = async (nickname: string, typed: string | undefined) => {
+    const failed = await join(nickname, typed);
+    if (!failed) setMode("view");
+    return failed;
   };
 
   if (load.kind === "loading")
@@ -224,8 +149,7 @@ export function PlayerHub({ slug, identity, code, maxPlayers }: Props) {
       </Panel>
     );
 
-  const { banned, players } = load.device;
-  if (banned)
+  if (load.device.banned)
     return (
       <Panel label="Your players">
         <p className="m-0 font-bold">{MESSAGES.banned}</p>
@@ -235,7 +159,7 @@ export function PlayerHub({ slug, identity, code, maxPlayers }: Props) {
   if (players.length === 0)
     return (
       <Panel label="Join the party">
-        <JoinForm title="Join the party" askCode={!code} onJoin={join} />
+        <JoinForm title="Join the party" askCode={!code} onJoin={joinThenShow} />
       </Panel>
     );
 
@@ -245,7 +169,7 @@ export function PlayerHub({ slug, identity, code, maxPlayers }: Props) {
         <JoinForm
           title="Add a player"
           askCode={false}
-          onJoin={join}
+          onJoin={joinThenShow}
           onCancel={() => {
             setMode("view");
           }}
@@ -253,7 +177,6 @@ export function PlayerHub({ slug, identity, code, maxPlayers }: Props) {
       </Panel>
     );
 
-  const active = players.find((p) => p.id === activeId) ?? players[0];
   return (
     <Panel label="Your players">
       <div className="grid gap-3">

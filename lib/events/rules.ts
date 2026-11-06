@@ -1,5 +1,12 @@
+import { contentErrors } from "@/lib/games";
 import { normalizeCode, validateStyleRef } from "@/lib/themes";
-import { CODE_PATTERN, EventConfig, type EventStatus, type PublicEvent } from "./model";
+import {
+  CODE_PATTERN,
+  EventConfig,
+  type EventStatus,
+  type GameConfig,
+  type PublicEvent,
+} from "./model";
 import type { FinalStandings, Standing } from "./repo";
 
 /** Slugs that clash with the app's own routes. */
@@ -46,6 +53,13 @@ export function validateEvent(file: string, value: unknown): string[] {
   for (const g of e.games) {
     if (seen.has(g.id)) add("games", `game id "${g.id}" is used twice.`);
     seen.add(g.id);
+    if (g.mode === "solo" && g.scoring.points !== undefined)
+      add(`games.${g.id}.scoring.points`, "solo games all use soloGamePoints; remove this.");
+    for (const problem of contentErrors(g.type, g.content))
+      add(
+        `games.${g.id}.content.${problem.split(": ")[0] ?? ""}`,
+        problem.split(": ").slice(1).join(": "),
+      );
   }
   if (e.kind === "quick" && e.games.length !== 1)
     add("games", "a quick event has exactly one game.");
@@ -96,6 +110,7 @@ export function toPublicEvent(e: EventConfig): PublicEvent {
     joinPolicy: e.joinPolicy,
     scoring: e.scoring,
     maxPlayersPerDevice: e.maxPlayersPerDevice,
+    soloGamePoints: e.soloGamePoints,
     games: e.games.map((g) => ({
       id: g.id,
       type: g.type,
@@ -153,3 +168,9 @@ export function resolveJoin(
     ? { kind: "event", href: `/${event.slug}?code=${encodeURIComponent(code)}` }
     : { kind: "unknown", href: "/?error=code" };
 }
+
+/** What a game is worth: the event's soloGamePoints for solo games, else its own (S08-AC10). */
+export const pointsFor = (
+  e: Pick<EventConfig, "soloGamePoints">,
+  g: Pick<GameConfig, "mode" | "scoring">,
+): number => (g.mode === "solo" ? e.soloGamePoints : (g.scoring.points ?? 0));

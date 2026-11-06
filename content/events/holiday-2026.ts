@@ -1,4 +1,5 @@
 import type { EventConfig } from "@/lib/events";
+import { holidayTrivia } from "./holiday-2026-trivia";
 
 /** The Nova Wushu Holiday Party. Started and ended by hand from Controls (ADR-024). */
 export const holiday2026: EventConfig = {
@@ -12,15 +13,16 @@ export const holiday2026: EventConfig = {
   joinPolicy: "open",
   scoring: "both",
   maxPlayersPerDevice: 4,
+  soloGamePoints: 100,
   games: [
     {
-      id: "daily-word",
-      type: "word-guess",
-      title: "Daily Word",
+      id: "trivia",
+      type: "trivia",
+      title: "Holiday Trivia",
       mode: "solo",
       visibility: "listed",
-      content: {},
-      scoring: { points: 100, awardTo: "player" },
+      content: holidayTrivia,
+      scoring: { awardTo: "player" },
     },
     {
       id: "ornament-hunt",
@@ -29,7 +31,7 @@ export const holiday2026: EventConfig = {
       mode: "solo",
       visibility: "listed",
       content: {},
-      scoring: { points: 50, awardTo: "player" },
+      scoring: { awardTo: "player" },
     },
     {
       id: "jeopardy",

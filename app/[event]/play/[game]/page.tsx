@@ -2,10 +2,12 @@ import { notFound } from "next/navigation";
 import { GameView } from "@/components/events/views";
 import { toPublicEvent } from "@/lib/events";
 import { eventRuntime, getEvent } from "@/lib/events/server";
+import { instructionsFor } from "@/lib/games/server";
+import { deviceIdentity } from "@/lib/players/server";
 
 export const dynamic = "force-dynamic";
 
-/** A game's page; its body arrives with spec 08. */
+/** A game's page: instructions, play and result for solo games (spec 08). */
 export default async function GamePage({
   params,
 }: {
@@ -17,5 +19,13 @@ export default async function GamePage({
   const event = toPublicEvent(config);
   const game = event.games.find((g) => g.id === gameId);
   if (!game) notFound();
-  return <GameView event={event} game={game} status={await eventRuntime().status(slug)} />;
+  const instructions = instructionsFor(config, gameId);
+  return (
+    <GameView
+      event={event}
+      game={game}
+      status={await eventRuntime().status(slug)}
+      {...(instructions ? { play: { device: { identity: deviceIdentity() }, instructions } } : {})}
+    />
+  );
 }
