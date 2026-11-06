@@ -150,3 +150,23 @@ describe("TriviaGame cue", () => {
     expect(screen.getByText("Your score is next…")).toBeInTheDocument();
   });
 });
+
+describe("TriviaGame tap feedback", () => {
+  test("S10-AC13: a tapped answer lights up at once and the answers lock until the server replies", async () => {
+    const onMove = vi.fn();
+    show(question(), { onMove });
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "8" }));
+    expect(onMove).toHaveBeenCalledExactlyOnceWith({ type: "answer", choice: 1 });
+    expect(screen.getByRole("button", { name: "8" })).toHaveClass("ring-gm-accent");
+    for (const b of screen.getAllByRole("button")) expect(b).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "6" }));
+    expect(onMove).toHaveBeenCalledTimes(1);
+  });
+
+  test("S10-AC13: the whole button is the target, not just its text", () => {
+    show(question());
+    const button = screen.getByRole("button", { name: "8" });
+    expect(button).toHaveClass("touch-manipulation", "[&_*]:pointer-events-none");
+  });
+});
