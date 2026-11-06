@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PointsIcon } from "@/components/icons/points";
 import { CountUp, useReducedMotion } from "@/components/motion";
 import { useDevice } from "@/components/players/device";
 import { useSlots } from "@/components/slots/registry";
@@ -41,6 +42,7 @@ function Result({
   const { refreshPlays } = useDevice();
   const reduced = useReducedMotion();
   const score = useRef<HTMLParagraphElement>(null);
+  const icon = useRef<HTMLSpanElement>(null);
   const [shown, setShown] = useState(0);
   const gain = play.best - bestBefore;
 
@@ -52,7 +54,7 @@ function Result({
       () => {
         const fly =
           gain > 0 && score.current
-            ? flyPoints(score.current, `+${String(gain)}`, reduced)
+            ? flyPoints(score.current, `+${String(gain)}`, reduced, icon.current?.firstElementChild)
             : Promise.resolve();
         void fly.then(refreshPlays);
       },
@@ -69,6 +71,9 @@ function Result({
       <p className="m-0 text-sm font-bold tracking-[0.12em] text-gm-text-muted uppercase">
         Your score
       </p>
+      <span ref={icon} hidden>
+        <PointsIcon />
+      </span>
       <p
         ref={score}
         className="m-0 font-gm-display text-7xl font-bold text-gm-accent"
