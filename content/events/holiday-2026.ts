@@ -23,6 +23,10 @@ export const holiday2026: EventConfig = {
       visibility: "listed",
       content: holidayTrivia,
       scoring: { awardTo: "player" },
+      // Open now for testing, and replayable with the best score kept.
+      // Decide both before the party (runbooks/event-checklist.md).
+      replayable: true,
+      alwaysOpen: true,
     },
     {
       id: "ornament-hunt",

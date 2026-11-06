@@ -42,6 +42,10 @@ const suites: { [N in SlotName]: Suite<N> } = {
       expect(screen.getByText("Dec 19")).toBeInTheDocument();
       expect(screen.queryByText(/live/i)).toBeNull();
     });
+    test("shows its aside, such as the player's total", () => {
+      render(<Banner title="Party" aside={<span>★ 180</span>} />);
+      expect(screen.getByText("★ 180")).toBeInTheDocument();
+    });
     test("shows Live only when live, at the requested heading level", () => {
       const { container } = render(<Banner title="Results" live level={2} />);
       expect(screen.getByRole("heading", { level: 2, name: "Results" })).toBeInTheDocument();

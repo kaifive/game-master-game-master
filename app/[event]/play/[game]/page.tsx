@@ -3,7 +3,6 @@ import { GameView } from "@/components/events/views";
 import { toPublicEvent } from "@/lib/events";
 import { eventRuntime, getEvent } from "@/lib/events/server";
 import { instructionsFor } from "@/lib/games/server";
-import { deviceIdentity } from "@/lib/players/server";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +24,7 @@ export default async function GamePage({
       event={event}
       game={game}
       status={await eventRuntime().status(slug)}
-      {...(instructions ? { play: { device: { identity: deviceIdentity() }, instructions } } : {})}
+      {...(instructions ? { play: { instructions } } : {})}
     />
   );
 }

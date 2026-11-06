@@ -9,6 +9,8 @@ import { DeviceProvider } from "./device";
 import { PlayerHub } from "./hub";
 
 vi.mock("@/components/motion/confetti", () => ({ fireConfetti: vi.fn() }));
+const search = vi.hoisted(() => ({ params: new URLSearchParams() }));
+vi.mock("next/navigation", () => ({ useSearchParams: () => search.params }));
 
 const SLUG = holiday2026.slug;
 
@@ -19,6 +21,7 @@ function fakeServer(banned: string[] = []) {
   const fetch = vi.fn(async (url: string, init: RequestInit = {}) => {
     const uid = new Headers(init.headers).get("authorization")?.replace("Bearer dev:", "") ?? "";
     if (url.endsWith("/device")) return reply(200, await repo.device(SLUG, uid));
+    if (url.includes("/plays")) return reply(200, { plays: {} });
     const body = JSON.parse(init.body as string) as { nickname: string; code?: string };
     const name = checkNickname(body.nickname);
     if (!name.ok) return reply(400, { error: name.message });
@@ -42,14 +45,16 @@ function fakeServer(banned: string[] = []) {
   return fetch;
 }
 
-const hub = (props: { code?: string } = {}) =>
-  render(
+const hub = (props: { code?: string } = {}) => {
+  search.params = new URLSearchParams(props.code ? { code: props.code } : {});
+  return render(
     <PackRoot styleRef={holiday2026.style}>
-      <DeviceProvider slug={SLUG} identity="dev" {...props}>
+      <DeviceProvider slug={SLUG} identity="dev">
         <PlayerHub maxPlayers={2} />
       </DeviceProvider>
     </PackRoot>,
   );
+};
 
 async function joinAs(name: string, code?: string) {
   const user = userEvent.setup();

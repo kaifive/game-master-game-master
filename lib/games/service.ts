@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { AppError } from "@/lib/errors";
-import { pointsFor, type EventConfig, type EventStatus, type GameConfig } from "@/lib/events";
+import {
+  gameOpen,
+  pointsFor,
+  type EventConfig,
+  type EventStatus,
+  type GameConfig,
+} from "@/lib/events";
 import type { PlayerRepo } from "@/lib/players";
 import type { AnyGameLogic, HubPlays, Instructions, PlayResponse } from "./model";
 import { gameLogic } from "./registry";
@@ -14,7 +20,11 @@ export type GameDeps = {
   seed: () => number;
 };
 
-export const StartBody = z.object({ playerId: z.string().min(1).max(64) });
+export const StartBody = z.object({
+  playerId: z.string().min(1).max(64),
+  /** Start a new run of a finished, replayable game (S08-AC12). */
+  again: z.boolean().optional(),
+});
 export const MoveBody = z.object({
   playerId: z.string().min(1).max(64),
   step: z.number().int().nonnegative(),
@@ -49,7 +59,7 @@ async function ownsPlayer(deps: GameDeps, event: EventConfig, uid: string, playe
     throw new AppError("FORBIDDEN", "That player isn't on this phone.");
 }
 
-/** Event live, game playable, player on this phone (S08-AC6). */
+/** Game playable and open now, player on this phone (S08-AC6, AC13). */
 async function guard(
   deps: GameDeps,
   event: EventConfig,
@@ -57,22 +67,25 @@ async function guard(
   gameId: string,
   playerId: string,
 ) {
-  const status = await deps.status(event.slug);
-  if (status !== "live") throw new AppError("FORBIDDEN", GAME_CLOSED[status]);
   const ready = playable(event, gameId);
   if (!ready) throw new AppError("NOT_FOUND", "We couldn't find that game.");
+  const status = await deps.status(event.slug);
+  if (!gameOpen(status, ready.game))
+    throw new AppError("FORBIDDEN", GAME_CLOSED[status === "ended" ? "ended" : "upcoming"]);
   await ownsPlayer(deps, event, uid, playerId);
   return { ...ready, points: pointsFor(event, ready.game) };
 }
 
-/** Fixes the points the moment a play ends, once (S08-AC4). */
+/** Fixes a run's points when it ends; the best run is the player's score (S08-AC4, AC12). */
 function settle(play: PlayRecord, state: unknown, r: Ready): PlayRecord {
-  if (play.scored || !r.logic.isOver(state)) return { ...play, state };
+  if (play.status === "finished" || !r.logic.isOver(state)) return { ...play, state };
+  const points = r.logic.score(state, r.points);
   return {
     ...play,
     state,
     status: "finished",
-    points: r.logic.score(state, r.points),
+    points,
+    best: Math.max(play.best, points),
     scored: true,
   };
 }
@@ -82,11 +95,15 @@ function respond(play: PlayRecord, r: Ready, now: number): PlayResponse {
     view: r.logic.view(play.state, r.content, { now }),
     status: play.status,
     points: play.points,
+    best: play.best,
     step: r.logic.step(play.state),
   };
 }
 
-/** Starts the player's one play of a game, or resumes it (S08-AC3). */
+/**
+ * Starts the player's play of a game, or resumes it (S08-AC3). A finished
+ * replayable game starts a new run when asked (`again`, S08-AC12).
+ */
 export async function startPlay(
   deps: GameDeps,
   event: EventConfig,
@@ -96,21 +113,28 @@ export async function startPlay(
 ): Promise<PlayResponse> {
   const r = await guard(deps, event, uid, gameId, body.playerId);
   const now = deps.now();
+  const run = () => {
+    const seed = deps.seed();
+    return {
+      seed,
+      state: r.logic.create(r.content, seed, { now }),
+      status: "playing" as const,
+      points: 0,
+    };
+  };
   const play = await deps.plays.update(event.slug, gameId, body.playerId, (cur) => {
-    if (!cur) {
-      const seed = deps.seed();
+    if (!cur)
       return {
         gameId,
         playerId: body.playerId,
         deviceUid: uid,
-        seed,
-        state: r.logic.create(r.content, seed, { now }),
-        status: "playing",
-        points: 0,
+        best: 0,
+        runs: 1,
         scored: false,
+        ...run(),
       };
-    }
-    if (cur.status === "finished") return null;
+    if (cur.status === "finished")
+      return body.again && r.game.replayable ? { ...cur, ...run(), runs: cur.runs + 1 } : null;
     const ticked = r.logic.tick(cur.state, r.content, { now });
     return ticked === cur.state ? null : settle(cur, ticked, r);
   });
@@ -152,6 +176,6 @@ export async function hubPlays(
   await ownsPlayer(deps, event, uid, playerId);
   const plays: HubPlays = {};
   for (const p of await deps.plays.forPlayer(event.slug, playerId))
-    plays[p.gameId] = { status: p.status, points: p.points };
+    plays[p.gameId] = { status: p.status, best: p.best, runs: p.runs };
   return { plays };
 }

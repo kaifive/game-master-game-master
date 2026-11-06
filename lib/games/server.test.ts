@@ -51,7 +51,9 @@ describe("game routes", () => {
       new Request(`http://x/api/events/${SLUG}/plays?playerId=${player.id}`, { headers }),
       ctx({}),
     );
-    expect(await listed.json()).toEqual({ plays: { trivia: { status: "playing", points: 0 } } });
+    expect(await listed.json()).toEqual({
+      plays: { trivia: { status: "playing", best: 0, runs: 1 } },
+    });
   });
 
   it("S08-AC6: a player that isn't on the calling phone can't play", async () => {

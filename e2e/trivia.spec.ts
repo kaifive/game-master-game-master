@@ -1,12 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// Without Firebase, this cookie sets the party's status (spec 08). It makes the party live.
-test.beforeEach(async ({ context, baseURL }) => {
-  await context.addCookies([
-    { name: "gm-dev-status", value: "live", url: baseURL ?? "http://localhost:3100" },
-  ]);
-});
-
+// The party's trivia is alwaysOpen, so it plays before the host starts the party (S08-AC13).
 const unique = (base: string) => `${base}${String(Math.floor(Math.random() * 1e6))}`;
 
 async function joinParty(page: Page) {
@@ -16,10 +10,21 @@ async function joinParty(page: Page) {
   await expect(page.getByText("Playing as")).toBeVisible();
 }
 
-test("S08-AC9 S08-AC3 S08-AC11 S10-AC6: instructions, five questions, a score, then Done on the hub", async ({
+async function playToEnd(page: Page) {
+  for (let n = 1; n <= 5; n++) {
+    await expect(page.getByText(`Question ${String(n)} of 5`)).toBeVisible();
+    await page.getByRole("list", { name: "Answers" }).getByRole("button").first().click();
+    await expect(page.getByRole("status")).toHaveText(/Right!|Not quite\./);
+    await page.getByRole("button", { name: n === 5 ? "See score" : "Next", exact: true }).click();
+  }
+}
+
+test("S08-AC9 S08-AC11 S08-AC13 S08-AC15 S10-AC6: play before the start, see the score and the header total", async ({
   page,
 }) => {
   await joinParty(page);
+  const total = page.locator("[data-total-score]");
+  await expect(total).toHaveAttribute("aria-label", /: 0 points$/);
   const trivia = page.getByRole("link", { name: /Holiday Trivia/ });
   await expect(trivia).toContainText("Play →");
   await trivia.click();
@@ -27,30 +32,38 @@ test("S08-AC9 S08-AC3 S08-AC11 S10-AC6: instructions, five questions, a score, t
   const rules = page.getByRole("dialog", { name: "How to play" });
   await expect(rules).toContainText("5 quick questions. You have 15 seconds for each.");
   await rules.getByRole("button", { name: "Start" }).click();
-
-  for (let n = 1; n <= 5; n++) {
-    await expect(page.getByText(`Question ${String(n)} of 5`)).toBeVisible();
-    await page.getByRole("list", { name: "Answers" }).getByRole("button").first().click();
-    await expect(page.getByRole("status")).toHaveText(/Right!|Not quite\./);
-    await page.getByRole("button", { name: n === 5 ? "See score" : "Next" }).click();
-  }
+  await playToEnd(page);
 
   const score = page.getByRole("region", { name: "Your score" });
   await expect(score).toContainText(/[0-5] of 5 right/);
-  const points = await score.getByLabel(/points$/).getAttribute("aria-label");
+  const points =
+    (await score.getByLabel(/points$/).getAttribute("aria-label"))?.replace(" points", "") ?? "";
+  await expect(total).toHaveAttribute("aria-label", new RegExp(`: ${points} points$`));
 
-  // Reopening shows the result, not a new game.
-  await page.reload();
-  await expect(page.getByRole("region", { name: "Your score" })).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-
-  await page.getByRole("link", { name: "Back to all games" }).click();
+  await page
+    .getByRole("navigation", { name: "Party" })
+    .getByRole("link", { name: /Games/ })
+    .click();
   await expect(page.getByRole("link", { name: /Holiday Trivia/ })).toContainText(
-    `Done · +${points?.replace(" points", "") ?? ""}`,
+    `Best ${points} · Again →`,
   );
 });
 
-test("S08-AC3: leaving mid-game resumes the same question with no instructions", async ({
+test("S08-AC12 S08-AC3: a finished replayable game shows its result and plays again", async ({
+  page,
+}) => {
+  await joinParty(page);
+  await page.getByRole("link", { name: /Holiday Trivia/ }).click();
+  await page.getByRole("button", { name: "Start" }).click();
+  await playToEnd(page);
+  await page.reload();
+  await expect(page.getByRole("region", { name: "Your score" })).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: "Play again" }).click();
+  await expect(page.getByText("Question 1 of 5")).toBeVisible();
+});
+
+test("S08-AC3 S08-AC14: leaving mid-game asks first, then resumes the same question", async ({
   page,
 }) => {
   await joinParty(page);
@@ -58,7 +71,16 @@ test("S08-AC3: leaving mid-game resumes the same question with no instructions",
   await page.getByRole("button", { name: "Start" }).click();
   await expect(page.getByText("Question 1 of 5")).toBeVisible();
   const prompt = await page.getByRole("heading", { level: 2 }).last().textContent();
-  await page.goto("/holiday-2026");
+
+  const games = page
+    .getByRole("navigation", { name: "Party" })
+    .getByRole("link", { name: /Games/ });
+  await games.click();
+  await page.getByRole("button", { name: "Keep playing" }).click();
+  await expect(page.getByText("Question 1 of 5")).toBeVisible();
+  await games.click();
+  await page.getByRole("button", { name: "Leave" }).click();
+
   await expect(page.getByRole("link", { name: /Holiday Trivia/ })).toContainText("Continue →");
   await page.getByRole("link", { name: /Holiday Trivia/ }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);

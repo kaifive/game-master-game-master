@@ -14,6 +14,8 @@ function toRecord(doc: DocumentSnapshot): PlayRecord | null {
     state: JSON.parse(String(d.state)) as unknown,
     status: d.status === "finished" ? "finished" : "playing",
     points: Number(d.points ?? 0),
+    best: Number(d.best ?? 0),
+    runs: Number(d.runs ?? 1),
     scored: d.scored === true,
   };
 }

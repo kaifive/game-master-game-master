@@ -34,6 +34,8 @@ type Game = {
   style?: { variant?: string };  // per-game variant override; the pack is the event's
   scoring: { points?: number; awardTo: "player" | "team" };  // solo games take soloGamePoints
   instructions?: { title: string; lines: string[] };  // replaces the type's default box
+  replayable?: boolean;      // play again; the best run counts
+  alwaysOpen?: boolean;      // playable before the start too
   opensAt?: string;
   closesAt?: string;
   visibility: "listed" | "hidden";         // hidden games appear only once unlocked
@@ -113,8 +115,10 @@ events/{slug}/plays/{gameId}_{playerId}
   seed: number               the play's randomness (question draw, answer order)
   state: string              game type's state as JSON text, server-owned
   status: "playing" | "finished"
-  scored: boolean
-  points: number
+  scored: boolean            a run has finished
+  points: number             this run
+  best: number               best finished run: the player's score for the game
+  runs: number
   startedAt, finishedAt
 
 events/{slug}/photos/{photoId}

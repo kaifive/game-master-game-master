@@ -60,7 +60,7 @@ function Holly() {
   );
 }
 
-function Banner({ title, subtitle, live, level = 1 }: BannerProps) {
+function Banner({ title, subtitle, live, level = 1, aside }: BannerProps) {
   const H = level === 1 ? "h1" : "h2";
   const holly = useDecoration("holly");
   return (
@@ -81,6 +81,7 @@ function Banner({ title, subtitle, live, level = 1 }: BannerProps) {
             LIVE
           </span>
         )}
+        {aside}
       </div>
     </header>
   );

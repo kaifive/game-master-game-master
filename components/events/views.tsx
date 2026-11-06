@@ -1,28 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { GamePlayer } from "@/components/games/game-player";
-import { DeviceProvider, useOptionalDevice } from "@/components/players/device";
+import { useOptionalDevice } from "@/components/players/device";
 import { PlayerHub } from "@/components/players/hub";
+import { TotalScore } from "@/components/players/total-score";
 import { useSlots } from "@/components/slots/registry";
 import {
   formatSchedule,
+  gameOpen,
   type EventStatus,
   type FinalStandings,
   type PublicEvent,
 } from "@/lib/events";
-import { gamesApi, type HubPlays, type Instructions } from "@/lib/games";
-import type { Identity } from "@/lib/players";
-
-/** How the page's phone identifies itself, from the server (spec 02). */
-export type DeviceProps = { identity: Identity; code?: string };
+import type { HubPlays, Instructions } from "@/lib/games";
 
 type Game = PublicEvent["games"][number];
 
-function EventBanner({ event, status }: { event: PublicEvent; status?: EventStatus }) {
+/** The event's banner, with the active player's total where the Live badge was (S08-AC15). */
+function EventBanner({ event }: { event: PublicEvent }) {
   const { Banner } = useSlots();
-  return <Banner title={event.name} subtitle={formatSchedule(event)} live={status === "live"} />;
+  return <Banner title={event.name} subtitle={formatSchedule(event)} aside={<TotalScore />} />;
 }
 
 const Body = ({ children }: { children: React.ReactNode }) => (
@@ -31,35 +30,21 @@ const Body = ({ children }: { children: React.ReactNode }) => (
 
 const listed = (event: PublicEvent) => event.games.filter((g) => g.visibility === "listed");
 
-/** The active player's plays, for Play / Continue / Done (S08-AC7). */
-function usePlays(): HubPlays {
-  const device = useOptionalDevice();
-  const [plays, setPlays] = useState<HubPlays>({});
-  const slug = device?.slug;
-  const token = device?.token;
-  const playerId = device?.active?.id;
-  useEffect(() => {
-    if (!slug || !token || !playerId) return;
-    const alive = { current: true };
-    void token()
-      .then((t) => gamesApi.plays(slug, t, playerId))
-      .then((res) => {
-        if (alive.current) setPlays(res.ok ? res.data.plays : {});
-      });
-    return () => {
-      alive.current = false;
-    };
-  }, [slug, token, playerId]);
-  return plays;
-}
-
-function playLabel(play: HubPlays[string] | undefined): string {
+/** Play, Continue, Done · +N, or Best N · Again for replayable games (S08-AC7, AC12). */
+function playLabel(g: Game, play: HubPlays[string] | undefined): string {
   if (!play) return "Play →";
-  return play.status === "finished" ? `Done · +${String(play.points)}` : "Continue →";
+  if (play.status === "playing") return "Continue →";
+  return g.replayable ? `Best ${String(play.best)} · Again →` : `Done · +${String(play.best)}`;
 }
 
 function GameList({ event, status }: { event: PublicEvent; status: EventStatus }) {
-  const plays = usePlays();
+  const device = useOptionalDevice();
+  const plays = device?.plays ?? {};
+  // The device's state outlives page changes; refresh progress whenever the list shows.
+  const refresh = device?.refreshPlays;
+  useEffect(() => {
+    void refresh?.();
+  }, [refresh]);
   return (
     <section aria-labelledby="games-heading" className="grid gap-2">
       <h2
@@ -71,13 +56,13 @@ function GameList({ event, status }: { event: PublicEvent; status: EventStatus }
       <ul aria-label="Tonight's games" className="m-0 grid list-none p-0">
         {listed(event).map((g) => (
           <li key={g.id} className="border-t border-gm-border">
-            {status === "live" ? (
+            {gameOpen(status, g) ? (
               <Link
                 href={`/${event.slug}/play/${g.id}`}
                 className="flex min-h-13 items-center justify-between gap-3 py-2 font-bold text-gm-text no-underline"
               >
                 {g.title}
-                <span className="text-gm-accent">{playLabel(plays[g.id])}</span>
+                <span className="text-gm-accent">{playLabel(g, plays[g.id])}</span>
               </Link>
             ) : (
               <div className="flex min-h-13 items-center justify-between gap-3 py-2 font-bold">
@@ -92,45 +77,43 @@ function GameList({ event, status }: { event: PublicEvent; status: EventStatus }
   );
 }
 
-type WithDevice = { event: PublicEvent; device?: DeviceProps };
-
-/** The player hub and everything under it share this phone's players (spec 02). */
-function WithPlayers({ event, device, children }: WithDevice & { children: React.ReactNode }) {
-  if (!device) return children;
+/** The player hub, when the page has this phone's players (spec 02). */
+function Hub({ event }: { event: PublicEvent }) {
+  if (!useOptionalDevice()) return null;
   return (
-    <DeviceProvider slug={event.slug} identity={device.identity} code={device.code}>
+    <div id="players" className="scroll-mt-4">
       <PlayerHub maxPlayers={event.maxPlayersPerDevice} />
-      {children}
-    </DeviceProvider>
+    </div>
   );
 }
 
 /** Before the host starts the party (S01-AC5), with the player hub (spec 02). */
-export function UpcomingView({ event, device }: WithDevice) {
+export function UpcomingView({ event }: { event: PublicEvent }) {
   return (
     <>
-      <EventBanner event={event} status="upcoming" />
+      <EventBanner event={event} />
       <Body>
-        <WithPlayers event={event} {...(device ? { device } : {})}>
-          <p className="m-0 text-lg">
-            Scheduled for {formatSchedule(event)}. Games open when the host starts the party.
-          </p>
-          <GameList event={event} status="upcoming" />
-        </WithPlayers>
+        <Hub event={event} />
+        <p className="m-0 text-lg">
+          Scheduled for {formatSchedule(event)}.{" "}
+          {listed(event).some((g) => g.alwaysOpen)
+            ? "Some games are open now; the rest open when the host starts the party."
+            : "Games open when the host starts the party."}
+        </p>
+        <GameList event={event} status="upcoming" />
       </Body>
     </>
   );
 }
 
 /** While the party is on: the hub, filled in by specs 02, 03 and 08. */
-export function LiveView({ event, device }: WithDevice) {
+export function LiveView({ event }: { event: PublicEvent }) {
   return (
     <>
-      <EventBanner event={event} status="live" />
+      <EventBanner event={event} />
       <Body>
-        <WithPlayers event={event} {...(device ? { device } : {})}>
-          <GameList event={event} status="live" />
-        </WithPlayers>
+        <Hub event={event} />
+        <GameList event={event} status="live" />
       </Body>
     </>
   );
@@ -173,7 +156,7 @@ export function EndedView({
   const empty = !standings || (standings.teams.length === 0 && standings.players.length === 0);
   return (
     <>
-      <EventBanner event={event} status="ended" />
+      <EventBanner event={event} />
       <Body>
         <h2 className="m-0 font-gm-display text-3xl font-bold">Thanks for playing</h2>
         {empty ? (
@@ -206,21 +189,24 @@ export function GameView({
   game: Game;
   status: EventStatus;
   /** Set for a playable solo game (spec 08). */
-  play?: { device: DeviceProps; instructions: Instructions };
+  play?: { instructions: Instructions };
 }) {
   return (
     <>
-      <EventBanner event={event} status={status} />
+      <EventBanner event={event} />
       <Body>
         <h2 className="m-0 font-gm-display text-3xl font-bold">{game.title}</h2>
-        {status === "live" && play ? (
-          <DeviceProvider slug={event.slug} identity={play.device.identity}>
-            <GamePlayer gameId={game.id} type={game.type} instructions={play.instructions} />
-          </DeviceProvider>
+        {gameOpen(status, game) && play ? (
+          <GamePlayer
+            gameId={game.id}
+            type={game.type}
+            instructions={play.instructions}
+            replayable={game.replayable === true}
+          />
         ) : (
           <p className="m-0 text-gm-text-muted">{GAME_STATE[status]}</p>
         )}
-        {event.kind === "event" && !(status === "live" && play) && (
+        {event.kind === "event" && !(gameOpen(status, game) && play) && (
           <Link href={`/${event.slug}`} className="font-bold text-gm-accent">
             All games
           </Link>

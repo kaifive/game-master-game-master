@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { gamesApi, type HubPlays } from "@/lib/games";
 import {
   activePlayer,
   deviceToken,
@@ -15,35 +16,45 @@ export type DeviceLoad =
 
 type DeviceState = {
   slug: string;
-  /** The code from `?code=`, if the phone arrived through a QR link. */
-  code: string | undefined;
   load: DeviceLoad;
   players: PlayerSummary[];
   active: PlayerSummary | null;
+  /** The active player's plays, and their total: the sum of best scores (S08-AC15). */
+  plays: HubPlays;
+  total: number;
+  refreshPlays: () => Promise<void>;
   /** A fresh token proving which device this is. */
   token: () => Promise<string>;
   choose: (id: string) => void;
   /** Joins a player; returns an error message, or null when it worked. */
   join: (nickname: string, code: string | undefined) => Promise<string | null>;
   retry: () => void;
+  /** Set while leaving would cost the player something, such as a running clock (S08-AC14). */
+  leaveWarning: string | null;
+  setLeaveWarning: (message: string | null) => void;
 };
 
 const DeviceContext = createContext<DeviceState | null>(null);
 
-/** This phone's players in one event, shared by the hub, the game list and game pages (spec 02). */
+const totalOf = (plays: HubPlays) => Object.values(plays).reduce((sum, p) => sum + p.best, 0);
+
+/**
+ * This phone's players in one event (spec 02), shared by every event page:
+ * the header total, the hub, the game list, game pages and the footer.
+ */
 export function DeviceProvider({
   slug,
   identity,
-  code,
   children,
 }: {
   slug: string;
   identity: Identity;
-  code?: string | undefined;
   children: React.ReactNode;
 }) {
   const [load, setLoad] = useState<DeviceLoad>({ kind: "loading" });
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [plays, setPlays] = useState<HubPlays>({});
+  const [leaveWarning, setLeaveWarning] = useState<string | null>(null);
   const token = useCallback(() => deviceToken(identity), [identity]);
   const fetchDevice = useCallback(
     async () => playersApi.device(slug, await token()),
@@ -65,38 +76,63 @@ export function DeviceProvider({
   );
 
   useEffect(() => {
-    let current = true;
+    const alive = { current: true };
     void fetchDevice().then((res) => {
-      if (current) apply(res);
+      if (alive.current) apply(res);
     });
     return () => {
-      current = false;
+      alive.current = false;
     };
   }, [fetchDevice, apply]);
 
+  const players = useMemo(() => (load.kind === "ready" ? load.device.players : []), [load]);
+  const active = players.find((p) => p.id === activeId) ?? players[0] ?? null;
+  const activeKey = active?.id ?? null;
+
+  const refreshPlays = useCallback(async () => {
+    if (!activeKey) return;
+    const res = await gamesApi.plays(slug, await token(), activeKey);
+    if (res.ok) setPlays(res.data.plays);
+  }, [slug, token, activeKey]);
+
+  useEffect(() => {
+    if (!activeKey) return;
+    const alive = { current: true };
+    void token()
+      .then((t) => gamesApi.plays(slug, t, activeKey))
+      .then((res) => {
+        if (alive.current) setPlays(res.ok ? res.data.plays : {});
+      });
+    return () => {
+      alive.current = false;
+    };
+  }, [slug, token, activeKey]);
+
   const value = useMemo<DeviceState>(() => {
-    const players = load.kind === "ready" ? load.device.players : [];
     const choose = (id: string) => {
       activePlayer.write(slug, id);
       setActiveId(id);
     };
     return {
       slug,
-      code,
       load,
       players,
-      active: players.find((p) => p.id === activeId) ?? players[0] ?? null,
+      active,
+      plays: activeKey ? plays : {},
+      total: activeKey ? totalOf(plays) : 0,
+      refreshPlays,
       token,
       choose,
+      leaveWarning,
+      setLeaveWarning,
       retry: () => {
         setLoad({ kind: "loading" });
         void fetchDevice().then(apply);
       },
-      join: async (nickname, typedCode) => {
-        const joinCode = typedCode ?? code;
+      join: async (nickname, code) => {
         const res = await playersApi.join(slug, await token(), {
           nickname,
-          ...(joinCode ? { code: joinCode } : {}),
+          ...(code ? { code } : {}),
         });
         if (!res.ok) return res.message;
         const player = res.data.player;
@@ -109,7 +145,19 @@ export function DeviceProvider({
         return null;
       },
     };
-  }, [slug, code, load, activeId, token, fetchDevice, apply]);
+  }, [
+    slug,
+    load,
+    players,
+    active,
+    activeKey,
+    plays,
+    refreshPlays,
+    token,
+    leaveWarning,
+    fetchDevice,
+    apply,
+  ]);
 
   return <DeviceContext.Provider value={value}>{children}</DeviceContext.Provider>;
 }
@@ -120,5 +168,5 @@ export function useDevice(): DeviceState {
   return state;
 }
 
-/** The device, or null outside a provider (pages that show no player hub). */
+/** The device, or null outside a provider. */
 export const useOptionalDevice = () => useContext(DeviceContext);

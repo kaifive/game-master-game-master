@@ -7,7 +7,14 @@ import type { Moment } from "@/lib/motion";
  * Every version of a slot takes exactly these props.
  */
 export type SurfaceProps = { children: ReactNode; className?: string };
-export type BannerProps = { title: string; subtitle?: string; live?: boolean; level?: 1 | 2 };
+export type BannerProps = {
+  title: string;
+  subtitle?: string;
+  live?: boolean;
+  level?: 1 | 2;
+  /** Shown at the banner's end, such as the player's total points. */
+  aside?: ReactNode;
+};
 export type ButtonProps = {
   children: ReactNode;
   onClick?: () => void;

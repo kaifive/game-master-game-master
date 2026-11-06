@@ -5,11 +5,15 @@ import { describe, expect, test, vi } from "vitest";
 import { PackRoot } from "@/components/packs/judges-table/root";
 import { holiday2026 } from "@/content/events/holiday-2026";
 import { toPublicEvent, type FinalStandings } from "@/lib/events";
+import { DeviceProvider } from "@/components/players/device";
 import { HomeCodeEntry } from "./home";
 import { EndedView, EventNotFound, LiveView, QuickEventView, UpcomingView } from "./views";
 
 const push = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push }),
+  useSearchParams: () => new URLSearchParams(),
+}));
 vi.mock("@/components/motion/confetti", () => ({ fireConfetti: vi.fn() }));
 
 const event = toPublicEvent(holiday2026);
@@ -31,12 +35,22 @@ describe("S01-AC4: event pages show the event's banner in its own style", () => 
 
 describe("S01-AC5: an upcoming event shows when it's scheduled and its games, locked", () => {
   test("lists every listed game as locked, with no links", () => {
-    inPack(<UpcomingView event={event} />);
+    const closed = { ...event, games: event.games.map((g) => ({ ...g, alwaysOpen: false })) };
+    inPack(<UpcomingView event={closed} />);
     expect(screen.getByText(/Games open when the host starts the party/)).toBeInTheDocument();
     const list = screen.getByRole("list", { name: "Tonight's games" });
     for (const g of event.games) expect(within(list).getByText(g.title)).toBeInTheDocument();
     expect(within(list).queryAllByRole("link")).toHaveLength(0);
-    expect(within(list).getAllByText("Locked").length).toBe(event.games.length);
+    expect(within(list).getAllByText("Locked").length).toBe(closed.games.length);
+  });
+
+  test("S08-AC13: an alwaysOpen game can be played before the start", () => {
+    inPack(<UpcomingView event={event} />);
+    expect(screen.getByText(/Some games are open now/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Holiday Trivia/ })).toHaveAttribute(
+      "href",
+      "/holiday-2026/play/trivia",
+    );
   });
 
   test("hidden games stay hidden", () => {
@@ -130,8 +144,8 @@ describe("S08-AC7: the hub lists each game for the active player", () => {
             url.includes("/plays")
               ? {
                   plays: {
-                    trivia: { status: "finished", points: 80 },
-                    "ornament-hunt": { status: "playing", points: 0 },
+                    trivia: { status: "finished", best: 80, runs: 2 },
+                    "ornament-hunt": { status: "playing", best: 0, runs: 1 },
                   },
                 }
               : { banned: false, players: [{ id: "p1", nickname: "Mai" }] },
@@ -139,9 +153,14 @@ describe("S08-AC7: the hub lists each game for the active player", () => {
         ),
       ),
     );
-    inPack(<LiveView event={event} device={{ identity: "dev" }} />);
+    inPack(
+      <DeviceProvider slug={event.slug} identity="dev">
+        <LiveView event={event} />
+      </DeviceProvider>,
+    );
     const list = screen.getByRole("list", { name: "Tonight's games" });
-    expect(await within(list).findByText("Done · +80")).toBeInTheDocument();
+    // Trivia is replayable in the party's event file.
+    expect(await within(list).findByText("Best 80 · Again →")).toBeInTheDocument();
     expect(within(list).getByText("Continue →")).toBeInTheDocument();
     expect(within(list).getByText("Play →")).toBeInTheDocument();
     vi.unstubAllGlobals();

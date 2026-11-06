@@ -1,79 +1,122 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
-import { CountUp } from "@/components/motion";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CountUp, useReducedMotion } from "@/components/motion";
 import { useDevice } from "@/components/players/device";
 import { useSlots } from "@/components/slots/registry";
 import { gamesApi, type Instructions, type PlayResponse } from "@/lib/games";
+import { flyPoints } from "./fly";
 import { InstructionsDialog } from "./instructions";
 import { rendererFor } from "./renderers";
 
-type Props = { gameId: string; type: string; instructions: Instructions };
+type Props = { gameId: string; type: string; instructions: Instructions; replayable: boolean };
 
 type Phase =
   | { kind: "checking" }
   | { kind: "instructions" }
-  | { kind: "playing"; play: PlayResponse }
+  | { kind: "playing"; play: PlayResponse; bestBefore: number }
   | { kind: "error"; message: string };
 
-/** The points count up from 0 to the final score (S08-AC11). */
+const COUNT_MS = 1200;
+export const LEAVE_WARNING =
+  "Leave the game? Your clock keeps running, so you may lose this question.";
+
+/**
+ * The run's points count up from 0; a new best then flies to the header
+ * total, which counts up in turn (S08-AC11, AC15).
+ */
 function Result({
-  points,
+  play,
+  bestBefore,
   summary,
-  slug,
+  onAgain,
 }: {
-  points: number;
+  play: PlayResponse;
+  bestBefore: number;
   summary: string | null;
-  slug: string;
+  onAgain?: (() => void) | undefined;
 }) {
+  const { Button } = useSlots();
+  const { refreshPlays } = useDevice();
+  const reduced = useReducedMotion();
+  const score = useRef<HTMLParagraphElement>(null);
   const [shown, setShown] = useState(0);
-  // Start at 0, then let CountUp run to the score.
+  const gain = play.best - bestBefore;
+
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
-      setShown(points);
+      setShown(play.points);
     });
+    const timer = setTimeout(
+      () => {
+        const fly =
+          gain > 0 && score.current
+            ? flyPoints(score.current, `+${String(gain)}`, reduced)
+            : Promise.resolve();
+        void fly.then(refreshPlays);
+      },
+      reduced ? 0 : COUNT_MS,
+    );
     return () => {
       cancelAnimationFrame(frame);
+      clearTimeout(timer);
     };
-  }, [points]);
+  }, [play.points, gain, reduced, refreshPlays]);
+
   return (
     <section aria-label="Your score" className="grid justify-items-center gap-3 py-6 text-center">
       <p className="m-0 text-sm font-bold tracking-[0.12em] text-gm-text-muted uppercase">
         Your score
       </p>
       <p
+        ref={score}
         className="m-0 font-gm-display text-7xl font-bold text-gm-accent"
-        aria-label={`${String(points)} points`}
+        aria-label={`${String(play.points)} points`}
       >
-        <CountUp value={shown} duration={1200} />
+        <CountUp value={shown} duration={COUNT_MS} />
       </p>
       {summary && <p className="m-0 text-xl font-bold">{summary}</p>}
-      <Link href={`/${slug}`} className="font-bold text-gm-accent">
-        Back to all games
-      </Link>
+      {onAgain && (
+        <>
+          <p className="m-0 text-gm-text-muted">
+            {gain > 0 ? "New best!" : `Your best: ${String(play.best)}`}
+          </p>
+          <Button onClick={onAgain}>Play again</Button>
+        </>
+      )}
     </section>
   );
 }
 
-/** A solo game on the phone: instructions, play, result (spec 08). Needs a DeviceProvider. */
-export function GamePlayer({ gameId, type, instructions }: Props) {
+/** A solo game on the phone: instructions, play, result (spec 08). */
+export function GamePlayer({ gameId, type, instructions, replayable }: Props) {
   const { Panel } = useSlots();
-  const { slug, load, active, token } = useDevice();
+  const { slug, load, active, token, plays, setLeaveWarning } = useDevice();
   const renderer = rendererFor(type);
   const [phase, setPhase] = useState<Phase>({ kind: "checking" });
   const [busy, setBusy] = useState(false);
   const playerId = active?.id ?? null;
+  const bestNow = plays[gameId]?.best ?? 0;
 
-  const begin = useCallback(async () => {
-    if (!playerId) return;
-    setBusy(true);
-    const res = await gamesApi.start(slug, gameId, await token(), playerId);
-    setBusy(false);
-    setPhase(
-      res.ok ? { kind: "playing", play: res.data } : { kind: "error", message: res.message },
-    );
-  }, [slug, gameId, token, playerId]);
+  const begin = useCallback(
+    async (again = false) => {
+      if (!playerId) return;
+      setBusy(true);
+      const res = await gamesApi.start(slug, gameId, await token(), playerId, again);
+      setBusy(false);
+      setPhase(
+        res.ok
+          ? {
+              kind: "playing",
+              play: res.data,
+              bestBefore: res.data.status === "finished" ? res.data.best : bestNow,
+            }
+          : { kind: "error", message: res.message },
+      );
+    },
+    [slug, gameId, token, playerId, bestNow],
+  );
 
   // A started play resumes with no instructions; a new one waits for Start (S08-AC9).
   useEffect(() => {
@@ -89,7 +132,18 @@ export function GamePlayer({ gameId, type, instructions }: Props) {
     return () => {
       alive.current = false;
     };
-  }, [slug, gameId, token, playerId, begin]);
+    // begin changes with the best score; only a new player or game should re-check.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, gameId, token, playerId]);
+
+  // Leaving mid-run costs time, so the footer asks first (S08-AC14).
+  const inProgress = phase.kind === "playing" && phase.play.status === "playing";
+  useEffect(() => {
+    setLeaveWarning(inProgress ? LEAVE_WARNING : null);
+    return () => {
+      setLeaveWarning(null);
+    };
+  }, [inProgress, setLeaveWarning]);
 
   const move = async (m: unknown) => {
     if (phase.kind !== "playing" || !playerId) return;
@@ -101,7 +155,9 @@ export function GamePlayer({ gameId, type, instructions }: Props) {
     });
     setBusy(false);
     setPhase(
-      res.ok ? { kind: "playing", play: res.data } : { kind: "error", message: res.message },
+      res.ok
+        ? { kind: "playing", play: res.data, bestBefore: phase.bestBefore }
+        : { kind: "error", message: res.message },
     );
   };
 
@@ -126,9 +182,6 @@ export function GamePlayer({ gameId, type, instructions }: Props) {
 
   return (
     <div className="grid gap-4">
-      <p className="m-0 text-gm-text-muted">
-        Playing as <strong className="text-gm-text">{active.nickname}</strong>
-      </p>
       {phase.kind === "error" && (
         <p role="alert" className="m-0 font-bold text-gm-danger">
           {phase.message}
@@ -139,9 +192,11 @@ export function GamePlayer({ gameId, type, instructions }: Props) {
       )}
       {phase.kind === "playing" && renderer && phase.play.status === "finished" && (
         <Result
-          points={phase.play.points}
+          key={`${String(phase.play.step)}-${String(phase.play.best)}`}
+          play={phase.play}
+          bestBefore={phase.bestBefore}
           summary={renderer.summary(phase.play.view)}
-          slug={slug}
+          onAgain={replayable ? () => void begin(true) : undefined}
         />
       )}
       {phase.kind === "playing" && renderer && phase.play.status === "playing" && (

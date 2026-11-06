@@ -33,6 +33,10 @@ export const GameConfig = z.object({
     points: z.number().int().nonnegative().optional(),
     awardTo: z.enum(["player", "team"]),
   }),
+  /** Players may play again; their best run counts (S08-AC12). */
+  replayable: z.boolean().optional(),
+  /** Playable before the host starts the event, too (S08-AC13). Every game closes at the end. */
+  alwaysOpen: z.boolean().optional(),
   /** Replaces the game type's default instructions box (S08-AC9). */
   instructions: z
     .object({ title: z.string().min(1), lines: z.array(z.string().min(1)).min(1) })
