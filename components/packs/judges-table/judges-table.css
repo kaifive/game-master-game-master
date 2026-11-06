@@ -124,3 +124,8 @@
     13px 19px;
   opacity: 0.85;
 }
+
+/* Once the player's total shows (with its own holly), the band's sprig steps aside. */
+[data-slot="banner"]:has([data-total-score]) [data-decoration="holly"] {
+  display: none;
+}

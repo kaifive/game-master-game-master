@@ -22,7 +22,7 @@ describe("flyPoints", () => {
 describe("flyPoints icon", () => {
   it("copies the event's points icon into the chip", async () => {
     document.body.innerHTML =
-      '<p id="from">80</p><span data-total-score>100</span><span id="icon"><svg data-icon="mistletoe"></svg></span>';
+      '<p id="from">80</p><span data-total-score>100</span><span id="icon"><svg data-icon="holly"></svg></span>';
     let chipHtml = "";
     animateSpy.mockImplementationOnce(function (this: Element) {
       chipHtml = this.outerHTML;
@@ -34,7 +34,7 @@ describe("flyPoints icon", () => {
       false,
       document.querySelector("#icon svg"),
     );
-    expect(chipHtml).toContain('data-icon="mistletoe"');
+    expect(chipHtml).toContain('data-icon="holly"');
     expect(chipHtml).toContain("+80");
   });
 });

@@ -13,8 +13,8 @@ const iconIn = (variant?: string) =>
   ).container.querySelector("[data-icon]");
 
 describe("PointsIcon", () => {
-  test("S09-AC13: the winter party's points are mistletoe; otherwise a star", () => {
-    expect(iconIn("winter")).toHaveAttribute("data-icon", "mistletoe");
+  test("S09-AC13: the winter party's points are holly; otherwise a star", () => {
+    expect(iconIn("winter")).toHaveAttribute("data-icon", "holly");
     expect(iconIn()).toHaveAttribute("data-icon", "star");
     const { container } = render(<PointsIcon />);
     expect(container.querySelector("[data-icon]")).toHaveAttribute("data-icon", "star");
