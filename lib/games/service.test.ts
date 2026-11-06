@@ -4,7 +4,14 @@ import { isAppError } from "@/lib/errors";
 import type { EventConfig, EventStatus } from "@/lib/events";
 import { MemoryPlayerRepo } from "@/lib/players";
 import { MemoryPlayRepo } from "./repo.memory";
-import { hubPlays, instructionsFor, makeMove, startPlay, type GameDeps } from "./service";
+import {
+  hubPlays,
+  instructionsFor,
+  makeMove,
+  startPlay,
+  type FinishedRun,
+  type GameDeps,
+} from "./service";
 import type { TriviaView } from "./trivia/logic";
 
 const event: EventConfig = {
@@ -30,8 +37,10 @@ let clock = 0;
 let status: EventStatus = "live";
 let deps: GameDeps;
 let playerId: string;
+let bests: FinishedRun[] = [];
 
 beforeEach(async () => {
+  bests = [];
   clock = 1_000_000;
   status = "live";
   const players = new MemoryPlayerRepo();
@@ -41,6 +50,11 @@ beforeEach(async () => {
     status: () => Promise.resolve(status),
     now: () => clock,
     seed: () => 42,
+    onBest: (_slug, _player, run) => {
+      bests.push(run);
+      return Promise.resolve();
+    },
+    pointsOf: () => Promise.resolve(123),
   };
   playerId = (await players.join(event.slug, UID, { nickname: "Mai", key: "mai" })).id;
 });
@@ -139,10 +153,11 @@ describe("game service", () => {
   });
 
   it("S08-AC7: lists the player's plays for the hub", async () => {
-    expect(await hubPlays(deps, event, UID, playerId)).toEqual({ plays: {} });
+    expect(await hubPlays(deps, event, UID, playerId)).toEqual({ plays: {}, total: 123 });
     await start();
     expect(await hubPlays(deps, event, UID, playerId)).toEqual({
       plays: { trivia: { status: "playing", best: 0, runs: 1 } },
+      total: 123,
     });
     const done = await playThrough();
     expect((await hubPlays(deps, event, UID, playerId)).plays.trivia).toEqual({
@@ -180,6 +195,59 @@ describe("game service", () => {
     expect((await startPlay(deps, event, UID, "trivia", { playerId, again: true })).status).toBe(
       "finished",
     );
+  });
+
+  it("S04-AC1: a finished run with a new best awards the improvement, once", async () => {
+    const done = await playThrough();
+    if (done.best === 0) return; // every answer wrong: nothing to award
+    expect(bests).toEqual([
+      { gameId: "trivia", title: "Holiday Trivia", run: 1, gain: done.best, replay: false },
+    ]);
+    await start(); // reopening a finished play awards nothing more
+    expect(bests).toHaveLength(1);
+  });
+
+  it("S04-AC1: a replay awards only what it beat the best by, and nothing when worse", async () => {
+    const replay: EventConfig = { ...event, replayable: true };
+    const run = async (answer: (v: Asked) => unknown) => {
+      let res = await startPlay(deps, replay, UID, "trivia", { playerId, again: true });
+      while (res.status === "playing") {
+        const v = res.view as Asked;
+        res = await makeMove(deps, replay, UID, "trivia", {
+          playerId,
+          step: res.step,
+          move: v.kind === "question" ? answer(v) : { type: "next" },
+        });
+      }
+      return res;
+    };
+    // A first run that times out on every question scores 0: no award.
+    await startPlay(deps, replay, UID, "trivia", { playerId });
+    let res = await startPlay(deps, replay, UID, "trivia", { playerId });
+    while (res.status === "playing") {
+      clock += 60_000;
+      res = await makeMove(deps, replay, UID, "trivia", {
+        playerId,
+        step: res.step,
+        move: { type: "next" },
+      });
+    }
+    expect(bests).toEqual([]);
+    // A replay with every answer right, instantly, scores 100: the gain is 100.
+    const content = replay.games[0]?.content as {
+      questions: { id: string; prompt: string; answer: number; choices: unknown[] }[];
+    };
+    const right = (v: Asked) => {
+      const q = content.questions.find((x) => x.prompt === v.prompt);
+      const text = q?.choices[q.answer];
+      const label = typeof text === "string" ? text : (text as { text?: string }).text;
+      return { type: "answer", choice: v.choices.findIndex((c) => c.text === label) };
+    };
+    const best = await run(right);
+    expect(best.best).toBe(100);
+    expect(bests).toEqual([
+      { gameId: "trivia", title: "Holiday Trivia", run: 2, gain: 100, replay: true },
+    ]);
   });
 
   it("S08-AC13: an alwaysOpen game can be played before the start; every game closes at the end", async () => {

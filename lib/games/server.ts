@@ -2,6 +2,7 @@ import "server-only";
 import { randomInt } from "node:crypto";
 import { eventRuntime, requireEvent } from "@/lib/events/server";
 import { playerRepo } from "@/lib/players/server";
+import { awardGame, pointsDeps, pointsOf } from "@/lib/points/server";
 import { playRepo } from "./runtime";
 import {
   hubPlays,
@@ -23,6 +24,8 @@ function deps(): GameDeps {
     status: (slug) => runtime.status(slug),
     now: () => Date.now(),
     seed: () => randomInt(2 ** 31),
+    onBest: (slug, player, run) => awardGame(pointsDeps(), slug, player, run),
+    pointsOf: (slug, playerId) => pointsOf(pointsDeps(), slug, playerId),
   };
 }
 

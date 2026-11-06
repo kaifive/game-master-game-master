@@ -27,6 +27,14 @@ describe("Realtime Database paths", () => {
     expect(rtdb.presenceAll("holiday-2026")).toBe("presence/holiday-2026");
     expect(rtdb.buzzes("holiday-2026", "r1")).toBe("live/holiday-2026/buzzes/r1");
     expect(rtdb.leaderboard("holiday-2026")).toBe("leaderboard/holiday-2026");
+    expect(rtdb.leaderboardPlayer("holiday-2026", "p1")).toBe(
+      "leaderboard/holiday-2026/players/p1",
+    );
+    expect(rtdb.leaderboardPlayers("holiday-2026")).toBe("leaderboard/holiday-2026/players");
+    expect(rtdb.leaderboardRecentEntry("holiday-2026", "e1")).toBe(
+      "leaderboard/holiday-2026/recent/e1",
+    );
+    expect(rtdb.leaderboardRecent("holiday-2026")).toBe("leaderboard/holiday-2026/recent");
     expect(rtdb.liveSession("holiday-2026")).toBe("live/holiday-2026/session");
     expect(rtdb.captain("holiday-2026", "t1")).toBe("live/holiday-2026/captains/t1");
     expect(rtdb.buzz("holiday-2026", "r1", "t1")).toBe("live/holiday-2026/buzzes/r1/t1");

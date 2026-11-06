@@ -19,7 +19,7 @@ type DeviceState = {
   load: DeviceLoad;
   /** The phone's one player (ADR-027), or null before joining. */
   active: PlayerSummary | null;
-  /** The player's plays, and their total: the sum of best scores (S08-AC15). */
+  /** The player's plays, and their points from the ledger (S04-AC7, S08-AC15). */
   plays: HubPlays;
   total: number;
   refreshPlays: () => Promise<void>;
@@ -37,8 +37,6 @@ type DeviceState = {
 
 const DeviceContext = createContext<DeviceState | null>(null);
 
-const totalOf = (plays: HubPlays) => Object.values(plays).reduce((sum, p) => sum + p.best, 0);
-
 /**
  * This phone's player in one event (spec 02), shared by every event page:
  * the header total, the hub, the game list, game pages and the footer.
@@ -54,6 +52,7 @@ export function DeviceProvider({
 }) {
   const [load, setLoad] = useState<DeviceLoad>({ kind: "loading" });
   const [plays, setPlays] = useState<HubPlays>({});
+  const [total, setTotal] = useState(0);
   const [leaveWarning, setLeaveWarning] = useState<string | null>(null);
   const token = useCallback(() => deviceToken(identity), [identity]);
   const fetchDevice = useCallback(
@@ -81,7 +80,10 @@ export function DeviceProvider({
   const refreshPlays = useCallback(async () => {
     if (!activeKey) return;
     const res = await gamesApi.plays(slug, await token(), activeKey);
-    if (res.ok) setPlays(res.data.plays);
+    if (res.ok) {
+      setPlays(res.data.plays);
+      setTotal(res.data.total);
+    }
   }, [slug, token, activeKey]);
 
   useEffect(() => {
@@ -90,7 +92,9 @@ export function DeviceProvider({
     void token()
       .then((t) => gamesApi.plays(slug, t, activeKey))
       .then((res) => {
-        if (alive.current) setPlays(res.ok ? res.data.plays : {});
+        if (!alive.current) return;
+        setPlays(res.ok ? res.data.plays : {});
+        setTotal(res.ok ? res.data.total : 0);
       });
     return () => {
       alive.current = false;
@@ -102,6 +106,7 @@ export function DeviceProvider({
       const res = await playersApi.join(slug, await token(), body);
       if (!res.ok) return res.message;
       setPlays({});
+      setTotal(0);
       apply(await fetchDevice());
       return null;
     };
@@ -110,7 +115,7 @@ export function DeviceProvider({
       load,
       active,
       plays: activeKey ? plays : {},
-      total: activeKey ? totalOf(plays) : 0,
+      total: activeKey ? total : 0,
       refreshPlays,
       token,
       leaveWarning,
@@ -122,7 +127,19 @@ export function DeviceProvider({
       join: (nickname, code) => send({ nickname, ...(code ? { code } : {}) }),
       restart: (nickname) => send({ nickname, restart: true }),
     };
-  }, [slug, load, active, activeKey, plays, refreshPlays, token, leaveWarning, fetchDevice, apply]);
+  }, [
+    slug,
+    load,
+    active,
+    activeKey,
+    plays,
+    total,
+    refreshPlays,
+    token,
+    leaveWarning,
+    fetchDevice,
+    apply,
+  ]);
 
   return <DeviceContext.Provider value={value}>{children}</DeviceContext.Provider>;
 }

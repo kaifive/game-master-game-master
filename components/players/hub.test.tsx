@@ -28,7 +28,7 @@ function fakeServer(banned: string[] = []) {
   const reply = (status: number, body: unknown) => Promise.resolve(Response.json(body, { status }));
   const fetch = vi.fn(async (url: string, init: RequestInit = {}) => {
     const uid = new Headers(init.headers).get("authorization")?.replace("Bearer dev:", "") ?? "";
-    if (url.includes("/plays")) return reply(200, { plays: {} });
+    if (url.includes("/plays")) return reply(200, { plays: {}, total: 0 });
     const d = await repo.device(SLUG, uid);
     if (url.endsWith("/device"))
       return reply(200, {

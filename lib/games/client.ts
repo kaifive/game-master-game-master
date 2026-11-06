@@ -11,7 +11,7 @@ const post = (body: unknown): RequestInit => ({
 
 export const gamesApi = {
   plays: (slug: string, token: string, playerId: string) =>
-    apiCall<{ plays: HubPlays }>(
+    apiCall<{ plays: HubPlays; total: number }>(
       `/api/events/${slug}/plays?playerId=${encodeURIComponent(playerId)}`,
       token,
     ),

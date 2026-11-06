@@ -8,7 +8,7 @@ Statuses are explained in `../conventions/docs.md`.
 | 01 | [Events and routing](01-events-and-routing.md) | M1 | Done |
 | 02 | [Player join and identity](02-player-join.md) | M1 | Done |
 | 03 | [Teams, phases and captains](03-teams-and-captains.md) | M1 | Draft |
-| 04 | [Points ledger](04-points-ledger.md) | M1 | Draft |
+| 04 | [Points ledger](04-points-ledger.md) | M1 | Done |
 | 05 | [Leaderboard and display](05-leaderboard-and-display.md) | M1 | Draft |
 | 06 | [Admin sign-in](06-admin-auth.md) | M1 | Draft |
 | 07 | [Controls](07-controls.md) | M1 | Draft |

@@ -99,16 +99,16 @@ events/{slug}/teams/{teamId}
   createdAt: timestamp
   (team score = ownPoints + sum of members' points; kept in the leaderboard summary)
 
-events/{slug}/ledger/{entryId}      append-only
-  kind: "award" | "donation" | "void"
-  points: number             always positive; direction comes from kind
-  to: { kind: "player" | "team"; id: string }
-  from?: { kind: "player"; id: string }    donations only
-  reason: string             "Won Daily Word 1", "Donated to Team Dragon"
-  source: { kind: "game" | "live" | "photo" | "vote" | "manual" | "donation"; id: string }
+events/{slug}/ledger/{entryId}      append-only (spec 04)
+  kind: "award" | "void"
+  points: number             signed: a deduction is a negative award; a void is the opposite of what it voids
+  to: { kind: "player"; id: string }
+  reason: string             "Holiday Trivia", "Holiday Trivia · new best", "Best costume"
+  source: { kind: "game" | "manual"; id: string }
   voids?: string             entryId this void cancels
   createdAt: timestamp
   createdBy: "server" | "admin"
+  Entry ids come from the source (game_{gameId}_{playerId}_{run}), so a retry can't pay twice.
 
 events/{slug}/plays/{gameId}_{playerId}
   gameId, playerId, deviceUid
@@ -157,9 +157,10 @@ presence/{slug}/{uid}
   surface: "player" | "display" | "controls"
   lastSeen: server timestamp
 
-leaderboard/{slug}           written only by the server after each ledger entry
+leaderboard/{slug}           written only by the server after each ledger entry, one row at a time
   updatedAt
   players/{playerId}: { nickname, teamId, points }
+  recent/{time_entryId}: { id, playerId, nickname, points, reason, at }   keyed by time, newest last
   teams/{teamId}: { name, color, points }     full team score
 
 live/{slug}/settings         admin-set, live display settings
