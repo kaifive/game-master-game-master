@@ -203,7 +203,7 @@ describe("game service", () => {
       lines: ["Be quick."],
     });
     expect(instructionsFor(event, "trivia")?.lines[0]).toBe(
-      "5 quick questions. You have 15 seconds for each.",
+      "5 quick questions. You have 10 seconds for each.",
     );
     expect(instructionsFor(event, "jeopardy")).toBeNull();
   });

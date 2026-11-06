@@ -17,6 +17,13 @@ const device = vi.hoisted(() => ({
   },
 }));
 vi.mock("./device", () => ({ useOptionalDevice: () => device.state }));
+vi.mock("./player-sheet", () => ({
+  PlayerSheet: ({ hasTeams }: { hasTeams: boolean }) => (
+    <div role="dialog" aria-label="Player">
+      {hasTeams ? "teams" : "no teams"}
+    </div>
+  ),
+}));
 
 beforeEach(() => {
   push.mockClear();
@@ -31,19 +38,15 @@ beforeEach(() => {
 
 describe("PlayerFooter", () => {
   test("S08-AC14: shows who's playing and the way back to the games", () => {
-    render(<PlayerFooter />);
+    render(<PlayerFooter hasTeams={false} />);
     const nav = screen.getByRole("navigation", { name: "Party" });
     expect(nav).toHaveTextContent("Mai");
     expect(screen.getByRole("link", { name: /Games/ })).toHaveAttribute("href", "/holiday-2026");
-    expect(screen.getByRole("link", { name: /Mai/ })).toHaveAttribute(
-      "href",
-      "/holiday-2026#players",
-    );
   });
 
   test("S08-AC14: asks before leaving a game in progress", async () => {
     if (device.state) device.state.leaveWarning = "Leave the game?";
-    render(<PlayerFooter />);
+    render(<PlayerFooter hasTeams={false} />);
     const user = userEvent.setup();
     await user.click(screen.getByRole("link", { name: /Games/ }));
     expect(screen.getByRole("alertdialog", { name: "Leave the game?" })).toBeInTheDocument();
@@ -57,7 +60,7 @@ describe("PlayerFooter", () => {
 
   test("hidden until a player has joined", () => {
     if (device.state) device.state.active = null;
-    const { container } = render(<PlayerFooter />);
+    const { container } = render(<PlayerFooter hasTeams={false} />);
     expect(container).toBeEmptyDOMElement();
   });
 });

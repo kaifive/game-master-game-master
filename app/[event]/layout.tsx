@@ -28,7 +28,7 @@ export default async function EventLayout({ params, children }: Props & { childr
       <EventSurface>
         <DeviceProvider slug={event.slug} identity={deviceIdentity()}>
           {children}
-          <PlayerFooter />
+          <PlayerFooter hasTeams={event.scoring !== "individual"} />
         </DeviceProvider>
       </EventSurface>
     </PackRoot>

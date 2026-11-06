@@ -7,15 +7,15 @@ async function joinParty(page: Page) {
   await page.goto("/holiday-2026?code=WUSH7");
   await page.getByLabel("Your name").fill(unique("Quiz"));
   await page.getByRole("button", { name: "Join" }).click();
-  await expect(page.getByText("Playing as")).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Party" })).toBeVisible();
 }
 
 async function playToEnd(page: Page) {
   for (let n = 1; n <= 5; n++) {
     await expect(page.getByText(`Question ${String(n)} of 5`)).toBeVisible();
     await page.getByRole("list", { name: "Answers" }).getByRole("button").first().click();
+    // No Next: the next question comes on its own a second later.
     await expect(page.getByRole("status")).toHaveText(/Right!|Not quite\./);
-    await page.getByRole("button", { name: n === 5 ? "See score" : "Next", exact: true }).click();
   }
 }
 
@@ -30,12 +30,14 @@ test("S08-AC9 S08-AC11 S08-AC13 S08-AC15 S10-AC6: play before the start, see the
   await trivia.click();
 
   const rules = page.getByRole("dialog", { name: "How to play" });
-  await expect(rules).toContainText("5 quick questions. You have 15 seconds for each.");
+  await expect(rules).toContainText("5 quick questions. You have 10 seconds for each.");
   await rules.getByRole("button", { name: "Start" }).click();
   await playToEnd(page);
 
   const score = page.getByRole("region", { name: "Your score" });
   await expect(score).toContainText(/[0-5] of 5 right/);
+  // The game's title replaces the party's name in the header.
+  await expect(page.getByRole("heading", { level: 1, name: "Holiday Trivia" })).toBeVisible();
   const points =
     (await score.getByLabel(/points$/).getAttribute("aria-label"))?.replace(" points", "") ?? "";
   await expect(total).toHaveAttribute("aria-label", new RegExp(`: ${points} points$`));

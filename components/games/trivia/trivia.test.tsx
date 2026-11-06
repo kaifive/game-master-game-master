@@ -70,20 +70,16 @@ describe("TriviaGame", () => {
     expect(answers.getByText("Star")).toBeInTheDocument();
   });
 
-  test("S10-AC4: after answering, marks the right answer and yours, then Next", async () => {
-    const onMove = vi.fn();
-    show({ ...question(), kind: "answered", chosen: 0, correct: 1, right: false }, { onMove });
+  test("S10-AC4: after answering, marks the right answer and yours", () => {
+    show({ ...question(), kind: "answered", chosen: 0, correct: 1, right: false });
     expect(screen.getByRole("status")).toHaveTextContent("Not quite.");
     expect(screen.getByRole("button", { name: "8 (Right answer)" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "6 (Your answer)" })).toBeInTheDocument();
-    await userEvent.setup().click(screen.getByRole("button", { name: "Next" }));
-    expect(onMove).toHaveBeenCalledWith({ type: "next" });
   });
 
-  test("S10-AC5: says time's up when no answer came, and See score on the last question", () => {
+  test("S10-AC5: says time's up when no answer came", () => {
     show({ ...question({ number: 5 }), kind: "answered", chosen: null, correct: 1, right: false });
     expect(screen.getByRole("status")).toHaveTextContent("Time's up.");
-    expect(screen.getByRole("button", { name: "See score" })).toBeInTheDocument();
   });
 
   test("S10-AC5: when the local timer runs out, asks the server for the timed-out view", () => {
@@ -97,7 +93,12 @@ describe("TriviaGame", () => {
   });
 
   test("S10-AC6: sums up the result", () => {
-    expect(triviaSummary({ kind: "done", right: 4, total: 5 })).toBe("4 of 5 right");
+    expect(triviaSummary({ kind: "done", right: 4, total: 5, avgSeconds: 3.2 })).toBe(
+      "4 of 5 right · 3.2 s average",
+    );
+    expect(triviaSummary({ kind: "done", right: 0, total: 5, avgSeconds: null })).toBe(
+      "0 of 5 right",
+    );
     expect(triviaSummary(question())).toBeNull();
   });
 });
@@ -123,13 +124,13 @@ describe("TriviaGame pacing", () => {
     expect(onMove).toHaveBeenCalledExactlyOnceWith({ type: "next" });
   });
 
-  test("S10-AC10: a tap anywhere skips the wait, and moves on only once", async () => {
+  test("S10-AC10: no Next button, and a tap doesn't skip ahead", async () => {
     const onMove = vi.fn();
     show({ ...question(), kind: "answered", chosen: 1, correct: 1, right: true }, { onMove });
-    const user = userEvent.setup();
-    await user.click(screen.getByRole("heading", { name: "How many legs does a spider have?" }));
-    await user.click(screen.getByRole("button", { name: "Next" }));
-    expect(onMove).toHaveBeenCalledExactlyOnceWith({ type: "next" });
-    expect(screen.getByText(/tap to skip/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Next|See score/ })).toBeNull();
+    await userEvent
+      .setup()
+      .click(screen.getByRole("heading", { name: "How many legs does a spider have?" }));
+    expect(onMove).not.toHaveBeenCalled();
   });
 });

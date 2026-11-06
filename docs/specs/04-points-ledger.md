@@ -19,6 +19,12 @@ Every point movement is an append-only ledger entry written by the server (ADR-0
 - Rebuild totals from the ledger (admin button and script)
 - Idempotency: deterministic entry ids per source, so retries can't double-pay
 
+## Rules from Khai (to fold into acceptance criteria)
+
+- A player's own points are their best solo-game scores plus awards, minus donations given. A donation can't exceed the player's own points.
+- Replaying a game only adds the improvement on the best score, so donating and then replaying can't inflate points: donate 80, replay from 80 to 90, and only 10 comes back.
+- Starting over forfeits the old player's points, including donations they gave (ADR-027): those donations are voided from their teams.
+
 ## Open questions
 
 - Q14: can a player donate to a team they aren't on? Default yes.

@@ -22,7 +22,7 @@ function liveMessage(name: string): string | null {
   return !check.ok && check.message !== MESSAGES.tooShort ? check.message : null;
 }
 
-function JoinForm({
+export function JoinForm({
   askCode,
   onJoin,
   onCancel,
@@ -128,11 +128,10 @@ export function forfeitMessage(
   return `${lost} This phone can only start over ${left} at this party.`;
 }
 
-/** Join, or start over as someone new (spec 02). One player per phone (ADR-027). */
-export function PlayerHub({ hasTeams }: { hasTeams: boolean }) {
+/** Joining, on the party page. Once joined it shows nothing: the footer has the player (spec 02). */
+export function PlayerHub() {
   const { Panel, Button } = useSlots();
-  const { load, active, total, join, restart, retry } = useDevice();
-  const [mode, setMode] = useState<"view" | "confirm" | "restart">("view");
+  const { load, active, join, retry } = useDevice();
   // The join code from a QR link (`?code=`), if the phone arrived that way.
   const code = useSearchParams().get("code") ?? undefined;
 
@@ -164,76 +163,14 @@ export function PlayerHub({ hasTeams }: { hasTeams: boolean }) {
       </Panel>
     );
 
-  if (!active)
-    return (
-      <Panel label="Join the party">
-        <JoinForm
-          title="Join the party"
-          askCode={!code}
-          onJoin={(nickname, typed) => join(nickname, typed ?? code)}
-        />
-      </Panel>
-    );
-
-  const { restartsLeft } = load.device;
-  const back = () => {
-    setMode("view");
-  };
-
-  if (mode === "restart")
-    return (
-      <Panel label="Start over">
-        <JoinForm
-          title="Start over"
-          askCode={false}
-          onCancel={back}
-          onJoin={async (nickname) => {
-            const failed = await restart(nickname);
-            if (!failed) back();
-            return failed;
-          }}
-        />
-      </Panel>
-    );
-
+  if (active) return null;
   return (
-    <Panel label="Your player">
-      <div className="grid gap-3">
-        <p className="m-0 text-lg">
-          Playing as <strong className="font-gm-display text-2xl">{active.nickname}</strong>
-        </p>
-        {mode === "confirm" ? (
-          <div role="alertdialog" aria-label="Start over?" className="grid gap-3">
-            <p className="m-0 font-bold">
-              {forfeitMessage(active.nickname, total, hasTeams, restartsLeft)}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={back}>Keep {active.nickname}</Button>
-              <Button
-                tone="secondary"
-                onClick={() => {
-                  setMode("restart");
-                }}
-              >
-                Start over
-              </Button>
-            </div>
-          </div>
-        ) : (
-          restartsLeft > 0 && (
-            <div>
-              <Button
-                tone="secondary"
-                onClick={() => {
-                  setMode("confirm");
-                }}
-              >
-                Not you? Start over
-              </Button>
-            </div>
-          )
-        )}
-      </div>
+    <Panel label="Join the party">
+      <JoinForm
+        title="Join the party"
+        askCode={!code}
+        onJoin={(nickname, typed) => join(nickname, typed ?? code)}
+      />
     </Panel>
   );
 }

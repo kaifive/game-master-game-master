@@ -5,8 +5,15 @@ import { PackRoot } from "@/components/packs/judges-table/root";
 import { holiday2026 } from "@/content/events/holiday-2026";
 import { isAppError } from "@/lib/errors";
 import { checkNickname, codeMatches, MemoryPlayerRepo, MESSAGES } from "@/lib/players";
-import { DeviceProvider } from "./device";
+import { DeviceProvider, useDevice } from "./device";
 import { forfeitMessage, PlayerHub } from "./hub";
+import { PlayerSheet } from "./player-sheet";
+
+/** Stands in for the footer: shows who's playing. */
+function Who() {
+  const { active } = useDevice();
+  return active ? <p>Playing as {active.nickname}</p> : null;
+}
 
 vi.mock("@/components/motion/confetti", () => ({ fireConfetti: vi.fn() }));
 const search = vi.hoisted(() => ({ params: new URLSearchParams() }));
@@ -55,12 +62,14 @@ function fakeServer(banned: string[] = []) {
   return fetch;
 }
 
-const hub = (props: { code?: string; hasTeams?: boolean } = {}) => {
+const hub = (props: { code?: string; sheet?: boolean } = {}) => {
   search.params = new URLSearchParams(props.code ? { code: props.code } : {});
   return render(
     <PackRoot styleRef={holiday2026.style}>
       <DeviceProvider slug={SLUG} identity="dev">
-        <PlayerHub hasTeams={props.hasTeams ?? false} />
+        <PlayerHub />
+        <Who />
+        {props.sheet && <PlayerSheet hasTeams={false} onClose={() => undefined} />}
       </DeviceProvider>
     </PackRoot>,
   );
@@ -86,8 +95,9 @@ describe("PlayerHub", () => {
     expect(await screen.findByRole("heading", { name: "Join the party" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Party code")).toBeNull();
     await joinAs("Mai");
-    expect(await screen.findByText("Playing as")).toBeInTheDocument();
-    expect(screen.getByText("Mai")).toBeInTheDocument();
+    expect(await screen.findByText("Playing as Mai")).toBeInTheDocument();
+    // Once joined, the party page shows no player card; the footer has the player.
+    expect(screen.queryByRole("region", { name: /Join the party|Your player/ })).toBeNull();
   });
 
   test("S02-AC2: a wrong code shows its message", async () => {
@@ -119,7 +129,7 @@ describe("PlayerHub", () => {
     localStorage.setItem("gm.device", "otherphone1");
     const first = hub({ code: "WUSH7" });
     await joinAs("Mai");
-    await screen.findByText("Playing as");
+    await screen.findByText(/^Playing as /);
     first.unmount();
     localStorage.clear();
     hub({ code: "WUSH7" });
@@ -131,27 +141,25 @@ describe("PlayerHub", () => {
     fakeServer();
     hub({ code: "WUSH7" });
     await joinAs("Mai");
-    await screen.findByText("Playing as");
+    await screen.findByText(/^Playing as /);
     expect(screen.queryByRole("button", { name: /Add player|Switch player/ })).toBeNull();
   });
 
   test("S02-AC7: starting over warns about the points, then makes a new player", async () => {
     fakeServer();
-    hub({ code: "WUSH7" });
+    hub({ code: "WUSH7", sheet: true });
     const user = await joinAs("Mai");
-    await user.click(await screen.findByRole("button", { name: "Not you? Start over" }));
-    const confirm = screen.getByRole("alertdialog", { name: "Start over?" });
-    expect(confirm).toHaveTextContent(
+    const sheet = await screen.findByRole("dialog", { name: "Mai" });
+    expect(sheet).toHaveTextContent("0 points");
+    await user.click(screen.getByRole("button", { name: "Not you? Start over" }));
+    expect(screen.getByRole("alert")).toHaveTextContent(
       "Mai's 0 points will be lost. This phone can only start over once",
     );
-    await user.click(screen.getByRole("button", { name: "Keep Mai" }));
-    expect(screen.queryByRole("alertdialog")).toBeNull();
-    await user.click(screen.getByRole("button", { name: "Not you? Start over" }));
     await user.click(screen.getByRole("button", { name: "Start over" }));
     expect(screen.getByRole("heading", { name: "Start over" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Party code")).toBeNull();
     await joinAs("Bao");
-    expect(await screen.findByText("Bao")).toBeInTheDocument();
+    expect(await screen.findByText("Playing as Bao")).toBeInTheDocument();
     // The limit is used up, so the option is gone.
     expect(screen.queryByRole("button", { name: "Not you? Start over" })).toBeNull();
   });
@@ -169,10 +177,10 @@ describe("PlayerHub", () => {
     fakeServer();
     const first = hub({ code: "WUSH7" });
     await joinAs("Mai");
-    await screen.findByText("Playing as");
+    await screen.findByText(/^Playing as /);
     first.unmount();
     hub();
-    expect(await screen.findByText("Mai")).toBeInTheDocument();
+    expect(await screen.findByText("Playing as Mai")).toBeInTheDocument();
   });
 
   test("S02-AC9: a banned phone sees why it can't join", async () => {

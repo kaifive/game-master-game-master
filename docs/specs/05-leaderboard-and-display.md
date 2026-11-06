@@ -19,6 +19,8 @@ A big-screen page for the room shows the join QR code and a live leaderboard, an
 
 ## Open questions
 
+- How to show a score that went up because someone replayed a game (for example a "+10 new best" toast on the TV, and the row gliding up)?
+
 - Q8: full leaderboard on phones or top 10 plus own rank?
 - Q9: sound on the display?
 

@@ -36,7 +36,7 @@ export const Question = z
 export type Question = z.infer<typeof Question>;
 
 export const DEFAULT_QUESTIONS_PER_PLAY = 5;
-export const DEFAULT_SECONDS = 15;
+export const DEFAULT_SECONDS = 10;
 
 /** A trivia game's content in the event file (spec 10). */
 export const TriviaContent = z

@@ -9,8 +9,9 @@ async function join(page: Page, name: string, code?: string) {
   await page.getByRole("button", { name: "Join" }).click();
 }
 
+// Once joined, the footer shows who's playing.
 const playingAs = (page: Page, name: string) =>
-  expect(page.getByText("Playing as")).toContainText(name);
+  expect(page.getByRole("navigation", { name: "Party" })).toContainText(name);
 
 test("S02-AC1 S02-AC2 S02-AC6: scan, join, and the phone keeps its one player", async ({
   page,
@@ -37,13 +38,15 @@ test("S02-AC7: starting over warns, makes a new player, and then can't happen ag
   await page.goto("/holiday-2026?code=WUSH7");
   await join(page, mai);
   await playingAs(page, mai);
+  const footer = page.getByRole("navigation", { name: "Party" });
+  await footer.getByRole("button", { name: new RegExp(mai) }).click();
   await page.getByRole("button", { name: "Not you? Start over" }).click();
-  await expect(page.getByRole("alertdialog", { name: "Start over?" })).toContainText(
-    "points will be lost",
-  );
+  await expect(page.getByRole("dialog").getByRole("alert")).toContainText("points will be lost");
   await page.getByRole("button", { name: "Start over", exact: true }).click();
   await join(page, bao);
   await playingAs(page, bao);
+  await footer.getByRole("button", { name: new RegExp(bao) }).click();
+  await expect(page.getByRole("dialog", { name: bao })).toBeVisible();
   await expect(page.getByRole("button", { name: "Not you? Start over" })).toHaveCount(0);
 
   // Mai's name is free again.
