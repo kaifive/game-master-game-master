@@ -13,6 +13,15 @@ export function eventRuntimeContract(seed: Seed) {
     expect(await repo.status("holiday-2026")).toBe("upcoming");
   });
 
+  test("S07-AC2: the admin's Start, End and Reopen are stored", async () => {
+    const repo = await seed({});
+    await repo.setStatus("holiday-2026", "live");
+    expect(await repo.status("holiday-2026")).toBe("live");
+    await repo.setStatus("holiday-2026", "ended");
+    expect(await repo.status("holiday-2026")).toBe("ended");
+    expect(await repo.status("other-party")).toBe("upcoming");
+  });
+
   test("returns the status the admin set", async () => {
     const repo = await seed({ status: { "holiday-2026": "ended" } });
     expect(await repo.status("holiday-2026")).toBe("ended");

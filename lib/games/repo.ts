@@ -31,4 +31,10 @@ export interface PlayRepo {
     playerId: string,
     change: PlayChange,
   ): Promise<PlayRecord | null>;
+  /** Every play in the event, for rebuild (S07-AC8). */
+  all(slug: string): Promise<PlayRecord[]>;
+  /** Deletes one play so the player can start fresh (S07-AC6). */
+  remove(slug: string, gameId: string, playerId: string): Promise<void>;
+  /** Deletes every play in the event (S07-AC9). */
+  clear(slug: string): Promise<void>;
 }

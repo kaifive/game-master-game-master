@@ -73,7 +73,8 @@ codes/{code}                 global index, server-only
 
 events/{slug}/devices/{uid}
   banned: boolean
-  playerId: string           the phone's current player (ADR-027)
+  playerId: string | null    the phone's current player (ADR-027)
+  playerNickname: string     the current player's name, so most reads need one document
   restarts: number           times it has started over
   playerIds: string[]        every player it has had
 

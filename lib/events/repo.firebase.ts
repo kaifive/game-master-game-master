@@ -12,6 +12,10 @@ export class FirebaseEventRuntimeRepo implements EventRuntimeRepo {
     return eventStatus(snap.get("status"));
   }
 
+  async setStatus(slug: string, status: string) {
+    await this.admin.firestore.doc(fs.event(slug)).set({ status }, { merge: true });
+  }
+
   async finalStandings(slug: string) {
     const snap = await this.admin.rtdb.ref(rtdb.leaderboard(slug)).get();
     return parseLeaderboard(snap.val());

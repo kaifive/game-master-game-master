@@ -30,7 +30,7 @@ export class FirebasePlayRepo implements PlayRepo {
 
   async forPlayer(slug: string, playerId: string) {
     const snap = await this.admin.firestore
-      .collection(`${fs.event(slug)}/plays`)
+      .collection(fs.plays(slug))
       .where("playerId", "==", playerId)
       .get();
     return snap.docs.flatMap((d) => toRecord(d) ?? []);
@@ -58,6 +58,19 @@ export class FirebasePlayRepo implements PlayRepo {
       );
       return next;
     });
+  }
+
+  async all(slug: string) {
+    const snap = await this.admin.firestore.collection(fs.plays(slug)).get();
+    return snap.docs.flatMap((d) => toRecord(d) ?? []);
+  }
+
+  async remove(slug: string, gameId: string, playerId: string) {
+    await this.admin.firestore.doc(fs.play(slug, gameId, playerId)).delete();
+  }
+
+  async clear(slug: string) {
+    await this.admin.firestore.recursiveDelete(this.admin.firestore.collection(fs.plays(slug)));
   }
 }
 

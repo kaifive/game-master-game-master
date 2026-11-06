@@ -48,6 +48,13 @@ export function pointsRepoContract(make: () => Promise<PointsRepo>) {
     expect(await repo.total(SLUG, "p1")).toBe(50);
   });
 
+  test("S07-AC9: clearing deletes the event's ledger", async () => {
+    const repo = await make();
+    await repo.award(SLUG, award("a1", "p1", 80));
+    await repo.clear(SLUG);
+    expect(await repo.entries(SLUG)).toEqual([]);
+  });
+
   test("S04-AC6: rebuild can set a player's total", async () => {
     const repo = await make();
     await repo.award(SLUG, award("a1", "p1", 80));
@@ -86,6 +93,21 @@ export function boardRepoContract(make: () => Promise<BoardRepo>) {
     ]);
     expect(read.recent.map((r) => r.id)).toEqual(["a2", "a1"]);
     expect((await board.read("spring-2027")).players).toEqual([]);
+  });
+
+  test("S07-AC9: clearing deletes the whole summary", async () => {
+    const board = await make();
+    await board.upsert(SLUG, { id: "p1", nickname: "Mai", teamId: null, points: 40 });
+    await board.addRecent(SLUG, {
+      id: "a1",
+      playerId: "p1",
+      nickname: "Mai",
+      points: 40,
+      reason: "Trivia",
+      at: 1,
+    });
+    await board.clear(SLUG);
+    expect(await board.read(SLUG)).toEqual({ players: [], recent: [] });
   });
 
   test("S04-AC5 S04-AC6: rows can be removed, and the whole board replaced", async () => {

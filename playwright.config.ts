@@ -26,7 +26,7 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     // No Firebase in CI or locally: every event shows as upcoming.
-    env: { GM_ALLOW_NO_FIREBASE: "1" },
+    env: { GM_ALLOW_NO_FIREBASE: "1", ADMIN_PASSPHRASE: "e2e-host-pass" },
     timeout: 180_000,
   },
 });

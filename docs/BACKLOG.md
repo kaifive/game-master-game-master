@@ -27,12 +27,12 @@ A feature item needs its spec at `Ready` before it starts.
 ## M1: Core event loop (by Nov 26)
 
 - [x] Spec 01, events and routing: event files, manual status, code-box home, `/join`, event pages in their pack, final standings, not-found pages
-- [ ] Spec 06, admin auth: passphrase sign-in, admin claim, guarded routes
+- [x] Spec 06, admin auth: passphrase sign-in, signed session cookie (ADR-028), guarded routes
 - [x] Spec 02, player join: devices, one player per phone with limited restarts (ADR-027), join code, name filter (kick and ban moved to spec 07)
 - [x] Spec 04, points ledger: awards, voids, totals, rebuild (donations with spec 03)
 - [ ] Spec 03, teams: phases, captains, team names, one-tap join
 - [x] Spec 05, leaderboard and display (individual; teams with spec 03, modes with spec 07)
-- [ ] Spec 07, controls (includes the event library at `/admin`, Start and End): players by device, "new since you looked", phases, manual awards
+- [x] Spec 07, controls first pass: event library, Start/End/Reopen, players with fix-ups, rebuild, clear test data (later: "new since you looked", phases, display modes)
 
 ## M2: Solo games and photos (by Dec 6)
 

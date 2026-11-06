@@ -10,6 +10,11 @@ export class MemoryEventRuntimeRepo implements EventRuntimeRepo {
     private readonly override: () => Promise<string | undefined> = () => Promise.resolve(undefined),
   ) {}
 
+  setStatus(slug: string, status: string) {
+    this.statuses[slug] = status;
+    return Promise.resolve();
+  }
+
   async status(slug: string) {
     return eventStatus((await this.override()) ?? this.statuses[slug]);
   }
