@@ -6,7 +6,7 @@
 
 ## Summary
 
-Each event picks a style pack (ADR-021) for its player client and TV display: tokens, fonts, icons, motion presets, and its own versions of any generic component slots, falling back to defaults (ADR-022). Games are written once against the slots, so a new event can look completely different with no game code changes. The admin layer has its own fixed, standard look. The first pack is Judges' Table with a winter variant, for the Wushu Holiday Party (`docs/styles/judges-table.md`).
+Each event picks a style pack (ADR-021) for its player client and TV display: tokens, fonts, icons, motion presets, and its own versions of any generic component slots, falling back to defaults (ADR-022). Games are written once against the slots, so a new event can look completely different with no game code changes. The admin layer has its own fixed, standard look. The first pack is Judges' Table with a winter variant, for the Nova Wushu Holiday Party (`docs/styles/judges-table.md`).
 
 ## Behavior
 

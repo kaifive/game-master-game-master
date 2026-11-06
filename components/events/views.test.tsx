@@ -20,7 +20,7 @@ describe("S01-AC4: event pages show the event's banner in its own style", () => 
   test("the banner names the event and its schedule in the event's time zone", () => {
     const { container } = inPack(<UpcomingView event={event} />);
     expect(
-      screen.getByRole("heading", { level: 1, name: "Wushu Holiday Party" }),
+      screen.getByRole("heading", { level: 1, name: "Nova Wushu Holiday Party" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Saturday, Dec 19 · 4:30 PM EST")).toBeInTheDocument();
     expect(

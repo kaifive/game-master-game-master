@@ -47,7 +47,7 @@ Each event is a config file in `content/events/` (ADR-003), served at `/[slug]` 
 - [x] AC-8: The home page shows the code box and an Admin link; submitting a code goes to `/join?code=` with the code uppercased.
 - [x] AC-9: `/join` sends an event's join code to that event (keeping the code), and an unknown code back home with "We couldn't find that code".
 - [x] AC-10: Join codes never appear in any page's HTML or client bundle.
-- [x] AC-11: The Wushu Holiday Party event file exists (Judges' Table, winter variant, dark mode) and its page renders at phone, tablet and TV sizes without sideways scroll.
+- [x] AC-11: The Nova Wushu Holiday Party event file exists (Judges' Table, winter variant, dark mode) and its page renders at phone, tablet and TV sizes without sideways scroll.
 
 ## How it's built
 

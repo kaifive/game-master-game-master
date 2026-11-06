@@ -8,7 +8,9 @@ test("S01-AC8, S01-AC9: home → code → the event, keeping the code", async ({
   await page.getByLabel("Code").fill("wush7");
   await page.getByRole("button", { name: "Go" }).click();
   await expect(page).toHaveURL(/\/holiday-2026\?code=WUSH7$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Wushu Holiday Party" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Nova Wushu Holiday Party" }),
+  ).toBeVisible();
 });
 
 test("an unknown code returns home with an error", async ({ page }) => {
