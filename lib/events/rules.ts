@@ -12,17 +12,6 @@ import type { FinalStandings, Standing } from "./repo";
 /** Slugs that clash with the app's own routes. */
 export const RESERVED_SLUGS = ["admin", "api", "_next", "join", "dev"] as const;
 
-const validTimeZone = (tz: string) => {
-  try {
-    new Intl.DateTimeFormat("en-US", { timeZone: tz });
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const parse = (iso: string) => (/^\d{4}-\d{2}-\d{2}T/.test(iso) ? Date.parse(iso) : NaN);
-
 /** Every problem with one event file, each naming the file and field (S01-AC1). */
 export function validateEvent(file: string, value: unknown): string[] {
   const at = `content/events/${file}.ts`;
@@ -36,15 +25,6 @@ export function validateEvent(file: string, value: unknown): string[] {
   if ((RESERVED_SLUGS as readonly string[]).includes(e.slug))
     add("slug", `"${e.slug}" is reserved for the app's own pages.`);
   if (e.slug !== file) add("slug", `"${e.slug}" must match the file name "${file}".`);
-  if (!validTimeZone(e.timeZone)) add("timeZone", `"${e.timeZone}" isn't an IANA time zone.`);
-  const start = parse(e.schedule.start);
-  if (Number.isNaN(start))
-    add("schedule.start", "use an ISO date-time with offset, e.g. 2026-12-19T16:30:00-05:00.");
-  if (e.schedule.end !== undefined) {
-    const end = parse(e.schedule.end);
-    if (Number.isNaN(end) || end <= start)
-      add("schedule.end", "must be a date-time after schedule.start.");
-  }
   const style = validateStyleRef(e.style);
   if (!style.ok) add("style", style.error);
   if (!CODE_PATTERN.test(e.joinCode))
@@ -71,24 +51,6 @@ export function eventStatus(stored: unknown): EventStatus {
   return stored === "live" || stored === "ended" ? stored : "upcoming";
 }
 
-/** "Saturday, Dec 19 · 4:30 PM EST", in the event's own time zone. */
-export function formatSchedule(e: Pick<EventConfig, "schedule" | "timeZone">): string {
-  const d = new Date(e.schedule.start);
-  const day = new Intl.DateTimeFormat("en-US", {
-    timeZone: e.timeZone,
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-  }).format(d);
-  const time = new Intl.DateTimeFormat("en-US", {
-    timeZone: e.timeZone,
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  }).format(d);
-  return `${day} · ${time}`;
-}
-
 export function findByJoinCode(
   raw: string,
   events: Record<string, EventConfig>,
@@ -103,8 +65,7 @@ export function toPublicEvent(e: EventConfig): PublicEvent {
   return {
     slug: e.slug,
     name: e.name,
-    timeZone: e.timeZone,
-    schedule: e.schedule,
+    replayable: e.replayable === true,
     style: e.style,
     kind: e.kind,
     joinPolicy: e.joinPolicy,
@@ -119,7 +80,6 @@ export function toPublicEvent(e: EventConfig): PublicEvent {
       visibility: g.visibility,
       scoring: g.scoring,
       ...(g.phase ? { phase: g.phase } : {}),
-      ...(g.replayable ? { replayable: true } : {}),
       ...(g.alwaysOpen ? { alwaysOpen: true } : {}),
       ...(g.style ? { style: g.style } : {}),
     })),

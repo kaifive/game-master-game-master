@@ -24,7 +24,7 @@ list whenever a new event file is added.
 - [ ] Join and play tested on one iPhone and one Android.
 - [ ] Load test passes for the expected head count plus 20%.
 - [ ] Name filter reviewed for this crowd (add club or local words).
-- [ ] Each game's `replayable` and `alwaysOpen` decided. Games left
+- [ ] The event's `replayable` and each game's `alwaysOpen` decided. Games left
       `alwaysOpen` for testing let people play (and score) before the start.
 - [ ] Test players and plays from before the party cleared (ask Khai first:
       it deletes data).

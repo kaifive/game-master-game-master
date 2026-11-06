@@ -28,7 +28,9 @@ test("S01-AC11: the holiday party page renders in its style without sideways scr
   await expect(
     page.locator('[data-pack="judges-table"][data-variant="winter"][data-color-mode="dark"]'),
   ).toBeVisible();
-  await expect(page.getByText("Saturday, Dec 19 · 4:30 PM EST").first()).toBeVisible();
+  await expect(
+    page.getByText("Some games are open now. The rest open when the host starts them."),
+  ).toBeVisible();
   expect(await noSideScroll(page)).toBe(0);
   const fills = await page.evaluate(() => {
     const surface = document.querySelector('[data-slot="surface"]');

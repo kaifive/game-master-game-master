@@ -28,7 +28,7 @@ export function GallerySlots({ title }: { title: string }) {
         </Item>
         <Item name="Banner">
           <div className="w-full">
-            <s.Banner title="Nova Wushu Holiday Party" subtitle="Saturday, Dec 19" live />
+            <s.Banner title="Nova Wushu Holiday Party" live />
           </div>
         </Item>
         <Item name="Button">

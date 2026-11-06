@@ -134,7 +134,9 @@ export async function startPlay(
         ...run(),
       };
     if (cur.status === "finished")
-      return body.again && r.game.replayable ? { ...cur, ...run(), runs: cur.runs + 1 } : null;
+      return body.again && event.replayable === true
+        ? { ...cur, ...run(), runs: cur.runs + 1 }
+        : null;
     const ticked = r.logic.tick(cur.state, r.content, { now });
     return ticked === cur.state ? null : settle(cur, ticked, r);
   });

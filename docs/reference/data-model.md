@@ -11,13 +11,12 @@ never by hand. Status: **draft**; each spec finalizes its own part.
 type EventConfig = {
   slug: string;              // "holiday-2026"
   name: string;              // "Wushu Holiday Party 2026"
-  timeZone: string;          // IANA, e.g. "America/New_York"
-  schedule: { start: string; end?: string };  // ISO with offset; shown only, never acted on (ADR-024)
   style: StyleRef;           // { pack: "one-hour-photo", variant?: "holiday", colorMode: "dark" } (ADR-021)
   joinPolicy: "open" | "approval";        // default "open" (ADR-010)
   kind: "event" | "quick";                // quick = one game, code opens it (ADR-020)
   maxPlayersPerDevice: number;            // default 4 (ADR-009)
   soloGamePoints: number;                 // every solo game is worth this (spec 08)
+  replayable?: boolean;                   // every game can be played again; best run counts (ADR-026)
   blockedNames?: string[];                // extra name-filter words, server-only (spec 02)
   scoring: "individual" | "team" | "both"; // ADR-011
   maxTeams?: number;
@@ -34,7 +33,6 @@ type Game = {
   style?: { variant?: string };  // per-game variant override; the pack is the event's
   scoring: { points?: number; awardTo: "player" | "team" };  // solo games take soloGamePoints
   instructions?: { title: string; lines: string[] };  // replaces the type's default box
-  replayable?: boolean;      // play again; the best run counts
   alwaysOpen?: boolean;      // playable before the start too
   opensAt?: string;
   closesAt?: string;
