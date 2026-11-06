@@ -200,3 +200,8 @@ every one in every pack at `/dev/ui/motion`.
 `Button`, `Card`, `Sheet` (bottom sheet on phones), `List`, `Badge`,
 `TeamChip`, `PointsPill`, `QrCode`, `Buzzer`, `LeaderboardRow`, `Toast`.
 Hand-written on Tailwind; no component libraries.
+
+## Tap targets
+
+- Everything tappable is at least 44 px; the main action on a screen uses the `Button` slot's `size="lg"` (at least 56 px, full width).
+- Game answers, which people tap fast and excited, are at least 80 px tall.

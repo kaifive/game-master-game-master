@@ -87,7 +87,9 @@ function Result({
           <p className="m-0 text-gm-text-muted">
             {gain > 0 ? "New best!" : `Your best: ${String(play.best)}`}
           </p>
-          <Button onClick={onAgain}>Play again</Button>
+          <Button size="lg" onClick={onAgain}>
+            Play again
+          </Button>
         </>
       )}
     </section>

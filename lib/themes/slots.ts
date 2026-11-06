@@ -21,6 +21,8 @@ export type ButtonProps = {
   tone?: "primary" | "secondary";
   disabled?: boolean;
   type?: "button" | "submit";
+  /** "lg" for the main action on a screen: taller, full width (at least 56 px). */
+  size?: "md" | "lg";
 };
 export type PanelProps = { label: string; children: ReactNode };
 export type ScoreCardProps = {

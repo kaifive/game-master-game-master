@@ -88,3 +88,17 @@ test("S08-AC3 S08-AC14: leaving mid-game asks first, then resumes the same quest
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 2 }).last()).toHaveText(prompt ?? "");
 });
+
+test("S10-AC12: answers and the main buttons are big enough to tap in a hurry", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "phone", "Tap targets matter on phones");
+  await joinParty(page);
+  await page.getByRole("link", { name: /Holiday Trivia/ }).click();
+  const start = page.getByRole("button", { name: "Start" });
+  expect((await start.boundingBox())?.height).toBeGreaterThanOrEqual(56);
+  await start.click();
+  await expect(page.getByText("Question 1 of 5")).toBeVisible();
+  for (const answer of await page.getByRole("list", { name: "Answers" }).getByRole("button").all())
+    expect((await answer.boundingBox())?.height).toBeGreaterThanOrEqual(80);
+});
