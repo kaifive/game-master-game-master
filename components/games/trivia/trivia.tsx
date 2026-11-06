@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { readAnswerKey, type ChoiceView, type Media, type TriviaView } from "@/lib/games";
 import { cx } from "@/lib/ui";
 import type { GameRendererProps } from "../types";
@@ -135,29 +135,30 @@ function TimerBar({ left, seconds }: { left: number; seconds: number }) {
 export const REVEAL_MS = 1000;
 
 /**
- * Moves on once per question, REVEAL_MS after the answer shows. No tap to
- * skip, so a stray tap can't land on the next question. The wait runs on the
- * phone, so a phone that leaves waits here (S10-AC10).
+ * Moves on once per question. The request for the next question goes out as
+ * soon as the server confirms the answer, and its reply is held until the
+ * answer has shown for REVEAL_MS, so the next question lands as the pause ends
+ * (S10-AC14). No tap to skip, so a stray tap can't land on the next question.
+ * A phone that leaves stops here (S10-AC10).
  */
-function useAdvance(answered: boolean, question: number, next: () => void) {
+function useAdvance(
+  answered: boolean,
+  question: number,
+  shownAt: number | null,
+  next: (move: { type: "next"; startIn: number }, options: { notBefore: number }) => void,
+) {
   const sent = useRef<number | null>(null);
   const latest = useRef(next);
   useEffect(() => {
     latest.current = next;
   }, [next]);
-  const advance = useCallback(() => {
-    if (sent.current === question) return;
-    sent.current = question;
-    latest.current();
-  }, [question]);
   useEffect(() => {
-    if (!answered) return;
-    const timer = setTimeout(advance, REVEAL_MS);
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [answered, advance]);
-  return advance;
+    if (!answered || sent.current === question) return;
+    sent.current = question;
+    const now = Date.now();
+    const end = (shownAt ?? now) + REVEAL_MS;
+    latest.current({ type: "next", startIn: Math.max(0, end - now) }, { notBefore: end });
+  }, [answered, question, shownAt]);
 }
 
 /** The tapped answer marked right or wrong from the question's key, before the server replies. */
@@ -176,14 +177,19 @@ export function TriviaGame({ view: raw, onMove, onTimeUp, busy }: GameRendererPr
   const asking = serverView.kind === "question";
   // The answer tapped on this question. With the question's answer key, the phone
   // says right or wrong at once; the server's reply then confirms it (S10-AC13, ADR-029).
-  const [pick, setPicked] = useState<{ question: number; choice: number } | null>(null);
+  const [pick, setPicked] = useState<{ question: number; choice: number; at: number } | null>(null);
   const picked = asking && pick?.question === serverView.number ? pick.choice : null;
   const view = picked === null ? serverView : judgedLocally(serverView, picked);
   const left = useCountdown(serverView.msLeft, asking && picked === null, onTimeUp);
   // The next question waits for the server's reply, so its step is always current.
-  useAdvance(serverView.kind === "answered", serverView.number, () => {
-    onMove({ type: "next" });
-  });
+  useAdvance(
+    serverView.kind === "answered",
+    serverView.number,
+    pick?.question === serverView.number ? pick.at : null,
+    (move, options) => {
+      onMove(move, options);
+    },
+  );
   const feedback =
     view.kind === "answered"
       ? view.right
@@ -219,7 +225,7 @@ export function TriviaGame({ view: raw, onMove, onTimeUp, busy }: GameRendererPr
               picked={picked}
               disabled={!asking || busy || picked !== null}
               onPick={(choiceIndex) => {
-                setPicked({ question: view.number, choice: choiceIndex });
+                setPicked({ question: view.number, choice: choiceIndex, at: Date.now() });
                 onMove({ type: "answer", choice: choiceIndex });
               }}
             />

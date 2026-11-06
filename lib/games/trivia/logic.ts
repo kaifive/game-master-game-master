@@ -10,6 +10,9 @@ import {
   type Question,
 } from "./content";
 
+/** The longest a phone may hold the next question back while the last answer shows. */
+export const MAX_START_IN = 2000;
+
 /** Network slack after a deadline before an answer counts as late (S10-AC5). */
 export const GRACE_MS = 2000;
 const SHORT_ANSWER = 16;
@@ -65,7 +68,11 @@ export type TriviaView =
 
 const Move = z.discriminatedUnion("type", [
   z.object({ type: z.literal("answer"), choice: z.number().int().nonnegative() }),
-  z.object({ type: z.literal("next") }),
+  /** `startIn`: the phone shows the next question this many ms from now, so its clock starts then (S10-AC14). */
+  z.object({
+    type: z.literal("next"),
+    startIn: z.number().int().min(0).max(MAX_START_IN).optional(),
+  }),
 ]);
 
 const seconds = (c: TriviaContent) => c.secondsPerQuestion ?? DEFAULT_SECONDS;
@@ -226,7 +233,7 @@ export const trivia: GameLogic<TriviaContent, TriviaState, TriviaView> = {
             ...s,
             index: s.index + 1,
             phase: "question",
-            deadline: now + seconds(c) * 1000,
+            deadline: now + (move.startIn ?? 0) + seconds(c) * 1000,
             step: s.step + 1,
           },
     };
