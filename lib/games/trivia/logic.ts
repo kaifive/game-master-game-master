@@ -106,6 +106,7 @@ export const trivia: GameLogic<TriviaContent, TriviaState, TriviaView> = {
     lines: [
       `${String(perPlay(c))} quick questions. You have ${String(seconds(c))} seconds for each.`,
       "Tap an answer to lock it in. You can't change it.",
+      "The next question starts by itself, a second after each answer.",
       "Right answers score points. Faster answers score more.",
     ],
   }),

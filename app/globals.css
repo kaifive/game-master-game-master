@@ -55,6 +55,15 @@ body {
 }
 
 /* Shared keyframes for components/motion (spec 14); used only behind motion-safe. */
+@keyframes gm-drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 @keyframes gm-burst {
   from {
     transform: translateY(0) scale(1);
