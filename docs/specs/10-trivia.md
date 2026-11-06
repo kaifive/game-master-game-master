@@ -17,7 +17,7 @@ A multiple-choice quiz on the player's phone: a question, a few answers, a timer
 5. Points: each question is worth an equal share of `soloGamePoints`. A right answer earns half its share for being right and up to half again for speed (all of it when instant, half at the buzzer). A perfect, instant run earns everything, which gives a reason to replay.
 6. Answers show as a **2×2 grid** when there are at most 4 and each is short (16 characters or fewer) or a picture; otherwise as a **list**.
 7. The result screen shows correct out of total and the average seconds taken on right answers, and the points counting up (spec 08).
-8. Instructions (default): "5 quick questions. You have 10 seconds for each." / "Tap an answer to lock it in. You can't change it." / "Right answers score points. Faster answers score more." built from the content's numbers.
+8. Instructions (default): "5 quick questions. You have 10 seconds for each." / "Tap an answer to lock it in. You can't change it." / "The next question starts by itself, a second after each answer." / "Right answers score points. Faster answers score more." built from the content's numbers.
 
 ## Data
 
@@ -40,6 +40,7 @@ The play's `state`: the drawn question ids, choice order per question, the curre
 - [x] AC-7: The party's event file has a trivia game with a placeholder pool, and word guess is gone from it.
 - [x] AC-8: Answers show as a 2×2 grid when there are at most 4 short or picture answers, and as a list otherwise.
 - [x] AC-9: Questions and answers can show images, each with alt text.
+- [x] AC-11: After each answer, a line says what's next ("Question 3 of 5 is next…" or "Your score is next…") over a bar that empties during the pause, and the instructions say the next question starts by itself.
 - [x] AC-10: After an answer shows for 1 second, the next question (or the score) comes on its own, once; there is no Next button and a tap doesn't skip ahead.
 
 ## Tests

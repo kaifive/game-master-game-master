@@ -134,3 +134,19 @@ describe("TriviaGame pacing", () => {
     expect(onMove).not.toHaveBeenCalled();
   });
 });
+
+describe("TriviaGame cue", () => {
+  test("S10-AC11: after an answer, says the next question (or the score) is coming", () => {
+    const { unmount } = show({
+      ...question(),
+      kind: "answered",
+      chosen: 1,
+      correct: 1,
+      right: true,
+    });
+    expect(screen.getByText("Question 3 of 5 is next…")).toBeInTheDocument();
+    unmount();
+    show({ ...question({ number: 5 }), kind: "answered", chosen: 1, correct: 1, right: true });
+    expect(screen.getByText("Your score is next…")).toBeInTheDocument();
+  });
+});

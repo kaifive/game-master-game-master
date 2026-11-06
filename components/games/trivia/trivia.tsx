@@ -203,9 +203,26 @@ export function TriviaGame({ view: raw, onMove, onTimeUp, busy }: GameRendererPr
         ))}
       </ul>
       {feedback && (
-        <p role="status" className="m-0 text-center text-lg font-bold">
-          {feedback}
-        </p>
+        <div className="grid justify-items-center gap-2">
+          <p role="status" className="m-0 text-center text-lg font-bold">
+            {feedback}
+          </p>
+          {/* Says what happens next, with a bar that empties over the pause (S10-AC11). */}
+          <p className="m-0 text-sm text-gm-text-muted">
+            {view.number === view.total
+              ? "Your score is next…"
+              : `Question ${String(view.number + 1)} of ${String(view.total)} is next…`}
+          </p>
+          <div
+            aria-hidden="true"
+            className="h-1 w-24 overflow-hidden rounded-full bg-gm-surface-raised"
+          >
+            <div
+              className="h-full origin-left bg-gm-accent motion-safe:animate-[gm-drain_var(--gm-reveal)_linear_forwards]"
+              style={{ "--gm-reveal": `${String(REVEAL_MS)}ms` } as React.CSSProperties}
+            />
+          </div>
+        </div>
       )}
     </section>
   );
