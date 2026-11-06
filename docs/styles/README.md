@@ -6,7 +6,7 @@ presets and variants. The contract every pack follows is in
 
 | Pack | Status | Notes |
 |------|--------|-------|
-| Judges' Table | Building (winter variant) | Chosen for the Wushu Holiday Party; `judges-table.md` |
+| Judges' Table | Building (winter variant) | Chosen for the Nova Wushu Holiday Party; `judges-table.md` |
 | Sticker Book | Candidate | Die-cut stickers, party nametag, slap motion |
 | Tile Rack | Candidate | Scrabble and Rummikub tiles on felt |
 | One-Hour Photo | Candidate | 90s disposable camera, prints, date stamp, flash |

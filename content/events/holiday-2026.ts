@@ -1,9 +1,9 @@
 import type { EventConfig } from "@/lib/events";
 
-/** The Wushu Holiday Party. Started and ended by hand from Controls (ADR-024). */
+/** The Nova Wushu Holiday Party. Started and ended by hand from Controls (ADR-024). */
 export const holiday2026: EventConfig = {
   slug: "holiday-2026",
-  name: "Wushu Holiday Party",
+  name: "Nova Wushu Holiday Party",
   timeZone: "America/New_York",
   schedule: { start: "2026-12-19T16:30:00-05:00" },
   style: { pack: "judges-table", variant: "winter", colorMode: "dark" },

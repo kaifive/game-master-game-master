@@ -7,7 +7,7 @@ related_targets: ["app/[event]/display"]
 
 ## Scope
 
-Player client and TV display for the Wushu Holiday Party (event `holiday-2026`), Experience mode. Style pack: Judges' Table, variant: winter. Admin screens are out of scope (standard admin theme).
+Player client and TV display for the Nova Wushu Holiday Party (event `holiday-2026`), Experience mode. Style pack: Judges' Table, variant: winter. Admin screens are out of scope (standard admin theme).
 
 ## Audience and job
 

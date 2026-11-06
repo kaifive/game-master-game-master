@@ -1,16 +1,43 @@
 /* Judges' Table (docs/styles/judges-table.md). Colors come from --gm-* tokens. */
 
+/* Winter night: a warm glow under the band, a snowbank glow at the foot,
+   and scattered flakes from two offset tiles so no grid shows. */
 .jt-snow {
+  position: relative;
+  isolation: isolate;
   background-color: var(--gm-bg);
   background-image:
-    radial-gradient(var(--gm-snow) 1.4px, transparent 1.8px),
-    radial-gradient(var(--gm-snow) 1px, transparent 1.4px);
-  background-size:
-    46px 46px,
-    27px 27px;
-  background-position:
+    radial-gradient(
+      120% 45% at 50% 0%,
+      color-mix(in srgb, var(--gm-band) 16%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      160% 35% at 50% 100%,
+      color-mix(in srgb, var(--gm-snow) 45%, transparent),
+      transparent 75%
+    );
+}
+
+.jt-snow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--gm-snow);
+  mask-image: var(--jt-flakes-near), var(--jt-flakes-far);
+  mask-size:
+    310px 310px,
+    190px 190px;
+  mask-position:
     0 0,
-    13px 19px;
+    83px 121px;
+}
+
+:root {
+  --jt-flakes-near: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22310%22%20height%3D%22310%22%3E%3Ccircle%20cx%3D%220.0%22%20cy%3D%22285.4%22%20r%3D%221.89%22%20fill-opacity%3D%220.49%22%2F%3E%3Ccircle%20cx%3D%22226.1%22%20cy%3D%22165.1%22%20r%3D%221.93%22%20fill-opacity%3D%220.84%22%2F%3E%3Ccircle%20cx%3D%22234.1%22%20cy%3D%22168.3%22%20r%3D%222.28%22%20fill-opacity%3D%220.76%22%2F%3E%3Ccircle%20cx%3D%22253.2%22%20cy%3D%2275.0%22%20r%3D%221.97%22%20fill-opacity%3D%220.81%22%2F%3E%3Ccircle%20cx%3D%22216.4%22%20cy%3D%2216.7%22%20r%3D%222.28%22%20fill-opacity%3D%220.65%22%2F%3E%3Ccircle%20cx%3D%22285.9%22%20cy%3D%22250.3%22%20r%3D%221.72%22%20fill-opacity%3D%220.68%22%2F%3E%3Ccircle%20cx%3D%22286.2%22%20cy%3D%22213.4%22%20r%3D%222.24%22%20fill-opacity%3D%220.73%22%2F%3E%3Ccircle%20cx%3D%22282.7%22%20cy%3D%22281.6%22%20r%3D%221.97%22%20fill-opacity%3D%220.57%22%2F%3E%3Ccircle%20cx%3D%22259.5%22%20cy%3D%22103.0%22%20r%3D%221.75%22%20fill-opacity%3D%220.54%22%2F%3E%3C%2Fsvg%3E");
+  --jt-flakes-far: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22190%22%20height%3D%22190%22%3E%3Ccircle%20cx%3D%2281.4%22%20cy%3D%2256.0%22%20r%3D%221.26%22%20fill-opacity%3D%220.71%22%2F%3E%3Ccircle%20cx%3D%22138.6%22%20cy%3D%22166.8%22%20r%3D%220.64%22%20fill-opacity%3D%220.53%22%2F%3E%3Ccircle%20cx%3D%22106.5%22%20cy%3D%2296.7%22%20r%3D%220.90%22%20fill-opacity%3D%220.48%22%2F%3E%3Ccircle%20cx%3D%22172.7%22%20cy%3D%2210.4%22%20r%3D%220.86%22%20fill-opacity%3D%220.57%22%2F%3E%3Ccircle%20cx%3D%22126.2%22%20cy%3D%22175.6%22%20r%3D%220.96%22%20fill-opacity%3D%220.46%22%2F%3E%3Ccircle%20cx%3D%2277.1%22%20cy%3D%2253.9%22%20r%3D%220.86%22%20fill-opacity%3D%220.63%22%2F%3E%3Ccircle%20cx%3D%2263.2%22%20cy%3D%22101.0%22%20r%3D%221.03%22%20fill-opacity%3D%220.50%22%2F%3E%3Ccircle%20cx%3D%22172.2%22%20cy%3D%2287.0%22%20r%3D%221.20%22%20fill-opacity%3D%220.76%22%2F%3E%3Ccircle%20cx%3D%22120.5%22%20cy%3D%2298.1%22%20r%3D%220.95%22%20fill-opacity%3D%220.80%22%2F%3E%3Ccircle%20cx%3D%22178.5%22%20cy%3D%2275.4%22%20r%3D%221.10%22%20fill-opacity%3D%220.51%22%2F%3E%3Ccircle%20cx%3D%22111.5%22%20cy%3D%2266.6%22%20r%3D%220.83%22%20fill-opacity%3D%220.60%22%2F%3E%3Ccircle%20cx%3D%22151.0%22%20cy%3D%22166.7%22%20r%3D%220.68%22%20fill-opacity%3D%220.88%22%2F%3E%3Ccircle%20cx%3D%2214.8%22%20cy%3D%2277.3%22%20r%3D%220.71%22%20fill-opacity%3D%220.40%22%2F%3E%3Ccircle%20cx%3D%22189.3%22%20cy%3D%2241.8%22%20r%3D%221.04%22%20fill-opacity%3D%220.44%22%2F%3E%3Ccircle%20cx%3D%2286.9%22%20cy%3D%22112.7%22%20r%3D%220.70%22%20fill-opacity%3D%220.95%22%2F%3E%3Ccircle%20cx%3D%22168.1%22%20cy%3D%22169.2%22%20r%3D%221.22%22%20fill-opacity%3D%220.94%22%2F%3E%3C%2Fsvg%3E");
 }
 
 .jt-band {
