@@ -43,7 +43,7 @@ const show = () =>
         slug="holiday-2026"
         name="Nova Wushu Holiday Party"
         joinUrl="https://example.app/join?code=WUSH7"
-        shortUrl="example.app/join"
+        shortUrl="example.app/join/WUSH7"
         joinCode="WUSH7"
       />
     </PackRoot>,
@@ -66,9 +66,9 @@ describe("DisplayView", () => {
     show();
     const join = screen.getByRole("region", { name: "Join the party" });
     expect(
-      within(join).getByRole("img", { name: "QR code for example.app/join" }),
+      within(join).getByRole("img", { name: "QR code for example.app/join/WUSH7" }),
     ).toBeInTheDocument();
-    expect(join).toHaveTextContent("example.app/join");
+    expect(join).toHaveTextContent("example.app/join/WUSH7");
     expect(join).toHaveTextContent("WUSH7");
   });
 

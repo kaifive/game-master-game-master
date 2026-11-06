@@ -36,9 +36,9 @@ test("S05-AC2 S05-AC4: a player's points show on their phone and on the display"
     await expect(phone.getByRole("status")).toBeVisible();
   }
   const score = phone.getByRole("region", { name: "Your score" });
-  const points = Number(
-    (await score.getByLabel(/points$/).getAttribute("aria-label"))?.split(" ")[0],
-  );
+  const label =
+    (await score.getByRole("img", { name: /points$/ }).getAttribute("aria-label")) ?? "";
+  const points = Number(/(\d+) points$/.exec(label)?.[1] ?? 0);
   test.skip(points === 0, "No right answers this time, so there's nothing on the board");
 
   const tv = await (

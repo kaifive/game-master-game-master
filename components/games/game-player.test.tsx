@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { PlayResponse } from "@/lib/games";
@@ -122,17 +122,20 @@ describe("GamePlayer", () => {
     });
   });
 
-  test("S08-AC11 S08-AC3: a finished play shows the score counting up and the summary", async () => {
+  test("S08-AC11 S08-AC3: a finished play holds up its score card, the summary and a way back", async () => {
     setReducedMotion(true);
     api.plays.mockReturnValue(ok({ plays: { trivia: { status: "finished", points: 80 } } }));
     api.start.mockReturnValue(ok(finished));
     page();
     const score = await screen.findByRole("region", { name: "Your score" });
     expect(score).toHaveTextContent("4 of 5 right");
-    const points = await screen.findByLabelText("80 points");
-    await waitFor(() => {
-      expect(points).toHaveTextContent("8080"); // the shown number, and the same for screen readers
-    });
+    expect(
+      within(score).getByRole("img", { name: "This game, your score: 80 points" }),
+    ).toHaveTextContent("80");
+    expect(within(score).getByRole("link", { name: "Back to games" })).toHaveAttribute(
+      "href",
+      "/holiday-2026",
+    );
   });
 
   test("shows the server's message when a game can't start", async () => {

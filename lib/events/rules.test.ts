@@ -144,9 +144,12 @@ describe("S01-AC9: /join sends a code to its event", () => {
   test("an event's join code goes to the event, keeping the code", () => {
     expect(resolveJoin("xmas7", events)).toEqual({ kind: "event", href: "/test-party?code=XMAS7" });
   });
-  test("an unknown or missing code goes back home with an error", () => {
+  test("an unknown code goes back home with an error", () => {
     expect(resolveJoin("ZZZZ9", events)).toEqual({ kind: "unknown", href: "/?error=code" });
-    expect(resolveJoin(undefined, events).kind).toBe("unknown");
+  });
+  test("no code goes home to ask for one, with no error", () => {
+    expect(resolveJoin(undefined, events)).toEqual({ kind: "ask", href: "/" });
+    expect(resolveJoin("  ", events)).toEqual({ kind: "ask", href: "/" });
   });
 });
 

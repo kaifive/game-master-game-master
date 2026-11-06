@@ -118,15 +118,22 @@ export function parseLeaderboard(raw: unknown): FinalStandings | null {
   };
 }
 
-export type JoinTarget = { kind: "event"; href: string } | { kind: "unknown"; href: string };
+export type JoinTarget =
+  | { kind: "event"; href: string }
+  | { kind: "unknown"; href: string }
+  | { kind: "ask"; href: string };
 
-/** Where /join?code= sends a player (S01-AC9). Game codes join with spec 08. */
+/**
+ * Where /join?code= (or /join/CODE) sends a player (S01-AC9). With no code
+ * at all, home asks for one calmly: someone typed the address off the TV.
+ */
 export function resolveJoin(
   raw: string | undefined,
   events: Record<string, EventConfig>,
 ): JoinTarget {
   const code = normalizeCode(raw ?? "");
-  const event = code ? findByJoinCode(code, events) : undefined;
+  if (!code) return { kind: "ask", href: "/" };
+  const event = findByJoinCode(code, events);
   return event
     ? { kind: "event", href: `/${event.slug}?code=${encodeURIComponent(code)}` }
     : { kind: "unknown", href: "/?error=code" };

@@ -27,11 +27,10 @@ const Body = ({ children }: { children: React.ReactNode }) => (
 
 const listed = (event: PublicEvent) => event.games.filter((g) => g.visibility === "listed");
 
-/** Play, Continue, Done · +N, or Best N · Again for replayable games (S08-AC7, AC12). */
-function playLabel(replayable: boolean, play: HubPlays[string] | undefined): string {
+/** The action at the end of an open row (S08-AC7, AC12). */
+function playLabel(play: HubPlays[string] | undefined): string {
   if (!play) return "Play →";
-  if (play.status === "playing") return "Continue →";
-  return replayable ? `Best ${String(play.best)} · Again →` : `Done · +${String(play.best)}`;
+  return play.status === "playing" ? "Continue →" : "Again →";
 }
 
 /** Why a team game can't be opened from this phone, or null when it can (S03-AC5). */
@@ -46,7 +45,92 @@ export function teamGameBlock(
   return "Captain plays";
 }
 
+type Group = "open" | "scored" | "later";
+type Row = { game: Game; group: Group; href: string | null; note: string; best: number | null };
+
+/**
+ * Sorts the listed games the way the judges' table reads them: what's up for
+ * grabs, what's scored, what's coming up (docs/styles/judges-table.md).
+ */
+export function hubRows(
+  event: PublicEvent,
+  status: EventStatus,
+  plays: HubPlays,
+  seat: Seat | null,
+): Row[] {
+  return listed(event).map((game) => {
+    const play = plays[game.id];
+    // A solo team game is the captain's to play (S03-AC5); live team games run from the host.
+    const blocked =
+      game.phase === "team" && game.mode === "solo" ? teamGameBlock(seat, play) : null;
+    const open = gameOpen(status, game) && !blocked;
+    const href = open ? `/${event.slug}/play/${game.id}` : null;
+    if (play?.status === "finished") {
+      const again = open && event.replayable;
+      return {
+        game,
+        group: "scored",
+        href: again ? href : null,
+        note: again ? "Again →" : (blocked ?? "Done"),
+        best: play.best,
+      };
+    }
+    if (open) return { game, group: "open", href, note: playLabel(play), best: null };
+    return {
+      game,
+      group: "later",
+      href: null,
+      note: gameOpen(status, game) ? (blocked ?? "Locked") : "Locked",
+      best: null,
+    };
+  });
+}
+
+const GROUPS: { id: Group; title: string }[] = [
+  { id: "open", title: "Up for grabs" },
+  { id: "scored", title: "Scored" },
+  { id: "later", title: "Coming up" },
+];
+
+function GameRow({ row }: { row: Row }) {
+  const { ScoreCard } = useSlots();
+  const card =
+    row.best === null ? (
+      <ScoreCard label={row.game.title} state="blank" size="sm" />
+    ) : (
+      <ScoreCard label={row.game.title} value={row.best} state="scored" size="sm" />
+    );
+  const body = (
+    <>
+      <span className="grid min-w-0 gap-0.5">
+        <span className="truncate text-lg font-bold">{row.game.title}</span>
+        <span
+          className={
+            row.href ? "font-bold text-gm-accent-ink" : "text-sm font-bold text-gm-text-muted"
+          }
+        >
+          {row.note}
+        </span>
+      </span>
+      {card}
+    </>
+  );
+  const look = "flex min-h-16 items-center justify-between gap-3 py-2";
+  return (
+    <li className="border-t border-gm-border first:border-t-0">
+      {row.href ? (
+        <Link href={row.href} className={`${look} text-gm-text no-underline`}>
+          {body}
+        </Link>
+      ) : (
+        <div className={look}>{body}</div>
+      )}
+    </li>
+  );
+}
+
 function GameList({ event, status }: { event: PublicEvent; status: EventStatus }) {
+  const { Progress } = useSlots();
   const device = useOptionalDevice();
   const plays = device?.plays ?? {};
   const seat = device?.seat ?? null;
@@ -55,41 +139,31 @@ function GameList({ event, status }: { event: PublicEvent; status: EventStatus }
   useEffect(() => {
     void refresh?.();
   }, [refresh]);
+  const rows = hubRows(event, status, plays, seat);
+  const scorable = rows.filter((r) => r.game.mode === "solo");
   return (
-    <section aria-labelledby="games-heading" className="grid gap-2">
-      <h2
-        id="games-heading"
-        className="m-0 font-gm-display text-sm font-medium tracking-[0.12em] text-gm-text-muted uppercase"
-      >
-        Tonight&apos;s games
-      </h2>
-      <ul aria-label="Tonight's games" className="m-0 grid list-none p-0">
-        {listed(event).map((g) => {
-          // A solo team game is the captain's to play (S03-AC5); live team games run from the host.
-          const blocked =
-            g.phase === "team" && g.mode === "solo" ? teamGameBlock(seat, plays[g.id]) : null;
-          return (
-            <li key={g.id} className="border-t border-gm-border">
-              {gameOpen(status, g) && !blocked ? (
-                <Link
-                  href={`/${event.slug}/play/${g.id}`}
-                  className="flex min-h-13 items-center justify-between gap-3 py-2 font-bold text-gm-text no-underline"
-                >
-                  {g.title}
-                  <span className="text-gm-accent">{playLabel(event.replayable, plays[g.id])}</span>
-                </Link>
-              ) : (
-                <div className="flex min-h-13 items-center justify-between gap-3 py-2 font-bold">
-                  {g.title}
-                  <span className="text-sm text-gm-text-muted">
-                    {gameOpen(status, g) ? blocked : "Locked"}
-                  </span>
-                </div>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+    <section aria-label="Tonight's games" className="grid gap-4">
+      {device?.active && scorable.length > 0 && (
+        <Progress
+          done={scorable.filter((r) => r.group === "scored").length}
+          total={scorable.length}
+          label="Games scored"
+        />
+      )}
+      {GROUPS.map(({ id, title }) => {
+        const group = rows.filter((r) => r.group === id);
+        if (group.length === 0) return null;
+        return (
+          <div key={id} className="grid gap-1">
+            <h2 className="m-0 font-gm-display text-2xl font-bold">{title}</h2>
+            <ul aria-label={title} className="m-0 grid list-none p-0">
+              {group.map((r) => (
+                <GameRow key={r.game.id} row={r} />
+              ))}
+            </ul>
+          </div>
+        );
+      })}
     </section>
   );
 }
@@ -143,9 +217,7 @@ function Standings({ title, rows }: { title: string; rows: FinalStandings["teams
   if (rows.length === 0) return null;
   return (
     <section aria-label={title} className="grid gap-2">
-      <h3 className="m-0 font-gm-display text-sm font-medium tracking-[0.12em] text-gm-text-muted uppercase">
-        {title}
-      </h3>
+      <h3 className="m-0 font-gm-display text-2xl font-bold">{title}</h3>
       <ul className="m-0 list-none p-0">
         {rows.map((r, i) => (
           <LeaderboardRow
@@ -217,6 +289,7 @@ export function GameView({
         {gameOpen(status, game) && play ? (
           <GamePlayer
             gameId={game.id}
+            title={game.title}
             type={game.type}
             instructions={play.instructions}
             replayable={event.replayable}
@@ -225,7 +298,7 @@ export function GameView({
           <p className="m-0 text-gm-text-muted">{GAME_STATE[status]}</p>
         )}
         {event.kind === "event" && !(gameOpen(status, game) && play) && (
-          <Link href={`/${event.slug}`} className="font-bold text-gm-accent">
+          <Link href={`/${event.slug}`} className="font-bold text-gm-accent-ink">
             All games
           </Link>
         )}
@@ -252,7 +325,7 @@ export function EventNotFound({ what }: { what: "event" | "game" }) {
       <p className="m-0 text-gm-text-muted">
         Check the link or the code, or start again from the home page.
       </p>
-      <Link href="/" className="font-bold text-gm-accent">
+      <Link href="/" className="font-bold text-gm-accent-ink">
         Go to the home page
       </Link>
     </Body>

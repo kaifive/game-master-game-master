@@ -13,6 +13,18 @@ test("S01-AC8, S01-AC9: home → code → the event, keeping the code", async ({
   ).toBeVisible();
 });
 
+test("S01-AC9: the TV's typed address joins with the code; a bare /join asks calmly", async ({
+  page,
+}) => {
+  await page.goto("/join/wush7");
+  await expect(page).toHaveURL(/\/holiday-2026\?code=WUSH7$/);
+  await expect(page.getByLabel("Party code")).toHaveCount(0);
+  await page.goto("/join");
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByLabel("Code")).toBeVisible();
+  await expect(page.getByText("We couldn't find that code")).toHaveCount(0);
+});
+
 test("an unknown code returns home with an error", async ({ page }) => {
   await page.goto("/join?code=ZZZZ9");
   await expect(page).toHaveURL(/\/\?error=code$/);

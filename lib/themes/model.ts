@@ -19,6 +19,8 @@ export const CORE_COLOR_TOKENS = [
   "text-on-accent",
   "accent",
   "accent-hover",
+  /** The accent as text, lines and focus rings on the page grounds; fills keep `accent`. */
+  "accent-ink",
   "success",
   "warning",
   "danger",
@@ -79,6 +81,9 @@ export const CONTRAST_PAIRS: ContrastPair[] = [
   { fg: "text-muted", bg: "surface", min: NORMAL },
   { fg: "text", bg: "surface-raised", min: NORMAL },
   { fg: "text-on-accent", bg: "accent", min: NORMAL },
+  { fg: "accent-ink", bg: "bg", min: NORMAL },
+  { fg: "accent-ink", bg: "surface", min: NORMAL },
+  { fg: "accent-ink", bg: "surface-raised", min: NORMAL },
   { fg: "tile-correct-ink", bg: "tile-correct", min: LARGE },
   { fg: "tile-present-ink", bg: "tile-present", min: LARGE },
   { fg: "tile-absent-ink", bg: "tile-absent", min: LARGE },

@@ -49,7 +49,7 @@ export function Banner({ title, subtitle, live, level = 1, aside }: BannerProps)
       </div>
       <div className="ml-auto flex items-center gap-2">
         {live && (
-          <span className="rounded-full bg-gm-surface px-3 py-0.5 text-xs font-bold tracking-widest text-gm-accent">
+          <span className="rounded-full bg-gm-surface px-3 py-0.5 text-xs font-bold tracking-widest text-gm-accent-ink">
             LIVE
           </span>
         )}
@@ -64,7 +64,7 @@ const button = variants({
   variants: {
     tone: {
       primary: "bg-gm-accent text-gm-text-on-accent hover:bg-gm-accent-hover",
-      secondary: "border-2 border-gm-accent bg-gm-surface text-gm-accent",
+      secondary: "border-2 border-gm-accent-ink bg-gm-surface text-gm-accent-ink",
     },
     size: { md: "", lg: "min-h-14 w-full text-xl" },
   },
@@ -99,6 +99,7 @@ const card = variants({
       sm: "h-9 min-w-12 px-2 text-lg",
       md: "h-14 min-w-18 px-3 text-3xl",
       lg: "h-24 min-w-28 px-4 text-5xl",
+      xl: "h-40 min-w-48 px-6 text-8xl",
     },
   },
   defaults: { state: "scored", size: "md" },
@@ -256,7 +257,9 @@ export function Toast({ text, value }: ToastProps) {
       data-slot="toast"
       className="flex items-center gap-2 rounded-gm bg-gm-surface-raised px-3 py-2 text-sm font-bold shadow ring-1 ring-gm-border"
     >
-      {value !== undefined && <span className="font-gm-display text-gm-accent">{fmt(value)}</span>}
+      {value !== undefined && (
+        <span className="font-gm-display text-gm-accent-ink">{fmt(value)}</span>
+      )}
       <span>{text}</span>
     </div>
   );
@@ -272,7 +275,7 @@ export function LeaderboardRow({ rank, name, score, team, highlight }: Leaderboa
         highlight && "bg-gm-surface-raised",
       )}
     >
-      <span aria-hidden="true" className="font-gm-display text-3xl font-bold text-gm-accent">
+      <span aria-hidden="true" className="font-gm-display text-3xl font-bold text-gm-accent-ink">
         {rank}
       </span>
       <span aria-hidden="true" className="flex items-center gap-2 text-xl font-bold">

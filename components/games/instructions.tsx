@@ -29,7 +29,7 @@ export function InstructionsDialog({
         aria-labelledby={`${id}-title`}
         className="w-full max-w-md overflow-hidden rounded-gm bg-gm-surface text-gm-text shadow-2xl ring-1 ring-gm-border"
       >
-        <div className="border-b-4 border-gm-accent px-5 pt-5 pb-4">
+        <div className="border-b-4 border-gm-accent-ink px-5 pt-5 pb-4">
           <p className="m-0 text-xs font-bold tracking-[0.16em] text-gm-text-muted uppercase">
             Before you start
           </p>
@@ -42,7 +42,7 @@ export function InstructionsDialog({
             <li key={line} className="grid grid-cols-[2rem_1fr] items-start gap-3">
               <span
                 aria-hidden="true"
-                className="grid size-8 place-items-center rounded-full bg-gm-surface-raised font-gm-display text-lg font-bold text-gm-accent"
+                className="grid size-8 place-items-center rounded-full bg-gm-surface-raised font-gm-display text-lg font-bold text-gm-accent-ink"
               >
                 {i + 1}
               </span>

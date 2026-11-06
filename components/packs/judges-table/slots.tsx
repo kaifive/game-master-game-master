@@ -81,7 +81,12 @@ const paddle = variants({
       highlight: "bg-[var(--gm-gold)] text-[#1d1300] shadow-md",
       blank: "bg-[var(--gm-card-back)] text-[var(--gm-card-back-ink)]",
     },
-    size: { sm: "h-9 w-12 text-lg", md: "h-14 w-[4.5rem] text-3xl", lg: "h-24 w-32 text-5xl" },
+    size: {
+      sm: "h-9 w-12 text-lg",
+      md: "h-14 w-[4.5rem] text-3xl",
+      lg: "h-24 w-32 text-5xl",
+      xl: "h-40 min-w-52 px-6 text-8xl",
+    },
   },
   defaults: { state: "scored", size: "md" },
 });
@@ -111,7 +116,7 @@ function ScoreCard({ label, value, state, size = "md" }: ScoreCardProps) {
         aria-hidden="true"
         className={cx(
           "rounded-b-[2px]",
-          size === "sm" ? "h-2.5 w-1.5" : "h-5 w-2",
+          { sm: "h-2.5 w-1.5", md: "h-5 w-2", lg: "h-5 w-2", xl: "h-12 w-3.5" }[size],
           scored ? "jt-handle" : "bg-[var(--gm-card-back)]",
         )}
       />
@@ -261,7 +266,7 @@ function LeaderboardRow({ rank, name, score, team, highlight }: LeaderboardRowPr
         aria-hidden="true"
         className={cx(
           "font-gm-display text-4xl font-bold",
-          highlight ? "text-[var(--gm-gold-line)]" : "text-gm-accent",
+          highlight ? "text-[var(--gm-gold-line)]" : "text-gm-accent-ink",
         )}
       >
         {rank}
@@ -272,7 +277,12 @@ function LeaderboardRow({ rank, name, score, team, highlight }: LeaderboardRowPr
         )}
         {name}
       </span>
-      <span aria-hidden="true" className="font-gm-display text-4xl font-bold tabular-nums">
+      {/* Keyed by score, so the card flips up again whenever the score changes. */}
+      <span
+        key={score}
+        aria-hidden="true"
+        className="jt-card-shadow inline-grid min-w-[2.2em] place-items-center rounded-[4px] bg-[var(--gm-card)] px-1.5 py-0.5 font-gm-display text-3xl font-bold text-[var(--gm-card-ink)] tabular-nums motion-safe:animate-[jt-flip_420ms_cubic-bezier(0.16,1,0.3,1)]"
+      >
         {fmt(score)}
       </span>
     </li>

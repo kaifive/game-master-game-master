@@ -212,7 +212,7 @@ export function Donate({
       {note && (
         <p
           role={note.ok ? "status" : "alert"}
-          className={`m-0 text-sm font-bold ${note.ok ? "text-gm-accent" : "text-gm-danger"}`}
+          className={`m-0 text-sm font-bold ${note.ok ? "text-gm-success" : "text-gm-danger"}`}
         >
           {note.text}
         </p>

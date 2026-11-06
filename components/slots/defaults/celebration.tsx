@@ -82,7 +82,7 @@ export function Celebration({ moment, onDone }: CelebrationProps) {
         )}
       >
         {moment.value !== undefined && (
-          <span className="block text-5xl text-gm-accent">{fmt(moment.value)}</span>
+          <span className="block text-5xl text-gm-accent-ink">{fmt(moment.value)}</span>
         )}
         {moment.text}
       </p>

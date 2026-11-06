@@ -46,10 +46,13 @@ describe("S01-AC5: an upcoming event waits for the host and lists its games, loc
     const closed = { ...event, games: event.games.map((g) => ({ ...g, alwaysOpen: false })) };
     inPack(<UpcomingView event={closed} />);
     expect(screen.getByText("Waiting for the host to start the games.")).toBeInTheDocument();
-    const list = screen.getByRole("list", { name: "Tonight's games" });
+    const list = screen.getByRole("region", { name: "Tonight's games" });
     for (const g of event.games) expect(within(list).getByText(g.title)).toBeInTheDocument();
     expect(within(list).queryAllByRole("link")).toHaveLength(0);
     expect(within(list).getAllByText("Locked").length).toBe(closed.games.length);
+    // Nothing is up for grabs yet: every game is coming up, on a blank card.
+    expect(within(list).getByRole("list", { name: "Coming up" })).toBeInTheDocument();
+    expect(within(list).queryByRole("list", { name: "Up for grabs" })).toBeNull();
   });
 
   test("S08-AC13: an alwaysOpen game can be played before the start", () => {
@@ -114,7 +117,7 @@ describe("S01-AC7: a quick event's page is its one game", () => {
     const quick = { ...event, kind: "quick" as const, games: [event.games[0]!] };
     inPack(<QuickEventView event={quick} status="live" />);
     expect(screen.getByRole("heading", { level: 1, name: "Holiday Trivia" })).toBeInTheDocument();
-    expect(screen.queryByRole("list", { name: "Tonight's games" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Tonight's games" })).toBeNull();
   });
 });
 
@@ -143,7 +146,7 @@ describe("S01-AC8: the home page takes a code", () => {
 });
 
 describe("S08-AC7: the hub lists each game for the active player", () => {
-  test("Play, Continue and Done · +N", async () => {
+  test("grouped as up for grabs, scored and coming up, each with its score card", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn((url: string) =>
@@ -171,13 +174,18 @@ describe("S08-AC7: the hub lists each game for the active player", () => {
         <LiveView event={event} />
       </DeviceProvider>,
     );
-    const list = screen.getByRole("list", { name: "Tonight's games" });
-    // Trivia is replayable in the party's event file.
-    expect(await within(list).findByText("Best 80 · Again →")).toBeInTheDocument();
-    expect(within(list).getByText("Continue →")).toBeInTheDocument();
-    expect(within(list).getByText("Play →")).toBeInTheDocument();
+    const list = screen.getByRole("region", { name: "Tonight's games" });
+    // Trivia is replayable in the party's event file: scored, and open again.
+    const scored = await within(list).findByRole("list", { name: "Scored" });
+    expect(within(scored).getByRole("img", { name: "Holiday Trivia: 80 points" })).toBeVisible();
+    expect(within(scored).getByText("Again →")).toBeInTheDocument();
+    const open = within(list).getByRole("list", { name: "Up for grabs" });
+    expect(within(open).getByText("Continue →")).toBeInTheDocument();
+    expect(within(open).getByText("Play →")).toBeInTheDocument();
     // S03-AC5: a team game waits for the team phase.
-    expect(within(list).getByText("Team phase")).toBeInTheDocument();
+    const later = within(list).getByRole("list", { name: "Coming up" });
+    expect(within(later).getByText("Team phase")).toBeInTheDocument();
+    expect(within(list).getByRole("progressbar", { name: "Games scored" })).toBeInTheDocument();
     vi.unstubAllGlobals();
   });
 });

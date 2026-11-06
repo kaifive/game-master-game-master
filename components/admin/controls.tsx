@@ -507,7 +507,7 @@ export function Controls({
   return (
     <main className="mx-auto grid w-full max-w-3xl gap-4 px-4 py-6">
       <div className="grid gap-1">
-        <Link href="/admin" className="text-sm font-bold text-gm-accent">
+        <Link href="/admin" className="text-sm font-bold text-gm-accent-ink">
           ← All events
         </Link>
         <div className="flex flex-wrap items-center gap-3">
@@ -515,10 +515,10 @@ export function Controls({
           <StatusBadge status={view.status} />
         </div>
         <p className="m-0 flex flex-wrap gap-3 text-sm">
-          <Link href={`/${slug}`} target="_blank" className="font-bold text-gm-accent">
+          <Link href={`/${slug}`} target="_blank" className="font-bold text-gm-accent-ink">
             Party page ↗
           </Link>
-          <Link href={`/${slug}/display`} target="_blank" className="font-bold text-gm-accent">
+          <Link href={`/${slug}/display`} target="_blank" className="font-bold text-gm-accent-ink">
             TV display ↗
           </Link>
         </p>

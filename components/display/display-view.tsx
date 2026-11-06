@@ -1,13 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import {
-  BarRace,
-  MomentsProvider,
-  MomentsStage,
-  ToastChainView,
-  useCelebrate,
-} from "@/components/motion";
+import { MomentsProvider, MomentsStage, ToastChainView, useCelebrate } from "@/components/motion";
 import { usePoll } from "@/components/leaderboard/use-poll";
 import { useSlots } from "@/components/slots/registry";
 import { leadChange, newAwards, standingsApi, type DisplayStandings } from "@/lib/points";
@@ -53,6 +47,32 @@ function useAnnouncements() {
   );
 }
 
+type BoardRow = { id: string; rank: number; name: string; score: number; team?: number };
+
+/** A results-board column: ranked rows whose score cards flip when a score lands (S05-AC4). */
+function Results({ label, rows }: { label: string; rows: BoardRow[] }) {
+  const { LeaderboardRow } = useSlots();
+  return (
+    <section aria-labelledby={`${label}-title`} className="grid min-h-0 content-start gap-2">
+      <h2 id={`${label}-title`} className="m-0 font-gm-display text-3xl font-bold">
+        {label}
+      </h2>
+      <ol aria-label={label} aria-live="polite" className="m-0 list-none p-0">
+        {rows.map((r) => (
+          <LeaderboardRow
+            key={r.id}
+            rank={r.rank}
+            name={r.name}
+            score={r.score}
+            highlight={r.rank === 1}
+            {...(r.team !== undefined ? { team: r.team } : {})}
+          />
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 function Board({ slug }: { slug: string }) {
   const announce = useAnnouncements();
   const load = useCallback(async () => {
@@ -63,30 +83,25 @@ function Board({ slug }: { slug: string }) {
   if (!data) return null;
   const players = data.players.map((p) => ({
     id: p.id,
-    name: p.nickname,
     rank: p.rank,
+    name: p.nickname,
     score: p.points,
   }));
-  // The team phase: team bars in team colors, with the top players beside them (S03-AC8).
+  // The team phase: the teams' board, with the top players beside it (S03-AC8).
   if (data.teams.length > 0)
     return (
-      <div className="grid h-full grid-cols-[3fr_2fr] gap-8">
-        <BarRace
+      <div className="grid h-full grid-cols-[3fr_2fr] content-start gap-10">
+        <Results
           label="Team standings"
-          entries={data.teams.map((t) => ({
+          rows={data.teams.map((t) => ({
             id: t.id,
-            name: t.name,
             rank: t.rank,
+            name: t.name,
             score: t.points,
             team: t.color,
           }))}
         />
-        {players.length > 0 && (
-          <div className="grid content-start gap-3 text-xl">
-            <p className="m-0 font-gm-display text-2xl font-bold">Top players</p>
-            <BarRace label="Top players" entries={players} />
-          </div>
-        )}
+        {players.length > 0 && <Results label="Top players" rows={players} />}
       </div>
     );
   if (data.players.length === 0)
@@ -95,7 +110,7 @@ function Board({ slug }: { slug: string }) {
         No scores yet. Scan the code to join!
       </p>
     );
-  return <BarRace label="Leaderboard" entries={players} />;
+  return <Results label="Leaderboard" rows={players} />;
 }
 
 /** The TV: how to join, and the live leaderboard with toasts and lead changes (spec 05). */
@@ -123,7 +138,7 @@ export function DisplayView({ slug, name, joinUrl, shortUrl, joinCode }: Props) 
               <p className="m-0 text-lg break-all text-gm-text-muted">{shortUrl}</p>
               <p className="m-0 text-lg">
                 Code{" "}
-                <span className="font-gm-display text-4xl font-bold tracking-[0.2em] text-gm-accent">
+                <span className="font-gm-display text-4xl font-bold tracking-[0.2em] text-gm-accent-ink">
                   {joinCode}
                 </span>
               </p>

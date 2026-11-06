@@ -15,6 +15,7 @@
   --color-gm-text-on-accent: var(--gm-text-on-accent);
   --color-gm-accent: var(--gm-accent);
   --color-gm-accent-hover: var(--gm-accent-hover);
+  --color-gm-accent-ink: var(--gm-accent-ink);
   --color-gm-success: var(--gm-success);
   --color-gm-warning: var(--gm-warning);
   --color-gm-danger: var(--gm-danger);
@@ -50,7 +51,8 @@ body {
 }
 
 [data-theme-root] :focus-visible {
-  outline: 3px solid var(--gm-accent);
+  /* accent-ink, not accent: the ring must reach 3:1 on cards as well as the page. */
+  outline: 3px solid var(--gm-accent-ink);
   outline-offset: 2px;
 }
 

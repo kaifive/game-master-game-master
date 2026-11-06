@@ -38,17 +38,18 @@ test("S04-AC7 S08-AC9 S08-AC11 S08-AC13 S08-AC15 S10-AC6: play before the start,
   await expect(score).toContainText(/[0-5] of 5 right/);
   // The game's title replaces the party's name in the header.
   await expect(page.getByRole("heading", { level: 1, name: "Holiday Trivia" })).toBeVisible();
-  const points =
-    (await score.getByLabel(/points$/).getAttribute("aria-label"))?.replace(" points", "") ?? "";
+  const label =
+    (await score.getByRole("img", { name: /points$/ }).getAttribute("aria-label")) ?? "";
+  const points = /(\d+) points$/.exec(label)?.[1] ?? "";
   await expect(total).toHaveAttribute("aria-label", new RegExp(`: ${points} points$`));
 
   await page
     .getByRole("navigation", { name: "Party" })
     .getByRole("link", { name: /Games/ })
     .click();
-  await expect(page.getByRole("link", { name: /Holiday Trivia/ })).toContainText(
-    `Best ${points} · Again →`,
-  );
+  const again = page.getByRole("link", { name: /Holiday Trivia/ });
+  await expect(again).toContainText("Again →");
+  await expect(again.getByRole("img", { name: `Holiday Trivia: ${points} points` })).toBeVisible();
 });
 
 test("S08-AC12 S08-AC3: a finished replayable game shows its result and plays again", async ({
