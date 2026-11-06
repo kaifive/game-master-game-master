@@ -63,7 +63,7 @@ Player phone, in the event's pack: game header (title, "Playing as"), the instru
 ## Acceptance criteria
 
 - [x] AC-1: Every game in an event file is validated against its type's content schema, with errors naming the file, game and field.
-- [x] AC-2: The move route runs the game's logic on the server; the phone's view never contains an answer it hasn't played.
+- [x] AC-2: The move route runs the game's logic on the server; the phone's view never contains an answer it hasn't played, except trivia's scrambled per-question key (ADR-029).
 - [x] AC-3: A player has one play per game unless the event is replayable: starting again resumes an unfinished run, and a finished play shows its result instead of a new game.
 - [x] AC-4: A play's points are fixed once, when it ends (`scored: true`), and never change after.
 - [x] AC-5: A move for an old step (double tap) changes nothing and returns the current view.

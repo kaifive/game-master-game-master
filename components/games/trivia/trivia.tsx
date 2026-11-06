@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChoiceView, Media, TriviaView } from "@/lib/games";
+import { readAnswerKey, type ChoiceView, type Media, type TriviaView } from "@/lib/games";
 import { cx } from "@/lib/ui";
 import type { GameRendererProps } from "../types";
 
@@ -160,17 +160,28 @@ function useAdvance(answered: boolean, question: number, next: () => void) {
   return advance;
 }
 
+/** The tapped answer marked right or wrong from the question's key, before the server replies. */
+function judgedLocally(view: Asked, picked: number): Asked {
+  if (view.kind !== "question") return view;
+  const correct = readAnswerKey(view.key, view.number, view.choices.length);
+  if (correct === null) return view;
+  return { ...view, kind: "answered", chosen: picked, correct, right: picked === correct };
+}
+
 const FEEDBACK = { right: "Right!", wrong: "Not quite.", late: "Time's up." };
 
 /** Trivia on the phone (spec 10): question, answers in a grid or list, a timer, then feedback. */
 export function TriviaGame({ view: raw, onMove, onTimeUp, busy }: GameRendererProps) {
-  const view = raw as Asked;
-  const asking = view.kind === "question";
-  const left = useCountdown(view.msLeft, asking, onTimeUp);
-  // The answer tapped on this question, shown at once while the server checks it.
+  const serverView = raw as Asked;
+  const asking = serverView.kind === "question";
+  // The answer tapped on this question. With the question's answer key, the phone
+  // says right or wrong at once; the server's reply then confirms it (S10-AC13, ADR-029).
   const [pick, setPicked] = useState<{ question: number; choice: number } | null>(null);
-  const picked = asking && pick?.question === view.number ? pick.choice : null;
-  useAdvance(view.kind === "answered", view.number, () => {
+  const picked = asking && pick?.question === serverView.number ? pick.choice : null;
+  const view = picked === null ? serverView : judgedLocally(serverView, picked);
+  const left = useCountdown(serverView.msLeft, asking && picked === null, onTimeUp);
+  // The next question waits for the server's reply, so its step is always current.
+  useAdvance(serverView.kind === "answered", serverView.number, () => {
     onMove({ type: "next" });
   });
   const feedback =

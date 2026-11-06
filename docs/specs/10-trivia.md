@@ -32,7 +32,7 @@ The play's `state`: the drawn question ids, choice order per question, the curre
 ## Acceptance criteria
 
 - [x] AC-1: Trivia content is validated: 1–200 questions with unique ids, 2–6 choices each, every choice text or an image with alt text, an answer that points at a real choice, and `questionsPerPlay` no larger than the pool.
-- [x] AC-2: The phone gets the prompt and choices but never the answer before it has answered that question.
+- [x] AC-2: The phone gets the prompt, the choices and only a scrambled key to the current question's answer (ADR-029); the server still checks every answer and keeps the score.
 - [x] AC-3: Each play draws `questionsPerPlay` different questions from the pool and shuffles answer order, both from the play's seed, and both stay the same on resume.
 - [x] AC-4: An answer is checked on the server and the reply shows whether it was right and which choice was correct.
 - [x] AC-5: An answer after the deadline plus 2 s, or no answer in time, counts as wrong, and the timer keeps running while the player is away.
@@ -40,7 +40,7 @@ The play's `state`: the drawn question ids, choice order per question, the curre
 - [x] AC-7: The party's event file has a trivia game with a placeholder pool, and word guess is gone from it.
 - [x] AC-8: Answers show as a 2×2 grid when there are at most 4 short or picture answers, and as a list otherwise.
 - [x] AC-9: Questions and answers can show images, each with alt text.
-- [x] AC-13: A tapped answer lights up at once (the rest dim and lock) while the server checks it, and the whole button takes the tap, not just its text.
+- [x] AC-13: A tapped answer shows right or wrong at once from the question's key, before the server replies (the reply confirms it), the answers lock, and the whole button takes the tap, not just its text.
 - [x] AC-12: On a phone, answers are at least 80 px tall and the Start button at least 56 px.
 - [x] AC-11: After each answer, a line says what's next ("Question 3 of 5 is next…" or "Your score is next…") over a bar that empties during the pause, and the instructions say the next question starts by itself.
 - [x] AC-10: After an answer shows for 1 second, the next question (or the score) comes on its own, once; there is no Next button and a tap doesn't skip ahead.

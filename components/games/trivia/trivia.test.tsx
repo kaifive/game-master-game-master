@@ -2,11 +2,13 @@ import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import type { TriviaView } from "@/lib/games";
+import { answerKey } from "@/lib/games";
 import { REVEAL_MS, TriviaGame, triviaSummary } from "./trivia";
 
 type Asked = Extract<TriviaView, { kind: "question" }>;
-const question = (extra: Partial<Asked> = {}): Asked => ({
+const question = (extra: { [K in keyof Asked]?: Asked[K] | undefined } = {}): Asked => ({
   kind: "question",
+  key: "",
   number: 2,
   total: 5,
   prompt: "How many legs does a spider have?",
@@ -14,7 +16,9 @@ const question = (extra: Partial<Asked> = {}): Asked => ({
   layout: "grid",
   seconds: 15,
   msLeft: 15_000,
-  ...extra,
+  ...(Object.fromEntries(
+    Object.entries(extra).filter(([, v]) => v !== undefined),
+  ) as Partial<Asked>),
 });
 
 const show = (view: TriviaView, handlers: { onMove?: () => void; onTimeUp?: () => void } = {}) =>
@@ -152,7 +156,19 @@ describe("TriviaGame cue", () => {
 });
 
 describe("TriviaGame tap feedback", () => {
-  test("S10-AC13: a tapped answer lights up at once and the answers lock until the server replies", async () => {
+  test("S10-AC13: with the answer key, a tap shows right or wrong at once, before the server replies", async () => {
+    const onMove = vi.fn();
+    // "8" is choice 1; the key says so.
+    show({ ...question(), key: answerKey(1, 2) }, { onMove });
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "6" }));
+    expect(onMove).toHaveBeenCalledExactlyOnceWith({ type: "answer", choice: 0 });
+    expect(screen.getByRole("status")).toHaveTextContent("Not quite.");
+    expect(screen.getByRole("button", { name: "8 (Right answer)" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "6 (Your answer)" })).toBeInTheDocument();
+  });
+
+  test("S10-AC13: without a usable key, the tapped answer still lights up while the server checks", async () => {
     const onMove = vi.fn();
     show(question(), { onMove });
     const user = userEvent.setup();
