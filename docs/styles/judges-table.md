@@ -14,7 +14,8 @@ gold judges' band.
 ## Winter variant
 
 Cranberry band with a gold rule and holly, snow falling on every screen,
-candy-striped ribbon on score-card handles. Light mode is a snowy day
+candy-striped ribbon on score-card handles. Points are counted in mistletoe
+sprigs (`icons.points`). Light mode is a snowy day
 (frost-white ground), dark mode a winter night.
 
 ## Tokens (starting values; finalized in the build)

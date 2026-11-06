@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { PointsIcon } from "@/components/icons/points";
 import { useSlots } from "@/components/slots/registry";
 import { useDevice } from "./device";
 import { forfeitMessage, JoinForm } from "./hub";
@@ -51,8 +52,9 @@ export function PlayerSheet({ hasTeams, onClose }: { hasTeams: boolean; onClose:
                 {active.nickname}
               </h2>
               <p className="m-0 text-lg">
-                <span aria-hidden="true">★ </span>
-                {total} points
+                <span className="inline-flex items-center gap-1.5">
+                  <PointsIcon /> {total} points
+                </span>
               </p>
             </div>
             {mode === "confirm" ? (

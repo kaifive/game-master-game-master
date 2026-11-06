@@ -29,6 +29,7 @@ Each event picks a style pack (ADR-021) for its player client and TV display: to
 - [x] AC-9: A page for an event using one pack never loads another pack's CSS, fonts or components.
 - [x] AC-10: The `/dev/ui` gallery shows every slot in every pack, variant and mode.
 - [x] AC-11: The Judges' Table pack with its winter variant provides `Surface`, `Banner`, `ScoreCard`, `Tile`, `Key`, `Toast`, `LeaderboardRow` and `Progress`; every other slot uses the default.
+- [x] AC-13: The points icon comes from the theme (`icons.points`): a star by default, mistletoe in Judges' Table winter. It shows in the header total, the player panel and the points chip.
 
 ## How it's built
 

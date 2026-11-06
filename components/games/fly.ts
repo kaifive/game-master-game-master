@@ -2,17 +2,24 @@
  * Sends a "+80" chip from the result to the header total (S08-AC15).
  * Resolves when it lands; does nothing under reduced motion or with no target.
  */
-export async function flyPoints(from: Element, text: string, reduced: boolean): Promise<void> {
+export async function flyPoints(
+  from: Element,
+  text: string,
+  reduced: boolean,
+  /** The event's points icon, copied into the chip. */
+  icon?: Element | null,
+): Promise<void> {
   const target = document.querySelector("[data-total-score]");
   if (reduced || !target) return;
   const a = from.getBoundingClientRect();
   const b = target.getBoundingClientRect();
   const chip = document.createElement("span");
-  chip.textContent = text;
+  if (icon) chip.append(icon.cloneNode(true));
+  chip.append(text);
   chip.setAttribute("aria-hidden", "true");
   chip.className =
     // Inverted text and background: readable on the banner and the page alike.
-    "pointer-events-none fixed z-50 rounded-full bg-gm-text px-3 py-1 font-gm-display text-2xl font-bold text-gm-bg shadow-lg ring-2 ring-gm-bg";
+    "pointer-events-none fixed z-50 inline-flex items-center gap-1 rounded-full bg-gm-text px-3 py-1 font-gm-display text-2xl font-bold text-gm-bg shadow-lg ring-2 ring-gm-bg";
   chip.style.left = `${String(a.left + a.width / 2)}px`;
   chip.style.top = `${String(a.top + a.height / 2)}px`;
   document.body.append(chip);

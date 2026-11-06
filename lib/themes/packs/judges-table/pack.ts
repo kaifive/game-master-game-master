@@ -117,6 +117,8 @@ export const judgesTable: PackDefinition = {
     winter: {
       name: "Winter",
       decorations: ["snow", "holly"],
+      // Points are mistletoe sprigs at a winter party (components/icons/points.tsx).
+      icons: { points: "mistletoe" },
       tokens: {
         light: {
           bg: "#edf2f5",

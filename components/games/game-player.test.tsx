@@ -183,7 +183,7 @@ describe("GamePlayer", () => {
     await waitFor(() => {
       expect(device.refreshPlays).toHaveBeenCalled();
     });
-    expect(fly).toHaveBeenCalledWith(expect.any(HTMLElement), "+80", true);
+    expect(fly).toHaveBeenCalledWith(expect.any(HTMLElement), "+80", true, expect.any(Element));
   });
 
   test("S08-AC15: no flight when the run didn't beat the best", async () => {

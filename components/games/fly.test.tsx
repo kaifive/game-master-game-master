@@ -18,3 +18,23 @@ describe("flyPoints", () => {
     expect(animateSpy).not.toHaveBeenCalled();
   });
 });
+
+describe("flyPoints icon", () => {
+  it("copies the event's points icon into the chip", async () => {
+    document.body.innerHTML =
+      '<p id="from">80</p><span data-total-score>100</span><span id="icon"><svg data-icon="mistletoe"></svg></span>';
+    let chipHtml = "";
+    animateSpy.mockImplementationOnce(function (this: Element) {
+      chipHtml = this.outerHTML;
+      return { cancel: () => undefined, finished: Promise.resolve() };
+    });
+    await flyPoints(
+      document.getElementById("from") as Element,
+      "+80",
+      false,
+      document.querySelector("#icon svg"),
+    );
+    expect(chipHtml).toContain('data-icon="mistletoe"');
+    expect(chipHtml).toContain("+80");
+  });
+});

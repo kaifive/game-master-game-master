@@ -1,5 +1,6 @@
 "use client";
 
+import { PointsIcon } from "@/components/icons/points";
 import { CountUp } from "@/components/motion";
 import { useOptionalDevice } from "./device";
 
@@ -13,7 +14,9 @@ export function TotalScore() {
       aria-label={`${device.active.nickname}: ${String(device.total)} points`}
       className="inline-flex min-w-14 items-center justify-center gap-1 rounded-full bg-black/25 px-3 py-1 font-gm-display text-lg font-bold tabular-nums"
     >
-      <span aria-hidden="true">★</span>
+      <span className="text-2xl leading-none">
+        <PointsIcon />
+      </span>
       <CountUp value={device.total} />
     </span>
   );
