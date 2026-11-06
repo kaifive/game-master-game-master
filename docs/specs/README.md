@@ -14,8 +14,9 @@ Statuses are explained in `../conventions/docs.md`.
 | 07 | [Controls](07-controls.md) | M1 | Draft |
 | 08 | [Game framework](08-game-framework.md) | M2 | Draft |
 | 09 | [Style packs and theming](09-theming.md) | M0 | Done |
-| 10 | [Word guess](10-word-guess.md) | M2 | Draft |
+| 10 | [Trivia](10-trivia.md) | M2 | Draft |
 | 11 | [Live session engine](11-live-sessions.md) | M3 | Draft |
 | 12 | [Buzzer and Jeopardy](12-buzzer-jeopardy.md) | M3 | Draft |
 | 13 | [Photos, triage, votes and recap](13-photos-and-recap.md) | M2 | Draft |
 | 14 | [Motion and celebrations](14-motion-and-celebrations.md) | M0 | Done |
+| 15 | [Game codes and hidden games](15-game-codes.md) | M2 | Draft |

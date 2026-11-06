@@ -7,7 +7,6 @@ Move answered ones to the bottom with the answer.
 
 | # | Question | Blocks | Default until answered |
 |---|----------|--------|------------------------|
-| Q6 | Which solo games for the party, beyond word guess and photo challenge? | Backlog M2 | Decide after word guess ships |
 | Q7 | Is Jeopardy the only live session type for the party? | Spec 11, 12 | Yes |
 | Q8 | Should players see the full leaderboard on their phones, or only top 10 and their own rank? | Spec 05 | Top 10 plus own rank, refreshed every 15 s |
 | Q9 | Sound on the display (buzz sound, correct or wrong stings)? | Spec 05, 12 | Yes on display, off on phones |
@@ -49,3 +48,4 @@ Move answered ones to the bottom with the answer.
 | A24 | Before start? (spec 01) | Players can join early; games unlock at the start (or when opened early). |
 | A25 | Party time? (was Q22) | Saturday Dec 19, 4:30 pm Eastern. No automatic start or end: Khai starts and ends it by hand (ADR-024). |
 | A15 | Photo storage over time? | Back up and clear photos after each event; checklist reminder before each event (ADR-012). |
+| A26 | Solo games for the party? (was Q6) | Trivia with placeholder questions for now; no word guess. Photo challenge and the ornament hunt stay. |

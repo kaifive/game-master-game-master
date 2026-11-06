@@ -2,27 +2,83 @@
 
 **Status:** Draft
 **Backlog:** M2
-**Depends on:** 04
+**Depends on:** 01, 02
 
 ## Summary
 
-The contract every game type follows (ADR-007): pure logic, a content shape, and a themeable renderer. Scored solo games run their logic on the server through one shared move route, so answers never reach the client.
+The contract every game type follows (ADR-007): pure logic, a content shape, and a themeable renderer. Scored solo games run their logic on the server through one shared move route, so answers never reach the phone. Trivia (spec 10) is the first game built on it.
 
-## In scope (first pass)
+## User stories
 
-- `GameType` interface: `create(content, seed)`, `applyMove(state, move)`, `isOver(state)`, `score(state, scoring)`, `publicView(state)`
-- Registry of game types; event config validation per type
-- `POST /api/[slug]/games/[gameId]/move` runs logic server-side and stores `plays/{gameId}_{uid}`
-- Score once per player per game; replays are practice
-- Open and close times; admin can open or close any game
-- Game codes (ADR-020): `open` codes jump straight to a game; `unlock` codes reveal hidden or locked games, per player or for the whole event; codes from `/join`, the hub's code box or `?code=`; rate-limited; codes never sent to clients
-- Admin: see each game's codes and their hiding-place labels, generate or rotate a code, show a code on the TV
-- Player hub game list with done, new and locked states
+- As a player, I want to tap a game on the hub, play it, and see my points.
+- As Khai, I want to add a new game type without touching the others.
 
-## Open questions
+## Behavior
 
-- Should practice replays exist at all for the party, or one play per game?
+1. A game type lives in `lib/games/<type>/`: `content.ts` (zod schema for the event file's `content`), `logic.ts` (pure), and a renderer in `components/games/<type>/`. The registry (`lib/games/registry.ts`) maps `type` to it. Event files are checked against each game's content schema at build time (spec 01's validator).
+2. The logic contract (`GameLogic`):
+   - `create(content, ctx)` → the starting state. `ctx` gives `seed` and `now` (ms), so logic stays pure and testable.
+   - `view(state, ctx)` → what the phone may see. Never contains answers that haven't been played.
+   - `move(state, move, ctx)` → the next state, or an `invalid` result with a message.
+   - `isOver(state)`, and `score(state, scoring)` → points earned.
+3. A play is one player's run at one game: `plays/{gameId}_{playerId}` (`reference/data-model.md`). The server owns its state.
+4. **One play per player per game.** No practice replays. Opening a game you've finished shows your result.
+5. Leaving mid-game and coming back resumes the same play. Anything timed keeps running while you're away.
+6. **Score once:** when a play ends, its points are fixed and `scored: true` is set in the same transaction. Spec 04 turns that into a ledger award; until spec 04 ships, the points show on the result screen only.
+7. A game is playable only while the event is `live`, by a player on the calling device. Before the start it shows "This game opens when the host starts the party."; after the end, "This game has closed."
+8. The hub's game list shows each game as **Play**, **Continue** (started), **Done · +N** (finished) or **Locked** (event not live), for the active player.
+9. The game page shows which player is playing and lets the hub's switcher change it.
+
+## Data
+
+- `events/{slug}/plays/{gameId}_{playerId}`: `playerId`, `deviceUid`, `gameId`, `state` (game type's), `status: "playing" | "finished"`, `points`, `scored`, `startedAt`, `finishedAt`.
+- Every move is a Firestore transaction on the play document, so a double tap can't apply twice: each move carries the step it answers (`step`), and a move for an old step is ignored and returns the current view.
+
+## Routes
+
+All need the device token (spec 02) and an active player on that device.
+
+- `GET /api/events/[slug]/plays?playerId=` → `{ plays: { [gameId]: { status, points } } }` for the hub.
+- `POST /api/events/[slug]/games/[gameId]/play` with `{ playerId }` → starts or resumes the play: `{ view, status, points }`.
+- `POST /api/events/[slug]/games/[gameId]/move` with `{ playerId, step, move }` → `{ view, status, points }`.
+- Errors: `403 FORBIDDEN` (event not live, not this device's player), `404 NOT_FOUND` (event, game, player), `400 BAD_REQUEST` (invalid move).
+
+## UI
+
+Player phone, in the event's pack: game header (title, "Playing as"), the game's renderer, and a result screen with the pack's `ScoreCard` and a celebration moment (spec 14) when points land. Back to the hub at any time.
+
+## Edge cases
+
+- Double tap: the step check makes the second move a no-op.
+- Two phones, same player: impossible, players live on one device.
+- Reload mid-question: resumes; the timer didn't stop.
+- Event ended mid-play: further moves are refused; points already fixed stay.
 
 ## Acceptance criteria
 
-To be written when this spec moves to `Ready`.
+- [ ] AC-1: Every game in an event file is validated against its type's content schema, with errors naming the file, game and field.
+- [ ] AC-2: The move route runs the game's logic on the server; the phone's view never contains an answer it hasn't played.
+- [ ] AC-3: A player has one play per game: starting again resumes it, and a finished play shows its result instead of a new game.
+- [ ] AC-4: A play's points are fixed once, when it ends (`scored: true`), and never change after.
+- [ ] AC-5: A move for an old step (double tap) changes nothing and returns the current view.
+- [ ] AC-6: Games can be played only while the event is live, by a player on the calling device.
+- [ ] AC-7: The hub lists each game as Play, Continue, Done · +N or Locked for the active player.
+- [ ] AC-8: The memory and Firebase play repos pass the same contract.
+
+## Tests
+
+- Unit: registry and content validation, the play service with memory repos and a fake clock.
+- Contract: `lib/games/repo.contract.ts` against memory and Firestore emulator.
+- Component: hub game states, game page shell.
+- E2E: join, play trivia to the end, see the result, reopen it.
+
+## Out of scope
+
+- Ledger awards (spec 04), team awards and `awardTo: "team"`.
+- Open and close times, and the admin opening or closing a game (spec 07).
+- Game codes, hidden games and scavenger hunts: spec 15.
+- Practice replays.
+
+## Open questions
+
+- None open.
