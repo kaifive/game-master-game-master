@@ -19,7 +19,7 @@ async function playToEnd(page: Page) {
   }
 }
 
-test("S08-AC9 S08-AC11 S08-AC13 S08-AC15 S10-AC6: play before the start, see the score and the header total", async ({
+test("S04-AC7 S08-AC9 S08-AC11 S08-AC13 S08-AC15 S10-AC6: play before the start, see the score and the header total", async ({
   page,
 }) => {
   await joinParty(page);

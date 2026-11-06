@@ -1,6 +1,7 @@
 import "server-only";
 import { backend } from "@/lib/backend";
 import { eventRuntime, requireEvent } from "@/lib/events/server";
+import { pointsDeps, removeFromBoard } from "@/lib/points/server";
 import { deviceUid } from "./identity";
 import type { Identity, JoinBody } from "./model";
 import { playersRuntime } from "./runtime";
@@ -15,6 +16,7 @@ function deps(): PlayerDeps {
     status: (slug) => runtime.status(slug),
     // Teams and captains arrive with spec 03; until then nobody is a captain.
     isCaptain: () => Promise.resolve(false),
+    onForfeit: (slug, playerId) => removeFromBoard(pointsDeps(), slug, playerId),
   };
 }
 

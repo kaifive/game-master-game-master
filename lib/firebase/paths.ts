@@ -42,6 +42,12 @@ export const rtdb = {
   presence: (s: string, uid: string) => `presence/${slug(s)}/${id(uid)}`,
   presenceAll: (s: string) => `presence/${slug(s)}`,
   leaderboard: (s: string) => `leaderboard/${slug(s)}`,
+  leaderboardPlayers: (s: string) => `leaderboard/${slug(s)}/players`,
+  leaderboardPlayer: (s: string, playerId: string) =>
+    `leaderboard/${slug(s)}/players/${id(playerId)}`,
+  leaderboardRecent: (s: string) => `leaderboard/${slug(s)}/recent`,
+  leaderboardRecentEntry: (s: string, entryId: string) =>
+    `leaderboard/${slug(s)}/recent/${id(entryId)}`,
   liveSession: (s: string) => `live/${slug(s)}/session`,
   captain: (s: string, teamId: string) => `live/${slug(s)}/captains/${id(teamId)}`,
   buzzes: (s: string, roundId: string) => `live/${slug(s)}/buzzes/${id(roundId)}`,

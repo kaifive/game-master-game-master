@@ -8,10 +8,6 @@ Move answered ones to the bottom with the answer.
 | # | Question | Blocks | Default until answered |
 |---|----------|--------|------------------------|
 | Q7 | Is Jeopardy the only live session type for the party? | Spec 11, 12 | Yes |
-| Q8 | Should players see the full leaderboard on their phones, or only top 10 and their own rank? | Spec 05 | Top 10 plus own rank, refreshed every 15 s |
-| Q9 | Sound on the display (buzz sound, correct or wrong stings)? | Spec 05, 12 | Yes on display, off on phones |
-| Q14 | Can a player donate to a team and also be on a different team? | Spec 04 | Yes, any player can donate to any team |
-| Q15 | In the team phase, do solo game points still go to the player (and so count for their team)? | Spec 04 | Yes |
 | Q16 | Can a captain lead a team without anyone else joining? | Spec 03 | Yes |
 | Q17 | Photo vote: can players vote for their own team's photo? | Spec 13 | No |
 | Q18 | Automatic photo screening with AI later? Costs roughly $1 per few hundred photos. | ADR-010 | Not for the party |
@@ -49,3 +45,8 @@ Move answered ones to the bottom with the answer.
 | A25 | Party time? (was Q22) | Saturday Dec 19, 4:30 pm Eastern. No automatic start or end: Khai starts and ends it by hand (ADR-024). |
 | A15 | Photo storage over time? | Back up and clear photos after each event; checklist reminder before each event (ADR-012). |
 | A26 | Solo games for the party? (was Q6) | Trivia with placeholder questions for now; no word guess. Photo challenge and the ornament hunt stay. |
+| A27 | Phone leaderboard? (was Q8) | Top 10 plus your own rank. |
+| A28 | Sound on the display? (was Q9) | No sound. |
+| A29 | Donate to a team you're not on? (was Q14) | Yes. |
+| A30 | Solo points in the team phase? (was Q15) | Still go to the player, so they count for their team. |
+| A31 | Showing a replay improvement? | A "+10 new best" toast on the TV, and the row slides up. |

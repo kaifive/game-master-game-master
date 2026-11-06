@@ -9,7 +9,10 @@ import { deviceView, joinEvent, type PlayerDeps } from "./service";
 const event: EventConfig = { ...holiday2026, restartsPerDevice: 1, blockedNames: ["grinch"] };
 const CODE = event.joinCode;
 
+const forfeited: string[] = [];
+
 function setup(status: EventStatus = "upcoming", banned: string[] = [], captains: string[] = []) {
+  forfeited.length = 0;
   const players = new MemoryPlayerRepo({
     banned: banned.map((uid) => ({ slug: event.slug, uid })),
   });
@@ -17,6 +20,10 @@ function setup(status: EventStatus = "upcoming", banned: string[] = [], captains
     players,
     status: () => Promise.resolve(status),
     isCaptain: (_slug, id) => Promise.resolve(captains.includes(id)),
+    onForfeit: (_slug, id) => {
+      forfeited.push(id);
+      return Promise.resolve();
+    },
   };
   return deps;
 }
@@ -75,6 +82,7 @@ describe("joinEvent", () => {
     const mai = await joinEvent(deps, event, "deviceA1", { nickname: "Mai", code: CODE });
     const bao = await joinEvent(deps, event, "deviceA1", { nickname: "Bao", restart: true });
     expect(bao.id).not.toBe(mai.id);
+    expect(forfeited).toEqual([mai.id]); // S04-AC5: off the leaderboard
     expect(await deviceView(deps, event, "deviceA1")).toEqual({
       banned: false,
       player: bao,

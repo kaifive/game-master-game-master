@@ -9,6 +9,8 @@ export type PlayerDeps = {
   status: (slug: string) => Promise<EventStatus>;
   /** Whether a player leads a team (spec 03); captains can't start over. */
   isCaptain: (slug: string, playerId: string) => Promise<boolean>;
+  /** A player was replaced by starting over: take them off the leaderboard (S04-AC5). */
+  onForfeit: (slug: string, playerId: string) => Promise<void>;
 };
 
 const forbidden = (message: string, reason: string) =>
@@ -49,7 +51,9 @@ export async function joinEvent(
     if (!device.player) throw new AppError("BAD_REQUEST", MESSAGES.nothingToRestart);
     if (await deps.isCaptain(event.slug, device.player.id))
       throw forbidden(MESSAGES.captain, "captain");
-    return deps.players.restart(event.slug, uid, player, event.restartsPerDevice);
+    const next = await deps.players.restart(event.slug, uid, player, event.restartsPerDevice);
+    await deps.onForfeit(event.slug, device.player.id);
+    return next;
   }
   if (!device.player && device.restarts === 0 && !codeMatches(body.code, event.joinCode))
     throw forbidden(MESSAGES.wrongCode, "code");

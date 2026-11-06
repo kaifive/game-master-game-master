@@ -7,10 +7,10 @@ import {
   type EventStatus,
   type GameConfig,
 } from "@/lib/events";
-import type { PlayerRepo } from "@/lib/players";
+import type { PlayerRepo, PlayerSummary } from "@/lib/players";
 import type { AnyGameLogic, HubPlays, Instructions, PlayResponse } from "./model";
 import { gameLogic } from "./registry";
-import type { PlayRecord, PlayRepo } from "./repo";
+import type { PlayChange, PlayRecord, PlayRepo } from "./repo";
 
 export type GameDeps = {
   plays: PlayRepo;
@@ -18,6 +18,19 @@ export type GameDeps = {
   status: (slug: string) => Promise<EventStatus>;
   now: () => number;
   seed: () => number;
+  /** A run finished with a new best: award the improvement (spec 04, S04-AC1). */
+  onBest: (slug: string, player: PlayerSummary, run: FinishedRun) => Promise<void>;
+  /** The player's points from the ledger (S04-AC7). */
+  pointsOf: (slug: string, playerId: string) => Promise<number>;
+};
+
+/** A run that just finished, and how much it beat the player's best by. */
+export type FinishedRun = {
+  gameId: string;
+  title: string;
+  run: number;
+  gain: number;
+  replay: boolean;
 };
 
 export const StartBody = z.object({
@@ -37,6 +50,36 @@ export const GAME_CLOSED: Record<Exclude<EventStatus, "live">, string> = {
 };
 
 type Ready = { game: GameConfig; logic: AnyGameLogic; content: unknown; points: number };
+type Guarded = Ready & { player: PlayerSummary };
+
+/**
+ * Changes a play and, when that change finishes a run with a new best,
+ * awards the improvement after the play is saved (S04-AC1).
+ */
+async function changePlay(
+  deps: GameDeps,
+  event: EventConfig,
+  gameId: string,
+  r: Guarded,
+  change: PlayChange,
+): Promise<PlayRecord | null> {
+  const finished: { run: FinishedRun | null } = { run: null };
+  const play = await deps.plays.update(event.slug, gameId, r.player.id, (cur) => {
+    finished.run = null;
+    const next = change(cur);
+    if (cur?.status === "playing" && next?.status === "finished")
+      finished.run = {
+        gameId,
+        title: r.game.title,
+        run: cur.runs,
+        gain: next.best - cur.best,
+        replay: cur.runs > 1,
+      };
+    return next;
+  });
+  if (finished.run && finished.run.gain > 0) await deps.onBest(event.slug, r.player, finished.run);
+  return play;
+}
 
 /** The solo games with logic that a page can play (spec 08). */
 export function playable(event: EventConfig, gameId: string): Omit<Ready, "points"> | null {
@@ -53,10 +96,16 @@ export function instructionsFor(event: EventConfig, gameId: string): Instruction
   return ready.game.instructions ?? ready.logic.instructions(ready.content);
 }
 
-async function ownsPlayer(deps: GameDeps, event: EventConfig, uid: string, playerId: string) {
+async function ownsPlayer(
+  deps: GameDeps,
+  event: EventConfig,
+  uid: string,
+  playerId: string,
+): Promise<PlayerSummary> {
   const device = await deps.players.device(event.slug, uid);
-  if (device.banned || device.player?.id !== playerId)
+  if (device.banned || !device.player || device.player.id !== playerId)
     throw new AppError("FORBIDDEN", "That player isn't on this phone.");
+  return device.player;
 }
 
 /** Game playable and open now, player on this phone (S08-AC6, AC13). */
@@ -72,8 +121,8 @@ async function guard(
   const status = await deps.status(event.slug);
   if (!gameOpen(status, ready.game))
     throw new AppError("FORBIDDEN", GAME_CLOSED[status === "ended" ? "ended" : "upcoming"]);
-  await ownsPlayer(deps, event, uid, playerId);
-  return { ...ready, points: pointsFor(event, ready.game) };
+  const player = await ownsPlayer(deps, event, uid, playerId);
+  return { ...ready, player, points: pointsFor(event, ready.game) };
 }
 
 /** Fixes a run's points when it ends; the best run is the player's score (S08-AC4, AC12). */
@@ -122,7 +171,7 @@ export async function startPlay(
       points: 0,
     };
   };
-  const play = await deps.plays.update(event.slug, gameId, body.playerId, (cur) => {
+  const play = await changePlay(deps, event, gameId, r, (cur) => {
     if (!cur)
       return {
         gameId,
@@ -154,7 +203,7 @@ export async function makeMove(
 ): Promise<PlayResponse> {
   const r = await guard(deps, event, uid, gameId, body.playerId);
   const now = deps.now();
-  const play = await deps.plays.update(event.slug, gameId, body.playerId, (cur) => {
+  const play = await changePlay(deps, event, gameId, r, (cur) => {
     if (!cur) throw new AppError("NOT_FOUND", "Start the game first.");
     if (cur.status === "finished") return null;
     const ticked = r.logic.tick(cur.state, r.content, { now });
@@ -174,10 +223,10 @@ export async function hubPlays(
   event: EventConfig,
   uid: string,
   playerId: string,
-): Promise<{ plays: HubPlays }> {
+): Promise<{ plays: HubPlays; total: number }> {
   await ownsPlayer(deps, event, uid, playerId);
   const plays: HubPlays = {};
   for (const p of await deps.plays.forPlayer(event.slug, playerId))
     plays[p.gameId] = { status: p.status, best: p.best, runs: p.runs };
-  return { plays };
+  return { plays, total: await deps.pointsOf(event.slug, playerId) };
 }
