@@ -1,5 +1,6 @@
 import { gameAwardId, type BoardRow, type EntrySource, type LedgerEntry } from "./model";
 import type { BoardRepo, PointsRepo } from "./repo";
+import { rank, standingsFor, TOP } from "./rules";
 
 export type PointsDeps = { points: PointsRepo; board: BoardRepo; now: () => number };
 
@@ -120,4 +121,24 @@ export async function rebuild(
     slug,
     players.map((p) => row(p, totals.get(p.id) ?? 0)),
   );
+}
+
+/** The phone's leaderboard: top 10 and the player's own place (S05-AC2). */
+export async function phoneStandings(deps: PointsDeps, slug: string, playerId: string | null) {
+  return standingsFor((await deps.board.read(slug)).players, playerId);
+}
+
+/** The display's leaderboard and the latest awards (S05-AC4, AC5). */
+export async function displayStandings(deps: PointsDeps, slug: string) {
+  const board = await deps.board.read(slug);
+  return {
+    players: rank(board.players).slice(0, TOP),
+    recent: board.recent.map(({ id, nickname, points, reason, at }) => ({
+      id,
+      nickname,
+      points,
+      reason,
+      at,
+    })),
+  };
 }
