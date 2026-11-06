@@ -26,8 +26,8 @@ list whenever a new event file is added.
 - [ ] Name filter reviewed for this crowd (add club or local words).
 - [ ] The event's `replayable` and each game's `alwaysOpen` decided. Games left
       `alwaysOpen` for testing let people play (and score) before the start.
-- [ ] Test players and plays from before the party cleared (ask Khai first:
-      it deletes data).
+- [ ] Test players and plays from before the party cleared with **Clear test
+      data** in Controls (it deletes them for good).
 
 ## On the day
 
