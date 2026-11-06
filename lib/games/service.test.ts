@@ -250,6 +250,13 @@ describe("game service", () => {
     ]);
   });
 
+  it("S04-AC6: a failed award doesn't break the finish; the play is saved", async () => {
+    deps.onBest = () => Promise.reject(new Error("realtime database down"));
+    const done = await playThrough();
+    expect(done.status).toBe("finished");
+    expect((await deps.plays.get(event.slug, "trivia", playerId))?.status).toBe("finished");
+  });
+
   it("S08-AC13: an alwaysOpen game can be played before the start; every game closes at the end", async () => {
     const open: EventConfig = {
       ...event,

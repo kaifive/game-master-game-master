@@ -82,7 +82,14 @@ export function CountUp({ value, duration }: { value: number; duration?: number 
   );
 }
 
-export type BarRaceEntry = { id: string; name: string; score: number; team?: number };
+/** `rank` lets ties share a place (spec 05); without it, rows number 1, 2, 3. */
+export type BarRaceEntry = {
+  id: string;
+  name: string;
+  score: number;
+  team?: number;
+  rank?: number;
+};
 
 /** Ranked bars that grow, swap places and count up as scores change. */
 export function BarRace({ label, entries }: { label: string; entries: BarRaceEntry[] }) {
@@ -96,11 +103,11 @@ export function BarRace({ label, entries }: { label: string; entries: BarRaceEnt
         <li
           key={e.id}
           ref={flip(e.id)}
-          aria-label={`${i + 1}. ${e.name}, ${fmt(e.score)} points`}
+          aria-label={`${String(e.rank ?? i + 1)}. ${e.name}, ${fmt(e.score)} points`}
           className="grid grid-cols-[2.5rem_1fr] items-center gap-3"
         >
           <span aria-hidden="true" className="font-gm-display text-3xl font-bold text-gm-accent">
-            {i + 1}
+            {e.rank ?? i + 1}
           </span>
           <div aria-hidden="true" className="min-w-0">
             <div

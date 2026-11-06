@@ -31,7 +31,7 @@ A feature item needs its spec at `Ready` before it starts.
 - [x] Spec 02, player join: devices, one player per phone with limited restarts (ADR-027), join code, name filter (kick and ban moved to spec 07)
 - [x] Spec 04, points ledger: awards, voids, totals, rebuild (donations with spec 03)
 - [ ] Spec 03, teams: phases, captains, team names, one-tap join
-- [ ] Spec 05, leaderboard and display
+- [x] Spec 05, leaderboard and display (individual; teams with spec 03, modes with spec 07)
 - [ ] Spec 07, controls (includes the event library at `/admin`, Start and End): players by device, "new since you looked", phases, manual awards
 
 ## M2: Solo games and photos (by Dec 6)

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AppError } from "@/lib/errors";
+import { log } from "@/lib/log";
 import {
   gameOpen,
   pointsFor,
@@ -77,7 +78,11 @@ async function changePlay(
       };
     return next;
   });
-  if (finished.run && finished.run.gain > 0) await deps.onBest(event.slug, r.player, finished.run);
+  // The play is saved either way; a failed award is logged and rebuild restores it (S04-AC6).
+  if (finished.run && finished.run.gain > 0)
+    await deps.onBest(event.slug, r.player, finished.run).catch((err: unknown) => {
+      log.error("game award failed", { slug: event.slug, gameId, playerId: r.player.id, err });
+    });
   return play;
 }
 

@@ -148,15 +148,17 @@ describe("S08-AC7: the hub lists each game for the active player", () => {
       vi.fn((url: string) =>
         Promise.resolve(
           Response.json(
-            url.includes("/plays")
-              ? {
-                  plays: {
-                    trivia: { status: "finished", best: 80, runs: 2 },
-                    "ornament-hunt": { status: "playing", best: 0, runs: 1 },
-                  },
-                  total: 80,
-                }
-              : { banned: false, player: { id: "p1", nickname: "Mai" }, restartsLeft: 1 },
+            url.includes("/leaderboard")
+              ? { top: [], me: null }
+              : url.includes("/plays")
+                ? {
+                    plays: {
+                      trivia: { status: "finished", best: 80, runs: 2 },
+                      "ornament-hunt": { status: "playing", best: 0, runs: 1 },
+                    },
+                    total: 80,
+                  }
+                : { banned: false, player: { id: "p1", nickname: "Mai" }, restartsLeft: 1 },
           ),
         ),
       ),

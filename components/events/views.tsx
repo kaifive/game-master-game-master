@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { GamePlayer } from "@/components/games/game-player";
+import { PhoneLeaderboard } from "@/components/leaderboard/phone-leaderboard";
 import { useOptionalDevice } from "@/components/players/device";
 import { PlayerHub } from "@/components/players/hub";
 import { TotalScore } from "@/components/players/total-score";
@@ -90,6 +91,7 @@ export function UpcomingView({ event }: { event: PublicEvent }) {
             : "Waiting for the host to start the games."}
         </p>
         <GameList event={event} status="upcoming" />
+        <PhoneLeaderboard slug={event.slug} />
       </Body>
     </>
   );
@@ -103,6 +105,7 @@ export function LiveView({ event }: { event: PublicEvent }) {
       <Body>
         <Hub />
         <GameList event={event} status="live" />
+        <PhoneLeaderboard slug={event.slug} />
       </Body>
     </>
   );
