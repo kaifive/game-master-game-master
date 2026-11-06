@@ -6,13 +6,14 @@ import { holiday2026 } from "@/content/events/holiday-2026";
 import { isAppError } from "@/lib/errors";
 import { checkNickname, codeMatches, MemoryPlayerRepo, MESSAGES } from "@/lib/players";
 import { DeviceProvider } from "./device";
-import { PlayerHub } from "./hub";
+import { forfeitMessage, PlayerHub } from "./hub";
 
 vi.mock("@/components/motion/confetti", () => ({ fireConfetti: vi.fn() }));
 const search = vi.hoisted(() => ({ params: new URLSearchParams() }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => search.params }));
 
 const SLUG = holiday2026.slug;
+const RESTARTS = 1;
 
 /** A stand-in for the player routes, backed by the memory repo. */
 function fakeServer(banned: string[] = []) {
@@ -20,21 +21,30 @@ function fakeServer(banned: string[] = []) {
   const reply = (status: number, body: unknown) => Promise.resolve(Response.json(body, { status }));
   const fetch = vi.fn(async (url: string, init: RequestInit = {}) => {
     const uid = new Headers(init.headers).get("authorization")?.replace("Bearer dev:", "") ?? "";
-    if (url.endsWith("/device")) return reply(200, await repo.device(SLUG, uid));
     if (url.includes("/plays")) return reply(200, { plays: {} });
-    const body = JSON.parse(init.body as string) as { nickname: string; code?: string };
+    const d = await repo.device(SLUG, uid);
+    if (url.endsWith("/device"))
+      return reply(200, {
+        banned: d.banned,
+        player: d.player,
+        restartsLeft: RESTARTS - d.restarts,
+      });
+    const body = JSON.parse(init.body as string) as {
+      nickname: string;
+      code?: string;
+      restart?: boolean;
+    };
     const name = checkNickname(body.nickname);
     if (!name.ok) return reply(400, { error: name.message });
-    const device = await repo.device(SLUG, uid);
-    if (device.players.length === 0 && !codeMatches(body.code, holiday2026.joinCode))
+    if (!body.restart && !d.player && !codeMatches(body.code, holiday2026.joinCode))
       return reply(403, { error: MESSAGES.wrongCode });
+    const player = { nickname: name.nickname, key: name.key };
     try {
-      const player = await repo.join(SLUG, uid, {
-        nickname: name.nickname,
-        key: name.key,
-        maxPerDevice: 2,
+      return await reply(201, {
+        player: body.restart
+          ? await repo.restart(SLUG, uid, player, RESTARTS)
+          : await repo.join(SLUG, uid, player),
       });
-      return await reply(201, { player });
     } catch (err) {
       return reply(isAppError(err) ? err.status : 500, {
         error: isAppError(err) ? err.message : "?",
@@ -45,12 +55,12 @@ function fakeServer(banned: string[] = []) {
   return fetch;
 }
 
-const hub = (props: { code?: string } = {}) => {
+const hub = (props: { code?: string; hasTeams?: boolean } = {}) => {
   search.params = new URLSearchParams(props.code ? { code: props.code } : {});
   return render(
     <PackRoot styleRef={holiday2026.style}>
       <DeviceProvider slug={SLUG} identity="dev">
-        <PlayerHub maxPlayers={2} />
+        <PlayerHub hasTeams={props.hasTeams ?? false} />
       </DeviceProvider>
     </PackRoot>,
   );
@@ -117,31 +127,52 @@ describe("PlayerHub", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(MESSAGES.taken);
   });
 
-  test("S02-AC6 S02-AC7: add a second player without a code, switch back, and the limit hides Add", async () => {
+  test("S02-AC6: one player per phone: no Add player or Switch player", async () => {
+    fakeServer();
+    hub({ code: "WUSH7" });
+    await joinAs("Mai");
+    await screen.findByText("Playing as");
+    expect(screen.queryByRole("button", { name: /Add player|Switch player/ })).toBeNull();
+  });
+
+  test("S02-AC7: starting over warns about the points, then makes a new player", async () => {
     fakeServer();
     hub({ code: "WUSH7" });
     const user = await joinAs("Mai");
-    await user.click(await screen.findByRole("button", { name: "Add player" }));
+    await user.click(await screen.findByRole("button", { name: "Not you? Start over" }));
+    const confirm = screen.getByRole("alertdialog", { name: "Start over?" });
+    expect(confirm).toHaveTextContent(
+      "Mai's 0 points will be lost. This phone can only start over once",
+    );
+    await user.click(screen.getByRole("button", { name: "Keep Mai" }));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Not you? Start over" }));
+    await user.click(screen.getByRole("button", { name: "Start over" }));
+    expect(screen.getByRole("heading", { name: "Start over" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Party code")).toBeNull();
     await joinAs("Bao");
     expect(await screen.findByText("Bao")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Add player" })).toBeNull();
-    await user.click(screen.getByRole("button", { name: "Switch player" }));
-    await user.click(screen.getByRole("button", { name: "Mai" }));
-    expect(screen.getByText("Mai")).toBeInTheDocument();
-    expect(localStorage.getItem(`gm.active.${SLUG}`)).toMatch(/^p/);
+    // The limit is used up, so the option is gone.
+    expect(screen.queryByRole("button", { name: "Not you? Start over" })).toBeNull();
   });
 
-  test("S02-AC7: the active player is remembered on this phone", async () => {
+  test("S02-AC7: the warning mentions donations only when the event has teams", () => {
+    expect(forfeitMessage("Mai", 140, true, 1)).toBe(
+      "Mai's 140 points will be lost, including any given to teams. This phone can only start over once at this party.",
+    );
+    expect(forfeitMessage("Mai", 140, false, 2)).toBe(
+      "Mai's 140 points will be lost. This phone can only start over 2 times at this party.",
+    );
+  });
+
+  test("S02-AC1 S02-AC8: reopening on the same phone shows its player", async () => {
     fakeServer();
     const first = hub({ code: "WUSH7" });
-    const user = await joinAs("Mai");
-    await user.click(await screen.findByRole("button", { name: "Add player" }));
-    await joinAs("Bao");
-    await screen.findByText("Bao");
+    await joinAs("Mai");
+    await screen.findByText("Playing as");
     first.unmount();
     hub();
-    expect(await screen.findByText("Bao")).toBeInTheDocument();
+    expect(await screen.findByText("Mai")).toBeInTheDocument();
   });
 
   test("S02-AC9: a banned phone sees why it can't join", async () => {

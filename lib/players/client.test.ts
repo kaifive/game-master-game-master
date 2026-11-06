@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { activePlayer, deviceToken, devToken, playersApi } from "./client";
+import { deviceToken, devToken, playersApi } from "./client";
 
 vi.mock("@/lib/firebase/device", () => ({
   firebaseDeviceToken: () => Promise.resolve("fb-token"),
@@ -32,10 +32,6 @@ describe("phone helpers", () => {
       throw new Error("blocked");
     });
     expect(devToken()).toMatch(/^dev:/);
-    expect(activePlayer.read("holiday-2026")).toBeNull();
-    expect(() => {
-      activePlayer.write("holiday-2026", "p1");
-    }).not.toThrow();
   });
 
   it("returns the server's message, or a plain one when there is none", async () => {

@@ -19,6 +19,8 @@ Events can be individual, team or both (ADR-011). In a `both` event the admin mo
 - Captains are mirrored to `live/{slug}/captains` for buzzer rules
 - Team-only events start in the team phase
 
+- Captains can't start over (ADR-027); `isCaptain` in the player service is wired here.
+
 ## Open questions
 
 - Q16: can a team have only its captain? Is there a max team size?

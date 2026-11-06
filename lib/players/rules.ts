@@ -13,7 +13,10 @@ export const MESSAGES = {
   wrongCode: "That code isn't right for this event.",
   banned: "This phone can't join this event.",
   ended: "This event has ended, so joining is closed.",
-  full: "This phone already has as many players as it can hold.",
+  hasPlayer: "This phone already has a player. Start over to play as someone new.",
+  noRestarts: "This phone can't start over again at this event.",
+  captain: "Team captains can't start over. Ask the host to hand your team to someone else first.",
+  nothingToRestart: "There's no player on this phone to start over from.",
   notSignedIn: "We couldn't recognize this phone. Reload the page and try again.",
 } as const;
 

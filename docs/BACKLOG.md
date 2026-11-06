@@ -28,7 +28,7 @@ A feature item needs its spec at `Ready` before it starts.
 
 - [x] Spec 01, events and routing: event files, manual status, code-box home, `/join`, event pages in their pack, final standings, not-found pages
 - [ ] Spec 06, admin auth: passphrase sign-in, admin claim, guarded routes
-- [x] Spec 02, player join: devices, several players per device, join code, name filter (kick and ban moved to spec 07)
+- [x] Spec 02, player join: devices, one player per phone with limited restarts (ADR-027), join code, name filter (kick and ban moved to spec 07)
 - [ ] Spec 04, points ledger: awards, donations, voids, totals, rebuild
 - [ ] Spec 03, teams: phases, captains, team names, one-tap join
 - [ ] Spec 05, leaderboard and display

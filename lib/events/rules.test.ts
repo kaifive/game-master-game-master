@@ -20,7 +20,7 @@ const valid: EventConfig = {
   joinCode: "XMAS7",
   joinPolicy: "open",
   scoring: "both",
-  maxPlayersPerDevice: 4,
+  restartsPerDevice: 1,
   soloGamePoints: 100,
   games: [
     {

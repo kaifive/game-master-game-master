@@ -7,9 +7,10 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Event** | One occasion Khai runs, such as the 2026 Wushu holiday party. Has a slug, a theme and a list of games. | `Event`, `event.slug` |
 | **Slug** | The short URL name of an event, such as `holiday-2026`. | `slug` |
 | **Library** | The list of every event, past and upcoming, at `/`. | |
-| **Device** | A browser with a lasting Firebase anonymous uid. Can hold several players per event. | `deviceUid` |
+| **Device** | A browser with a lasting Firebase anonymous uid. Has one player per event (ADR-027). | `deviceUid` |
 | **Player** | A person in one event. Lives on one device; a device can hold several (parent and kids). Not a global account. | `Player`, `playerId` |
-| **Switch player** | Changing which player a shared device is acting as. | |
+| **Start over** | Replacing a phone's player with a new one. The old player is forfeited; limited per phone by `restartsPerDevice`. | `restart` |
+| **Forfeited** | A player replaced by starting over: off the leaderboard, points lost, name freed. | `status: "forfeited"` |
 | **Nickname** | The name a player shows in an event. Unique within the event. | `player.nickname` |
 | **Join policy** | How an event admits players: `open` (instant, default) or `approval` (lobby). | `JoinPolicy` |
 | **Join code** | Short code on the QR poster and display, needed to join an event. | `joinCode` |

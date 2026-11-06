@@ -1,62 +1,99 @@
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, type DocumentReference, type Transaction } from "firebase-admin/firestore";
 import { firebaseAdmin, type FirebaseAdmin } from "@/lib/firebase/admin";
 import { fs } from "@/lib/firebase/paths";
-import type { DeviceView, PlayerSummary } from "./model";
-import type { NewPlayer, PlayerRepo } from "./repo";
+import type { PlayerSummary } from "./model";
+import type { NewPlayer, PlayerRepo, StoredDevice } from "./repo";
 import { joinErrors } from "./repo.errors";
 
-const ids = (value: unknown): string[] =>
-  Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
-
-/** Players in Firestore: devices, players and nicknames, joined in one transaction. */
+/** Players in Firestore: device, player and nickname change together in one transaction. */
 export class FirebasePlayerRepo implements PlayerRepo {
   constructor(private readonly admin: FirebaseAdmin) {}
 
-  async device(slug: string, uid: string): Promise<DeviceView> {
+  private refs(slug: string, uid: string, key: string) {
     const db = this.admin.firestore;
-    const device = await db.doc(fs.device(slug, uid)).get();
-    const playerIds = ids(device.get("playerIds"));
-    const docs = playerIds.length
-      ? await db.getAll(...playerIds.map((id) => db.doc(fs.player(slug, id))))
-      : [];
-    const players = docs
-      .filter((d) => d.exists && d.get("status") === "active")
-      .map((d) => ({ id: d.id, nickname: String(d.get("nickname")) }));
-    return { banned: device.get("banned") === true, players };
+    return { db, device: db.doc(fs.device(slug, uid)), nickname: db.doc(fs.nickname(slug, key)) };
   }
 
-  join(slug: string, uid: string, { nickname, key, maxPerDevice }: NewPlayer) {
-    const db = this.admin.firestore;
-    return db.runTransaction(async (tx): Promise<PlayerSummary> => {
-      const deviceRef = db.doc(fs.device(slug, uid));
-      const nicknameRef = db.doc(fs.nickname(slug, key));
-      const [device, taken] = await tx.getAll(deviceRef, nicknameRef);
-      if (device?.get("banned") === true) throw joinErrors.banned();
-      const playerIds = ids(device?.get("playerIds"));
-      if (taken?.exists) {
-        const owner = String(taken.get("playerId"));
-        if (!playerIds.includes(owner)) throw joinErrors.taken();
-        const mine = await tx.get(db.doc(fs.player(slug, owner)));
-        return { id: owner, nickname: String(mine.get("nickname")) };
+  private async currentPlayer(
+    tx: Transaction | null,
+    slug: string,
+    playerId: unknown,
+  ): Promise<PlayerSummary | null> {
+    if (typeof playerId !== "string") return null;
+    const ref = this.admin.firestore.doc(fs.player(slug, playerId));
+    const doc = tx ? await tx.get(ref) : await ref.get();
+    return doc.exists && doc.get("status") === "active"
+      ? { id: doc.id, nickname: String(doc.get("nickname")) }
+      : null;
+  }
+
+  async device(slug: string, uid: string): Promise<StoredDevice> {
+    const doc = await this.admin.firestore.doc(fs.device(slug, uid)).get();
+    return {
+      banned: doc.get("banned") === true,
+      player: await this.currentPlayer(null, slug, doc.get("playerId")),
+      restarts: Number(doc.get("restarts") ?? 0),
+    };
+  }
+
+  private create(
+    tx: Transaction,
+    slug: string,
+    uid: string,
+    device: DocumentReference,
+    nickname: DocumentReference,
+    player: NewPlayer,
+    restarts: number,
+  ): PlayerSummary {
+    const ref = this.admin.firestore.collection(fs.players(slug)).doc();
+    tx.create(ref, {
+      deviceUid: uid,
+      nickname: player.nickname,
+      nicknameKey: player.key,
+      status: "active",
+      teamId: null,
+      points: 0,
+      joinedAt: FieldValue.serverTimestamp(),
+    });
+    tx.set(nickname, { playerId: ref.id });
+    tx.set(
+      device,
+      { banned: false, playerId: ref.id, restarts, playerIds: FieldValue.arrayUnion(ref.id) },
+      { merge: true },
+    );
+    return { id: ref.id, nickname: player.nickname };
+  }
+
+  join(slug: string, uid: string, player: NewPlayer) {
+    const { db, device, nickname } = this.refs(slug, uid, player.key);
+    return db.runTransaction(async (tx) => {
+      const [d, taken] = await tx.getAll(device, nickname);
+      if (d?.get("banned") === true) throw joinErrors.banned();
+      const mine = await this.currentPlayer(tx, slug, d?.get("playerId"));
+      if (mine && taken?.get("playerId") === mine.id) return mine;
+      if (mine) throw joinErrors.hasPlayer();
+      if (taken?.exists) throw joinErrors.taken();
+      return this.create(tx, slug, uid, device, nickname, player, Number(d?.get("restarts") ?? 0));
+    });
+  }
+
+  restart(slug: string, uid: string, player: NewPlayer, maxRestarts: number) {
+    const { db, device, nickname } = this.refs(slug, uid, player.key);
+    return db.runTransaction(async (tx) => {
+      const [d, taken] = await tx.getAll(device, nickname);
+      if (d?.get("banned") === true) throw joinErrors.banned();
+      const restarts = Number(d?.get("restarts") ?? 0);
+      if (restarts >= maxRestarts) throw joinErrors.noRestarts();
+      const oldId: unknown = d?.get("playerId");
+      const old = typeof oldId === "string" ? await tx.get(db.doc(fs.player(slug, oldId))) : null;
+      if (taken?.exists && taken.get("playerId") !== oldId) throw joinErrors.taken();
+      if (old?.exists) {
+        tx.update(old.ref, { status: "forfeited", forfeitedAt: FieldValue.serverTimestamp() });
+        const oldKey: unknown = old.get("nicknameKey");
+        if (typeof oldKey === "string" && oldKey !== player.key)
+          tx.delete(db.doc(fs.nickname(slug, oldKey)));
       }
-      if (playerIds.length >= maxPerDevice) throw joinErrors.full();
-      const ref = db.collection(fs.players(slug)).doc();
-      tx.create(ref, {
-        deviceUid: uid,
-        nickname,
-        nicknameKey: key,
-        status: "active",
-        teamId: null,
-        points: 0,
-        joinedAt: FieldValue.serverTimestamp(),
-      });
-      tx.create(nicknameRef, { playerId: ref.id });
-      tx.set(
-        deviceRef,
-        { banned: false, playerIds: FieldValue.arrayUnion(ref.id) },
-        { merge: true },
-      );
-      return { id: ref.id, nickname };
+      return this.create(tx, slug, uid, device, nickname, player, restarts + 1);
     });
   }
 }
