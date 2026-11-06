@@ -1,7 +1,8 @@
 /** What every game renderer gets from the game page (spec 08). */
 export type GameRendererProps = {
   view: unknown;
-  onMove: (move: unknown) => void;
+  /** `notBefore` (epoch ms): hold the reply until then, so a request can go out early (S10-AC14). */
+  onMove: (move: unknown, options?: { notBefore?: number }) => void;
   /** The local timer ran out: the page asks the server for the timed-out view. */
   onTimeUp: () => void;
   busy: boolean;

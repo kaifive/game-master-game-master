@@ -3,6 +3,7 @@ import type { TriviaContent } from "./content";
 import {
   answerKey,
   GRACE_MS,
+  MAX_START_IN,
   readAnswerKey,
   trivia,
   type TriviaState,
@@ -121,6 +122,16 @@ describe("trivia", () => {
     let none = start();
     for (let i = 0; i < 3; i++) none = next(answerWrong(none, 0), 0);
     expect(trivia.view(none, content, at(0))).toMatchObject({ right: 0, avgSeconds: null });
+  });
+
+  it("S10-AC14: the next question's clock can start when the phone will show it", () => {
+    const answered = answerRight(start(), 1000);
+    const later = play(answered, { type: "next", startIn: 800 }, 1200);
+    expect(view(later, 1200)).toMatchObject({ number: 2, msLeft: 15_800 });
+    expect(view(later, 2000)).toMatchObject({ msLeft: 15_000 });
+    expect(
+      trivia.move(answered, content, { type: "next", startIn: MAX_START_IN + 1 }, at(1200)).ok,
+    ).toBe(false);
   });
 
   it("each question gets a fresh deadline when shown", () => {

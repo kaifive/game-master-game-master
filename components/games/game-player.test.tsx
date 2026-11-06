@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { PlayResponse } from "@/lib/games";
@@ -199,5 +199,37 @@ describe("GamePlayer", () => {
       expect(device.refreshPlays).toHaveBeenCalled();
     });
     expect(fly).not.toHaveBeenCalled();
+  });
+
+  test("S10-AC14: a reply asked for early waits until its moment", async () => {
+    api.plays.mockReturnValue(ok({ plays: { trivia: { status: "playing", best: 0, runs: 1 } } }));
+    api.start.mockReturnValue(
+      ok({
+        ...question,
+        view: {
+          ...(question.view as object),
+          kind: "answered",
+          chosen: 1,
+          correct: 1,
+          right: true,
+        },
+      }),
+    );
+    const second = {
+      ...question,
+      step: 2,
+      view: { ...(question.view as object), number: 2, prompt: "Second question?" },
+    };
+    api.move.mockReturnValue(ok(second));
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    page();
+    await screen.findByRole("status");
+    expect(api.move).toHaveBeenCalledTimes(1); // asked for straight away
+    expect(screen.queryByRole("heading", { name: "Second question?" })).toBeNull();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1100);
+    });
+    expect(await screen.findByRole("heading", { name: "Second question?" })).toBeInTheDocument();
+    vi.useRealTimers();
   });
 });

@@ -117,15 +117,40 @@ describe("TriviaGame timer", () => {
 });
 
 describe("TriviaGame pacing", () => {
-  test("S10-AC10: the next question comes on its own after the answer shows", () => {
-    vi.useFakeTimers();
+  test("S10-AC10 S10-AC14: once the answer's confirmed, the next question is asked for at once, to show when the pause ends", () => {
+    vi.useFakeTimers({ now: 10_000 });
     const onMove = vi.fn();
     show({ ...question(), kind: "answered", chosen: 1, correct: 1, right: true }, { onMove });
-    expect(onMove).not.toHaveBeenCalled();
+    expect(onMove).toHaveBeenCalledExactlyOnceWith(
+      { type: "next", startIn: REVEAL_MS },
+      { notBefore: 10_000 + REVEAL_MS },
+    );
+  });
+
+  test("S10-AC14: the pause counts from the tap, so a slow reply shortens the wait, not the next question", async () => {
+    vi.useFakeTimers({ now: 10_000, shouldAdvanceTime: true });
+    const onMove = vi.fn();
+    const { rerender } = show({ ...question(), key: answerKey(1, 2) }, { onMove });
+    await userEvent
+      .setup({ advanceTimers: vi.advanceTimersByTime })
+      .click(screen.getByRole("button", { name: "8" }));
+    const tappedAt = Date.now();
     act(() => {
-      vi.advanceTimersByTime(REVEAL_MS);
+      vi.advanceTimersByTime(600); // the server's reply takes 0.6 s
     });
-    expect(onMove).toHaveBeenCalledExactlyOnceWith({ type: "next" });
+    rerender(
+      <TriviaGame
+        view={{ ...question(), kind: "answered", chosen: 1, correct: 1, right: true }}
+        busy={false}
+        onMove={onMove}
+        onTimeUp={vi.fn()}
+      />,
+    );
+    const [move, options] = onMove.mock.calls[1] as [{ startIn: number }, { notBefore: number }];
+    // Counted from the tap, not from the reply 0.6 s later.
+    expect(options.notBefore).toBeGreaterThanOrEqual(10_000 + REVEAL_MS);
+    expect(options.notBefore).toBeLessThanOrEqual(tappedAt + REVEAL_MS);
+    expect(move.startIn).toBeLessThanOrEqual(REVEAL_MS - 600);
   });
 
   test("S10-AC10: no Next button, and a tap doesn't skip ahead", async () => {
@@ -135,7 +160,8 @@ describe("TriviaGame pacing", () => {
     await userEvent
       .setup()
       .click(screen.getByRole("heading", { name: "How many legs does a spider have?" }));
-    expect(onMove).not.toHaveBeenCalled();
+    // Only the automatic request for the next question; the tap adds nothing.
+    expect(onMove).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -152,7 +152,7 @@ export function GamePlayer({ gameId, type, instructions, replayable }: Props) {
     };
   }, [inProgress, setLeaveWarning]);
 
-  const move = async (m: unknown) => {
+  const move = async (m: unknown, options: { notBefore?: number } = {}) => {
     if (phase.kind !== "playing" || !playerId) return;
     setBusy(true);
     const res = await gamesApi.move(slug, gameId, await token(), {
@@ -160,12 +160,18 @@ export function GamePlayer({ gameId, type, instructions, replayable }: Props) {
       step: phase.play.step,
       move: m,
     });
-    setBusy(false);
-    setPhase(
-      res.ok
-        ? { kind: "playing", play: res.data, bestBefore: phase.bestBefore }
-        : { kind: "error", message: res.message },
-    );
+    const apply = () => {
+      setBusy(false);
+      setPhase(
+        res.ok
+          ? { kind: "playing", play: res.data, bestBefore: phase.bestBefore }
+          : { kind: "error", message: res.message },
+      );
+    };
+    // A reply that came back early waits for its moment, such as the end of an answer's pause.
+    const wait = (options.notBefore ?? 0) - Date.now();
+    if (res.ok && wait > 0) setTimeout(apply, wait);
+    else apply();
   };
 
   if (load.kind !== "ready" || (playerId && phase.kind === "checking"))
@@ -210,7 +216,7 @@ export function GamePlayer({ gameId, type, instructions, replayable }: Props) {
         <renderer.Play
           view={phase.play.view}
           busy={busy}
-          onMove={(m) => void move(m)}
+          onMove={(m, options) => void move(m, options)}
           onTimeUp={() => void begin()}
         />
       )}
