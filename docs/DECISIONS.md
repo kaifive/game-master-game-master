@@ -503,3 +503,21 @@ page scripts.
 `gm_admin`: an expiry and an HMAC-SHA256 signature keyed from the
 passphrase. HttpOnly, SameSite=Lax, Secure outside local runs, 7 days.
 Changing the passphrase signs everyone out. Sign-in is rate-limited per IP.
+
+## ADR-029: Trivia sends each question's answer, scrambled, for instant feedback
+
+**Status:** accepted. Narrows spec 08's "the phone never sees an answer it hasn't played" for trivia.
+
+A tap took about 0.8 s to show right or wrong, because the phone waited for
+the server. Khai chose instant feedback over keeping answers off the phone.
+
+**Decision:**
+- Each trivia question's view carries `key`: the right answer's position,
+  lightly scrambled. The phone reads it to mark the tapped answer right or
+  wrong at once; the server's reply then confirms it.
+- The server still checks every answer, applies the deadline and the speed
+  scoring, and keeps the score. The phone's verdict is only for show.
+- Only the current question's key is sent, never the whole round.
+- The trade-off: someone with browser developer tools could read the key
+  within the 10 seconds. That's hard on a phone at a family party and
+  accepted for now. Other game types keep answers on the server.

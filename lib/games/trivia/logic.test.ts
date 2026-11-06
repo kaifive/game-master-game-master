@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { TriviaContent } from "./content";
-import { GRACE_MS, trivia, type TriviaState, type TriviaView } from "./logic";
+import {
+  answerKey,
+  GRACE_MS,
+  readAnswerKey,
+  trivia,
+  type TriviaState,
+  type TriviaView,
+} from "./logic";
 
 const pool = (n: number): TriviaContent => ({
   questions: Array.from({ length: n }, (_, i) => ({
@@ -48,11 +55,20 @@ describe("trivia", () => {
     expect(new Set(orders).size).toBeGreaterThan(1);
   });
 
-  it("S10-AC2: the view has the prompt and choices but no answer", () => {
-    const v = view(start());
+  it("S10-AC2: the view has the prompt, the choices and only a scrambled key to the answer", () => {
+    const v = view(start()) as Extract<TriviaView, { kind: "question" }>;
     expect(v).toMatchObject({ kind: "question", number: 1, total: 3, msLeft: 15_000, seconds: 15 });
     expect(v.choices).toHaveLength(4);
     expect(JSON.stringify(v)).not.toMatch(/"(answer|correct|right)"/);
+    expect(v.choices[readAnswerKey(v.key, v.number, 4) ?? -1]?.text).toBe("Right");
+  });
+
+  it("S10-AC2: a key reads back only to a real choice", () => {
+    for (let n = 1; n <= 5; n++)
+      for (let i = 0; i < 6; i++) expect(readAnswerKey(answerKey(i, n), n, 6)).toBe(i);
+    expect(readAnswerKey(answerKey(3, 1), 1, 2)).toBeNull();
+    expect(readAnswerKey(answerKey(1, 2), 1, 4)).toBeNull();
+    expect(readAnswerKey("zz", 1, 4)).toBeNull();
   });
 
   it("S10-AC4: an answer is checked and the view shows the correct choice", () => {
