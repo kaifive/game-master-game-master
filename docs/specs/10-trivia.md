@@ -25,7 +25,7 @@ The play's `state`: the drawn question ids, choice order per question, the curre
 
 ## UI
 
-- Question card: "Question 3 of 5", the prompt in the pack's display font, its image if any, answers as large buttons (at least 56 px tall) in a grid or list, and a draining timer bar with the seconds left (red for the last 5).
+- Question card: "Question 3 of 5", the prompt in the pack's display font, its image if any, answers as large buttons (at least 80 px tall) in a grid or list, and a draining timer bar with the seconds left (red for the last 5).
 - After an answer: the chosen answer marked right or wrong (✓ and ✗ as well as color), the correct one marked, and a short line ("Right!", "Not quite.", "Time's up.") smaller than the question. "Time's up" if none was chosen. No sound.
 - Result: points counting up, "4 of 5 right · 3.2 s average", Play again in a replayable event.
 
@@ -40,6 +40,7 @@ The play's `state`: the drawn question ids, choice order per question, the curre
 - [x] AC-7: The party's event file has a trivia game with a placeholder pool, and word guess is gone from it.
 - [x] AC-8: Answers show as a 2×2 grid when there are at most 4 short or picture answers, and as a list otherwise.
 - [x] AC-9: Questions and answers can show images, each with alt text.
+- [x] AC-12: On a phone, answers are at least 80 px tall and the Start button at least 56 px.
 - [x] AC-11: After each answer, a line says what's next ("Question 3 of 5 is next…" or "Your score is next…") over a bar that empties during the pause, and the instructions say the next question starts by itself.
 - [x] AC-10: After an answer shows for 1 second, the next question (or the score) comes on its own, once; there is no Next button and a tap doesn't skip ahead.
 

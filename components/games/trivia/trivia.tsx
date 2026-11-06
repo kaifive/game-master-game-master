@@ -78,7 +78,7 @@ function ChoiceButton({
       }}
       aria-label={mark ? `${choice.text ?? choice.image?.alt ?? ""} (${mark})` : undefined}
       className={cx(
-        "grid min-h-14 w-full place-items-center gap-2 rounded-gm p-3 text-center font-gm-display text-xl font-bold ring-2 transition-colors disabled:cursor-default",
+        "grid min-h-20 w-full place-items-center gap-2 rounded-gm p-4 text-center font-gm-display text-2xl font-bold ring-2 transition-colors disabled:cursor-default",
         choiceTone(view, index),
       )}
     >

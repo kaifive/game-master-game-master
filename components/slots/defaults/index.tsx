@@ -66,13 +66,14 @@ const button = variants({
       primary: "bg-gm-accent text-gm-text-on-accent hover:bg-gm-accent-hover",
       secondary: "border-2 border-gm-accent bg-gm-surface text-gm-accent",
     },
+    size: { md: "", lg: "min-h-14 w-full text-xl" },
   },
-  defaults: { tone: "primary" },
+  defaults: { tone: "primary", size: "md" },
 });
 
-export function Button({ children, onClick, tone, disabled, type = "button" }: ButtonProps) {
+export function Button({ children, onClick, tone, disabled, type = "button", size }: ButtonProps) {
   return (
-    <button type={type} onClick={onClick} disabled={disabled} className={button({ tone })}>
+    <button type={type} onClick={onClick} disabled={disabled} className={button({ tone, size })}>
       {children}
     </button>
   );

@@ -101,7 +101,7 @@ export function JoinForm({
       )}
       {(error ?? typed) && <Alert>{(error ?? typed) as string}</Alert>}
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={busy || Boolean(typed)}>
+        <Button size="lg" type="submit" disabled={busy || Boolean(typed)}>
           {busy ? "Joining…" : "Join"}
         </Button>
         {onCancel && (

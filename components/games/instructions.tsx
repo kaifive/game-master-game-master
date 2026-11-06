@@ -51,7 +51,7 @@ export function InstructionsDialog({
           ))}
         </ol>
         <div className="grid px-5 pb-5">
-          <Button onClick={onStart} disabled={busy ?? false}>
+          <Button size="lg" onClick={onStart} disabled={busy ?? false}>
             {busy ? "Starting…" : "Start"}
           </Button>
         </div>
