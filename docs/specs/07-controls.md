@@ -12,6 +12,7 @@ The admin's page for running an event, built for quick glances rather than const
 
 - Header counts: players, devices online (presence), teams
 - "New since you last looked": new players and team names in one list, with rename, remove and ban inline; one tap marks all seen
+- Move a player to a new phone (lost phone); banning a device bans all its players (moved here from spec 02)
 - Players grouped by device; a device with many players stands out
 - Phase switch (individual → team); promote and demote captains; move players
 - Manual award and void (spec 04); display mode switch (spec 05); open and close games
