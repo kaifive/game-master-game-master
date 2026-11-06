@@ -123,10 +123,13 @@ async function guard(
 ) {
   const ready = playable(event, gameId);
   if (!ready) throw new AppError("NOT_FOUND", "We couldn't find that game.");
-  const status = await deps.status(event.slug);
+  // Both reads at once: every tap waits on them (S10-AC13).
+  const [status, player] = await Promise.all([
+    deps.status(event.slug),
+    ownsPlayer(deps, event, uid, playerId),
+  ]);
   if (!gameOpen(status, ready.game))
     throw new AppError("FORBIDDEN", GAME_CLOSED[status === "ended" ? "ended" : "upcoming"]);
-  const player = await ownsPlayer(deps, event, uid, playerId);
   return { ...ready, player, points: pointsFor(event, ready.game) };
 }
 

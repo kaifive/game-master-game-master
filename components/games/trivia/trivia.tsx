@@ -41,14 +41,21 @@ function useCountdown(msLeft: number, running: boolean, onDone: () => void) {
   return running ? left : msLeft;
 }
 
-function choiceTone(view: Asked, i: number) {
-  if (view.kind !== "answered") return "bg-gm-surface-raised text-gm-text ring-gm-border";
+function choiceTone(view: Asked, i: number, picked: number | null) {
+  if (view.kind !== "answered") {
+    // While the server checks it, the tapped answer lights up and the rest step back (S10-AC13).
+    if (picked === null) return "bg-gm-surface-raised text-gm-text ring-gm-border";
+    return i === picked
+      ? "bg-gm-surface-raised text-gm-text ring-4 ring-gm-accent scale-[1.03]"
+      : "bg-gm-surface text-gm-text-muted ring-gm-border opacity-60";
+  }
   if (i === view.correct) return "bg-gm-tile-correct text-gm-tile-correct-ink ring-gm-tile-correct";
   if (i === view.chosen) return "bg-gm-danger text-white ring-gm-danger";
   return "bg-gm-surface text-gm-text-muted ring-gm-border opacity-70";
 }
 
 function ChoiceButton({
+  picked,
   choice,
   index,
   view,
@@ -60,6 +67,7 @@ function ChoiceButton({
   view: Asked;
   onPick: (i: number) => void;
   disabled: boolean;
+  picked: number | null;
 }) {
   const mark =
     view.kind === "answered"
@@ -78,8 +86,8 @@ function ChoiceButton({
       }}
       aria-label={mark ? `${choice.text ?? choice.image?.alt ?? ""} (${mark})` : undefined}
       className={cx(
-        "grid min-h-20 w-full place-items-center gap-2 rounded-gm p-4 text-center font-gm-display text-2xl font-bold ring-2 transition-colors disabled:cursor-default",
-        choiceTone(view, index),
+        "grid min-h-20 w-full touch-manipulation place-items-center gap-2 rounded-gm p-4 text-center font-gm-display text-2xl font-bold ring-2 transition-[background-color,box-shadow,opacity,transform] duration-100 select-none active:scale-[0.97] disabled:cursor-default [&_*]:pointer-events-none",
+        choiceTone(view, index, picked),
       )}
     >
       {choice.image && <Picture image={choice.image} className="max-h-28" />}
@@ -159,6 +167,9 @@ export function TriviaGame({ view: raw, onMove, onTimeUp, busy }: GameRendererPr
   const view = raw as Asked;
   const asking = view.kind === "question";
   const left = useCountdown(view.msLeft, asking, onTimeUp);
+  // The answer tapped on this question, shown at once while the server checks it.
+  const [pick, setPicked] = useState<{ question: number; choice: number } | null>(null);
+  const picked = asking && pick?.question === view.number ? pick.choice : null;
   useAdvance(view.kind === "answered", view.number, () => {
     onMove({ type: "next" });
   });
@@ -194,8 +205,10 @@ export function TriviaGame({ view: raw, onMove, onTimeUp, busy }: GameRendererPr
               choice={choice}
               index={i}
               view={view}
-              disabled={!asking || busy}
+              picked={picked}
+              disabled={!asking || busy || picked !== null}
               onPick={(choiceIndex) => {
+                setPicked({ question: view.number, choice: choiceIndex });
                 onMove({ type: "answer", choice: choiceIndex });
               }}
             />

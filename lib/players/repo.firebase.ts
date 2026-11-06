@@ -29,9 +29,16 @@ export class FirebasePlayerRepo implements PlayerRepo {
 
   async device(slug: string, uid: string): Promise<StoredDevice> {
     const doc = await this.admin.firestore.doc(fs.device(slug, uid)).get();
+    const playerId: unknown = doc.get("playerId");
+    const nickname: unknown = doc.get("playerNickname");
+    // The device keeps its player's name, so most calls need one read, not two (S10-AC13).
+    const player =
+      typeof playerId === "string" && typeof nickname === "string"
+        ? { id: playerId, nickname }
+        : await this.currentPlayer(null, slug, playerId);
     return {
       banned: doc.get("banned") === true,
-      player: await this.currentPlayer(null, slug, doc.get("playerId")),
+      player,
       restarts: Number(doc.get("restarts") ?? 0),
     };
   }
@@ -58,7 +65,13 @@ export class FirebasePlayerRepo implements PlayerRepo {
     tx.set(nickname, { playerId: ref.id });
     tx.set(
       device,
-      { banned: false, playerId: ref.id, restarts, playerIds: FieldValue.arrayUnion(ref.id) },
+      {
+        banned: false,
+        playerId: ref.id,
+        playerNickname: player.nickname,
+        restarts,
+        playerIds: FieldValue.arrayUnion(ref.id),
+      },
       { merge: true },
     );
     return { id: ref.id, nickname: player.nickname };
