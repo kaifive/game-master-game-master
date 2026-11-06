@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { gamesApi, type HubPlays } from "@/lib/games";
+import { gamesApi, type HubPlays, type Seat } from "@/lib/games";
 import {
   deviceToken,
   playersApi,
@@ -22,6 +22,8 @@ type DeviceState = {
   /** The player's plays, and their points from the ledger (S04-AC7, S08-AC15). */
   plays: HubPlays;
   total: number;
+  /** The player's team and whether they captain it, for team games (S03-AC5). */
+  seat: Seat | null;
   refreshPlays: () => Promise<void>;
   /** A fresh token proving which device this is. */
   token: () => Promise<string>;
@@ -53,6 +55,7 @@ export function DeviceProvider({
   const [load, setLoad] = useState<DeviceLoad>({ kind: "loading" });
   const [plays, setPlays] = useState<HubPlays>({});
   const [total, setTotal] = useState(0);
+  const [seat, setSeat] = useState<Seat | null>(null);
   const [leaveWarning, setLeaveWarning] = useState<string | null>(null);
   const token = useCallback(() => deviceToken(identity), [identity]);
   const fetchDevice = useCallback(
@@ -83,6 +86,7 @@ export function DeviceProvider({
     if (res.ok) {
       setPlays(res.data.plays);
       setTotal(res.data.total);
+      setSeat(res.data.seat);
     }
   }, [slug, token, activeKey]);
 
@@ -95,6 +99,7 @@ export function DeviceProvider({
         if (!alive.current) return;
         setPlays(res.ok ? res.data.plays : {});
         setTotal(res.ok ? res.data.total : 0);
+        setSeat(res.ok ? res.data.seat : null);
       });
     return () => {
       alive.current = false;
@@ -107,6 +112,7 @@ export function DeviceProvider({
       if (!res.ok) return res.message;
       setPlays({});
       setTotal(0);
+      setSeat(null);
       apply(await fetchDevice());
       return null;
     };
@@ -116,6 +122,7 @@ export function DeviceProvider({
       active,
       plays: activeKey ? plays : {},
       total: activeKey ? total : 0,
+      seat: activeKey ? seat : null,
       refreshPlays,
       token,
       leaveWarning,
@@ -134,6 +141,7 @@ export function DeviceProvider({
     activeKey,
     plays,
     total,
+    seat,
     refreshPlays,
     token,
     leaveWarning,

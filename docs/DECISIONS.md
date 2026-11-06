@@ -521,3 +521,49 @@ the server. Khai chose instant feedback over keeping answers off the phone.
 - The trade-off: someone with browser developer tools could read the key
   within the 10 seconds. That's hard on a phone at a family party and
   accepted for now. Other game types keep answers on the server.
+
+---
+
+## ADR-030: Two competitions: individual and team, with donations
+
+**Status:** accepted. Refines ADR-011 (team score no longer includes members' points).
+
+Khai wants a prize for the top player and the top team, and teams that play
+like one player on one device.
+
+**Decision:**
+- Solo games earn **individual** points on each player's phone. Team games
+  (`phase: "team"`) are played on the captain's phone and earn **team**
+  points. Neither ever changes the other.
+- **Team score** = team awards + donations received. Members' individual
+  points don't count toward it, so team size doesn't decide the winner.
+- **Donations** move a player's own points to any team, one to one, so
+  donating lowers their individual score. That tension is the point: anyone
+  out of the running for the individual prize can help a team.
+- The individual prize is decided at the **end of the night**, not when the
+  team phase starts, so donations always cost something.
+- The host sets a **maximum team size**, so bigger teams can't win on
+  donations alone. Solo games stay open in the team phase.
+
+## ADR-031: Phones read teams from a Realtime Database summary
+
+**Status:** accepted.
+
+Every phone polls the teams panel every 15 seconds. Building it from
+Firestore costs about 60 reads (settings, every team, every player), so 50
+phones over a 3-hour party would need about 2 million reads, 40 times the
+free limit.
+
+**Decision:** the server writes `teams/{slug}` in the Realtime Database (one
+JSON string: phase, maximum team size, and every team with its members)
+after every team change: a captain made or changed, a team named, a join or
+move, a phase or size change, a player dropped, test data cleared. Polls,
+the phone leaderboard, the TV and team games read only that. Controls and
+writes still read Firestore, so the checks (room on a team, the phase for
+joining) use fresh data.
+
+**Consequences:** a team change costs about 60 Firestore reads once, not
+per poll. The summary can't drift for long, since every team write rewrites
+it. Team rows on the leaderboard get their name and color from the same
+step, so a renamed team shows its new name on the TV at once.
+

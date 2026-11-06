@@ -6,7 +6,7 @@ const unique = (base: string) => `${base}${String(Math.floor(Math.random() * 1e6
 async function join(page: Page, name: string, code?: string) {
   await page.getByLabel("Your name").fill(name);
   if (code) await page.getByLabel("Party code").fill(code);
-  await page.getByRole("button", { name: "Join" }).click();
+  await page.getByRole("button", { name: "Join", exact: true }).click();
 }
 
 // Once joined, the footer shows who's playing.
@@ -86,5 +86,5 @@ test("S02-AC5: a rude name is flagged while it's typed", async ({ page }) => {
   await expect(page.getByRole("alert").filter({ hasText: "name" })).toHaveText(
     "Pick another name.",
   );
-  await expect(page.getByRole("button", { name: "Join" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Join", exact: true })).toBeDisabled();
 });

@@ -9,6 +9,13 @@ export const CODE_PATTERN = /^[A-HJKMNP-Z2-9]{5}$/;
 export const GAME_TYPES = ["trivia", "photo-challenge", "jeopardy"] as const;
 
 export const EVENT_STATUSES = ["upcoming", "live", "ended"] as const;
+
+/** Which competition is on (ADR-030). Only `both` events switch. */
+export const PHASES = ["individual", "team"] as const;
+export type Phase = (typeof PHASES)[number];
+
+/** What the host sets at runtime besides the status (spec 03). */
+export type EventSettings = { phase?: Phase; maxTeamSize?: number };
 export const EventStatus = z.enum(EVENT_STATUSES);
 export type EventStatus = z.infer<typeof EventStatus>;
 

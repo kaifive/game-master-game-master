@@ -1,7 +1,8 @@
 import "server-only";
 import { backend } from "@/lib/backend";
 import { eventRuntime, requireEvent } from "@/lib/events/server";
-import { pointsDeps, removeFromBoard } from "@/lib/points/server";
+import { pointsDeps, removeFromBoard, voidDonationsFrom } from "@/lib/points/server";
+import { captainCheck, dropPlayer } from "@/lib/teams/server";
 import { deviceUid } from "./identity";
 import type { Identity, JoinBody } from "./model";
 import { playersRuntime } from "./runtime";
@@ -14,9 +15,13 @@ function deps(): PlayerDeps {
   return {
     players: playersRuntime().repo,
     status: (slug) => runtime.status(slug),
-    // Teams and captains arrive with spec 03; until then nobody is a captain.
-    isCaptain: () => Promise.resolve(false),
-    onForfeit: (slug, playerId) => removeFromBoard(pointsDeps(), slug, playerId),
+    isCaptain: (slug, playerId) => captainCheck(slug, playerId),
+    // The old player takes back their donations, then leaves the leaderboard and their team (S04-AC5, S03-AC7).
+    onForfeit: async (slug, playerId) => {
+      await voidDonationsFrom(pointsDeps(), slug, playerId);
+      await removeFromBoard(pointsDeps(), slug, playerId);
+      await dropPlayer(slug, playerId);
+    },
   };
 }
 

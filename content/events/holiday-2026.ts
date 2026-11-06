@@ -27,6 +27,17 @@ export const holiday2026: EventConfig = {
       alwaysOpen: true,
     },
     {
+      // A team game: the captain plays on their phone for the team (spec 03). Placeholder questions.
+      id: "team-trivia",
+      type: "trivia",
+      title: "Team Trivia",
+      mode: "solo",
+      phase: "team",
+      visibility: "listed",
+      content: holidayTrivia,
+      scoring: { awardTo: "team" },
+    },
+    {
       id: "ornament-hunt",
       type: "photo-challenge",
       title: "Ornament Hunt",

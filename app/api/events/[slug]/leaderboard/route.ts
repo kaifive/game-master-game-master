@@ -1,5 +1,5 @@
 import { defineRoute } from "@/lib/http";
-import { leaderboardFor } from "@/lib/points/server";
+import { leaderboardFor } from "@/lib/teams/server";
 
 /** GET ?playerId=: the top 10 and that player's place (spec 05). Public. */
 export const GET = defineRoute({

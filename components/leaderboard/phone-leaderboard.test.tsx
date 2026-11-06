@@ -21,7 +21,8 @@ const top = Array.from({ length: 10 }, (_, i) => ({
 }));
 
 function stub(body: unknown) {
-  const fetch = vi.fn((url: string) => Promise.resolve(Response.json(url ? body : null)));
+  const full = { phase: "individual", teams: [], myTeam: null, ...(body as object) };
+  const fetch = vi.fn((url: string) => Promise.resolve(Response.json(url ? full : null)));
   vi.stubGlobal("fetch", fetch);
   return fetch;
 }
@@ -69,5 +70,25 @@ describe("PhoneLeaderboard", () => {
       await vi.advanceTimersByTimeAsync(PHONE_POLL_MS);
     });
     expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  test("S03-AC8: in the team phase, your team's place and the team standings come first", async () => {
+    stub({
+      top,
+      me: { rank: 13, points: 30 },
+      phase: "team",
+      teams: [
+        { id: "t2", rank: 1, name: "Cranes", color: 2, points: 300 },
+        { id: "t1", rank: 2, name: "Dragons", color: 1, points: 120 },
+      ],
+      myTeam: { id: "t1", rank: 2, points: 120 },
+    });
+    board();
+    const teams = await screen.findByRole("list", { name: "Team standings" });
+    expect(within(teams).getAllByRole("listitem")).toHaveLength(2);
+    expect(screen.getByText(/is/, { selector: "p" })).toHaveTextContent(
+      "Dragons is #2 with 120 points",
+    );
+    expect(screen.getByRole("list", { name: "Leaderboard" })).toBeInTheDocument();
   });
 });

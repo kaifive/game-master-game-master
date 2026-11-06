@@ -1,5 +1,5 @@
 import { apiCall } from "@/lib/players";
-import type { HubPlays, PlayResponse } from "./model";
+import type { HubPlays, PlayResponse, Seat } from "./model";
 
 /** Browser calls for games (spec 08). */
 
@@ -11,7 +11,7 @@ const post = (body: unknown): RequestInit => ({
 
 export const gamesApi = {
   plays: (slug: string, token: string, playerId: string) =>
-    apiCall<{ plays: HubPlays; total: number }>(
+    apiCall<{ plays: HubPlays; total: number; seat: Seat | null }>(
       `/api/events/${slug}/plays?playerId=${encodeURIComponent(playerId)}`,
       token,
     ),

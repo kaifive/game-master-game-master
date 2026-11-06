@@ -167,7 +167,10 @@ describe("GamePlayer", () => {
     api.start.mockReturnValue(ok(question));
     const { unmount } = page();
     await screen.findByRole("heading", { name: "Which reindeer has a red nose?" });
-    expect(device.setLeaveWarning).toHaveBeenLastCalledWith(LEAVE_WARNING);
+    // The warning is set in an effect, which can land just after the render.
+    await waitFor(() => {
+      expect(device.setLeaveWarning).toHaveBeenLastCalledWith(LEAVE_WARNING);
+    });
     unmount();
     expect(device.setLeaveWarning).toHaveBeenLastCalledWith(null);
   });
@@ -224,7 +227,10 @@ describe("GamePlayer", () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     page();
     await screen.findByRole("status");
-    expect(api.move).toHaveBeenCalledTimes(1); // asked for straight away
+    // Asked for straight away (from an effect, so allow it a tick).
+    await waitFor(() => {
+      expect(api.move).toHaveBeenCalledTimes(1);
+    });
     expect(screen.queryByRole("heading", { name: "Second question?" })).toBeNull();
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1100);

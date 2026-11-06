@@ -1,20 +1,46 @@
 import { AppError } from "@/lib/errors";
-import type { EventConfig, EventRuntimeRepo, EventStatus } from "@/lib/events";
+import type { EventConfig, EventStatus } from "@/lib/events";
 import type { PlayRepo } from "@/lib/games";
-import type { AdminPlayer, PlayerRepo } from "@/lib/players";
-import { awardPoints, rebuild, removeFromBoard, voidPoints, type PointsDeps } from "@/lib/points";
+import type { AdminPlayer } from "@/lib/players";
+import {
+  awardPoints,
+  donations,
+  rebuild,
+  removeFromBoard,
+  voidDonation,
+  voidPoints,
+} from "@/lib/points";
+import {
+  clearTeams,
+  currentTeams,
+  dropFromTeam,
+  teamsView,
+  type TeamDeps,
+  type TeamsSummary,
+} from "@/lib/teams";
 
-export type AdminDeps = {
-  events: EventRuntimeRepo;
-  players: PlayerRepo;
-  plays: PlayRepo;
-  points: PointsDeps;
-  /** A fresh id for a manual award. */
-  id: () => string;
+/** Everything teams need, plus the plays. `id` gives a fresh id for a manual award. */
+export type AdminDeps = TeamDeps & { plays: PlayRepo };
+
+export type ControlsPlayer = AdminPlayer & { points: number; teamId: string | null };
+
+/** One donation as Controls lists it (S03-AC6). */
+export type ControlsDonation = {
+  id: string;
+  from: string;
+  team: string;
+  points: number;
+  voided: boolean;
 };
 
-export type ControlsPlayer = AdminPlayer & { points: number };
-export type ControlsView = { status: EventStatus; players: ControlsPlayer[] };
+export type ControlsView = {
+  status: EventStatus;
+  players: ControlsPlayer[];
+  /** Phase, team size and teams, for events with teams (spec 03). */
+  teams: TeamsSummary | null;
+  /** Only when asked for: reading them costs a read per donation (S03-AC6). */
+  donations?: ControlsDonation[];
+};
 
 export const ACTIONS = ["start", "end", "reopen"] as const;
 export type StatusAction = (typeof ACTIONS)[number];
@@ -26,13 +52,67 @@ const NEXT: Record<StatusAction, { from: EventStatus; to: EventStatus }> = {
 };
 
 /** What Controls shows: the status, and every active player with their points (S07-AC3). */
-export async function controlsView(deps: AdminDeps, event: EventConfig): Promise<ControlsView> {
-  const [status, players] = await Promise.all([
+export async function controlsView(
+  deps: AdminDeps,
+  event: EventConfig,
+  withDonations = false,
+): Promise<ControlsView> {
+  // Points and teams come from the summaries: no read per player or team (ADR-031).
+  const [status, players, teams, board] = await Promise.all([
     deps.events.status(event.slug),
     deps.players.list(event.slug),
+    event.scoring === "individual" ? Promise.resolve(null) : publishedTeams(deps, event),
+    deps.points.board.read(event.slug),
   ]);
-  const points = await Promise.all(players.map((p) => deps.points.points.total(event.slug, p.id)));
-  return { status, players: players.map((p, i) => ({ ...p, points: points[i] ?? 0 })) };
+  const pointsOf = new Map(board.players.map((r) => [r.id, r.points]));
+  const teamOf = new Map(
+    teams?.teams.flatMap((t) => t.members.map((m) => [m.id, t.id] as const)) ?? [],
+  );
+  return {
+    status,
+    players: players.map((p) => ({
+      ...p,
+      points: pointsOf.get(p.id) ?? 0,
+      teamId: teamOf.get(p.id) ?? null,
+    })),
+    teams,
+    ...(withDonations ? { donations: await donationList(deps, event, players, teams) } : {}),
+  };
+}
+
+async function publishedTeams(deps: AdminDeps, event: EventConfig): Promise<TeamsSummary> {
+  const { phase, maxTeamSize, teams } = await teamsView(deps, event, null);
+  return { phase, maxTeamSize, teams };
+}
+
+async function donationList(
+  deps: AdminDeps,
+  event: EventConfig,
+  players: AdminPlayer[],
+  teams: TeamsSummary | null,
+): Promise<ControlsDonation[]> {
+  const nickname = new Map(players.map((p) => [p.id, p.nickname]));
+  const teamName = new Map(teams?.teams.map((t) => [t.id, t.name]) ?? []);
+  return (await donations(deps.points, event.slug)).map((d) => ({
+    id: d.id,
+    from: nickname.get(d.playerId) ?? "A player who left",
+    team: teamName.get(d.teamId) ?? "A team",
+    points: d.points,
+    voided: d.voided,
+  }));
+}
+
+/** The host voids a donation: both entries, so the points go back (S03-AC6). */
+export async function voidPlayerDonation(deps: AdminDeps, event: EventConfig, donationId: string) {
+  const players = await deps.players.list(event.slug);
+  const found = await voidDonation(
+    deps.points,
+    event.slug,
+    donationId,
+    "Donation voided by the host",
+    (id) => players.find((p) => p.id === id) ?? null,
+  );
+  if (!found) throw new AppError("NOT_FOUND", "We couldn't find that donation.");
 }
 
 /** Start, End and Reopen, each only from the status it belongs to (S07-AC2). */
@@ -112,6 +192,7 @@ export async function removePlayer(deps: AdminDeps, event: EventConfig, playerId
   await findPlayer(deps, event, playerId);
   await deps.players.remove(event.slug, playerId);
   await removeFromBoard(deps.points, event.slug, playerId);
+  await dropFromTeam(deps, event, playerId);
 }
 
 /** Bans the player's phone and removes them (S07-AC7). */
@@ -119,21 +200,30 @@ export async function banPlayer(deps: AdminDeps, event: EventConfig, playerId: s
   const player = await findPlayer(deps, event, playerId);
   await deps.players.ban(event.slug, player.deviceUid);
   await removeFromBoard(deps.points, event.slug, playerId);
+  await dropFromTeam(deps, event, playerId);
 }
 
-/** Spec 04's rebuild, over the event's active players and plays (S07-AC8). */
+/** Spec 04's rebuild, over the event's active players, teams and plays (S07-AC8, S03-AC5). */
 export async function rebuildPoints(deps: AdminDeps, event: EventConfig) {
-  const [players, plays] = await Promise.all([
+  const [players, plays, teams] = await Promise.all([
     deps.players.list(event.slug),
     deps.plays.all(event.slug),
+    event.scoring === "individual" ? Promise.resolve(null) : currentTeams(deps, event),
   ]);
   const ids = new Set(players.map((p) => p.id));
-  const title = (gameId: string) => event.games.find((g) => g.id === gameId)?.title ?? gameId;
+  const teamIds = new Set(teams?.teams.map((t) => t.id) ?? []);
+  const game = (gameId: string) => event.games.find((g) => g.id === gameId);
   await rebuild(
     deps.points,
     event.slug,
     players,
-    plays.filter((p) => ids.has(p.playerId)).map((p) => ({ ...p, title: title(p.gameId) })),
+    plays.flatMap((p) => {
+      const g = game(p.gameId);
+      const team = g?.phase === "team";
+      if (!(team ? teamIds : ids).has(p.playerId)) return [];
+      return [{ ...p, title: g?.title ?? p.gameId, team }];
+    }),
+    teams?.teams.map((t) => ({ id: t.id, name: t.name, color: t.color })) ?? [],
   );
 }
 
@@ -151,4 +241,5 @@ export async function clearTestData(deps: AdminDeps, event: EventConfig, confirm
     deps.points.points.clear(event.slug),
     deps.points.board.clear(event.slug),
   ]);
+  await clearTeams(deps, event);
 }

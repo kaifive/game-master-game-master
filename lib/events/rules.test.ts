@@ -5,7 +5,9 @@ import type { EventConfig } from "./model";
 import {
   eventStatus,
   findByJoinCode,
+  phaseOf,
   pointsFor,
+  suggestedTeamSize,
   RESERVED_SLUGS,
   resolveJoin,
   toPublicEvent,
@@ -176,5 +178,21 @@ describe("S10-AC7: the party has trivia, not word guess", () => {
     );
     expect(holiday2026.games.map((g) => g.type as string)).not.toContain("word-guess");
     expect(holiday2026.soloGamePoints).toBe(100);
+  });
+});
+
+describe("phases (spec 03)", () => {
+  test("S03-AC1: a both event starts in the individual phase and follows the host", () => {
+    expect(phaseOf("both", undefined)).toBe("individual");
+    expect(phaseOf("both", "team")).toBe("team");
+    expect(phaseOf("team", undefined)).toBe("team");
+    expect(phaseOf("individual", "team")).toBe("individual");
+  });
+
+  test("S03-AC4: the suggested team size is players ÷ teams, rounded up", () => {
+    expect(suggestedTeamSize(50, 8)).toBe(7);
+    expect(suggestedTeamSize(48, 8)).toBe(6);
+    expect(suggestedTeamSize(3, 0)).toBe(3);
+    expect(suggestedTeamSize(0, 4)).toBe(1);
   });
 });

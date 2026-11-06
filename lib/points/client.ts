@@ -1,17 +1,33 @@
 import { apiCall } from "@/lib/players";
-import type { Ranked } from "./rules";
+import type { Ranked, RankedTeam } from "./rules";
 
 /** Browser calls for standings (spec 05). Public routes, so no device token is needed. */
 
-export type PhoneStandings = { top: Ranked[]; me: { rank: number; points: number } | null };
+type Phase = "individual" | "team";
+
+export type PhoneStandings = {
+  top: Ranked[];
+  me: { rank: number; points: number } | null;
+  phase: Phase;
+  /** Ranked teams, in the team phase only (S03-AC8). */
+  teams: RankedTeam[];
+  myTeam: { id: string; rank: number; points: number } | null;
+};
 export type DisplayAward = {
   id: string;
   nickname: string;
   points: number;
   reason: string;
   at: number;
+  /** A donation's giver (S03-AC8). */
+  from?: string;
 };
-export type DisplayStandings = { players: Ranked[]; recent: DisplayAward[] };
+export type DisplayStandings = {
+  phase: Phase;
+  players: Ranked[];
+  teams: RankedTeam[];
+  recent: DisplayAward[];
+};
 
 export const standingsApi = {
   phone: (slug: string, playerId: string | null) =>

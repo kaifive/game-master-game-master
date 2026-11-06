@@ -56,6 +56,8 @@ in `events/{slug}.joinCode`.
 ```
 events/{slug}
   status: "upcoming" | "live" | "ended"   set only by the admin (Start, End); missing = upcoming
+  phase: "individual" | "team"            both events; missing = individual (spec 03)
+  maxTeamSize: number                     set by the host; missing = players ÷ teams
   phase: "individual" | "team"            when scoring is "both"
   joinCode: string                        on the QR poster and display
   adminLastSeenAt: timestamp              for "new since you last looked"
@@ -91,28 +93,35 @@ events/{slug}/players/{playerId}
 events/{slug}/nicknames/{nicknameKey}
   playerId: string           unique nicknames per event (transaction)
 
-events/{slug}/teams/{teamId}
-  name: string
-  nameKey: string
-  color: number              index into --gm-team-N
-  captainId: string          the player who leads it
-  ownPoints: number          donations received + team awards
+events/{slug}/teams/{teamId}       spec 03, ADR-030
+  name: string | null        null until the captain names it ("Team <captain>")
+  nameKey: string | null
+  color: number              1–8, into --gm-team-N, in order
+  captainId: string | null   null if the captain left; the host picks another
+  memberIds: string[]
+  points: number             the team score, changed only with a ledger entry (like a player's)
   createdAt: timestamp
-  (team score = ownPoints + sum of members' points; kept in the leaderboard summary)
+  (team score = team awards + donations received; members' points don't count)
+
+events/{slug}/teamNames/{nameKey}
+  teamId: string             unique team names per event
 
 events/{slug}/ledger/{entryId}      append-only (spec 04)
   kind: "award" | "void"
   points: number             signed: a deduction is a negative award; a void is the opposite of what it voids
-  to: { kind: "player"; id: string }
+  to: { kind: "player" | "team"; id: string }
+  from?: { kind: "player"; id: string }   a donation's team award names its giver
   reason: string             "Holiday Trivia", "Holiday Trivia · new best", "Best costume"
-  source: { kind: "game" | "manual"; id: string }
+  source: { kind: "game" | "manual" | "donation"; id: string }
   voids?: string             entryId this void cancels
   createdAt: timestamp
   createdBy: "server" | "admin"
   Entry ids come from the source (game_{gameId}_{playerId}_{run}), so a retry can't pay twice.
+  A donation is two entries in one transaction: donation_{id} (the player, negative) and
+  donation_{id}_team (the team), both with source { kind: "donation", id } (S03-AC6).
 
 events/{slug}/plays/{gameId}_{playerId}
-  gameId, playerId, deviceUid
+  gameId, playerId, deviceUid   for a team game (phase: "team") playerId is the team's id (S03-AC5)
   seed: number               the play's randomness (question draw, answer order)
   state: string              game type's state as JSON text, server-owned
   status: "playing" | "finished"
@@ -161,8 +170,13 @@ presence/{slug}/{uid}
 leaderboard/{slug}           written only by the server after each ledger entry, one row at a time
   updatedAt
   players/{playerId}: { nickname, teamId, points }
-  recent/{time_entryId}: { id, playerId, nickname, points, reason, at }   keyed by time, newest last
-  teams/{teamId}: { name, color, points }     full team score
+  recent/{time_entryId}: { id, playerId, nickname, points, reason, at, from? }   keyed by time, newest last;
+                             playerId and nickname are the team's for team awards; from = a donation's giver
+  teams/{teamId}: { name, color, points }     team score; name and color written on every team change
+
+teams/{slug}                 spec 03, ADR-031: what phones see of teams, as one JSON string
+  { phase, maxTeamSize, teams: [{ id, name, named, color, captain, members, room }] }
+  Written by the server after every team change; phones poll it instead of reading Firestore.
 
 live/{slug}/settings         admin-set, live display settings
   colorMode: "light" | "dark"   overrides the event file's default, on phones and TV

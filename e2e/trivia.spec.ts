@@ -6,7 +6,7 @@ const unique = (base: string) => `${base}${String(Math.floor(Math.random() * 1e6
 async function joinParty(page: Page) {
   await page.goto("/holiday-2026?code=WUSH7");
   await page.getByLabel("Your name").fill(unique("Quiz"));
-  await page.getByRole("button", { name: "Join" }).click();
+  await page.getByRole("button", { name: "Join", exact: true }).click();
   await expect(page.getByRole("navigation", { name: "Party" })).toBeVisible();
 }
 

@@ -24,7 +24,15 @@ function serve(...responses: unknown[]) {
   let i = 0;
   vi.stubGlobal(
     "fetch",
-    vi.fn(() => Promise.resolve(Response.json(responses[Math.min(i++, responses.length - 1)]))),
+    vi.fn(() =>
+      Promise.resolve(
+        Response.json({
+          phase: "individual",
+          teams: [],
+          ...(responses[Math.min(i++, responses.length - 1)] as object),
+        }),
+      ),
+    ),
   );
 }
 
@@ -117,5 +125,27 @@ describe("DisplayView", () => {
     serve({ players: [], recent: [] });
     show();
     expect(await screen.findByText(/No scores yet/)).toBeInTheDocument();
+  });
+
+  test("S03-AC8: the team phase shows team bars, the top players, and donation toasts", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const teams = [
+      { id: "t1", rank: 1, name: "Dragons", color: 1, points: 200 },
+      { id: "t2", rank: 2, name: "Cranes", color: 2, points: 150 },
+    ];
+    serve(
+      { phase: "team", teams, players: [row("p1", 1, "Mai", 60)], recent: [] },
+      {
+        phase: "team",
+        teams,
+        players: [row("p1", 1, "Mai", 60)],
+        recent: [{ ...award("d1", "Dragons", 50, "Donation", 3), from: "Mai" }],
+      },
+    );
+    show();
+    expect(await screen.findByRole("list", { name: "Team standings" })).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Top players" })).toBeInTheDocument();
+    await next();
+    expect(await screen.findByText("Mai gave 50 to Dragons")).toBeInTheDocument();
   });
 });

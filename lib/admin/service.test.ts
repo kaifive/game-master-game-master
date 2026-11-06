@@ -4,7 +4,8 @@ import { isAppError } from "@/lib/errors";
 import { MemoryEventRuntimeRepo } from "@/lib/events";
 import { MemoryPlayRepo, type PlayRecord } from "@/lib/games";
 import { MemoryPlayerRepo } from "@/lib/players";
-import { awardGame, MemoryBoardRepo, MemoryPointsRepo } from "@/lib/points";
+import { awardGame, donate, MemoryBoardRepo, MemoryPointsRepo } from "@/lib/points";
+import { MemoryTeamRepo, MemoryTeamSummaryRepo, makeCaptain } from "@/lib/teams";
 import {
   adjustPoints,
   banPlayer,
@@ -15,6 +16,7 @@ import {
   rebuildPoints,
   removePlayer,
   resetGame,
+  voidPlayerDonation,
   type AdminDeps,
 } from "./service";
 
@@ -48,6 +50,8 @@ let bao: { id: string; nickname: string };
 beforeEach(async () => {
   ids = 0;
   deps = {
+    teams: new MemoryTeamRepo(),
+    summary: new MemoryTeamSummaryRepo(),
     events: new MemoryEventRuntimeRepo(),
     players: new MemoryPlayerRepo(),
     plays: new MemoryPlayRepo(),
@@ -161,6 +165,49 @@ describe("controls", () => {
     ]);
   });
 
+  it("S03-AC4: Controls shows teams and each player's team; removing a player takes them off their team", async () => {
+    await makeCaptain(deps, event, mai.id);
+    const view = await controlsView(deps, event);
+    expect(view.teams?.teams.map((t) => t.name)).toEqual(["Team Mai"]);
+    expect(view.players.find((p) => p.id === mai.id)?.teamId).toBe(view.teams?.teams[0]?.id);
+    await removePlayer(deps, event, mai.id);
+    expect((await deps.teams.list(SLUG))[0]?.memberIds).toEqual([]);
+  });
+
+  it("S03-AC6: Controls lists donations on request, and the host voids one", async () => {
+    await makeCaptain(deps, event, mai.id);
+    const team = (await controlsView(deps, event)).teams?.teams[0];
+    await adjustPoints(deps, event, bao.id, 40, "Bonus");
+    await donate(
+      deps.points,
+      SLUG,
+      bao,
+      { id: team?.id ?? "", name: "Team Mai", color: 1 },
+      30,
+      "d1",
+    );
+    expect((await controlsView(deps, event)).donations).toBeUndefined();
+    expect((await controlsView(deps, event, true)).donations).toEqual([
+      { id: "d1", from: "Bao", team: "Team Mai", points: 30, voided: false },
+    ]);
+    await voidPlayerDonation(deps, event, "d1");
+    expect((await controlsView(deps, event, true)).donations?.[0]?.voided).toBe(true);
+    expect(await total(bao.id)).toBe(40);
+    expect((await failure(voidPlayerDonation(deps, event, "nope"))).status).toBe(404);
+  });
+
+  it("S03-AC5: rebuild restores team plays to the team", async () => {
+    await makeCaptain(deps, event, mai.id);
+    const teamId = (await controlsView(deps, event)).teams?.teams[0]?.id ?? "";
+    await deps.plays.update(SLUG, "team-trivia", teamId, () => ({
+      ...play(teamId, 55),
+      gameId: "team-trivia",
+    }));
+    await rebuildPoints(deps, event);
+    expect(await deps.points.points.teamTotal(SLUG, teamId)).toBe(55);
+    expect(await total(mai.id)).toBe(0);
+  });
+
   it("S07-AC9: clear test data deletes everything, only while upcoming and after typing CLEAR", async () => {
     await deps.plays.update(SLUG, "trivia", mai.id, () => play(mai.id, 70));
     await adjustPoints(deps, event, mai.id, 50, "x");
@@ -169,7 +216,7 @@ describe("controls", () => {
     expect((await controlsView(deps, event)).players).toEqual([]);
     expect(await deps.plays.all(SLUG)).toEqual([]);
     expect(await deps.points.points.entries(SLUG)).toEqual([]);
-    expect(await deps.points.board.read(SLUG)).toEqual({ players: [], recent: [] });
+    expect(await deps.points.board.read(SLUG)).toEqual({ players: [], teams: [], recent: [] });
     await changeStatus(deps, event, "start");
     expect(await failure(clearTestData(deps, event, "CLEAR"))).toEqual({
       status: 409,

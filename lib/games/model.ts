@@ -46,3 +46,10 @@ export type PlayResponse = {
 
 /** A player's plays by game id, for the hub (S08-AC7). */
 export type HubPlays = Record<string, { status: PlayStatus; best: number; runs: number }>;
+
+/** Where a player sits for team games: only a captain plays them, for the team (S03-AC5). */
+export type Seat = {
+  phase: "individual" | "team";
+  team: { id: string; name: string; color: number } | null;
+  isCaptain: boolean;
+};

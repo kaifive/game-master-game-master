@@ -15,6 +15,9 @@ beforeEach(async () => {
     await admin()
       .firestore.doc(fs.player("holiday-2026", id))
       .set({ nickname: id, status: "active", points: 0 });
+  await admin()
+    .firestore.doc(fs.team("holiday-2026", "t1"))
+    .set({ name: null, color: 1, memberIds: [] });
 });
 
 afterAll(() => {
