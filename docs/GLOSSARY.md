@@ -23,10 +23,11 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Lobby** | Where players wait for approval under the `approval` policy. | |
 | **Scoring mode** | Whether an event is `individual`, `team` or `both`. | `scoring` |
 | **Phase** | In a `both` event, whether it is in the `individual` or `team` phase. Admin switches it. | `event.phase` |
-| **Team** | A group of players, created by its captain in the team phase. | `Team` |
-| **Captain** | A player the admin promotes to lead a team. Also called team leader. Names the team and buzzes for it. | `team.captainId` |
-| **Team score** | Members' points + donations to the team + team awards. | |
-| **Donation** | A player giving some of their points to a team, with or without joining it. A ledger transfer. | `kind: "donation"` |
+| **Team** | A group of players. The host makes a captain, which creates the team; players join it in the team phase. | `Team` |
+| **Captain** | A player the admin promotes to lead a team. Also called team leader. Names the team, plays its team games and buzzes for it. | `team.captainId` |
+| **Team game** | A game with `phase: "team"`: the captain plays it on their phone for the team, and its points go to the team (ADR-030). | `game.phase` |
+| **Team score** | Team awards + donations to the team. Members' own points don't count (ADR-030). | `team.points` |
+| **Donation** | A player giving some of their own points to any team, which lowers their own score. Two ledger entries in one transaction. | `source.kind: "donation"` |
 | **Game type** | A generic, reusable game, such as `trivia` or `jeopardy`. Code, not content. | `GameType` |
 | **Game** | An instance of a game type in one event: type + content + theme variant + scoring. | `Game` |
 | **Solo game** | A game a player plays alone at their own pace. Also called a mini game. | `mode: "solo"` |
@@ -40,6 +41,7 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Void** | Cancelling an award by adding a reversing entry. Nothing is deleted. | `voidAward()` |
 | **Total** | A player's or team's points, derived from the ledger. | `total` |
 | **Leaderboard** | Ranked totals, kept as a summary for live screens. | `LeaderboardSummary` |
+| **Teams summary** | What phones see of teams, rewritten by the server after every team change so polls never read Firestore (ADR-031). | `TeamsSummary` |
 | **Photo** | A picture a player uploaded in an event. File in Vercel Blob, record in Firestore. | `Photo` |
 | **Photo challenge** | A solo game type that asks for a photo of something; points on approval. | `type: "photo-challenge"` |
 | **Triage** | The admin swiping through pending photos: right to approve, left to hide. | `/admin/[event]/photos` |

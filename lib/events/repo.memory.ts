@@ -1,3 +1,4 @@
+import type { EventSettings } from "./model";
 import type { EventRuntimeRepo } from "./repo";
 import { eventStatus, parseLeaderboard } from "./rules";
 
@@ -9,6 +10,17 @@ export class MemoryEventRuntimeRepo implements EventRuntimeRepo {
     /** A status for every event, such as a test's cookie. Wins over `statuses`. */
     private readonly override: () => Promise<string | undefined> = () => Promise.resolve(undefined),
   ) {}
+
+  private readonly stored = new Map<string, EventSettings>();
+
+  settings(slug: string) {
+    return Promise.resolve({ ...this.stored.get(slug) });
+  }
+
+  setSettings(slug: string, settings: EventSettings) {
+    this.stored.set(slug, { ...this.stored.get(slug), ...settings });
+    return Promise.resolve();
+  }
 
   setStatus(slug: string, status: string) {
     this.statuses[slug] = status;

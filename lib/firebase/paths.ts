@@ -30,6 +30,8 @@ export const fs = {
   nickname: (s: string, key: string) => `${event(s)}/nicknames/${id(key)}`,
   teams: (s: string) => `${event(s)}/teams`,
   team: (s: string, teamId: string) => `${event(s)}/teams/${id(teamId)}`,
+  teamNames: (s: string) => `${event(s)}/teamNames`,
+  teamName: (s: string, key: string) => `${event(s)}/teamNames/${id(key)}`,
   ledger: (s: string) => `${event(s)}/ledger`,
   ledgerEntry: (s: string, entryId: string) => `${event(s)}/ledger/${id(entryId)}`,
   play: (s: string, gameId: string, playerId: string) =>
@@ -48,6 +50,10 @@ export const rtdb = {
   leaderboardPlayers: (s: string) => `leaderboard/${slug(s)}/players`,
   leaderboardPlayer: (s: string, playerId: string) =>
     `leaderboard/${slug(s)}/players/${id(playerId)}`,
+  leaderboardTeams: (s: string) => `leaderboard/${slug(s)}/teams`,
+  leaderboardTeam: (s: string, teamId: string) => `leaderboard/${slug(s)}/teams/${id(teamId)}`,
+  /** What phones see of teams, written by the server after every team change (spec 03). */
+  teams: (s: string) => `teams/${slug(s)}`,
   leaderboardRecent: (s: string) => `leaderboard/${slug(s)}/recent`,
   leaderboardRecentEntry: (s: string, entryId: string) =>
     `leaderboard/${slug(s)}/recent/${id(entryId)}`,

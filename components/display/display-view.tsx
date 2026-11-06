@@ -26,7 +26,9 @@ function useAnnouncements() {
         celebrate({
           id: a.id,
           kind: "points",
-          text: `${a.nickname} +${String(a.points)} · ${a.reason}`,
+          text: a.from
+            ? `${a.from} gave ${String(a.points)} to ${a.nickname}`
+            : `${a.nickname} +${String(a.points)} · ${a.reason}`,
           value: a.points,
         });
       const leader = leadChange(
@@ -38,6 +40,13 @@ function useAnnouncements() {
           id: `lead-${leader.id}-${String(Date.now())}`,
           kind: "lead-change",
           text: `${leader.nickname} takes the lead!`,
+        });
+      const team = leadChange(previous ? (previous.teams[0]?.id ?? null) : undefined, next.teams);
+      if (team)
+        celebrate({
+          id: `lead-${team.id}-${String(Date.now())}`,
+          kind: "lead-change",
+          text: `${team.name} take the lead!`,
         });
     },
     [celebrate],
@@ -52,23 +61,41 @@ function Board({ slug }: { slug: string }) {
   }, [slug]);
   const data = usePoll(load, DISPLAY_POLL_MS, announce);
   if (!data) return null;
+  const players = data.players.map((p) => ({
+    id: p.id,
+    name: p.nickname,
+    rank: p.rank,
+    score: p.points,
+  }));
+  // The team phase: team bars in team colors, with the top players beside them (S03-AC8).
+  if (data.teams.length > 0)
+    return (
+      <div className="grid h-full grid-cols-[3fr_2fr] gap-8">
+        <BarRace
+          label="Team standings"
+          entries={data.teams.map((t) => ({
+            id: t.id,
+            name: t.name,
+            rank: t.rank,
+            score: t.points,
+            team: t.color,
+          }))}
+        />
+        {players.length > 0 && (
+          <div className="grid content-start gap-3 text-xl">
+            <p className="m-0 font-gm-display text-2xl font-bold">Top players</p>
+            <BarRace label="Top players" entries={players} />
+          </div>
+        )}
+      </div>
+    );
   if (data.players.length === 0)
     return (
       <p className="m-0 font-gm-display text-4xl text-gm-text-muted">
         No scores yet. Scan the code to join!
       </p>
     );
-  return (
-    <BarRace
-      label="Leaderboard"
-      entries={data.players.map((p) => ({
-        id: p.id,
-        name: p.nickname,
-        rank: p.rank,
-        score: p.points,
-      }))}
-    />
-  );
+  return <BarRace label="Leaderboard" entries={players} />;
 }
 
 /** The TV: how to join, and the live leaderboard with toasts and lead changes (spec 05). */

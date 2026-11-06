@@ -9,7 +9,8 @@ import {
   type GameConfig,
 } from "@/lib/events";
 import type { PlayerRepo, PlayerSummary } from "@/lib/players";
-import type { AnyGameLogic, HubPlays, Instructions, PlayResponse } from "./model";
+import type { Recipient, TeamCompetitor } from "@/lib/points";
+import type { AnyGameLogic, HubPlays, Instructions, PlayResponse, Seat } from "./model";
 import { gameLogic } from "./registry";
 import type { PlayChange, PlayRecord, PlayRepo } from "./repo";
 
@@ -19,8 +20,10 @@ export type GameDeps = {
   status: (slug: string) => Promise<EventStatus>;
   now: () => number;
   seed: () => number;
-  /** A run finished with a new best: award the improvement (spec 04, S04-AC1). */
-  onBest: (slug: string, player: PlayerSummary, run: FinishedRun) => Promise<void>;
+  /** A run finished with a new best: award the improvement to the player or team (S04-AC1, S03-AC5). */
+  onBest: (slug: string, to: Recipient | TeamCompetitor, run: FinishedRun) => Promise<void>;
+  /** The player's team and whether they captain it, for team games (S03-AC5). */
+  seat: (slug: string, playerId: string) => Promise<Seat>;
   /** The player's points from the ledger (S04-AC7). */
   pointsOf: (slug: string, playerId: string) => Promise<number>;
 };
@@ -51,7 +54,8 @@ export const GAME_CLOSED: Record<Exclude<EventStatus, "live">, string> = {
 };
 
 type Ready = { game: GameConfig; logic: AnyGameLogic; content: unknown; points: number };
-type Guarded = Ready & { player: PlayerSummary };
+/** `key` is whose play it is: the player's id, or for a team game the team's (S03-AC5). */
+type Guarded = Ready & { key: string; to: Recipient | TeamCompetitor };
 
 /**
  * Changes a play and, when that change finishes a run with a new best,
@@ -65,7 +69,7 @@ async function changePlay(
   change: PlayChange,
 ): Promise<PlayRecord | null> {
   const finished: { run: FinishedRun | null } = { run: null };
-  const play = await deps.plays.update(event.slug, gameId, r.player.id, (cur) => {
+  const play = await deps.plays.update(event.slug, gameId, r.key, (cur) => {
     finished.run = null;
     const next = change(cur);
     if (cur?.status === "playing" && next?.status === "finished")
@@ -80,8 +84,8 @@ async function changePlay(
   });
   // The play is saved either way; a failed award is logged and rebuild restores it (S04-AC6).
   if (finished.run && finished.run.gain > 0)
-    await deps.onBest(event.slug, r.player, finished.run).catch((err: unknown) => {
-      log.error("game award failed", { slug: event.slug, gameId, playerId: r.player.id, err });
+    await deps.onBest(event.slug, r.to, finished.run).catch((err: unknown) => {
+      log.error("game award failed", { slug: event.slug, gameId, to: r.key, err });
     });
   return play;
 }
@@ -113,24 +117,43 @@ async function ownsPlayer(
   return device.player;
 }
 
-/** Game playable and open now, player on this phone (S08-AC6, AC13). */
+export const TEAM_GAME = {
+  closed: "Team games open when the host starts the team phase.",
+  noTeam: "Join a team to play this one.",
+  notCaptain: "Your captain plays this one for the team.",
+};
+
+const isTeamGame = (game: Pick<GameConfig, "phase">) => game.phase === "team";
+
+/** Who plays a team game: only a captain, for their team, in the team phase (S03-AC5). */
+function teamSeat(seat: Seat): TeamCompetitor {
+  if (seat.phase !== "team") throw new AppError("FORBIDDEN", TEAM_GAME.closed);
+  if (!seat.team) throw new AppError("FORBIDDEN", TEAM_GAME.noTeam);
+  if (!seat.isCaptain) throw new AppError("FORBIDDEN", TEAM_GAME.notCaptain);
+  return { kind: "team", ...seat.team };
+}
+
+/** Game playable and open now, player on this phone; a team game needs its captain (S08-AC6, AC13, S03-AC5). */
 async function guard(
   deps: GameDeps,
   event: EventConfig,
   uid: string,
   gameId: string,
   playerId: string,
-) {
+): Promise<Guarded> {
   const ready = playable(event, gameId);
   if (!ready) throw new AppError("NOT_FOUND", "We couldn't find that game.");
-  // Both reads at once: every tap waits on them (S10-AC13).
-  const [status, player] = await Promise.all([
+  const team = isTeamGame(ready.game);
+  // All reads at once: every tap waits on them (S10-AC13).
+  const [status, player, seat] = await Promise.all([
     deps.status(event.slug),
     ownsPlayer(deps, event, uid, playerId),
+    team ? deps.seat(event.slug, playerId) : Promise.resolve(null),
   ]);
   if (!gameOpen(status, ready.game))
     throw new AppError("FORBIDDEN", GAME_CLOSED[status === "ended" ? "ended" : "upcoming"]);
-  return { ...ready, player, points: pointsFor(event, ready.game) };
+  const to = seat ? teamSeat(seat) : player;
+  return { ...ready, key: to.id, to, points: pointsFor(event, ready.game) };
 }
 
 /** Fixes a run's points when it ends; the best run is the player's score (S08-AC4, AC12). */
@@ -183,7 +206,7 @@ export async function startPlay(
     if (!cur)
       return {
         gameId,
-        playerId: body.playerId,
+        playerId: r.key,
         deviceUid: uid,
         best: 0,
         runs: 1,
@@ -225,16 +248,29 @@ export async function makeMove(
   return respond(play, r, now);
 }
 
-/** The active player's plays, for the hub's game list (S08-AC7). */
+/**
+ * The active player's plays for the hub's game list (S08-AC7), with their
+ * team's plays of team games and their seat (S03-AC5).
+ */
 export async function hubPlays(
   deps: GameDeps,
   event: EventConfig,
   uid: string,
   playerId: string,
-): Promise<{ plays: HubPlays; total: number }> {
+): Promise<{ plays: HubPlays; total: number; seat: Seat | null }> {
   await ownsPlayer(deps, event, uid, playerId);
+  const teamGames = new Set(event.games.filter(isTeamGame).map((g) => g.id));
+  const seat = teamGames.size > 0 ? await deps.seat(event.slug, playerId) : null;
+  const [mine, team, total] = await Promise.all([
+    deps.plays.forPlayer(event.slug, playerId),
+    seat?.team ? deps.plays.forPlayer(event.slug, seat.team.id) : Promise.resolve([]),
+    deps.pointsOf(event.slug, playerId),
+  ]);
   const plays: HubPlays = {};
-  for (const p of await deps.plays.forPlayer(event.slug, playerId))
-    plays[p.gameId] = { status: p.status, best: p.best, runs: p.runs };
-  return { plays, total: await deps.pointsOf(event.slug, playerId) };
+  for (const p of mine)
+    if (!teamGames.has(p.gameId))
+      plays[p.gameId] = { status: p.status, best: p.best, runs: p.runs };
+  for (const p of team)
+    if (teamGames.has(p.gameId)) plays[p.gameId] = { status: p.status, best: p.best, runs: p.runs };
+  return { plays, total, seat };
 }

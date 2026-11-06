@@ -48,10 +48,15 @@ export type NicknameCheck =
 
 /** The name rules (S02-AC3, AC5), run on the phone as it's typed and again on the server. */
 export function checkNickname(raw: string, blocked: readonly string[] = []): NicknameCheck {
+  return checkName(raw, blocked, NICKNAME_MAX);
+}
+
+/** The name rules for any name, such as a team's (spec 03), up to `max` characters. */
+export function checkName(raw: string, blocked: readonly string[], max: number): NicknameCheck {
   const nickname = cleanNickname(raw);
   const length = characters(nickname);
   if (length < NICKNAME_MIN) return { ok: false, message: MESSAGES.tooShort };
-  if (length > NICKNAME_MAX) return { ok: false, message: MESSAGES.tooLong };
+  if (length > max) return { ok: false, message: `Use ${String(max)} characters or fewer.` };
   if (!/^[\p{L}\p{N} '\-._]+$/u.test(nickname) || !/[\p{L}\p{N}]/u.test(nickname))
     return { ok: false, message: MESSAGES.characters };
   if (isBlockedName(nickname, blocked)) return { ok: false, message: MESSAGES.blocked };

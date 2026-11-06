@@ -42,12 +42,21 @@ full 1 GB.
 | Awards (solo + live) | ~600 | ~1,800 | ~1,800 | small |
 | Leaderboard: display + controls live, 50 phones every 15 s | 36,000 fetches | 0 | 0 | ~500 MB |
 | Player hub listening to own player doc | 50 × ~30 changes | ~1,500 | 0 | none |
-| **Total** | | **~10,000** | **~8,400** | **< 1 GB** |
+| Teams panel: 50 phones every 15 s, from the RTDB summary (ADR-031) | 36,000 fetches | 0 | 0 | ~100 MB |
+| Team changes (captains, names, joins, moves), each rewriting the summary | ~100 | ~6,000 | ~200 | small |
+| Donations | ~100 | ~300 | ~400 | small |
+| Controls open all night, refreshing every minute (~55 reads each) | 180 | ~10,000 | 0 | small |
+| **Total** | | **~26,000** | **~9,000** | **< 1 GB** |
 
-About 20% of Firestore's daily read limit, 40% of writes. Comfortable.
+About half of Firestore's daily read limit, 45% of writes. Fine, with room
+for a rehearsal the same day. Controls pauses its refresh while its tab is
+hidden.
 
 ## Things that would break the budget
 
+- Polling anything built from Firestore on every phone. 50 phones every
+  15 seconds is 12,000 polls an hour: publish an RTDB summary instead
+  (ADR-031).
 - Players listening live to a Firestore collection of all players or the
   ledger. Each change costs one read per listener. Use the RTDB summary.
 - Re-reading event config from Firestore. It comes from the repo.

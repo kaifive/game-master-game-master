@@ -3,6 +3,7 @@ import { randomInt } from "node:crypto";
 import { eventRuntime, requireEvent } from "@/lib/events/server";
 import { playerRepo } from "@/lib/players/server";
 import { awardGame, pointsDeps, pointsOf } from "@/lib/points/server";
+import { teamOfPlayer } from "@/lib/teams/server";
 import { playRepo } from "./runtime";
 import {
   hubPlays,
@@ -24,7 +25,15 @@ function deps(): GameDeps {
     status: (slug) => runtime.status(slug),
     now: () => Date.now(),
     seed: () => randomInt(2 ** 31),
-    onBest: (slug, player, run) => awardGame(pointsDeps(), slug, player, run),
+    onBest: (slug, to, run) => awardGame(pointsDeps(), slug, to, run),
+    seat: async (slug, playerId) => {
+      const { phase, team, isCaptain } = await teamOfPlayer(slug, playerId);
+      return {
+        phase,
+        team: team ? { id: team.id, name: team.name, color: team.color } : null,
+        isCaptain,
+      };
+    },
     pointsOf: (slug, playerId) => pointsOf(pointsDeps(), slug, playerId),
   };
 }

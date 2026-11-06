@@ -4,6 +4,7 @@ import {
   CODE_PATTERN,
   EventConfig,
   type EventStatus,
+  type Phase,
   type GameConfig,
   type PublicEvent,
 } from "./model";
@@ -140,3 +141,14 @@ export const pointsFor = (
 /** Whether a game can be played now: while live, or before the start if alwaysOpen (S08-AC13). */
 export const gameOpen = (status: EventStatus, g: Pick<GameConfig, "alwaysOpen">): boolean =>
   status === "live" || (status === "upcoming" && g.alwaysOpen === true);
+
+/** The phase now: what the host set, or where the event starts (S03-AC1). */
+export function phaseOf(scoring: EventConfig["scoring"], stored: Phase | undefined): Phase {
+  if (scoring === "individual") return "individual";
+  if (scoring === "team") return "team";
+  return stored ?? "individual";
+}
+
+/** A fair maximum team size: active players ÷ teams, rounded up (spec 03). */
+export const suggestedTeamSize = (players: number, teams: number) =>
+  Math.max(1, Math.ceil(players / Math.max(1, teams)));

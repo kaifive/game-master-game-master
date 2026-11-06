@@ -30,7 +30,7 @@ A feature item needs its spec at `Ready` before it starts.
 - [x] Spec 06, admin auth: passphrase sign-in, signed session cookie (ADR-028), guarded routes
 - [x] Spec 02, player join: devices, one player per phone with limited restarts (ADR-027), join code, name filter (kick and ban moved to spec 07)
 - [x] Spec 04, points ledger: awards, voids, totals, rebuild (donations with spec 03)
-- [ ] Spec 03, teams: phases, captains, team names, one-tap join
+- [x] Spec 03, teams: phases, captains, team names, one-tap join, team games, donations, team standings
 - [x] Spec 05, leaderboard and display (individual; teams with spec 03, modes with spec 07)
 - [x] Spec 07, controls first pass: event library, Start/End/Reopen, players with fix-ups, rebuild, clear test data (later: "new since you looked", phases, display modes)
 

@@ -13,6 +13,7 @@ import {
   GameView,
   LiveView,
   QuickEventView,
+  teamGameBlock,
   UpcomingView,
 } from "./views";
 
@@ -149,16 +150,18 @@ describe("S08-AC7: the hub lists each game for the active player", () => {
         Promise.resolve(
           Response.json(
             url.includes("/leaderboard")
-              ? { top: [], me: null }
-              : url.includes("/plays")
-                ? {
-                    plays: {
-                      trivia: { status: "finished", best: 80, runs: 2 },
-                      "ornament-hunt": { status: "playing", best: 0, runs: 1 },
-                    },
-                    total: 80,
-                  }
-                : { banned: false, player: { id: "p1", nickname: "Mai" }, restartsLeft: 1 },
+              ? { top: [], me: null, phase: "individual", teams: [], myTeam: null }
+              : url.includes("/teams")
+                ? { phase: "individual", maxTeamSize: 1, teams: [], mine: null }
+                : url.includes("/plays")
+                  ? {
+                      plays: {
+                        trivia: { status: "finished", best: 80, runs: 2 },
+                        "ornament-hunt": { status: "playing", best: 0, runs: 1 },
+                      },
+                      total: 80,
+                    }
+                  : { banned: false, player: { id: "p1", nickname: "Mai" }, restartsLeft: 1 },
           ),
         ),
       ),
@@ -173,6 +176,8 @@ describe("S08-AC7: the hub lists each game for the active player", () => {
     expect(await within(list).findByText("Best 80 · Again →")).toBeInTheDocument();
     expect(within(list).getByText("Continue →")).toBeInTheDocument();
     expect(within(list).getByText("Play →")).toBeInTheDocument();
+    // S03-AC5: a team game waits for the team phase.
+    expect(within(list).getByText("Team phase")).toBeInTheDocument();
     vi.unstubAllGlobals();
   });
 });
@@ -182,5 +187,25 @@ describe("S08-AC16: a game page names the game in the banner", () => {
     inPack(<GameView event={event} game={event.games[0]!} status="upcoming" />);
     expect(screen.getByRole("heading", { level: 1, name: "Holiday Trivia" })).toBeInTheDocument();
     expect(screen.queryByText("Nova Wushu Holiday Party")).toBeNull();
+  });
+});
+
+describe("S03-AC5: team games on the list", () => {
+  test("only the captain gets a link; members see the team's result", () => {
+    const team = { id: "t1", name: "Dragons", color: 1 };
+    expect(teamGameBlock(null, undefined)).toBe("Team phase");
+    expect(teamGameBlock({ phase: "team", team: null, isCaptain: false }, undefined)).toBe(
+      "Join a team",
+    );
+    expect(teamGameBlock({ phase: "team", team, isCaptain: true }, undefined)).toBeNull();
+    expect(teamGameBlock({ phase: "team", team, isCaptain: false }, undefined)).toBe(
+      "Captain plays",
+    );
+    expect(
+      teamGameBlock(
+        { phase: "team", team, isCaptain: false },
+        { status: "finished", best: 70, runs: 1 },
+      ),
+    ).toBe("Team · +70");
   });
 });

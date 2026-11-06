@@ -6,10 +6,11 @@ import { GamePlayer } from "@/components/games/game-player";
 import { PhoneLeaderboard } from "@/components/leaderboard/phone-leaderboard";
 import { useOptionalDevice } from "@/components/players/device";
 import { PlayerHub } from "@/components/players/hub";
+import { TeamPanel } from "@/components/teams/team-panel";
 import { TotalScore } from "@/components/players/total-score";
 import { useSlots } from "@/components/slots/registry";
 import { gameOpen, type EventStatus, type FinalStandings, type PublicEvent } from "@/lib/events";
-import type { HubPlays, Instructions } from "@/lib/games";
+import type { HubPlays, Instructions, Seat } from "@/lib/games";
 
 type Game = PublicEvent["games"][number];
 
@@ -33,9 +34,22 @@ function playLabel(replayable: boolean, play: HubPlays[string] | undefined): str
   return replayable ? `Best ${String(play.best)} · Again →` : `Done · +${String(play.best)}`;
 }
 
+/** Why a team game can't be opened from this phone, or null when it can (S03-AC5). */
+export function teamGameBlock(
+  seat: Seat | null,
+  play: HubPlays[string] | undefined,
+): string | null {
+  if (seat?.phase !== "team") return "Team phase";
+  if (!seat.team) return "Join a team";
+  if (seat.isCaptain) return null;
+  if (play?.status === "finished") return `Team · +${String(play.best)}`;
+  return "Captain plays";
+}
+
 function GameList({ event, status }: { event: PublicEvent; status: EventStatus }) {
   const device = useOptionalDevice();
   const plays = device?.plays ?? {};
+  const seat = device?.seat ?? null;
   // The device's state outlives page changes; refresh progress whenever the list shows.
   const refresh = device?.refreshPlays;
   useEffect(() => {
@@ -50,32 +64,45 @@ function GameList({ event, status }: { event: PublicEvent; status: EventStatus }
         Tonight&apos;s games
       </h2>
       <ul aria-label="Tonight's games" className="m-0 grid list-none p-0">
-        {listed(event).map((g) => (
-          <li key={g.id} className="border-t border-gm-border">
-            {gameOpen(status, g) ? (
-              <Link
-                href={`/${event.slug}/play/${g.id}`}
-                className="flex min-h-13 items-center justify-between gap-3 py-2 font-bold text-gm-text no-underline"
-              >
-                {g.title}
-                <span className="text-gm-accent">{playLabel(event.replayable, plays[g.id])}</span>
-              </Link>
-            ) : (
-              <div className="flex min-h-13 items-center justify-between gap-3 py-2 font-bold">
-                {g.title}
-                <span className="text-sm text-gm-text-muted">Locked</span>
-              </div>
-            )}
-          </li>
-        ))}
+        {listed(event).map((g) => {
+          // A solo team game is the captain's to play (S03-AC5); live team games run from the host.
+          const blocked =
+            g.phase === "team" && g.mode === "solo" ? teamGameBlock(seat, plays[g.id]) : null;
+          return (
+            <li key={g.id} className="border-t border-gm-border">
+              {gameOpen(status, g) && !blocked ? (
+                <Link
+                  href={`/${event.slug}/play/${g.id}`}
+                  className="flex min-h-13 items-center justify-between gap-3 py-2 font-bold text-gm-text no-underline"
+                >
+                  {g.title}
+                  <span className="text-gm-accent">{playLabel(event.replayable, plays[g.id])}</span>
+                </Link>
+              ) : (
+                <div className="flex min-h-13 items-center justify-between gap-3 py-2 font-bold">
+                  {g.title}
+                  <span className="text-sm text-gm-text-muted">
+                    {gameOpen(status, g) ? blocked : "Locked"}
+                  </span>
+                </div>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
 }
 
 /** Joining, when the page has this phone's device (spec 02). */
-function Hub() {
-  return useOptionalDevice() ? <PlayerHub /> : null;
+function Hub({ event }: { event: PublicEvent }) {
+  if (!useOptionalDevice()) return null;
+  return (
+    <>
+      <PlayerHub />
+      {event.scoring !== "individual" && <TeamPanel slug={event.slug} />}
+    </>
+  );
 }
 
 /** Before the host starts the party (S01-AC5), with the player hub (spec 02). */
@@ -84,7 +111,7 @@ export function UpcomingView({ event }: { event: PublicEvent }) {
     <>
       <EventBanner event={event} />
       <Body>
-        <Hub />
+        <Hub event={event} />
         <p className="m-0 text-lg">
           {listed(event).some((g) => g.alwaysOpen)
             ? "Some games are open now. The rest open when the host starts them."
@@ -103,7 +130,7 @@ export function LiveView({ event }: { event: PublicEvent }) {
     <>
       <EventBanner event={event} />
       <Body>
-        <Hub />
+        <Hub event={event} />
         <GameList event={event} status="live" />
         <PhoneLeaderboard slug={event.slug} />
       </Body>

@@ -12,6 +12,7 @@ import {
   type FinishedRun,
   type GameDeps,
 } from "./service";
+import type { Seat } from "./model";
 import type { TriviaView } from "./trivia/logic";
 
 const event: EventConfig = {
@@ -38,9 +39,14 @@ let status: EventStatus = "live";
 let deps: GameDeps;
 let playerId: string;
 let bests: FinishedRun[] = [];
+let paid: string[] = [];
+let seat: Seat = { phase: "individual", team: null, isCaptain: false };
+const dragons = { id: "t1", name: "Dragons", color: 1 };
 
 beforeEach(async () => {
   bests = [];
+  paid = [];
+  seat = { phase: "individual", team: null, isCaptain: false };
   clock = 1_000_000;
   status = "live";
   const players = new MemoryPlayerRepo();
@@ -50,10 +56,12 @@ beforeEach(async () => {
     status: () => Promise.resolve(status),
     now: () => clock,
     seed: () => 42,
-    onBest: (_slug, _player, run) => {
+    onBest: (_slug, to, run) => {
       bests.push(run);
+      paid.push("kind" in to ? `team:${to.id}` : `player:${to.id}`);
       return Promise.resolve();
     },
+    seat: () => Promise.resolve(seat),
     pointsOf: () => Promise.resolve(123),
   };
   playerId = (await players.join(event.slug, UID, { nickname: "Mai", key: "mai" })).id;
@@ -153,11 +161,12 @@ describe("game service", () => {
   });
 
   it("S08-AC7: lists the player's plays for the hub", async () => {
-    expect(await hubPlays(deps, event, UID, playerId)).toEqual({ plays: {}, total: 123 });
+    expect(await hubPlays(deps, event, UID, playerId)).toMatchObject({ plays: {}, total: 123 });
     await start();
     expect(await hubPlays(deps, event, UID, playerId)).toEqual({
       plays: { trivia: { status: "playing", best: 0, runs: 1 } },
       total: 123,
+      seat: { phase: "individual", team: null, isCaptain: false },
     });
     const done = await playThrough();
     expect((await hubPlays(deps, event, UID, playerId)).plays.trivia).toEqual({
@@ -281,5 +290,35 @@ describe("game service", () => {
       "5 quick questions. You have 10 seconds for each.",
     );
     expect(instructionsFor(event, "jeopardy")).toBeNull();
+  });
+
+  it("S03-AC5: only a captain plays a team game, for their team, in the team phase; it pays the team", async () => {
+    const team = (m: unknown, step = 0) =>
+      makeMove(deps, event, UID, "team-trivia", { playerId, step, move: m });
+    const startTeam = () => startPlay(deps, event, UID, "team-trivia", { playerId });
+    expect((await failure(startTeam())).message).toMatch(/team phase/);
+    seat = { phase: "team", team: null, isCaptain: false };
+    expect((await failure(startTeam())).message).toMatch(/Join a team/);
+    seat = { phase: "team", team: dragons, isCaptain: false };
+    expect((await failure(startTeam())).message).toBe("Your captain plays this one for the team.");
+    seat = { phase: "team", team: dragons, isCaptain: true };
+    let res = await startTeam();
+    while (res.status === "playing") {
+      const v = res.view as TriviaView;
+      res = await team(
+        v.kind === "question" ? { type: "answer", choice: 0 } : { type: "next" },
+        res.step,
+      );
+    }
+    // The play is the team's, and so are its points.
+    expect(await deps.plays.get(event.slug, "team-trivia", "t1")).toMatchObject({
+      status: "finished",
+    });
+    expect(await deps.plays.get(event.slug, "team-trivia", playerId)).toBeNull();
+    if (res.points > 0) expect(paid).toEqual(["team:t1"]);
+    // Members see the team's play in their list; solo games stay theirs.
+    const hub = await hubPlays(deps, event, UID, playerId);
+    expect(hub.plays["team-trivia"]).toMatchObject({ status: "finished" });
+    expect(hub.seat).toEqual(seat);
   });
 });

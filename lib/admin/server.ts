@@ -1,12 +1,11 @@
 import "server-only";
-import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { AppError } from "@/lib/errors";
-import { eventRuntime, requireEvent } from "@/lib/events/server";
+import { requireEvent } from "@/lib/events/server";
 import { playRepo } from "@/lib/games/server";
-import { playerRepo } from "@/lib/players/server";
-import { pointsDeps } from "@/lib/points/server";
+import { changeCaptain, makeCaptain, moveToTeam, setPhase, setTeamSize } from "@/lib/teams";
+import { teamDeps } from "@/lib/teams/server";
 import {
   adjustPoints,
   banPlayer,
@@ -17,6 +16,7 @@ import {
   rebuildPoints,
   removePlayer,
   resetGame,
+  voidPlayerDonation,
   type AdminDeps,
 } from "./service";
 import {
@@ -98,15 +98,7 @@ export function signIn(request: Request, body: z.infer<typeof SignInBody>): Resp
 export const signOut = (request: Request) =>
   new Response(null, { status: 204, headers: { "set-cookie": sessionCookie(request, "", 0) } });
 
-function deps(): AdminDeps {
-  return {
-    events: eventRuntime(),
-    players: playerRepo(),
-    plays: playRepo(),
-    points: pointsDeps(),
-    id: () => randomUUID(),
-  };
-}
+const deps = (): AdminDeps => ({ ...teamDeps(), plays: playRepo() });
 
 type Slug = string | string[] | undefined;
 
@@ -125,7 +117,22 @@ export const ControlsAction = z.discriminatedUnion("action", [
     gameId: z.string().min(1).max(64),
   }),
   z.object({ action: z.literal("rebuild") }),
+  z.object({ action: z.literal("phase"), phase: z.enum(["individual", "team"]) }),
+  z.object({ action: z.literal("teamSize"), size: z.number().int() }),
+  z.object({ action: z.literal("captain"), playerId: z.string().min(1).max(64) }),
+  z.object({
+    action: z.literal("moveTeam"),
+    playerId: z.string().min(1).max(64),
+    teamId: z.string().min(1).max(64),
+  }),
+  z.object({
+    action: z.literal("setCaptain"),
+    teamId: z.string().min(1).max(64),
+    playerId: z.string().min(1).max(64),
+  }),
   z.object({ action: z.literal("clear"), confirm: z.string().max(20) }),
+  z.object({ action: z.literal("donations") }),
+  z.object({ action: z.literal("voidDonation"), donationId: z.string().min(1).max(64) }),
 ]);
 export type ControlsAction = z.infer<typeof ControlsAction>;
 
@@ -163,6 +170,26 @@ export async function runAction(slug: Slug, body: ControlsAction) {
     case "clear":
       await clearTestData(d, event, body.confirm);
       break;
+    case "phase":
+      await setPhase(d, event, body.phase);
+      break;
+    case "teamSize":
+      await setTeamSize(d, event, body.size);
+      break;
+    case "captain":
+      await makeCaptain(d, event, body.playerId);
+      break;
+    case "moveTeam":
+      await moveToTeam(d, event, body.playerId, body.teamId);
+      break;
+    case "setCaptain":
+      await changeCaptain(d, event, body.teamId, body.playerId);
+      break;
+    case "donations":
+      break;
+    case "voidDonation":
+      await voidPlayerDonation(d, event, body.donationId);
+      break;
   }
-  return controlsView(d, event);
+  return controlsView(d, event, body.action === "donations" || body.action === "voidDonation");
 }

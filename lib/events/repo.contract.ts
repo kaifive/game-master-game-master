@@ -22,6 +22,15 @@ export function eventRuntimeContract(seed: Seed) {
     expect(await repo.status("other-party")).toBe("upcoming");
   });
 
+  test("S03-AC1 S03-AC4: the phase and maximum team size the host set are stored", async () => {
+    const repo = await seed({});
+    expect(await repo.settings("holiday-2026")).toEqual({});
+    await repo.setSettings("holiday-2026", { phase: "team" });
+    await repo.setSettings("holiday-2026", { maxTeamSize: 6 });
+    expect(await repo.settings("holiday-2026")).toEqual({ phase: "team", maxTeamSize: 6 });
+    expect(await repo.settings("other-party")).toEqual({});
+  });
+
   test("returns the status the admin set", async () => {
     const repo = await seed({ status: { "holiday-2026": "ended" } });
     expect(await repo.status("holiday-2026")).toBe("ended");

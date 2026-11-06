@@ -54,6 +54,7 @@ describe("game routes", () => {
     expect(await listed.json()).toEqual({
       plays: { trivia: { status: "playing", best: 0, runs: 1 } },
       total: 0,
+      seat: { phase: "individual", team: null, isCaptain: false },
     });
   });
 

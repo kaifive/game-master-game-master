@@ -11,8 +11,15 @@ vi.mock("next/navigation", () => ({ useRouter: () => router }));
 
 type Body = Record<string, unknown>;
 const players = [
-  { id: "p1", nickname: "Mai", points: 60, restarts: 1, joinedAt: Date.now() - 5 * 60_000 },
-  { id: "p2", nickname: "Bao", points: 40, restarts: 0, joinedAt: Date.now() },
+  {
+    id: "p1",
+    nickname: "Mai",
+    points: 60,
+    restarts: 1,
+    joinedAt: Date.now() - 5 * 60_000,
+    teamId: null,
+  },
+  { id: "p2", nickname: "Bao", points: 40, restarts: 0, joinedAt: Date.now(), teamId: null },
 ];
 
 let sent: Body[] = [];
@@ -36,7 +43,7 @@ const controls = (status: "upcoming" | "live" | "ended" = "upcoming") =>
         slug="holiday-2026"
         name="Nova Wushu Holiday Party"
         games={[{ id: "trivia", title: "Holiday Trivia" }]}
-        initial={{ status, players }}
+        initial={{ status, players, teams: null }}
       />
     </AdminRoot>,
   );
@@ -180,5 +187,106 @@ describe("Admin sign-in and library", () => {
     await vi.waitFor(() => {
       expect(router.push).toHaveBeenCalledWith("/admin");
     });
+  });
+});
+
+describe("Controls teams", () => {
+  const teams = {
+    phase: "individual" as const,
+    maxTeamSize: 3,
+    teams: [
+      {
+        id: "t1",
+        name: "Dragons",
+        color: 1,
+        captain: { id: "p1", nickname: "Mai" },
+        members: [
+          { id: "p1", nickname: "Mai" },
+          { id: "p2", nickname: "Bao" },
+        ],
+        room: 1,
+      },
+    ],
+  };
+
+  test("S03-AC1 S03-AC2 S03-AC4: phase switch, team size, captain, make captain and move", async () => {
+    const all = [
+      ...players,
+      { id: "p3", nickname: "Lan", points: 0, restarts: 0, joinedAt: Date.now(), teamId: null },
+    ].map((p) => ({ ...p, teamId: p.id === "p3" ? null : "t1" }));
+    server(() => ({ status: 200, json: { status: "upcoming", players: all, teams } }));
+    render(
+      <AdminRoot>
+        <Controls
+          slug="holiday-2026"
+          name="Party"
+          games={[{ id: "trivia", title: "Holiday Trivia" }]}
+          initial={{
+            status: "upcoming",
+            players: [
+              ...players,
+              {
+                id: "p3",
+                nickname: "Lan",
+                points: 0,
+                restarts: 0,
+                joinedAt: Date.now(),
+                teamId: null,
+              },
+            ].map((p) => ({ ...p, teamId: p.id === "p3" ? null : "t1" })),
+            teams,
+          }}
+        />
+      </AdminRoot>,
+    );
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Start the team phase" }));
+    await user.click(screen.getByRole("button", { name: "Yes, start teams" }));
+    const size = screen.getByLabelText("Max team size");
+    await user.clear(size);
+    await user.type(size, "5");
+    await user.click(screen.getByRole("button", { name: "Save size" }));
+    await user.selectOptions(screen.getByRole("combobox", { name: "Captain" }), "p2");
+    await user.click(screen.getByRole("button", { name: /Lan/ }));
+    await user.click(screen.getByRole("button", { name: "Make captain" }));
+    await user.click(screen.getByRole("button", { name: "Move to team" }));
+    expect(sent).toEqual([
+      { action: "phase", phase: "team" },
+      { action: "teamSize", size: 5 },
+      { action: "setCaptain", teamId: "t1", playerId: "p2" },
+      { action: "captain", playerId: "p3" },
+      { action: "moveTeam", playerId: "p3", teamId: "t1" },
+    ]);
+  });
+
+  test("S03-AC6: donations load on request, and the host voids one with a confirm", async () => {
+    const donation = { id: "d1", from: "Bao", team: "Dragons", points: 30, voided: false };
+    server((body) => ({
+      status: 200,
+      json: {
+        status: "live",
+        players,
+        teams,
+        donations: [{ ...donation, voided: body.action === "voidDonation" }],
+      },
+    }));
+    render(
+      <AdminRoot>
+        <Controls
+          slug="holiday-2026"
+          name="Party"
+          games={[]}
+          initial={{ status: "live", players, teams }}
+        />
+      </AdminRoot>,
+    );
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Show donations" }));
+    const list = await screen.findByRole("list", { name: "Donations" });
+    expect(list).toHaveTextContent("Bao gave 30 to Dragons");
+    await user.click(within(list).getByRole("button", { name: "Void" }));
+    await user.click(within(list).getByRole("button", { name: "Yes, void it" }));
+    expect(await within(list).findByText("Voided")).toBeInTheDocument();
+    expect(sent).toEqual([{ action: "donations" }, { action: "voidDonation", donationId: "d1" }]);
   });
 });

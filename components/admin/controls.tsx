@@ -5,22 +5,110 @@ import { useCallback, useEffect, useId, useState } from "react";
 import type { EventStatus } from "@/lib/events";
 import { AdminButton, Card, field, StatusBadge } from "./ui";
 
-type Player = { id: string; nickname: string; points: number; restarts: number; joinedAt: number };
-type View = { status: EventStatus; players: Player[] };
+type Player = {
+  id: string;
+  nickname: string;
+  points: number;
+  restarts: number;
+  joinedAt: number;
+  teamId: string | null;
+};
+type Team = {
+  id: string;
+  name: string;
+  color: number;
+  captain: { id: string; nickname: string } | null;
+  members: { id: string; nickname: string }[];
+  room: number;
+};
+type Teams = { phase: "individual" | "team"; maxTeamSize: number; teams: Team[] };
+type Donation = { id: string; from: string; team: string; points: number; voided: boolean };
+type View = {
+  status: EventStatus;
+  players: Player[];
+  teams: Teams | null;
+  donations?: Donation[];
+};
 type Game = { id: string; title: string };
 type Action =
   | { action: "start" | "end" | "reopen" | "rebuild" }
   | { action: "adjust"; playerId: string; points: number; reason: string }
   | { action: "restart" | "remove" | "ban"; playerId: string }
   | { action: "reset"; playerId: string; gameId: string }
-  | { action: "clear"; confirm: string };
+  | { action: "clear"; confirm: string }
+  | { action: "phase"; phase: "individual" | "team" }
+  | { action: "teamSize"; size: number }
+  | { action: "captain"; playerId: string }
+  | { action: "moveTeam"; playerId: string; teamId: string }
+  | { action: "setCaptain"; teamId: string; playerId: string }
+  | { action: "donations" }
+  | { action: "voidDonation"; donationId: string };
 
-const REFRESH_MS = 15_000;
+/** Each refresh reads every player, so once a minute (free-tier budget); actions refresh at once. */
+const REFRESH_MS = 60_000;
 
 function ago(ms: number, now: number) {
   const mins = Math.round((now - ms) / 60_000);
   if (ms === 0 || mins < 1) return "just now";
   return mins < 60 ? `${String(mins)} min ago` : `${String(Math.round(mins / 60))} h ago`;
+}
+
+/** Donations to teams, loaded on request (each costs a read); the host can void one (S03-AC6). */
+function DonationsCard({
+  donations,
+  run,
+  busy,
+}: {
+  donations: Donation[] | null;
+  run: (action: Action) => void;
+  busy: boolean;
+}) {
+  return (
+    <Card title={donations ? `Donations (${String(donations.length)})` : "Donations"}>
+      <div className="grid gap-3">
+        <div>
+          <AdminButton
+            tone="secondary"
+            disabled={busy}
+            onClick={() => {
+              run({ action: "donations" });
+            }}
+          >
+            {donations ? "Refresh donations" : "Show donations"}
+          </AdminButton>
+        </div>
+        {donations?.length === 0 && (
+          <p className="m-0 text-sm text-gm-text-muted">Nobody has given points to a team yet.</p>
+        )}
+        {donations && donations.length > 0 && (
+          <ul aria-label="Donations" className="m-0 grid list-none gap-2 p-0">
+            {donations.map((d) => (
+              <li
+                key={d.id}
+                className="flex flex-wrap items-center justify-between gap-2 border-t border-gm-border pt-2"
+              >
+                <span className={d.voided ? "text-gm-text-muted line-through" : ""}>
+                  <strong>{d.from}</strong> gave {d.points} to <strong>{d.team}</strong>
+                </span>
+                {d.voided ? (
+                  <span className="text-sm text-gm-text-muted">Voided</span>
+                ) : (
+                  <Confirm
+                    label="Void"
+                    sure="Yes, void it"
+                    disabled={busy}
+                    onConfirm={() => {
+                      run({ action: "voidDonation", donationId: d.id });
+                    }}
+                  />
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </Card>
+  );
 }
 
 /** A button that asks once more before doing something hard to undo. */
@@ -77,11 +165,13 @@ function Confirm({
 function PlayerTools({
   player,
   games,
+  teams,
   run,
   busy,
 }: {
   player: Player;
   games: Game[];
+  teams: Teams | null;
   run: (a: Action) => void;
   busy: boolean;
 }) {
@@ -89,6 +179,8 @@ function PlayerTools({
   const [points, setPoints] = useState("");
   const [reason, setReason] = useState("");
   const [gameId, setGameId] = useState(games[0]?.id ?? "");
+  const others = teams?.teams.filter((t) => t.id !== player.teamId) ?? [];
+  const [moveTo, setMoveTo] = useState(others[0]?.id ?? "");
   const amount = Number(points);
   return (
     <div className="grid gap-4 border-t border-gm-border bg-gm-bg p-3">
@@ -166,6 +258,47 @@ function PlayerTools({
             run({ action: "reset", playerId: player.id, gameId });
           }}
         />
+        {teams && !player.teamId && (
+          <AdminButton
+            tone="secondary"
+            disabled={busy}
+            onClick={() => {
+              run({ action: "captain", playerId: player.id });
+            }}
+          >
+            Make captain
+          </AdminButton>
+        )}
+        {teams && others.length > 0 && (
+          <span className="inline-flex flex-wrap gap-2">
+            <label className="sr-only" htmlFor={`${id}-team`}>
+              Team to move to
+            </label>
+            <select
+              id={`${id}-team`}
+              value={moveTo}
+              onChange={(e) => {
+                setMoveTo(e.target.value);
+              }}
+              className={`${field} w-auto`}
+            >
+              {others.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            <AdminButton
+              tone="secondary"
+              disabled={busy || !moveTo}
+              onClick={() => {
+                run({ action: "moveTeam", playerId: player.id, teamId: moveTo });
+              }}
+            >
+              Move to team
+            </AdminButton>
+          </span>
+        )}
         <Confirm
           label="Remove"
           sure={`Remove ${player.nickname}`}
@@ -187,6 +320,125 @@ function PlayerTools({
   );
 }
 
+function TeamsCard({
+  teams,
+  players,
+  run,
+  busy,
+}: {
+  teams: Teams;
+  players: number;
+  run: (a: Action) => void;
+  busy: boolean;
+}) {
+  const sizeId = useId();
+  const [size, setSize] = useState(String(teams.maxTeamSize));
+  const suggested = Math.max(1, Math.ceil(players / Math.max(1, teams.teams.length)));
+  return (
+    <Card title={`Teams (${String(teams.teams.length)})`}>
+      <div className="grid gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm font-bold">
+            Phase: {teams.phase === "team" ? "Team" : "Individual"}
+          </span>
+          {teams.phase === "individual" ? (
+            <Confirm
+              label="Start the team phase"
+              sure="Yes, start teams"
+              tone="primary"
+              disabled={busy}
+              onConfirm={() => {
+                run({ action: "phase", phase: "team" });
+              }}
+            />
+          ) : (
+            <Confirm
+              label="Back to individual"
+              sure="Yes, go back"
+              disabled={busy}
+              onConfirm={() => {
+                run({ action: "phase", phase: "individual" });
+              }}
+            />
+          )}
+        </div>
+        <form
+          className="flex flex-wrap items-end gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            run({ action: "teamSize", size: Number(size) });
+          }}
+        >
+          <label htmlFor={sizeId} className="grid gap-1 text-sm font-bold">
+            Max team size
+            <input
+              id={sizeId}
+              inputMode="numeric"
+              value={size}
+              onChange={(e) => {
+                setSize(e.target.value);
+              }}
+              className={`${field} w-24`}
+            />
+          </label>
+          <AdminButton type="submit" tone="secondary" disabled={busy || !/^[0-9]+$/.test(size)}>
+            Save size
+          </AdminButton>
+          <span className="text-sm text-gm-text-muted">
+            Suggested: {suggested} ({players} players ÷ {teams.teams.length || 1} teams)
+          </span>
+        </form>
+        {teams.teams.length === 0 ? (
+          <p className="m-0 text-sm text-gm-text-muted">
+            No teams yet. Open a player below and tap Make captain.
+          </p>
+        ) : (
+          <ul aria-label="Teams" className="m-0 grid list-none gap-2 p-0">
+            {teams.teams.map((t) => (
+              <li key={t.id} className="grid gap-2 rounded-gm border border-gm-border p-3">
+                <div className="flex items-center gap-2">
+                  <span
+                    aria-hidden="true"
+                    className="size-3 rounded-full"
+                    style={{ background: `var(--gm-team-${String(t.color)})` }}
+                  />
+                  <span className="font-bold">{t.name}</span>
+                  <span className="ml-auto text-sm text-gm-text-muted">
+                    {t.members.length} / {teams.maxTeamSize}
+                  </span>
+                </div>
+                <p className="m-0 text-sm text-gm-text-muted">
+                  {t.members.map((m) => m.nickname).join(", ") || "No members"}
+                </p>
+                {t.members.length > 1 && (
+                  <label className="flex flex-wrap items-center gap-2 text-sm">
+                    Captain
+                    <select
+                      value={t.captain?.id ?? ""}
+                      disabled={busy}
+                      onChange={(e) => {
+                        run({ action: "setCaptain", teamId: t.id, playerId: e.target.value });
+                      }}
+                      className={`${field} w-auto`}
+                    >
+                      {!t.captain && <option value="">Pick a captain</option>}
+                      {t.members.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.nickname}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </Card>
+  );
+}
+
 /** The host's page for one event: Start and End, players and their fix-ups, and tools (spec 07). */
 export function Controls({
   slug,
@@ -200,6 +452,7 @@ export function Controls({
   initial: View;
 }) {
   const [view, setView] = useState(initial);
+  const [donations, setDonations] = useState<Donation[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
@@ -209,6 +462,8 @@ export function Controls({
   const searchId = useId();
 
   const refresh = useCallback(async () => {
+    // A hidden tab doesn't refresh: every refresh reads each player (free-tier budget).
+    if (document.hidden) return;
     const res = await fetch(`/api/admin/events/${slug}`).catch(() => null);
     if (res?.ok) setView((await res.json()) as View);
     setNow(Date.now());
@@ -231,8 +486,10 @@ export function Controls({
     })
       .then(async (res) => {
         const body = (await res.json().catch(() => null)) as (View & { error?: string }) | null;
-        if (res.ok && body) setView(body);
-        else setError(body?.error ?? "That didn't work. Try again.");
+        if (res.ok && body) {
+          setView(body);
+          if (body.donations) setDonations(body.donations);
+        } else setError(body?.error ?? "That didn't work. Try again.");
       })
       .catch(() => {
         setError("We couldn't reach the server. Try again.");
@@ -318,6 +575,13 @@ export function Controls({
         </div>
       </Card>
 
+      {view.teams && (
+        <>
+          <TeamsCard teams={view.teams} players={view.players.length} run={run} busy={busy} />
+          <DonationsCard donations={donations} run={run} busy={busy} />
+        </>
+      )}
+
       <Card title={`Players (${String(view.players.length)})`}>
         <div className="grid gap-3">
           <label htmlFor={searchId} className="sr-only">
@@ -358,7 +622,15 @@ export function Controls({
                     </span>
                     <span className="shrink-0 text-lg font-bold tabular-nums">{p.points}</span>
                   </button>
-                  {open === p.id && <PlayerTools player={p} games={games} run={run} busy={busy} />}
+                  {open === p.id && (
+                    <PlayerTools
+                      player={p}
+                      games={games}
+                      teams={view.teams}
+                      run={run}
+                      busy={busy}
+                    />
+                  )}
                 </li>
               ))}
             </ul>

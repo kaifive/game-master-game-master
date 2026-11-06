@@ -16,6 +16,8 @@ describe("Firestore paths", () => {
     expect(fs.devices("holiday-2026")).toBe("events/holiday-2026/devices");
     expect(fs.nicknames("holiday-2026")).toBe("events/holiday-2026/nicknames");
     expect(fs.plays("holiday-2026")).toBe("events/holiday-2026/plays");
+    expect(fs.teamName("holiday-2026", "dragons")).toBe("events/holiday-2026/teamNames/dragons");
+    expect(fs.teamNames("holiday-2026")).toBe("events/holiday-2026/teamNames");
     expect(fs.play("holiday-2026", "word-1", "p1")).toBe("events/holiday-2026/plays/word-1_p1");
     expect(fs.photo("holiday-2026", "ph1")).toBe("events/holiday-2026/photos/ph1");
     expect(fs.vote("holiday-2026", "photo-1", "pr1", "p1")).toBe(
@@ -38,6 +40,9 @@ describe("Realtime Database paths", () => {
       "leaderboard/holiday-2026/recent/e1",
     );
     expect(rtdb.leaderboardRecent("holiday-2026")).toBe("leaderboard/holiday-2026/recent");
+    expect(rtdb.leaderboardTeams("holiday-2026")).toBe("leaderboard/holiday-2026/teams");
+    expect(rtdb.leaderboardTeam("holiday-2026", "t1")).toBe("leaderboard/holiday-2026/teams/t1");
+    expect(rtdb.teams("holiday-2026")).toBe("teams/holiday-2026");
     expect(rtdb.liveSession("holiday-2026")).toBe("live/holiday-2026/session");
     expect(rtdb.captain("holiday-2026", "t1")).toBe("live/holiday-2026/captains/t1");
     expect(rtdb.buzz("holiday-2026", "r1", "t1")).toBe("live/holiday-2026/buzzes/r1/t1");

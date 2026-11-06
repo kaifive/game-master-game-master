@@ -1,3 +1,4 @@
+import type { EventSettings } from "./model";
 import { firebaseAdmin, type FirebaseAdmin } from "@/lib/firebase/admin";
 import { fs, rtdb } from "@/lib/firebase/paths";
 import type { EventRuntimeRepo } from "./repo";
@@ -10,6 +11,20 @@ export class FirebaseEventRuntimeRepo implements EventRuntimeRepo {
   async status(slug: string) {
     const snap = await this.admin.firestore.doc(fs.event(slug)).get();
     return eventStatus(snap.get("status"));
+  }
+
+  async settings(slug: string): Promise<EventSettings> {
+    const doc = await this.admin.firestore.doc(fs.event(slug)).get();
+    const phase: unknown = doc.get("phase");
+    const size: unknown = doc.get("maxTeamSize");
+    return {
+      ...(phase === "individual" || phase === "team" ? { phase } : {}),
+      ...(typeof size === "number" ? { maxTeamSize: size } : {}),
+    };
+  }
+
+  async setSettings(slug: string, settings: EventSettings) {
+    await this.admin.firestore.doc(fs.event(slug)).set(settings, { merge: true });
   }
 
   async setStatus(slug: string, status: string) {
