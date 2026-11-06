@@ -38,7 +38,7 @@ test("S07-AC3 S07-AC4 S07-AC6 S07-AC7: find a player, change their points, reset
   ).newPage();
   await phone.goto("/holiday-2026?code=WUSH7");
   await phone.getByLabel("Your name").fill(name);
-  await phone.getByRole("button", { name: "Join" }).click();
+  await phone.getByRole("button", { name: "Join", exact: true }).click();
   await expect(phone.getByRole("navigation", { name: "Party" })).toContainText(name);
 
   await signIn(page);

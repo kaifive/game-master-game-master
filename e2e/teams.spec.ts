@@ -1,7 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
-// The team phase is shared by every test on the e2e server, so this runs once
-// and switches back to the individual phase at the end.
+// The team phase is shared by every test on the e2e server, so this runs in its
+// own project after the others (playwright.config.ts) and switches back at the end.
 const PASS = "e2e-host-pass";
 const unique = (base: string) => `${base}${String(Math.floor(Math.random() * 1e6))}`;
 
@@ -12,7 +12,7 @@ async function joinOnPhone(browser: Browser, name: string, baseURL: string): Pro
   const phone = await context.newPage();
   await phone.goto("/holiday-2026?code=WUSH7");
   await phone.getByLabel("Your name").fill(name);
-  await phone.getByRole("button", { name: "Join" }).click();
+  await phone.getByRole("button", { name: "Join", exact: true }).click();
   await expect(phone.getByRole("navigation", { name: "Party" })).toContainText(name);
   return phone;
 }
@@ -21,7 +21,6 @@ test("S03-AC1 S03-AC2 S03-AC3 S03-AC5 S03-AC6 S03-AC8: teams from captain to TV"
   page,
   browser,
 }, info) => {
-  test.skip(info.project.name !== "tablet", "The team phase is shared; one run is enough");
   const captain = unique("Cap");
   const player = unique("Mem");
   const team = unique("Snow");
@@ -33,6 +32,12 @@ test("S03-AC1 S03-AC2 S03-AC3 S03-AC5 S03-AC6 S03-AC8: teams from captain to TV"
   await page.getByLabel("Passphrase").fill(PASS);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.getByRole("link", { name: /Nova Wushu Holiday Party/ }).click();
+  // A retry starts from wherever the last attempt stopped.
+  if (await page.getByRole("button", { name: "Back to individual" }).isVisible()) {
+    await page.getByRole("button", { name: "Back to individual" }).click();
+    await page.getByRole("button", { name: "Yes, go back" }).click();
+    await expect(page.getByText("Phase: Individual")).toBeVisible();
+  }
   await page.getByPlaceholder("Find a player").fill(captain);
   await page.getByRole("button", { name: new RegExp(captain) }).click();
   await page.getByRole("button", { name: "Make captain" }).click();
@@ -92,6 +97,7 @@ test("S03-AC1 S03-AC2 S03-AC3 S03-AC5 S03-AC6 S03-AC8: teams from captain to TV"
   await tv.goto("/holiday-2026/display");
   await expect(tv.getByRole("list", { name: "Team standings" })).toContainText(team);
 
+  await page.reload();
   await page.getByRole("button", { name: "Back to individual" }).click();
   await page.getByRole("button", { name: "Yes, go back" }).click();
   await expect(page.getByText("Phase: Individual")).toBeVisible();

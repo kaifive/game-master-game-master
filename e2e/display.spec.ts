@@ -27,7 +27,7 @@ test("S05-AC2 S05-AC4: a player's points show on their phone and on the display"
   ).newPage();
   await phone.goto("/holiday-2026?code=WUSH7");
   await phone.getByLabel("Your name").fill(name);
-  await phone.getByRole("button", { name: "Join" }).click();
+  await phone.getByRole("button", { name: "Join", exact: true }).click();
   await phone.getByRole("link", { name: /Holiday Trivia/ }).click();
   await phone.getByRole("button", { name: "Start" }).click();
   for (let n = 1; n <= 5; n++) {

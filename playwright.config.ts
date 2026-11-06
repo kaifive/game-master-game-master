@@ -12,14 +12,26 @@ export default defineConfig({
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",
   },
-  // The three surfaces: player phone, controls tablet, display TV.
+  // The three surfaces: player phone, controls tablet, display TV. The teams test
+  // switches the shared event into the team phase, so it runs on its own, after the rest.
   projects: [
-    { name: "phone", use: { ...devices["Pixel 7"] } },
+    { name: "phone", testIgnore: /teams\.spec/, use: { ...devices["Pixel 7"] } },
     {
       name: "tablet",
+      testIgnore: /teams\.spec/,
       use: { ...devices["Desktop Chrome"], viewport: { width: 1024, height: 768 } },
     },
-    { name: "tv", use: { ...devices["Desktop Chrome"], viewport: { width: 1920, height: 1080 } } },
+    {
+      name: "tv",
+      testIgnore: /teams\.spec/,
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1920, height: 1080 } },
+    },
+    {
+      name: "teams",
+      testMatch: /teams\.spec/,
+      dependencies: ["phone", "tablet", "tv"],
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1024, height: 768 } },
+    },
   ],
   webServer: {
     command: `npm run build && npm run start -- --port ${PORT}`,
