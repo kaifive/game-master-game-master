@@ -51,7 +51,7 @@ All need the device token (spec 02) and an active player on that device.
 
 ## UI
 
-Player phone, in the event's pack: game header (title, "Playing as"), the instructions box, the game's renderer, and a result screen where the points count up from 0 to the final score (`CountUp`, spec 14; instant under reduced motion). Back to the hub at any time.
+Player phone, in the event's pack: game header (title, "Playing as"), the instructions box, the game's renderer, and a result screen where the run's score is held up as a large score card that flips up on its handle (the pack's `ScoreCard`, size `xl`; it just appears under reduced motion), with "Play again" (replayable events) and "Back to games". Back to the hub at any time.
 
 ## Edge cases
 
@@ -72,7 +72,7 @@ Player phone, in the event's pack: game header (title, "Playing as"), the instru
 - [x] AC-8: The memory and Firebase play repos pass the same contract.
 - [x] AC-9: Every game opens with an instructions box (the type's default or the event's own), and the play and its timer start only when it is closed with Start; a resumed play skips it.
 - [x] AC-10: Every solo game is worth the event's `soloGamePoints`; an event file that sets points on a solo game fails validation.
-- [x] AC-11: The result screen counts the points up from 0 to the final score.
+- [x] AC-11: The result screen holds up the final score as a large score card that flips up (it appears at once under reduced motion), with a way back to the games.
 - [x] AC-12: In a replayable event, a finished game offers Play again, which starts a new run; the game's score is the best run, never lowered by a worse one.
 - [x] AC-13: An `alwaysOpen` game can be played before the event starts; every game closes when it ends.
 - [x] AC-14: Event pages have a footer with the active player and Games; leaving a run in progress asks first.

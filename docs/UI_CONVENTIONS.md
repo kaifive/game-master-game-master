@@ -67,7 +67,8 @@ Names are stable; values change per theme and color mode.
 ```
 --gm-bg, --gm-surface, --gm-surface-raised, --gm-border
 --gm-text, --gm-text-muted, --gm-text-on-accent
---gm-accent, --gm-accent-hover            primary actions
+--gm-accent, --gm-accent-hover            primary actions (fills, with --gm-text-on-accent)
+--gm-accent-ink                           the accent as text, outlines and focus rings on bg and surfaces (4.5:1)
 --gm-success, --gm-warning, --gm-danger   right, careful, wrong
 --gm-tile-correct, --gm-tile-present, --gm-tile-absent, --gm-tile-empty
 --gm-buzzer, --gm-buzzer-pressed, --gm-buzzer-locked

@@ -27,6 +27,7 @@ export const judgesTable: PackDefinition = {
       "text-on-accent": "#ffffff",
       accent: "#b3122e",
       "accent-hover": "#8c0d23",
+      "accent-ink": "#b3122e",
       success: "#1f7a52",
       warning: "#9a6200",
       danger: "#b3122e",
@@ -72,6 +73,8 @@ export const judgesTable: PackDefinition = {
       "text-on-accent": "#ffffff",
       accent: "#c41e3c",
       "accent-hover": "#a3172f",
+      // Cranberry lifted for text on the dark grounds: #c41e3c reads at under 3:1 there.
+      "accent-ink": "#f5607a",
       success: "#3fbf86",
       warning: "#e5a93a",
       danger: "#ff6b81",

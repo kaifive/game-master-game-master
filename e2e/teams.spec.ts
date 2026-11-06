@@ -77,7 +77,7 @@ test("S03-AC1 S03-AC2 S03-AC3 S03-AC5 S03-AC6 S03-AC8: teams from captain to TV"
 
   // Members can't play the team game; the captain plays it, and it never pays the captain (S03-AC5).
   await mem.reload();
-  await expect(mem.getByRole("list", { name: "Tonight's games" })).toContainText("Captain plays");
+  await expect(mem.getByRole("region", { name: "Tonight's games" })).toContainText("Captain plays");
   await cap.goto("/holiday-2026/play/team-trivia");
   await cap
     .getByRole("dialog", { name: "How to play" })

@@ -25,7 +25,7 @@ Each event is a config file in `content/events/` (ADR-003), served at `/[slug]` 
 - **Ended:** "Thanks for playing" with final team and player standings from the leaderboard summary, or a short note when there are none. Games are closed.
 - **Quick event:** an event with one game; `/[slug]` is that game.
 - **Home `/`:** "Scan the QR code at your event, or enter a code." Submitting goes to `/join?code=`. A small "Admin" link goes to `/admin`.
-- **`/join?code=`:** an event's join code goes to `/[slug]?code=` (the code rides along for spec 02); game codes join with spec 08; an unknown code goes back home with "We couldn't find that code" and the box ready to retry.
+- **`/join?code=` and `/join/CODE`:** an event's join code goes to `/[slug]?code=` (the code rides along for spec 02); game codes join with spec 08; an unknown code goes back home with "We couldn't find that code" and the box ready to retry. `/join` with no code goes home to ask for one, with no error. The TV shows `host/join/CODE`, so a guest whose camera won't scan types one address.
 
 ## Data
 
@@ -33,7 +33,7 @@ Each event is a config file in `content/events/` (ADR-003), served at `/[slug]` 
 
 ## Routes
 
-`/`, `/join`, `/[event]`, `/[event]/play/[game]` (game body from spec 08). Reserved slugs: `admin`, `api`, `_next`, `join`, `dev`.
+`/`, `/join`, `/join/[code]`, `/[event]`, `/[event]/play/[game]` (game body from spec 08). Reserved slugs: `admin`, `api`, `_next`, `join`, `dev`.
 
 ## Acceptance criteria
 
@@ -45,7 +45,7 @@ Each event is a config file in `content/events/` (ADR-003), served at `/[slug]` 
 - [x] AC-6: An ended event shows "Thanks for playing" with final team and player standings from the leaderboard summary, and a short note when there are none; its games can't be opened.
 - [x] AC-7: A quick event's page is its one game.
 - [x] AC-8: The home page shows the code box and an Admin link; submitting a code goes to `/join?code=` with the code uppercased.
-- [x] AC-9: `/join` sends an event's join code to that event (keeping the code), and an unknown code back home with "We couldn't find that code".
+- [x] AC-9: `/join` (and `/join/CODE`) sends an event's join code to that event (keeping the code), an unknown code back home with "We couldn't find that code", and no code home with no error.
 - [x] AC-10: Join codes never appear in any page's HTML or client bundle. (The TV display, spec 05, is the one page that shows the join code on purpose.)
 - [x] AC-11: The Nova Wushu Holiday Party event file exists (Judges' Table, winter variant, dark mode) and its page renders at phone, tablet and TV sizes without sideways scroll.
 

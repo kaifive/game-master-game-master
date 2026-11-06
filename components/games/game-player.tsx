@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PointsIcon } from "@/components/icons/points";
-import { CountUp, useReducedMotion } from "@/components/motion";
+import { useReducedMotion } from "@/components/motion";
 import { useDevice } from "@/components/players/device";
 import { useSlots } from "@/components/slots/registry";
 import { gamesApi, type Instructions, type PlayResponse } from "@/lib/games";
@@ -11,7 +11,14 @@ import { flyPoints } from "./fly";
 import { InstructionsDialog } from "./instructions";
 import { rendererFor } from "./renderers";
 
-type Props = { gameId: string; type: string; instructions: Instructions; replayable: boolean };
+type Props = {
+  gameId: string;
+  type: string;
+  instructions: Instructions;
+  replayable: boolean;
+  /** The game's name, for the result card. */
+  title?: string;
+};
 
 type Phase =
   | { kind: "checking" }
@@ -19,37 +26,38 @@ type Phase =
   | { kind: "playing"; play: PlayResponse; bestBefore: number }
   | { kind: "error"; message: string };
 
-const COUNT_MS = 1200;
+/** How long the score card takes to flip up before the points fly. */
+const FLIP_MS = 600;
 export const LEAVE_WARNING =
   "Leave the game? Your clock keeps running, so you may lose this question.";
 
 /**
- * The run's points count up from 0; a new best then flies to the header
- * total, which counts up in turn (S08-AC11, AC15).
+ * The judges hold up the run's score card: it flips up on its handle, and a
+ * new best then flies to the header total, which counts up (S08-AC11, AC15).
  */
 function Result({
   play,
   bestBefore,
   summary,
+  title,
   onAgain,
 }: {
   play: PlayResponse;
   bestBefore: number;
   summary: string | null;
+  title: string;
   onAgain?: (() => void) | undefined;
 }) {
-  const { Button } = useSlots();
-  const { refreshPlays } = useDevice();
+  const { Button, ScoreCard } = useSlots();
+  const { refreshPlays, slug } = useDevice();
   const reduced = useReducedMotion();
-  const score = useRef<HTMLParagraphElement>(null);
+  const score = useRef<HTMLDivElement>(null);
   const icon = useRef<HTMLSpanElement>(null);
-  const [shown, setShown] = useState(0);
   const gain = play.best - bestBefore;
+  const newBest = gain > 0 && bestBefore > 0;
 
   useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      setShown(play.points);
-    });
+    // The flight leaves once the card has landed.
     const timer = setTimeout(
       () => {
         const fly =
@@ -58,46 +66,51 @@ function Result({
             : Promise.resolve();
         void fly.then(refreshPlays);
       },
-      reduced ? 0 : COUNT_MS,
+      reduced ? 0 : FLIP_MS,
     );
     return () => {
-      cancelAnimationFrame(frame);
       clearTimeout(timer);
     };
-  }, [play.points, gain, reduced, refreshPlays]);
+  }, [gain, reduced, refreshPlays]);
 
   return (
-    <section aria-label="Your score" className="grid justify-items-center gap-3 py-6 text-center">
-      <p className="m-0 text-sm font-bold tracking-[0.12em] text-gm-text-muted uppercase">
-        Your score
-      </p>
+    <section aria-label="Your score" className="grid justify-items-center gap-4 py-6 text-center">
       <span ref={icon} hidden>
         <PointsIcon />
       </span>
-      <p
-        ref={score}
-        className="m-0 font-gm-display text-7xl font-bold text-gm-accent"
-        aria-label={`${String(play.points)} points`}
-      >
-        <CountUp value={shown} duration={COUNT_MS} />
-      </p>
+      <div ref={score}>
+        <ScoreCard
+          label={`${title}, your score`}
+          value={play.points}
+          state={newBest ? "highlight" : "scored"}
+          size="xl"
+        />
+      </div>
       {summary && <p className="m-0 text-xl font-bold">{summary}</p>}
       {onAgain && (
-        <>
-          <p className="m-0 text-gm-text-muted">
-            {gain > 0 ? "New best!" : `Your best: ${String(play.best)}`}
-          </p>
+        <p className="m-0 text-lg text-gm-text-muted">
+          {newBest ? "New best!" : `Your best: ${String(play.best)}`}
+        </p>
+      )}
+      <div className="flex flex-wrap justify-center gap-2">
+        {onAgain && (
           <Button size="lg" onClick={onAgain}>
             Play again
           </Button>
-        </>
-      )}
+        )}
+        <Link
+          href={`/${slug}`}
+          className="inline-flex min-h-14 items-center px-4 text-lg font-bold text-gm-accent-ink"
+        >
+          Back to games
+        </Link>
+      </div>
     </section>
   );
 }
 
 /** A solo game on the phone: instructions, play, result (spec 08). */
-export function GamePlayer({ gameId, type, instructions, replayable }: Props) {
+export function GamePlayer({ gameId, type, instructions, replayable, title = "This game" }: Props) {
   const { Panel } = useSlots();
   const { slug, load, active, token, plays, setLeaveWarning } = useDevice();
   const renderer = rendererFor(type);
@@ -186,7 +199,7 @@ export function GamePlayer({ gameId, type, instructions, replayable }: Props) {
       <Panel label="Join first">
         <p className="m-0 text-lg">
           Join the party to play.{" "}
-          <Link href={`/${slug}`} className="font-bold text-gm-accent">
+          <Link href={`/${slug}`} className="font-bold text-gm-accent-ink">
             Join now
           </Link>
         </p>
@@ -209,6 +222,7 @@ export function GamePlayer({ gameId, type, instructions, replayable }: Props) {
           play={phase.play}
           bestBefore={phase.bestBefore}
           summary={renderer.summary(phase.play.view)}
+          title={title}
           onAgain={replayable ? () => void begin(true) : undefined}
         />
       )}

@@ -106,7 +106,10 @@ export function BarRace({ label, entries }: { label: string; entries: BarRaceEnt
           aria-label={`${String(e.rank ?? i + 1)}. ${e.name}, ${fmt(e.score)} points`}
           className="grid grid-cols-[2.5rem_1fr] items-center gap-3"
         >
-          <span aria-hidden="true" className="font-gm-display text-3xl font-bold text-gm-accent">
+          <span
+            aria-hidden="true"
+            className="font-gm-display text-3xl font-bold text-gm-accent-ink"
+          >
             {e.rank ?? i + 1}
           </span>
           <div aria-hidden="true" className="min-w-0">
@@ -157,7 +160,7 @@ export function PointsBurst({ points, onDone }: { points: number; onDone?: () =>
       <span role="status" className="sr-only">{`+${points} points`}</span>
       <span
         aria-hidden="true"
-        className="inline-block font-gm-display text-2xl font-bold text-gm-accent motion-safe:animate-[gm-burst_var(--gm-motion-slow)_var(--gm-ease-out)_forwards]"
+        className="inline-block font-gm-display text-2xl font-bold text-gm-accent-ink motion-safe:animate-[gm-burst_var(--gm-motion-slow)_var(--gm-ease-out)_forwards]"
       >
         +{points}
       </span>

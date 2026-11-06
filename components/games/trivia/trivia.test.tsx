@@ -200,7 +200,7 @@ describe("TriviaGame tap feedback", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "8" }));
     expect(onMove).toHaveBeenCalledExactlyOnceWith({ type: "answer", choice: 1 });
-    expect(screen.getByRole("button", { name: "8" })).toHaveClass("ring-gm-accent");
+    expect(screen.getByRole("button", { name: "8" })).toHaveClass("ring-gm-accent-ink");
     for (const b of screen.getAllByRole("button")) expect(b).toBeDisabled();
     await user.click(screen.getByRole("button", { name: "6" }));
     expect(onMove).toHaveBeenCalledTimes(1);

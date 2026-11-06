@@ -26,7 +26,7 @@ export function EventLibrary({
                 <span className="min-w-0 truncate">{e.name}</span>
                 <span className="flex items-center gap-3">
                   <StatusBadge status={e.status} />
-                  <span aria-hidden="true" className="text-gm-accent">
+                  <span aria-hidden="true" className="text-gm-accent-ink">
                     Controls →
                   </span>
                 </span>

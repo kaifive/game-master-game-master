@@ -29,7 +29,8 @@ export type ScoreCardProps = {
   label: string;
   value?: number;
   state: "scored" | "blank" | "highlight";
-  size?: "sm" | "md" | "lg";
+  /** xl is the result held up when a game ends. */
+  size?: "sm" | "md" | "lg" | "xl";
 };
 export type TileState = "empty" | "typed" | "correct" | "present" | "absent";
 export type TileProps = { letter?: string; state: TileState };

@@ -29,10 +29,7 @@ export function PhoneLeaderboard({ slug }: { slug: string }) {
     <>
       {teams.length > 0 && (
         <section aria-labelledby="teams-board-heading" className="grid gap-2">
-          <h2
-            id="teams-board-heading"
-            className="m-0 font-gm-display text-sm font-medium tracking-[0.12em] text-gm-text-muted uppercase"
-          >
+          <h2 id="teams-board-heading" className="m-0 font-gm-display text-2xl font-bold">
             Teams
           </h2>
           {mine && myTeam && (
@@ -56,10 +53,7 @@ export function PhoneLeaderboard({ slug }: { slug: string }) {
         </section>
       )}
       <section aria-labelledby="board-heading" className="grid gap-2">
-        <h2
-          id="board-heading"
-          className="m-0 font-gm-display text-sm font-medium tracking-[0.12em] text-gm-text-muted uppercase"
-        >
+        <h2 id="board-heading" className="m-0 font-gm-display text-2xl font-bold">
           Leaderboard
         </h2>
         {top.length === 0 ? (

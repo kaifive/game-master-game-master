@@ -21,11 +21,11 @@ function choiceTone(view: Asked, i: number, picked: number | null) {
     // While the server checks it, the tapped answer lights up and the rest step back (S10-AC13).
     if (picked === null) return "bg-gm-surface-raised text-gm-text ring-gm-border";
     return i === picked
-      ? "bg-gm-surface-raised text-gm-text ring-4 ring-gm-accent scale-[1.03]"
+      ? "bg-gm-surface-raised text-gm-text ring-4 ring-gm-accent-ink scale-[1.03]"
       : "bg-gm-surface text-gm-text-muted ring-gm-border opacity-60";
   }
   if (i === view.correct) return "bg-gm-tile-correct text-gm-tile-correct-ink ring-gm-tile-correct";
-  if (i === view.chosen) return "bg-gm-danger text-white ring-gm-danger";
+  if (i === view.chosen) return "bg-gm-danger text-gm-bg ring-gm-danger";
   return "bg-gm-surface text-gm-text-muted ring-gm-border opacity-70";
 }
 

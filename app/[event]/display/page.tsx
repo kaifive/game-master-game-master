@@ -17,7 +17,7 @@ export default async function DisplayPage({ params }: { params: Promise<{ event:
       slug={config.slug}
       name={config.name}
       joinUrl={`${proto}://${host}/join?code=${config.joinCode}`}
-      shortUrl={`${host}/join`}
+      shortUrl={`${host}/join/${config.joinCode}`}
       joinCode={config.joinCode}
     />
   );
