@@ -36,7 +36,7 @@ export function Surface({ children, className }: SurfaceProps) {
   );
 }
 
-export function Banner({ title, subtitle, live, level = 1, aside, lead }: BannerProps) {
+export function Banner({ title, subtitle, live, level = 1, aside, lead, size }: BannerProps) {
   const H = level === 1 ? "h1" : "h2";
   return (
     <header
@@ -45,7 +45,9 @@ export function Banner({ title, subtitle, live, level = 1, aside, lead }: Banner
     >
       {lead}
       <div className="min-w-0">
-        <H className="m-0 font-gm-display text-xl font-bold">{title}</H>
+        <H className={cx("m-0 font-gm-display font-bold", size === "lg" ? "text-4xl" : "text-xl")}>
+          {title}
+        </H>
         {subtitle && <p className="m-0 text-sm opacity-90">{subtitle}</p>}
       </div>
       <div className="ml-auto flex items-center gap-2">

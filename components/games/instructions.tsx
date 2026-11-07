@@ -10,15 +10,18 @@ export function InstructionsDialog({
   instructions,
   onStart,
   busy,
+  onLeave,
 }: {
   instructions: Instructions;
   onStart: () => void;
   busy?: boolean;
+  /** Escape leaves the game, back to the games (the header's back arrow is behind the box). */
+  onLeave?: () => void;
 }) {
   const { Button } = useSlots();
   const id = useId();
   const box = useRef<HTMLDivElement>(null);
-  useFocusTrap(box);
+  useFocusTrap(box, onLeave);
   return (
     <div className="fixed inset-0 z-40 grid place-items-end bg-black/70 p-3 sm:place-items-center sm:p-4">
       <div

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { PackRoot } from "@/components/packs/judges-table/root";
@@ -105,7 +105,16 @@ describe("PlayerHub", () => {
     fakeServer();
     hub();
     await joinAs("Mai", "ZZZZZ");
-    expect(await screen.findByRole("alert")).toHaveTextContent(MESSAGES.wrongCode);
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(MESSAGES.wrongCode);
+    // The code box is the one marked wrong, and it gets focus back; the name box isn't blamed.
+    const code = screen.getByLabelText("Party code");
+    expect(code).toHaveAttribute("aria-invalid", "true");
+    expect(code).toHaveAttribute("aria-describedby", alert.id);
+    expect(screen.getByLabelText("Your name")).not.toHaveAttribute("aria-invalid");
+    await waitFor(() => {
+      expect(code).toHaveFocus();
+    });
   });
 
   test("S02-AC3: a too-short name is caught on Join, without calling the server", async () => {

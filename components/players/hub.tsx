@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useSlots } from "@/components/slots/registry";
 import { checkNickname, MESSAGES, NICKNAME_MAX } from "@/lib/players";
 import { useDevice } from "./device";
@@ -41,6 +41,11 @@ export function JoinForm({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const typed = liveMessage(name);
+  const nameBox = useRef<HTMLInputElement>(null);
+  const codeBox = useRef<HTMLInputElement>(null);
+  // A wrong code belongs to the code box; every other message to the name box.
+  const codeError = error === MESSAGES.wrongCode;
+  const nameError = Boolean(typed) || (Boolean(error) && !codeError);
 
   async function submit(e: { preventDefault: () => void }) {
     e.preventDefault();
@@ -56,6 +61,10 @@ export function JoinForm({
     if (failed) {
       setError(failed);
       if (failed === MESSAGES.wrongCode) setShowCode(true);
+      // Back to the box that needs fixing, so focus isn't lost after the wait.
+      requestAnimationFrame(() => {
+        (failed === MESSAGES.wrongCode ? codeBox : nameBox).current?.focus();
+      });
     }
   }
 
@@ -68,6 +77,7 @@ export function JoinForm({
         </label>
         <input
           id={`${id}-name`}
+          ref={nameBox}
           value={name}
           onChange={(e) => {
             setName(e.target.value);
@@ -76,8 +86,8 @@ export function JoinForm({
           maxLength={NICKNAME_MAX + 8}
           autoComplete="off"
           enterKeyHint="go"
-          aria-invalid={typed || error ? true : undefined}
-          aria-describedby={typed || error ? `${id}-error` : undefined}
+          aria-invalid={nameError ? true : undefined}
+          aria-describedby={nameError ? `${id}-error` : undefined}
           className={field}
         />
       </div>
@@ -88,10 +98,14 @@ export function JoinForm({
           </label>
           <input
             id={`${id}-code`}
+            ref={codeBox}
             value={code}
             onChange={(e) => {
               setCode(e.target.value);
+              if (codeError) setError(null);
             }}
+            aria-invalid={codeError ? true : undefined}
+            aria-describedby={codeError ? `${id}-error` : undefined}
             autoCapitalize="characters"
             autoComplete="off"
             spellCheck={false}

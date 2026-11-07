@@ -67,6 +67,24 @@ describe("S09-AC11: Judges' Table provides its eight slots (plus Celebration, sp
     expect(container.querySelectorAll('[data-slot="score-card"]')).toHaveLength(20);
     expect(container.querySelector('[data-part="handle"]')).not.toBeNull();
   });
+
+  test("S14-AC12: a card flips when its score changes or a result is fresh, not on every visit", () => {
+    const { ScoreCard } = resolveSlots(judgesTableSlots);
+    const flipping = (el: HTMLElement) =>
+      el.querySelector('[data-slot="score-card"] > span')?.className.includes("jt-flip") ?? false;
+    const first = render(<ScoreCard label="Flip test" value={10} state="scored" />);
+    expect(flipping(first.container)).toBe(false); // first sight: no flip
+    first.rerender(<ScoreCard label="Flip test" value={30} state="scored" />);
+    expect(flipping(first.container)).toBe(true); // the score changed
+    first.unmount();
+    const again = render(<ScoreCard label="Flip test" value={30} state="scored" />);
+    expect(flipping(again.container)).toBe(false); // the same score on a later visit
+    again.unmount();
+    const later = render(<ScoreCard label="Flip test" value={50} state="scored" />);
+    expect(flipping(later.container)).toBe(true); // a new best since the last visit
+    const fresh = render(<ScoreCard label="Fresh result" value={0} state="scored" fresh />);
+    expect(flipping(fresh.container)).toBe(true);
+  });
 });
 
 const inPack = (node: ReactNode) => (

@@ -50,11 +50,20 @@ function useAnnouncements() {
 type BoardRow = { id: string; rank: number; name: string; score: number; team?: number };
 
 /** A results-board column: ranked rows whose score cards flip when a score lands (S05-AC4). */
-function Results({ label, rows }: { label: string; rows: BoardRow[] }) {
+function Results({
+  label,
+  rows,
+  compact = false,
+}: {
+  label: string;
+  rows: BoardRow[];
+  /** The top players beside the teams: normal-size rows. */
+  compact?: boolean;
+}) {
   const { LeaderboardRow } = useSlots();
   return (
     <section aria-labelledby={`${label}-title`} className="grid min-h-0 content-start gap-2">
-      <h2 id={`${label}-title`} className="m-0 font-gm-display text-3xl font-bold">
+      <h2 id={`${label}-title`} className="m-0 font-gm-display text-4xl font-bold">
         {label}
       </h2>
       <ol aria-label={label} aria-live="polite" className="m-0 list-none p-0">
@@ -64,7 +73,7 @@ function Results({ label, rows }: { label: string; rows: BoardRow[] }) {
             rank={r.rank}
             name={r.name}
             score={r.score}
-            highlight={r.rank === 1}
+            size={compact ? "md" : "lg"}
             {...(r.team !== undefined ? { team: r.team } : {})}
           />
         ))}
@@ -73,14 +82,38 @@ function Results({ label, rows }: { label: string; rows: BoardRow[] }) {
   );
 }
 
-function Board({ slug }: { slug: string }) {
-  const announce = useAnnouncements();
-  const load = useCallback(async () => {
-    const res = await standingsApi.display(slug);
-    return res.ok ? res.data : null;
-  }, [slug]);
-  const data = usePoll(load, DISPLAY_POLL_MS, announce);
-  if (!data) return null;
+/**
+ * The latest points, kept on screen beside the QR code so the room always
+ * sees what just landed; new ones also arrive as toasts (spec 05).
+ */
+function Latest({ recent }: { recent: DisplayStandings["recent"] }) {
+  const { Toast } = useSlots();
+  return (
+    <section aria-labelledby="latest-title" className="grid content-start gap-3">
+      <h2 id="latest-title" className="m-0 font-gm-display text-2xl font-bold">
+        Latest points
+      </h2>
+      {recent.length === 0 ? (
+        <p className="m-0 text-lg text-gm-text-muted">Points show here as they land.</p>
+      ) : (
+        <ul aria-label="Latest points" className="m-0 grid list-none gap-2 p-0 text-lg">
+          {recent.slice(0, LATEST).map((a) => (
+            <li key={a.id}>
+              <Toast
+                text={a.from ? `${a.from} → ${a.nickname}` : `${a.nickname} · ${a.reason}`}
+                value={a.points}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+const LATEST = 3;
+
+function Board({ data }: { data: DisplayStandings }) {
   const players = data.players.map((p) => ({
     id: p.id,
     rank: p.rank,
@@ -101,52 +134,65 @@ function Board({ slug }: { slug: string }) {
             team: t.color,
           }))}
         />
-        {players.length > 0 && <Results label="Top players" rows={players} />}
+        {players.length > 0 && <Results label="Top players" rows={players} compact />}
       </div>
     );
   if (data.players.length === 0)
     return (
-      <p className="m-0 font-gm-display text-4xl text-gm-text-muted">
+      <p className="m-0 font-gm-display text-5xl text-gm-text-muted">
         No scores yet. Scan the code to join!
       </p>
     );
   return <Results label="Leaderboard" rows={players} />;
 }
 
-/** The TV: how to join, and the live leaderboard with toasts and lead changes (spec 05). */
-export function DisplayView({ slug, name, joinUrl, shortUrl, joinCode }: Props) {
+function Screen({ slug, name, joinUrl, shortUrl, joinCode }: Props) {
   const { Banner } = useSlots();
+  const announce = useAnnouncements();
+  const load = useCallback(async () => {
+    const res = await standingsApi.display(slug);
+    return res.ok ? res.data : null;
+  }, [slug]);
+  const data = usePoll(load, DISPLAY_POLL_MS, announce);
+  return (
+    <div className="grid h-dvh grid-rows-[auto_1fr] overflow-hidden">
+      <Banner title={name} size="lg" />
+      <div className="grid min-h-0 grid-cols-[1fr_minmax(0,26rem)] gap-10 p-8">
+        <main aria-label="Leaderboard" className="min-h-0 overflow-hidden text-2xl">
+          {data && <Board data={data} />}
+        </main>
+        <aside className="grid min-h-0 grid-rows-[auto_auto_1fr] content-start gap-6">
+          <section
+            aria-label="Join the party"
+            className="grid gap-3 rounded-gm bg-gm-surface p-5 text-center shadow-xl ring-1 ring-gm-border"
+          >
+            <p className="m-0 font-gm-display text-3xl font-bold">Scan to join</p>
+            <div className="mx-auto w-full max-w-[13rem]">
+              <QrCode value={joinUrl} label={`QR code for ${shortUrl}`} />
+            </div>
+            <p className="m-0 text-lg break-all text-gm-text-muted">{shortUrl}</p>
+            <p className="m-0 text-lg">
+              Code{" "}
+              <span className="font-gm-display text-4xl font-bold tracking-[0.2em] text-gm-accent-ink">
+                {joinCode}
+              </span>
+            </p>
+          </section>
+          <ToastChainView />
+          {data && <Latest recent={data.recent} />}
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+/** The TV: how to join, the results board, the latest points, and lead changes (spec 05). */
+export function DisplayView(props: Props) {
   return (
     <MomentsProvider surface="display">
       {/* Scales the whole page with the screen: everything is in rem, so a 1080p TV reads from across the room. */}
       <style>{"html{font-size:clamp(16px,1.2vw,32px)}"}</style>
-      <div className="grid h-dvh grid-rows-[auto_1fr] overflow-hidden">
-        <Banner title={name} />
-        <div className="grid min-h-0 grid-cols-[1fr_minmax(0,26rem)] gap-8 p-8">
-          <section aria-label="Leaderboard" className="min-h-0 overflow-hidden text-2xl">
-            <Board slug={slug} />
-          </section>
-          <aside className="grid min-h-0 content-start gap-6">
-            <section
-              aria-label="Join the party"
-              className="grid gap-3 rounded-gm bg-gm-surface p-5 text-center shadow-xl ring-1 ring-gm-border"
-            >
-              <p className="m-0 font-gm-display text-3xl font-bold">Scan to join</p>
-              <div className="mx-auto w-full max-w-[13rem]">
-                <QrCode value={joinUrl} label={`QR code for ${shortUrl}`} />
-              </div>
-              <p className="m-0 text-lg break-all text-gm-text-muted">{shortUrl}</p>
-              <p className="m-0 text-lg">
-                Code{" "}
-                <span className="font-gm-display text-4xl font-bold tracking-[0.2em] text-gm-accent-ink">
-                  {joinCode}
-                </span>
-              </p>
-            </section>
-            <ToastChainView />
-          </aside>
-        </div>
-      </div>
+      <Screen {...props} />
       <MomentsStage />
     </MomentsProvider>
   );

@@ -22,6 +22,8 @@ type DeviceState = {
   /** The player's plays, and their points from the ledger (S04-AC7, S08-AC15). */
   plays: HubPlays;
   total: number;
+  /** Whether `total` has loaded from the server yet; until then the header shows nothing. */
+  totalKnown: boolean;
   /** The player's team and whether they captain it, for team games (S03-AC5). */
   seat: Seat | null;
   refreshPlays: () => Promise<void>;
@@ -56,6 +58,7 @@ export function DeviceProvider({
   const [plays, setPlays] = useState<HubPlays>({});
   const [total, setTotal] = useState(0);
   const [seat, setSeat] = useState<Seat | null>(null);
+  const [totalKnown, setTotalKnown] = useState(false);
   const [leaveWarning, setLeaveWarning] = useState<string | null>(null);
   const token = useCallback(() => deviceToken(identity), [identity]);
   const fetchDevice = useCallback(
@@ -87,6 +90,7 @@ export function DeviceProvider({
       setPlays(res.data.plays);
       setTotal(res.data.total);
       setSeat(res.data.seat);
+      setTotalKnown(true);
     }
   }, [slug, token, activeKey]);
 
@@ -100,6 +104,7 @@ export function DeviceProvider({
         setPlays(res.ok ? res.data.plays : {});
         setTotal(res.ok ? res.data.total : 0);
         setSeat(res.ok ? res.data.seat : null);
+        setTotalKnown(res.ok);
       });
     return () => {
       alive.current = false;
@@ -123,6 +128,7 @@ export function DeviceProvider({
       plays: activeKey ? plays : {},
       total: activeKey ? total : 0,
       seat: activeKey ? seat : null,
+      totalKnown: activeKey ? totalKnown : false,
       refreshPlays,
       token,
       leaveWarning,
@@ -142,6 +148,7 @@ export function DeviceProvider({
     plays,
     total,
     seat,
+    totalKnown,
     refreshPlays,
     token,
     leaveWarning,

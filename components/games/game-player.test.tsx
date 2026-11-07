@@ -10,6 +10,8 @@ const api = vi.hoisted(() => ({
   start: vi.fn(),
   move: vi.fn(),
 }));
+const push = vi.hoisted(() => vi.fn());
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("@/lib/games", async (original) => ({ ...(await original<object>()), gamesApi: api }));
 
 type Active = { id: string; nickname: string } | null;

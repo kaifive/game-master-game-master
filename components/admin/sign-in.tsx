@@ -32,6 +32,7 @@ export function AdminSignIn() {
 
   return (
     <main className="mx-auto grid min-h-dvh w-full max-w-sm content-center px-4">
+      <h1 className="sr-only">Game Master host</h1>
       <Card title="Host sign-in">
         <form className="grid gap-3" onSubmit={(e) => void submit(e)}>
           <label htmlFor={id} className="text-sm font-bold text-gm-text-muted">

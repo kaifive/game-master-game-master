@@ -58,6 +58,7 @@ primitives (ADR-018) so every screen moves the same way, themed per event
 - [x] AC-9: The confetti library is not in any page's first download; it loads when the first celebration fires, uses theme colors, and fires fewer particles on phones than on the TV.
 - [x] AC-10: With reduced motion on, rows snap or fade instead of gliding, numbers jump to their final value, and no confetti, flips or shakes play.
 - [x] AC-11: A `/dev/ui/motion` gallery page replays every primitive and every moment in every pack, variant and mode.
+- [x] AC-12: A score card flips up when a score lands (a fresh result, or a score that changed since that card was last seen, even on an earlier page), not every time it is shown again.
 
 ## How it's built
 

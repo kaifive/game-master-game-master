@@ -14,6 +14,7 @@ const device = vi.hoisted(() => ({
     slug: string;
     active: { id: string; nickname: string } | null;
     total: number;
+    totalKnown: boolean;
     leaveWarning: string | null;
     setLeaveWarning: (m: string | null) => void;
   },
@@ -41,6 +42,7 @@ beforeEach(() => {
     slug: "holiday-2026",
     active: { id: "p1", nickname: "Mai" },
     total: 180,
+    totalKnown: true,
     leaveWarning: null,
     setLeaveWarning: vi.fn(),
   };
@@ -97,6 +99,12 @@ describe("TotalScore", () => {
   test("S08-AC15: shows the active player's total in the header", () => {
     render(<TotalScore />);
     expect(screen.getByLabelText("Mai: 180 points")).toHaveAttribute("data-total-score");
+  });
+
+  test("S08-AC15: shows nothing until the real total has loaded, so it never counts up from 0", () => {
+    if (device.state) device.state.totalKnown = false;
+    const { container } = render(<TotalScore />);
+    expect(container).toBeEmptyDOMElement();
   });
 
   test("shows nothing without a player", () => {

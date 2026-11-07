@@ -8,7 +8,8 @@ const FOCUSABLE =
 /**
  * Keeps Tab inside an open dialog (aria-modal hides the page from screen
  * readers, so keyboard focus mustn't wander there), focuses its first
- * control, and closes it on Escape when it can be closed.
+ * control, closes it on Escape when it can be closed, and hands focus back
+ * to what opened it.
  */
 export function useFocusTrap(
   box: RefObject<HTMLElement | null>,
@@ -16,6 +17,14 @@ export function useFocusTrap(
   /** Change this to move focus to the first control again (a new step in the dialog). */
   step?: unknown,
 ) {
+  // Focus goes back to whatever opened the dialog when it closes. This runs
+  // first, so it remembers the opener before focus moves into the dialog.
+  useEffect(() => {
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    return () => {
+      if (opener?.isConnected) opener.focus();
+    };
+  }, []);
   useEffect(() => {
     box.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
   }, [box, step]);

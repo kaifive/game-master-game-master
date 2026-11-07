@@ -36,6 +36,25 @@ describe("InstructionsDialog", () => {
     expect(screen.getByRole("button", { name: "Start" })).toHaveFocus();
   });
 
+  test("Escape leaves for the games, and focus returns to what opened it", async () => {
+    const onLeave = vi.fn();
+    const opener = document.createElement("button");
+    document.body.append(opener);
+    opener.focus();
+    const { unmount } = render(
+      <InstructionsDialog
+        instructions={{ title: "Rules", lines: ["Go."] }}
+        onStart={vi.fn()}
+        onLeave={onLeave}
+      />,
+    );
+    await userEvent.setup().keyboard("{Escape}");
+    expect(onLeave).toHaveBeenCalledOnce();
+    unmount();
+    expect(opener).toHaveFocus();
+    opener.remove();
+  });
+
   test("disables Start while the game is starting", () => {
     render(
       <InstructionsDialog

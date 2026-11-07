@@ -72,7 +72,7 @@ describe("DisplayView", () => {
     expect(join).toHaveTextContent("WUSH7");
   });
 
-  test("S05-AC4 S05-AC5: racing bars; new awards since the last update become toasts, none at first", async () => {
+  test("S05-AC4 S05-AC5: a results board; new awards since the last update become toasts, none at first", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const first = {
       players: [row("p1", 1, "Mai", 60)],
@@ -94,6 +94,10 @@ describe("DisplayView", () => {
     await next();
     expect(await screen.findByText("Mai +10 · Holiday Trivia · new best")).toBeInTheDocument();
     expect(screen.getByText("Bao +40 · Holiday Trivia")).toBeInTheDocument();
+    // The latest points stay on screen beside the board.
+    const latest = screen.getByRole("list", { name: "Latest points" });
+    expect(within(latest).getAllByRole("listitem")).toHaveLength(3);
+    expect(within(latest).getByText("Bao · Holiday Trivia")).toBeInTheDocument();
   });
 
   test("S05-AC1: tied players share a rank on the bars", async () => {

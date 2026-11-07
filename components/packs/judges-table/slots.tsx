@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { HollyIcon } from "@/components/icons/holly";
 import "@fontsource/oswald/500.css";
 import "@fontsource/oswald/700.css";
@@ -46,7 +47,7 @@ function Holly() {
   );
 }
 
-function Banner({ title, subtitle, live, level = 1, aside, lead }: BannerProps) {
+function Banner({ title, subtitle, live, level = 1, aside, lead, size = "md" }: BannerProps) {
   const H = level === 1 ? "h1" : "h2";
   const holly = useDecoration("holly");
   return (
@@ -56,7 +57,12 @@ function Banner({ title, subtitle, live, level = 1, aside, lead }: BannerProps) 
     >
       {lead}
       <div className="min-w-0">
-        <H className="m-0 font-gm-display text-base font-medium tracking-[0.1em] uppercase">
+        <H
+          className={cx(
+            "m-0 font-gm-display font-medium tracking-[0.1em] uppercase",
+            size === "lg" ? "text-4xl" : "text-base",
+          )}
+        >
           {title}
         </H>
         {subtitle && <p className="m-0 text-xs font-bold opacity-90">{subtitle}</p>}
@@ -79,7 +85,7 @@ const paddle = variants({
   variants: {
     state: {
       scored: "jt-card-shadow bg-[var(--gm-card)] text-[var(--gm-card-ink)]",
-      highlight: "bg-[var(--gm-gold)] text-[#1d1300] shadow-md",
+      highlight: "bg-[var(--gm-gold)] text-gm-tile-correct-ink shadow-md",
       blank: "bg-[var(--gm-card-back)] text-[var(--gm-card-back-ink)]",
     },
     size: {
@@ -92,9 +98,35 @@ const paddle = variants({
   defaults: { state: "scored", size: "md" },
 });
 
+/** The last score each card showed, across pages, so a card flips only when its score changes. */
+const seen = new Map<string, number>();
+const BLANK = -1;
+
+/**
+ * Whether a card should flip up: a fresh result, or a score that changed
+ * since this card was last seen (on this page or an earlier one). Seeing the
+ * same score again doesn't flip it.
+ */
+function useLanded(key: string, value: number, fresh: boolean): boolean {
+  const [landed, setLanded] = useState<number | null>(() => {
+    const before = seen.get(key);
+    return fresh || (before !== undefined && before !== value) ? value : null;
+  });
+  const [last, setLast] = useState(value);
+  if (last !== value) {
+    setLast(value);
+    setLanded(value);
+  }
+  useEffect(() => {
+    seen.set(key, value);
+  }, [key, value]);
+  return landed === value && value !== BLANK;
+}
+
 /** A judge's score card on a handle; flips up when a score lands. */
-function ScoreCard({ label, value, state, size = "md" }: ScoreCardProps) {
+function ScoreCard({ label, value, state, size = "md", fresh = false }: ScoreCardProps) {
   const scored = state !== "blank" && value !== undefined;
+  const landed = useLanded(label, scored ? value : BLANK, fresh);
   return (
     <span
       role="img"
@@ -107,7 +139,7 @@ function ScoreCard({ label, value, state, size = "md" }: ScoreCardProps) {
         aria-hidden="true"
         className={cx(
           paddle({ state, size }),
-          scored && "motion-safe:animate-[jt-flip_420ms_cubic-bezier(0.16,1,0.3,1)]",
+          landed && "motion-safe:animate-[jt-flip_420ms_cubic-bezier(0.16,1,0.3,1)]",
         )}
       >
         {scored ? fmt(value) : "?"}
@@ -247,7 +279,7 @@ function Toast({ text, value }: ToastProps) {
       className="jt-card-shadow flex items-center gap-2 rounded-lg bg-gm-surface py-1.5 pr-3 pl-1.5 text-sm font-bold"
     >
       {value !== undefined && (
-        <span className="grid h-8 min-w-11 place-items-center rounded-[4px] bg-[var(--gm-gold)] px-1 font-gm-display text-lg text-[#1d1300]">
+        <span className="grid h-8 min-w-11 place-items-center rounded-[4px] bg-[var(--gm-gold)] px-1 font-gm-display text-lg text-gm-tile-correct-ink">
           {fmt(value)}
         </span>
       )}
@@ -256,35 +288,63 @@ function Toast({ text, value }: ToastProps) {
   );
 }
 
-function LeaderboardRow({ rank, name, score, team, highlight }: LeaderboardRowProps) {
+/** Gold, silver and bronze for the podium; everyone else in quiet ink. */
+const RANK_INK: Record<number, string> = {
+  1: "text-[var(--gm-gold)]",
+  2: "text-[var(--gm-rank-silver)]",
+  3: "text-[var(--gm-rank-bronze)]",
+};
+
+/** A results-board row: place, name, and a score card on its handle. */
+function LeaderboardRow({ rank, name, score, team, highlight, size = "md" }: LeaderboardRowProps) {
+  const landed = useLanded(`row:${name}`, score, false);
+  const lg = size === "lg";
   return (
     <li
       aria-label={`${rank}. ${name}, ${fmt(score)} points`}
       data-slot="leaderboard-row"
-      className="grid grid-cols-[3.5rem_1fr_auto] items-center gap-3 border-b border-gm-border px-2 py-3"
+      className={cx(
+        "grid items-center gap-3 border-b border-gm-border px-2",
+        lg ? "grid-cols-[5rem_1fr_auto] py-4" : "grid-cols-[3.5rem_1fr_auto] py-3",
+        highlight && "rounded-gm bg-gm-surface",
+      )}
     >
       <span
         aria-hidden="true"
         className={cx(
-          "font-gm-display text-4xl font-bold",
-          highlight ? "text-[var(--gm-gold-line)]" : "text-gm-accent-ink",
+          "font-gm-display font-bold",
+          lg ? "text-6xl" : "text-4xl",
+          RANK_INK[rank] ?? "text-gm-text-muted",
         )}
       >
         {rank}
       </span>
-      <span aria-hidden="true" className="flex items-center gap-2.5 text-2xl font-bold">
-        {team !== undefined && (
-          <i className="size-4 rounded-[3px]" style={{ background: `var(--gm-team-${team})` }} />
-        )}
-        {name}
-      </span>
-      {/* Keyed by score, so the card flips up again whenever the score changes. */}
       <span
-        key={score}
         aria-hidden="true"
-        className="jt-card-shadow inline-grid min-w-[2.2em] place-items-center rounded-[4px] bg-[var(--gm-card)] px-1.5 py-0.5 font-gm-display text-3xl font-bold text-[var(--gm-card-ink)] tabular-nums motion-safe:animate-[jt-flip_420ms_cubic-bezier(0.16,1,0.3,1)]"
+        className={cx("flex min-w-0 items-center gap-2.5 font-bold", lg ? "text-4xl" : "text-2xl")}
       >
-        {fmt(score)}
+        {team !== undefined && (
+          <i
+            className={cx("shrink-0 rounded-[3px]", lg ? "size-6" : "size-4")}
+            style={{ background: `var(--gm-team-${team})` }}
+          />
+        )}
+        {/* Long names wrap on the TV rather than lose their end; phones keep one line. */}
+        <span className={lg ? "text-balance break-words" : "truncate"}>{name}</span>
+      </span>
+      {/* A score card on its handle; keyed by score so it flips again when the score changes. */}
+      <span aria-hidden="true" className="inline-grid justify-items-center">
+        <span
+          key={score}
+          className={cx(
+            "jt-card-shadow inline-grid min-w-[2.2em] place-items-center rounded-[4px] bg-[var(--gm-card)] px-1.5 py-0.5 font-gm-display font-bold text-[var(--gm-card-ink)] tabular-nums",
+            lg ? "text-5xl" : "text-3xl",
+            landed && "motion-safe:animate-[jt-flip_420ms_cubic-bezier(0.16,1,0.3,1)]",
+          )}
+        >
+          {fmt(score)}
+        </span>
+        <span className={cx("jt-handle rounded-b-[2px]", lg ? "h-5 w-2" : "h-3 w-1.5")} />
       </span>
     </li>
   );

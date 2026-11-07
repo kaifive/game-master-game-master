@@ -221,7 +221,7 @@ export function TriviaGame({ view: raw, onMove, onTimeUp, busy }: GameRendererPr
   return (
     <section aria-label="Trivia" className="grid gap-4">
       <div className="grid gap-2">
-        <p className="m-0 text-sm font-bold tracking-wide text-gm-text-muted uppercase">
+        <p className="m-0 text-base font-bold text-gm-text-muted">
           Question {view.number} of {view.total}
         </p>
         <Countdown
