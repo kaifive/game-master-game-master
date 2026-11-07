@@ -46,6 +46,34 @@ export const holiday2026: EventConfig = {
       alwaysOpen: true,
     })),
     {
+      // Spec 17: one guess; points when the host scores it in Controls.
+      id: "guessing-jar",
+      type: "jar",
+      title: "Guessing Jar",
+      mode: "solo",
+      visibility: "listed",
+      content: { prompt: "How many candies are in the jar?" },
+      scoring: { awardTo: "player" },
+      alwaysOpen: true,
+    },
+    {
+      // Spec 17: placeholder codes and spots. Replace them before the party, then print the codes.
+      id: "geocache",
+      type: "cache",
+      title: "Geocache",
+      mode: "solo",
+      visibility: "listed",
+      content: {
+        caches: [
+          { id: "c1", label: "Placeholder: by the front door", code: "SNOW1" },
+          { id: "c2", label: "Placeholder: under the snack table", code: "HOLLY2" },
+          { id: "c3", label: "Placeholder: behind the TV", code: "GIFT3" },
+        ],
+      },
+      scoring: { awardTo: "player" },
+      alwaysOpen: true,
+    },
+    {
       // A team game: the captain plays on their phone for the team (spec 03). Placeholder questions.
       id: "team-trivia",
       type: "trivia",

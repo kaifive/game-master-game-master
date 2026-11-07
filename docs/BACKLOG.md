@@ -40,7 +40,7 @@ A feature item needs its spec at `Ready` before it starts.
 - [ ] Spec 09, theming: tokens, color modes, variants, icon sets; holiday variant
 - [x] Spec 10, trivia: the first solo game (replaces word guess)
 - [x] Spec 16, quick games: T-Timer, Tap Masher, Snow Trail, Stack Attack, Rapid Recall
-- [ ] Spec 17, Guessing Jar (scored when the host enters the count) and Geocache (hidden codes)
+- [x] Spec 17, Guessing Jar (scored when the host enters the count) and Geocache (hidden codes)
 - [ ] Spec 18, Color Matcher and Quick Draw (auto-judged), once Khai sends the logo
 - [ ] Spec 13, photos: upload, swipe triage, photo challenge, photo vote, slideshow
 - [ ] Photo export and prune scripts (ADR-012)

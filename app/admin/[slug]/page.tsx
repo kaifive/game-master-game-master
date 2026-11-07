@@ -17,7 +17,7 @@ export default async function ControlsPage({ params }: { params: Promise<{ slug:
       name={event.name}
       games={event.games
         .filter((g) => g.mode === "solo")
-        .map((g) => ({ id: g.id, title: g.title }))}
+        .map((g) => ({ id: g.id, title: g.title, type: g.type }))}
       initial={await controlsFor(slug)}
     />
   );

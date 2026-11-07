@@ -311,3 +311,38 @@ describe("S08-AC7: sorting the games", () => {
     expect(playing.find((r) => r.game.id === "trivia")?.note).toBe("Continue");
   });
 });
+
+describe("S17-AC5: jars and caches on the games list", () => {
+  test("a jar waits for the reveal; Geocache shows its points so far; neither offers Again", () => {
+    const replay = { ...event, replayable: true };
+    const rows = hubRows(
+      replay,
+      "live",
+      {
+        "guessing-jar": { status: "finished", best: 0, runs: 1, once: true, waiting: true },
+        geocache: { status: "playing", best: 33, runs: 1, once: true },
+        trivia: { status: "finished", best: 70, runs: 1 },
+      },
+      null,
+    );
+    const byId = Object.fromEntries(rows.map((r) => [r.game.id, r]));
+    expect(byId["guessing-jar"]).toMatchObject({
+      group: "scored",
+      note: "Waiting for the reveal",
+      best: null,
+    });
+    expect(byId.geocache).toMatchObject({ group: "open", note: "Continue", best: 33 });
+    expect(byId.trivia).toMatchObject({ note: "Again" });
+    const scoredJar = hubRows(
+      replay,
+      "live",
+      { "guessing-jar": { status: "finished", best: 80, runs: 1, once: true } },
+      null,
+    );
+    expect(scoredJar.find((r) => r.game.id === "guessing-jar")).toMatchObject({
+      note: "Done",
+      best: 80,
+      href: null,
+    });
+  });
+});

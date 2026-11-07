@@ -109,7 +109,7 @@ function Result({
 /** A solo game on the phone: instructions, play, result (spec 08). */
 export function GamePlayer({ gameId, type, instructions, replayable, title = "This game" }: Props) {
   const { Panel } = useSlots();
-  const { slug, load, active, token, plays, setLeaveWarning } = useDevice();
+  const { slug, load, active, token, plays, setLeaveWarning, refreshPlays } = useDevice();
   const router = useRouter();
   const renderer = rendererFor(type);
   const [phase, setPhase] = useState<Phase>({ kind: "checking" });
@@ -154,8 +154,9 @@ export function GamePlayer({ gameId, type, instructions, replayable, title = "Th
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, gameId, token, playerId]);
 
-  // Leaving mid-run costs time, so the footer asks first (S08-AC14).
-  const inProgress = phase.kind === "playing" && phase.play.status === "playing";
+  // Leaving mid-run costs time in a timed game, so the footer asks first (S08-AC14).
+  const inProgress =
+    renderer?.warnOnLeave === true && phase.kind === "playing" && phase.play.status === "playing";
   useEffect(() => {
     setLeaveWarning(inProgress ? LEAVE_WARNING : null);
     return () => {
@@ -171,6 +172,9 @@ export function GamePlayer({ gameId, type, instructions, replayable, title = "Th
       step: phase.play.step,
       move: m,
     });
+    // A game that banks points mid-run (Geocache) updates the header total at once.
+    if (res.ok && res.data.status === "playing" && res.data.best > phase.play.best)
+      void refreshPlays();
     const apply = () => {
       setBusy(false);
       setPhase(

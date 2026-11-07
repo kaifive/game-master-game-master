@@ -107,8 +107,10 @@ export function hubRows(
           : null;
     const open = gameOpen(status, game) && !blocked && !wait;
     const href = open ? `/${event.slug}/play/${game.id}` : null;
+    if (play?.waiting)
+      return { game, group: "scored", href: null, note: "Waiting for the reveal", best: null };
     if (play?.status === "finished") {
-      const again = open && event.replayable;
+      const again = open && event.replayable && !play.once;
       return {
         game,
         group: "scored",
@@ -117,7 +119,15 @@ export function hubRows(
         best: play.best,
       };
     }
-    if (open) return { game, group: "open", href, note: playLabel(play), best: null };
+    // A game that banks points as it goes shows them on its card while it's open.
+    if (open)
+      return {
+        game,
+        group: "open",
+        href,
+        note: playLabel(play),
+        best: play?.best ? play.best : null,
+      };
     return {
       game,
       group: "later",

@@ -16,6 +16,7 @@ import {
   rebuildPoints,
   removePlayer,
   resetGame,
+  scoreJar,
   voidPlayerDonation,
   type AdminDeps,
 } from "./service";
@@ -187,11 +188,13 @@ describe("controls", () => {
       "d1",
     );
     expect((await controlsView(deps, event)).donations).toBeUndefined();
-    expect((await controlsView(deps, event, true)).donations).toEqual([
+    expect((await controlsView(deps, event, { donations: true })).donations).toEqual([
       { id: "d1", from: "Bao", team: "Team Mai", points: 30, voided: false },
     ]);
     await voidPlayerDonation(deps, event, "d1");
-    expect((await controlsView(deps, event, true)).donations?.[0]?.voided).toBe(true);
+    expect((await controlsView(deps, event, { donations: true })).donations?.[0]?.voided).toBe(
+      true,
+    );
     expect(await total(bao.id)).toBe(40);
     expect((await failure(voidPlayerDonation(deps, event, "nope"))).status).toBe(404);
   });
@@ -206,6 +209,41 @@ describe("controls", () => {
     await rebuildPoints(deps, event);
     expect(await deps.points.points.teamTotal(SLUG, teamId)).toBe(55);
     expect(await total(mai.id)).toBe(0);
+  });
+
+  it("S17-AC3: scoring the jar pays each guess by how close it is, and re-scoring replaces it", async () => {
+    const guess = (id: string, value: number) =>
+      deps.plays.update(SLUG, "guessing-jar", id, () => ({
+        ...play(id, 0),
+        gameId: "guessing-jar",
+        state: { guess: value, actual: null, points: null, step: 1 },
+      }));
+    await guess(mai.id, 300);
+    await guess(bao.id, 400);
+    expect((await controlsView(deps, event, { jars: true })).jars).toEqual([
+      {
+        gameId: "guessing-jar",
+        title: "Guessing Jar",
+        guesses: 2,
+        actual: null,
+        closest: expect.any(Array) as unknown,
+      },
+    ]);
+    await scoreJar(deps, event, "guessing-jar", 300);
+    expect(await total(mai.id)).toBe(100);
+    expect(await total(bao.id)).toBe(33);
+    const jars = (await controlsView(deps, event, { jars: true })).jars;
+    expect(jars?.[0]).toMatchObject({ actual: 300 });
+    expect(jars?.[0]?.closest.map((c) => c.nickname)).toEqual(["Mai", "Bao"]);
+    expect((await deps.plays.get(SLUG, "guessing-jar", mai.id))?.best).toBe(100);
+    // The host miscounted: scoring again replaces the old points.
+    await scoreJar(deps, event, "guessing-jar", 400);
+    expect(await total(mai.id)).toBe(50);
+    expect(await total(bao.id)).toBe(100);
+    await scoreJar(deps, event, "guessing-jar", 400);
+    expect(await total(bao.id)).toBe(100);
+    expect((await failure(scoreJar(deps, event, "trivia", 3))).status).toBe(404);
+    expect((await failure(scoreJar(deps, event, "guessing-jar", -1))).status).toBe(400);
   });
 
   it("S07-AC9: clear test data deletes everything, only while upcoming and after typing CLEAR", async () => {
