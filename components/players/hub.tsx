@@ -9,8 +9,8 @@ import { useDevice } from "./device";
 const field =
   "min-h-11 w-full min-w-0 rounded-gm border-2 border-gm-border bg-gm-surface px-3 text-lg text-gm-text";
 const label = "text-sm font-bold text-gm-text-muted";
-const Alert = ({ children }: { children: string }) => (
-  <p role="alert" className="m-0 text-sm font-bold text-gm-danger">
+const Alert = ({ children, id }: { children: string; id?: string }) => (
+  <p id={id} role="alert" className="m-0 text-sm font-bold text-gm-danger">
     {children}
   </p>
 );
@@ -77,6 +77,7 @@ export function JoinForm({
           autoComplete="off"
           enterKeyHint="go"
           aria-invalid={typed || error ? true : undefined}
+          aria-describedby={typed || error ? `${id}-error` : undefined}
           className={field}
         />
       </div>
@@ -99,7 +100,7 @@ export function JoinForm({
           />
         </div>
       )}
-      {(error ?? typed) && <Alert>{(error ?? typed) as string}</Alert>}
+      {(error ?? typed) && <Alert id={`${id}-error`}>{(error ?? typed) as string}</Alert>}
       <div className="flex flex-wrap gap-2">
         <Button size="lg" type="submit" disabled={busy || Boolean(typed)}>
           {busy ? "Joining…" : "Join"}

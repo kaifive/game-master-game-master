@@ -64,7 +64,8 @@ export function PhoneLeaderboard({ slug }: { slug: string }) {
               <LeaderboardRow
                 key={r.id}
                 rank={r.rank}
-                name={r.nickname}
+                // Said in words too, so gold isn't the only sign it's you.
+                name={r.id === playerId ? `${r.nickname} (you)` : r.nickname}
                 score={r.points}
                 highlight={r.id === playerId}
               />

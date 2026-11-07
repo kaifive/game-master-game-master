@@ -57,6 +57,8 @@ describe("PhoneLeaderboard", () => {
     board();
     const list = await screen.findByRole("list", { name: "Leaderboard" });
     expect(within(list).queryByText("You")).toBeNull();
+    // Your row says so in words, not only in gold.
+    expect(within(list).getByText("P3 (you)")).toBeInTheDocument();
   });
 
   test("S05-AC2: refreshes every 15 seconds, and asks for this player's place", async () => {

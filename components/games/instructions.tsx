@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
+import { useId, useRef } from "react";
+import { useFocusTrap } from "@/components/dialog/use-focus-trap";
 import { useSlots } from "@/components/slots/registry";
 import type { Instructions } from "@/lib/games";
 
@@ -17,9 +18,7 @@ export function InstructionsDialog({
   const { Button } = useSlots();
   const id = useId();
   const box = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    box.current?.querySelector("button")?.focus();
-  }, []);
+  useFocusTrap(box);
   return (
     <div className="fixed inset-0 z-40 grid place-items-end bg-black/70 p-3 sm:place-items-center sm:p-4">
       <div
@@ -30,9 +29,6 @@ export function InstructionsDialog({
         className="w-full max-w-md overflow-hidden rounded-gm bg-gm-surface text-gm-text shadow-2xl ring-1 ring-gm-border"
       >
         <div className="border-b-4 border-gm-accent-ink px-5 pt-5 pb-4">
-          <p className="m-0 text-xs font-bold tracking-[0.16em] text-gm-text-muted uppercase">
-            Before you start
-          </p>
           <h2 id={`${id}-title`} className="m-0 font-gm-display text-3xl font-bold">
             {instructions.title}
           </h2>

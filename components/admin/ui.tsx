@@ -45,7 +45,7 @@ export const StatusBadge = ({ status }: { status: EventStatus }) => (
 );
 
 export const field =
-  "min-h-11 w-full min-w-0 rounded-gm border border-gm-border bg-gm-surface px-3 text-base text-gm-text";
+  "min-h-11 w-full min-w-0 rounded-gm border border-gm-border bg-gm-surface px-3 text-base text-gm-text placeholder:text-gm-text-muted";
 
 export function AdminButton({
   children,
