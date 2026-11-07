@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
+import { useFocusTrap } from "@/components/dialog/use-focus-trap";
 import { PointsIcon } from "@/components/icons/points";
 import { useSlots } from "@/components/slots/registry";
 import { useDevice } from "./device";
@@ -16,9 +17,7 @@ export function PlayerSheet({ hasTeams, onClose }: { hasTeams: boolean; onClose:
   const [mode, setMode] = useState<"view" | "confirm" | "restart">("view");
   const id = useId();
   const box = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    box.current?.querySelector("button")?.focus();
-  }, [mode]);
+  useFocusTrap(box, onClose, mode);
   if (!active || load.kind !== "ready") return null;
   const { restartsLeft } = load.device;
 
@@ -45,9 +44,6 @@ export function PlayerSheet({ hasTeams, onClose }: { hasTeams: boolean; onClose:
         ) : (
           <>
             <div className="grid gap-1">
-              <p className="m-0 text-xs font-bold tracking-[0.16em] text-gm-text-muted uppercase">
-                Playing as
-              </p>
               <h2 id={`${id}-title`} className="m-0 font-gm-display text-3xl font-bold">
                 {active.nickname}
               </h2>
@@ -75,17 +71,19 @@ export function PlayerSheet({ hasTeams, onClose }: { hasTeams: boolean; onClose:
                 </div>
               </div>
             ) : (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <Button onClick={onClose}>Close</Button>
+                {/* Quieter than Close: on a shared phone, this is the button you don't want by accident. */}
                 {restartsLeft > 0 && (
-                  <Button
-                    tone="secondary"
+                  <button
+                    type="button"
                     onClick={() => {
                       setMode("confirm");
                     }}
+                    className="min-h-11 px-2 text-sm font-bold text-gm-text-muted underline underline-offset-4"
                   >
                     Not you? Start over
-                  </Button>
+                  </button>
                 )}
               </div>
             )}

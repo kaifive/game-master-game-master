@@ -11,6 +11,7 @@ export function TotalScore() {
   return (
     <span
       data-total-score
+      role="img"
       aria-label={`${device.active.nickname}: ${String(device.total)} points`}
       className="inline-flex min-w-14 items-center justify-center gap-1 rounded-full bg-black/25 px-3 py-1 font-gm-display text-lg font-bold tabular-nums"
     >

@@ -22,6 +22,20 @@ describe("InstructionsDialog", () => {
     expect(onStart).toHaveBeenCalledOnce();
   });
 
+  test("keyboard focus stays inside the box", async () => {
+    render(
+      <>
+        <button type="button">Behind</button>
+        <InstructionsDialog instructions={{ title: "Rules", lines: ["Go."] }} onStart={vi.fn()} />
+      </>,
+    );
+    const user = userEvent.setup();
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Start" })).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(screen.getByRole("button", { name: "Start" })).toHaveFocus();
+  });
+
   test("disables Start while the game is starting", () => {
     render(
       <InstructionsDialog

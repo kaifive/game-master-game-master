@@ -62,6 +62,7 @@ function fakeServer(banned: string[] = []) {
   return fetch;
 }
 
+const closed = vi.fn();
 const hub = (props: { code?: string; sheet?: boolean } = {}) => {
   search.params = new URLSearchParams(props.code ? { code: props.code } : {});
   return render(
@@ -69,7 +70,7 @@ const hub = (props: { code?: string; sheet?: boolean } = {}) => {
       <DeviceProvider slug={SLUG} identity="dev">
         <PlayerHub />
         <Who />
-        {props.sheet && <PlayerSheet hasTeams={false} onClose={() => undefined} />}
+        {props.sheet && <PlayerSheet hasTeams={false} onClose={closed} />}
       </DeviceProvider>
     </PackRoot>,
   );
@@ -111,7 +112,10 @@ describe("PlayerHub", () => {
     const fetch = fakeServer();
     hub({ code: "WUSH7" });
     await joinAs("M");
-    expect(await screen.findByRole("alert")).toHaveTextContent(MESSAGES.tooShort);
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(MESSAGES.tooShort);
+    // The message is tied to the name box, so it's read again when the box is focused.
+    expect(screen.getByLabelText("Your name")).toHaveAttribute("aria-describedby", alert.id);
     expect(fetch.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(0);
   });
 
@@ -160,6 +164,10 @@ describe("PlayerHub", () => {
     expect(screen.queryByLabelText("Party code")).toBeNull();
     await joinAs("Bao");
     expect(await screen.findByText("Playing as Bao")).toBeInTheDocument();
+    // The panel closes on Escape.
+    closed.mockClear();
+    await user.keyboard("{Escape}");
+    expect(closed).toHaveBeenCalled();
     // The limit is used up, so the option is gone.
     expect(screen.queryByRole("button", { name: "Not you? Start over" })).toBeNull();
   });
