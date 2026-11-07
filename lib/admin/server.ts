@@ -23,6 +23,7 @@ import {
   rebuildPoints,
   removePlayer,
   resetGame,
+  scoreJar,
   voidPlayerDonation,
   type AdminDeps,
 } from "./service";
@@ -139,6 +140,12 @@ export const ControlsAction = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("clear"), confirm: z.string().max(20) }),
   z.object({ action: z.literal("donations") }),
+  z.object({ action: z.literal("jars") }),
+  z.object({
+    action: z.literal("scoreJar"),
+    gameId: z.string().min(1).max(64),
+    actual: z.number().int().min(0).max(1_000_000),
+  }),
   z.object({
     action: z.literal("board"),
     phones: z.boolean().optional(),
@@ -198,6 +205,10 @@ export async function runAction(slug: Slug, body: ControlsAction) {
       await changeCaptain(d, event, body.teamId, body.playerId);
       break;
     case "donations":
+    case "jars":
+      break;
+    case "scoreJar":
+      await scoreJar(d, event, body.gameId, body.actual);
       break;
     case "board":
       await setBoardVisibility(d, event, {
@@ -209,5 +220,8 @@ export async function runAction(slug: Slug, body: ControlsAction) {
       await voidPlayerDonation(d, event, body.donationId);
       break;
   }
-  return controlsView(d, event, body.action === "donations" || body.action === "voidDonation");
+  return controlsView(d, event, {
+    donations: body.action === "donations" || body.action === "voidDonation",
+    jars: body.action === "jars" || body.action === "scoreJar",
+  });
 }

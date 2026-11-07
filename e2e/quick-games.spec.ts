@@ -125,3 +125,53 @@ test("S16-AC7: Snow Trail", async ({ page }) => {
   await scored(page);
   await expect(page.getByRole("region", { name: "Your score" })).toContainText(/Solved in/);
 });
+
+test("S17-AC6: Guessing Jar is scored from Controls, and the points reach the phone", async ({
+  page,
+  browser,
+}) => {
+  await joinAndOpen(page, "Guessing Jar");
+  await page.getByLabel("How many candies are in the jar?").fill("300");
+  await page.getByRole("button", { name: "Lock in my guess" }).click();
+  await page.getByRole("button", { name: "Yes, lock it in" }).click();
+  await expect(page.getByRole("region", { name: "Your score" })).toContainText(
+    "Points come when the host reveals the jar",
+  );
+
+  const admin = await (
+    await browser.newContext({ viewport: { width: 1024, height: 900 } })
+  ).newPage();
+  await admin.goto("/admin");
+  await admin.getByLabel("Passphrase").fill("e2e-host-pass");
+  await admin.getByRole("button", { name: "Sign in" }).click();
+  await admin.getByRole("link", { name: /Nova Wushu Holiday Party/ }).click();
+  await admin.getByRole("button", { name: "Show guesses" }).click();
+  await admin.getByLabel("Real count").fill("300");
+  await admin.getByRole("button", { name: /Score (the jar|it again)/ }).click();
+  await admin.getByRole("button", { name: "Yes, the jar has 300" }).click();
+  await expect(admin.getByRole("list", { name: "Closest guesses for Guessing Jar" })).toBeVisible();
+
+  await page.goto("/holiday-2026/play/guessing-jar");
+  await expect(page.getByRole("region", { name: "Your score" })).toContainText(
+    "the jar had 300 · 0% off",
+  );
+});
+
+test("S17-AC6: Geocache scores a hidden code once", async ({ page }) => {
+  await joinAndOpen(page, "Geocache");
+  const box = page.getByLabel("Found a code? Type it here");
+  await box.fill("snow1");
+  await page.getByRole("button", { name: "Check code" }).click();
+  await expect(page.getByText("Found one! The points are yours.")).toBeVisible();
+  await expect(page.getByText("1 of 3 found")).toBeVisible();
+  await box.fill("SNOW1");
+  await page.getByRole("button", { name: "Check code" }).click();
+  await expect(page.getByText("You've already found that one.")).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Party" })
+    .getByRole("link", { name: /Games/ })
+    .click();
+  await expect(
+    page.getByRole("link", { name: /Geocache/ }).getByRole("img", { name: /Geocache: 33 points/ }),
+  ).toBeVisible();
+});

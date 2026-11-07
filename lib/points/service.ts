@@ -87,11 +87,13 @@ export async function awardGame(
   deps: PointsDeps,
   slug: string,
   to: Recipient | TeamCompetitor,
-  run: { gameId: string; title: string; run: number; gain: number; replay: boolean },
+  run: { gameId: string; title: string; run: number; gain: number; replay: boolean; key?: string },
 ): Promise<void> {
   if (run.gain <= 0) return;
   const award: Award = {
-    id: gameAwardId(run.gameId, to.id, run.run),
+    id: run.key
+      ? `game_${run.gameId}_${to.id}_${run.key}`
+      : gameAwardId(run.gameId, to.id, run.run),
     points: run.gain,
     reason: run.replay ? `${run.title} · new best` : run.title,
     source: { kind: "game", id: run.gameId },

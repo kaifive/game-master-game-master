@@ -1,4 +1,6 @@
 import { defineGame, type AnyGameLogic } from "./model";
+import { cache } from "./cache/logic";
+import { jar } from "./jar/logic";
 import { recall } from "./recall/logic";
 import { stacker } from "./stacker/logic";
 import { taps } from "./taps/logic";
@@ -17,6 +19,8 @@ const LOGIC: Readonly<Record<string, AnyGameLogic>> = {
   trail: defineGame(trail),
   stacker: defineGame(stacker),
   recall: defineGame(recall),
+  jar: defineGame(jar),
+  cache: defineGame(cache),
 };
 
 export const gameLogic = (type: string): AnyGameLogic | undefined => LOGIC[type];

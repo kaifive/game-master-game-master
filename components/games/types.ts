@@ -12,4 +12,6 @@ export type GameRenderer = {
   Play: (props: GameRendererProps) => React.ReactNode;
   /** A line for the result screen, such as "4 of 5 right". */
   summary: (view: unknown) => string | null;
+  /** A clock runs on the server mid-run, so leaving costs time: ask first (S08-AC14). */
+  warnOnLeave?: boolean;
 };

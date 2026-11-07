@@ -26,6 +26,12 @@ export type GameLogic<C, S, V> = {
   score: (state: S, points: number) => number;
   /** Counts every change, so a move for an old step can be ignored (S08-AC5). */
   step: (state: S) => number;
+  /** One run only, even in a replayable event (S17-AC2). */
+  once?: boolean;
+  /** Points land as the score grows, while the run is still open (S17-AC4). */
+  progressive?: boolean;
+  /** Finished, but scored later by the host (S17-AC2). */
+  waiting?: (state: S) => boolean;
 };
 
 /** A game's logic with its types erased, for the registry. */
@@ -45,7 +51,18 @@ export type PlayResponse = {
 };
 
 /** A player's plays by game id, for the hub (S08-AC7). */
-export type HubPlays = Record<string, { status: PlayStatus; best: number; runs: number }>;
+export type HubPlays = Record<
+  string,
+  {
+    status: PlayStatus;
+    best: number;
+    runs: number;
+    /** One run only: no Again (S17-AC5). */
+    once?: true;
+    /** Finished, but its points come later (a jar before the reveal). */
+    waiting?: true;
+  }
+>;
 
 /** Where a player sits for team games: only a captain plays them, for the team (S03-AC5). */
 export type Seat = {

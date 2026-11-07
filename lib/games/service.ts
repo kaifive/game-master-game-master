@@ -35,6 +35,8 @@ export type FinishedRun = {
   run: number;
   gain: number;
   replay: boolean;
+  /** Makes the award's id unique when one run scores in steps (progressive games, S17-AC4). */
+  key?: string;
 };
 
 export const StartBody = z.object({
@@ -71,7 +73,23 @@ async function changePlay(
   const finished: { run: FinishedRun | null } = { run: null };
   const play = await deps.plays.update(event.slug, gameId, r.key, (cur) => {
     finished.run = null;
-    const next = change(cur);
+    let next = change(cur);
+    // A progressive game banks points as its score grows, before the run ends (S17-AC4).
+    if (r.logic.progressive && next?.status === "playing") {
+      const now = r.logic.score(next.state, r.points);
+      if (now > next.best) {
+        finished.run = {
+          gameId,
+          title: r.game.title,
+          run: next.runs,
+          gain: now - next.best,
+          replay: false,
+          key: `${String(next.runs)}_${String(now)}`,
+        };
+        next = { ...next, best: now, points: now };
+      }
+      return next;
+    }
     if (cur?.status === "playing" && next?.status === "finished")
       finished.run = {
         gameId,
@@ -214,7 +232,7 @@ export async function startPlay(
         ...run(),
       };
     if (cur.status === "finished")
-      return body.again && event.replayable === true
+      return body.again && event.replayable === true && !r.logic.once
         ? { ...cur, ...run(), runs: cur.runs + 1 }
         : null;
     const ticked = r.logic.tick(cur.state, r.content, { now });
@@ -267,10 +285,17 @@ export async function hubPlays(
     deps.pointsOf(event.slug, playerId),
   ]);
   const plays: HubPlays = {};
-  for (const p of mine)
-    if (!teamGames.has(p.gameId))
-      plays[p.gameId] = { status: p.status, best: p.best, runs: p.runs };
-  for (const p of team)
-    if (teamGames.has(p.gameId)) plays[p.gameId] = { status: p.status, best: p.best, runs: p.runs };
+  const entry = (p: PlayRecord): HubPlays[string] => {
+    const logic = playable(event, p.gameId)?.logic;
+    return {
+      status: p.status,
+      best: p.best,
+      runs: p.runs,
+      ...(logic?.once ? { once: true as const } : {}),
+      ...(logic?.waiting?.(p.state) ? { waiting: true as const } : {}),
+    };
+  };
+  for (const p of mine) if (!teamGames.has(p.gameId)) plays[p.gameId] = entry(p);
+  for (const p of team) if (teamGames.has(p.gameId)) plays[p.gameId] = entry(p);
   return { plays, total, seat };
 }

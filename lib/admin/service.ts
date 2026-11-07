@@ -1,6 +1,6 @@
 import { AppError } from "@/lib/errors";
-import type { EventConfig, EventStatus } from "@/lib/events";
-import type { PlayRepo } from "@/lib/games";
+import { pointsFor, type EventConfig, type EventStatus } from "@/lib/events";
+import { jarShare, type JarState, type PlayRepo } from "@/lib/games";
 import type { AdminPlayer } from "@/lib/players";
 import {
   awardPoints,
@@ -43,6 +43,17 @@ export type ControlsView = {
   board: BoardVisibility;
   /** Only when asked for: reading them costs a read per donation (S03-AC6). */
   donations?: ControlsDonation[];
+  /** Only when asked for: reading them costs a read per play (S17-AC3). */
+  jars?: ControlsJar[];
+};
+
+/** A Guessing Jar as Controls shows it: how many guessed, the count if scored, the closest. */
+export type ControlsJar = {
+  gameId: string;
+  title: string;
+  guesses: number;
+  actual: number | null;
+  closest: { nickname: string; guess: number; points: number | null }[];
 };
 
 export const ACTIONS = ["start", "end", "reopen"] as const;
@@ -58,7 +69,8 @@ const NEXT: Record<StatusAction, { from: EventStatus; to: EventStatus }> = {
 export async function controlsView(
   deps: AdminDeps,
   event: EventConfig,
-  withDonations = false,
+  /** The lists that cost a read per row, loaded only when asked for. */
+  extra: { donations?: boolean; jars?: boolean } = {},
 ): Promise<ControlsView> {
   // Points and teams come from the summaries: no read per player or team (ADR-031).
   const [status, players, published, board] = await Promise.all([
@@ -83,7 +95,8 @@ export async function controlsView(
     })),
     teams,
     board: shown,
-    ...(withDonations ? { donations: await donationList(deps, event, players, teams) } : {}),
+    ...(extra.donations ? { donations: await donationList(deps, event, players, teams) } : {}),
+    ...(extra.jars ? { jars: await jarResults(deps, event) } : {}),
   };
 }
 
@@ -244,4 +257,87 @@ export async function clearTestData(deps: AdminDeps, event: EventConfig, confirm
     deps.points.board.clear(event.slug),
   ]);
   await clearTeams(deps, event);
+}
+
+const isJar = (event: EventConfig, gameId: string) =>
+  event.games.find((g) => g.id === gameId && g.type === "jar");
+
+/** Every jar's guesses, closest first once it's scored (S17-AC3). */
+export async function jarResults(deps: AdminDeps, event: EventConfig): Promise<ControlsJar[]> {
+  const jars = event.games.filter((g) => g.type === "jar");
+  if (jars.length === 0) return [];
+  const [plays, players] = await Promise.all([
+    deps.plays.all(event.slug),
+    deps.players.list(event.slug),
+  ]);
+  const nickname = new Map(players.map((p) => [p.id, p.nickname]));
+  return jars.map((g) => {
+    const guesses = plays.flatMap((p) => {
+      const s = p.state as JarState;
+      const name = nickname.get(p.playerId);
+      return p.gameId === g.id && s.guess !== null && name
+        ? [{ nickname: name, guess: s.guess, points: s.points, actual: s.actual }]
+        : [];
+    });
+    const actual = guesses.find((x) => x.actual !== null)?.actual ?? null;
+    const closest = [...guesses]
+      .sort((a, b) =>
+        actual === null ? 0 : Math.abs(a.guess - actual) - Math.abs(b.guess - actual),
+      )
+      .slice(0, 5)
+      .map(({ nickname: n, guess, points }) => ({ nickname: n, guess, points }));
+    return { gameId: g.id, title: g.title, guesses: guesses.length, actual, closest };
+  });
+}
+
+/**
+ * The host enters the jar's real count: each guess earns points by how close
+ * it is, through the ledger, and the phones see their result. Scoring again
+ * voids the earlier jar points first (S17-AC3).
+ */
+export async function scoreJar(
+  deps: AdminDeps,
+  event: EventConfig,
+  gameId: string,
+  actual: number,
+) {
+  const game = isJar(event, gameId);
+  if (!game) throw new AppError("NOT_FOUND", "We couldn't find that jar.");
+  if (!Number.isInteger(actual) || actual < 0 || actual > 1_000_000)
+    throw new AppError("BAD_REQUEST", "Enter the real count as a whole number.");
+  const points = pointsFor(event, game);
+  const [plays, players, entries] = await Promise.all([
+    deps.plays.all(event.slug),
+    deps.players.list(event.slug),
+    deps.points.points.entries(event.slug),
+  ]);
+  const voided = new Set(entries.flatMap((e) => (e.voids ? [e.voids] : [])));
+  for (const play of plays) {
+    const state = play.state as JarState;
+    const player = players.find((p) => p.id === play.playerId);
+    if (play.gameId !== gameId || state.guess === null || !player) continue;
+    for (const e of entries)
+      if (
+        e.kind === "award" &&
+        e.to.id === player.id &&
+        e.source.kind === "game" &&
+        e.source.id === gameId &&
+        !voided.has(e.id)
+      )
+        await voidPoints(deps.points, event.slug, e.id, "Jar scored again", () => player);
+    const earned = Math.round(points * jarShare(state.guess, actual));
+    await deps.plays.update(event.slug, gameId, player.id, (cur) =>
+      cur
+        ? { ...cur, state: { ...state, actual, points: earned }, points: earned, best: earned }
+        : null,
+    );
+    if (earned > 0)
+      await awardPoints(deps.points, event.slug, player, {
+        id: `jar_${deps.id()}`,
+        points: earned,
+        reason: game.title,
+        source: { kind: "game", id: gameId },
+        createdBy: "admin",
+      });
+  }
 }

@@ -13,6 +13,8 @@ export const GAME_TYPES = [
   "trail",
   "stacker",
   "recall",
+  "jar",
+  "cache",
   "photo-challenge",
   "jeopardy",
 ] as const;

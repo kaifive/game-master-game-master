@@ -321,4 +321,34 @@ describe("game service", () => {
     expect(hub.plays["team-trivia"]).toMatchObject({ status: "finished" });
     expect(hub.seat).toEqual(seat);
   });
+
+  it("S17-AC4: Geocache banks each code's share as it's found, with its own award id", async () => {
+    const play = (step: number, code: string) =>
+      makeMove(deps, event, UID, "geocache", { playerId, step, move: { type: "code", code } });
+    let res = await startPlay(deps, event, UID, "geocache", { playerId });
+    res = await play(res.step, "SNOW1");
+    expect(res).toMatchObject({ status: "playing", best: 33 });
+    res = await play(res.step, "SNOW1"); // again: nothing new
+    res = await play(res.step, "HOLLY2");
+    expect(res.best).toBe(67);
+    res = await play(res.step, "GIFT3");
+    expect(res).toMatchObject({ status: "finished", best: 100 });
+    expect(bests.map((b) => b.gain)).toEqual([33, 34, 33]);
+    expect(new Set(bests.map((b) => `${b.key ?? ""}:${String(b.run)}`)).size).toBe(3);
+  });
+
+  it("S17-AC2: a jar is one guess, even when the event is replayable", async () => {
+    const replay = { ...event, replayable: true };
+    const res = await startPlay(deps, replay, UID, "guessing-jar", { playerId });
+    const done = await makeMove(deps, replay, UID, "guessing-jar", {
+      playerId,
+      step: res.step,
+      move: { type: "guess", value: 300 },
+    });
+    expect(done.status).toBe("finished");
+    const again = await startPlay(deps, replay, UID, "guessing-jar", { playerId, again: true });
+    expect(again).toEqual(done);
+    const hub = await hubPlays(deps, replay, UID, playerId);
+    expect(hub.plays["guessing-jar"]).toMatchObject({ once: true, waiting: true });
+  });
 });

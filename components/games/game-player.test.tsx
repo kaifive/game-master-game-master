@@ -239,4 +239,25 @@ describe("GamePlayer", () => {
     expect(await screen.findByRole("heading", { name: "Second question?" })).toBeInTheDocument();
     vi.useRealTimers();
   });
+
+  test("S17-AC4: an untimed game doesn't warn on leaving, and points banked mid-run refresh the total", async () => {
+    const hunting = (best: number): PlayResponse => ({
+      status: "playing",
+      points: best,
+      best,
+      step: best,
+      view: { kind: "hunting", found: [], total: 3, last: null, lockedForMs: 0 },
+    });
+    api.plays.mockReturnValue(ok({ plays: { geocache: { status: "playing", best: 0, runs: 1 } } }));
+    api.start.mockReturnValue(ok(hunting(0)));
+    api.move.mockReturnValue(ok(hunting(33)));
+    render(<GamePlayer gameId="geocache" type="cache" instructions={rules} replayable={false} />);
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText("Found a code? Type it here"), "SNOW1");
+    await user.click(screen.getByRole("button", { name: "Check code" }));
+    await waitFor(() => {
+      expect(device.refreshPlays).toHaveBeenCalled();
+    });
+    expect(device.setLeaveWarning).not.toHaveBeenCalledWith(LEAVE_WARNING);
+  });
 });

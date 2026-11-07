@@ -30,8 +30,16 @@ type View = {
   /** Missing from a server that predates the switches: shown. */
   board?: { phones: boolean; tv: boolean };
   donations?: Donation[];
+  jars?: Jar[];
 };
-type Game = { id: string; title: string };
+type Game = { id: string; title: string; type?: string };
+type Jar = {
+  gameId: string;
+  title: string;
+  guesses: number;
+  actual: number | null;
+  closest: { nickname: string; guess: number; points: number | null }[];
+};
 type Action =
   | { action: "start" | "end" | "reopen" | "rebuild" }
   | { action: "adjust"; playerId: string; points: number; reason: string }
@@ -45,7 +53,9 @@ type Action =
   | { action: "setCaptain"; teamId: string; playerId: string }
   | { action: "donations" }
   | { action: "voidDonation"; donationId: string }
-  | { action: "board"; phones?: boolean; tv?: boolean };
+  | { action: "board"; phones?: boolean; tv?: boolean }
+  | { action: "jars" }
+  | { action: "scoreJar"; gameId: string; actual: number };
 
 /** Each refresh reads every player, so once a minute (free-tier budget); actions refresh at once. */
 const REFRESH_MS = 60_000;
@@ -156,6 +166,90 @@ function BoardSwitches({
       {row("phones", "Leaderboard on phones")}
       {row("tv", "Leaderboard on the TV")}
     </div>
+  );
+}
+
+/**
+ * Guessing Jars: load the guesses (each costs a read), enter the real count
+ * and score it; the closest guesses show after (S17-AC3).
+ */
+function JarsCard({
+  jars,
+  titles,
+  run,
+  busy,
+}: {
+  jars: Jar[] | null;
+  titles: Game[];
+  run: (action: Action) => void;
+  busy: boolean;
+}) {
+  const [counts, setCounts] = useState<Record<string, string>>({});
+  return (
+    <Card title="Guessing Jar">
+      <div className="grid gap-4">
+        <div>
+          <AdminButton
+            tone="secondary"
+            disabled={busy}
+            onClick={() => {
+              run({ action: "jars" });
+            }}
+          >
+            {jars ? "Refresh guesses" : "Show guesses"}
+          </AdminButton>
+        </div>
+        {jars?.map((j) => {
+          const count = Number(counts[j.gameId] ?? "");
+          const ready = (counts[j.gameId] ?? "") !== "" && Number.isInteger(count);
+          return (
+            <section
+              key={j.gameId}
+              aria-label={j.title}
+              className="grid gap-3 border-t border-gm-border pt-3"
+            >
+              <p className="m-0 font-bold">
+                {titles.find((t) => t.id === j.gameId)?.title ?? j.title}: {j.guesses} guesses
+                {j.actual !== null && ` · scored with ${String(j.actual)}`}
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="sr-only" htmlFor={`count-${j.gameId}`}>
+                  Real count
+                </label>
+                <input
+                  id={`count-${j.gameId}`}
+                  inputMode="numeric"
+                  placeholder="Real count"
+                  value={counts[j.gameId] ?? ""}
+                  onChange={(e) => {
+                    setCounts((c) => ({ ...c, [j.gameId]: e.target.value.replace(/\D/g, "") }));
+                  }}
+                  className={`${field} max-w-40`}
+                />
+                <Confirm
+                  label={j.actual === null ? "Score the jar" : "Score it again"}
+                  sure={`Yes, the jar has ${String(count)}`}
+                  tone="primary"
+                  disabled={busy || !ready}
+                  onConfirm={() => {
+                    run({ action: "scoreJar", gameId: j.gameId, actual: count });
+                  }}
+                />
+              </div>
+              {j.closest.length > 0 && j.actual !== null && (
+                <ol aria-label={`Closest guesses for ${j.title}`} className="m-0 grid gap-1 pl-5">
+                  {j.closest.map((g) => (
+                    <li key={g.nickname}>
+                      <strong>{g.nickname}</strong> guessed {g.guess} · {g.points ?? 0} points
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </section>
+          );
+        })}
+      </div>
+    </Card>
   );
 }
 
@@ -502,6 +596,7 @@ export function Controls({
 }) {
   const [view, setView] = useState(initial);
   const [donations, setDonations] = useState<Donation[] | null>(null);
+  const [jars, setJars] = useState<Jar[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
@@ -538,6 +633,7 @@ export function Controls({
         if (res.ok && body) {
           setView(body);
           if (body.donations) setDonations(body.donations);
+          if (body.jars) setJars(body.jars);
         } else setError(body?.error ?? "That didn't work. Try again.");
       })
       .catch(() => {
@@ -641,6 +737,10 @@ export function Controls({
           <TeamsCard teams={view.teams} players={view.players.length} run={run} busy={busy} />
           <DonationsCard donations={donations} run={run} busy={busy} />
         </>
+      )}
+
+      {games.some((g) => g.type === "jar") && (
+        <JarsCard jars={jars} titles={games} run={run} busy={busy} />
       )}
 
       <Card title={`Players (${String(view.players.length)})`}>

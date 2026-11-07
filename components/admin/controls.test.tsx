@@ -318,4 +318,56 @@ describe("Controls teams", () => {
     expect(screen.getByRole("button", { name: "Hide on the TV" })).toBeInTheDocument();
     expect(sent).toEqual([{ action: "board", phones: false }]);
   });
+
+  test("S17-AC3: the jar card loads guesses, scores the real count after a confirm, and lists the closest", async () => {
+    const jar = {
+      gameId: "guessing-jar",
+      title: "Guessing Jar",
+      guesses: 2,
+      actual: null,
+      closest: [],
+    };
+    server((body) => ({
+      status: 200,
+      json: {
+        status: "live",
+        players,
+        teams: null,
+        jars: [
+          body.action === "scoreJar"
+            ? {
+                ...jar,
+                actual: 300,
+                closest: [
+                  { nickname: "Mai", guess: 300, points: 100 },
+                  { nickname: "Bao", guess: 400, points: 33 },
+                ],
+              }
+            : jar,
+        ],
+      },
+    }));
+    render(
+      <AdminRoot>
+        <Controls
+          slug="holiday-2026"
+          name="Party"
+          games={[{ id: "guessing-jar", title: "Guessing Jar", type: "jar" }]}
+          initial={{ status: "live", players, teams: null }}
+        />
+      </AdminRoot>,
+    );
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Show guesses" }));
+    expect(await screen.findByText(/Guessing Jar: 2 guesses/)).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Real count"), "300");
+    await user.click(screen.getByRole("button", { name: "Score the jar" }));
+    await user.click(screen.getByRole("button", { name: "Yes, the jar has 300" }));
+    const closest = await screen.findByRole("list", { name: "Closest guesses for Guessing Jar" });
+    expect(closest).toHaveTextContent("Mai guessed 300 · 100 points");
+    expect(sent).toEqual([
+      { action: "jars" },
+      { action: "scoreJar", gameId: "guessing-jar", actual: 300 },
+    ]);
+  });
 });
