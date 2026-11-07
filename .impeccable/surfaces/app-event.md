@@ -34,7 +34,7 @@ The flip: score cards flip up on their handles when a score lands; snow drifts o
 ## Unresolved
 
 - Exact holiday copy and game names come from the event file.
-- "Enter a code" as the hub's last row arrives with game codes (spec 15). Until then the join gate and the QR / `/join/CODE` flow cover codes.
+- "Enter a code" as the hub's last row arrives with game codes (spec 15), which is deferred: every game at the holiday party is open. The join gate and the QR / `/join/CODE` flow cover the party's join code.
 
 ## Adaptations (cited)
 

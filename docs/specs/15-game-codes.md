@@ -1,7 +1,7 @@
 # 15: Game codes and hidden games
 
 **Status:** Draft
-**Backlog:** M2
+**Backlog:** Later (the holiday party has every game open)
 **Depends on:** 08
 
 ## Summary

@@ -39,7 +39,6 @@ A feature item needs its spec at `Ready` before it starts.
 - [x] Spec 08, game framework: game type contract, move route, results, score once (points reach the ledger with spec 04)
 - [ ] Spec 09, theming: tokens, color modes, variants, icon sets; holiday variant
 - [x] Spec 10, trivia: the first solo game (replaces word guess)
-- [ ] Spec 15, game codes and hidden games (split from spec 08)
 - [ ] Spec 13, photos: upload, swipe triage, photo challenge, photo vote, slideshow
 - [ ] Photo export and prune scripts (ADR-012)
 
@@ -58,6 +57,7 @@ A feature item needs its spec at `Ready` before it starts.
 
 ## Later
 
+- Spec 15, game codes and hidden games: not needed for the holiday party, where every game is open (Khai, 2026-11-07)
 - Second solo game (Q6)
 - Admin recap page polish; results archive per past event
 - Automatic photo screening (Q18; costs money)
