@@ -53,7 +53,9 @@ describe("S01-AC5: an upcoming event waits for the host and lists its games, loc
     for (const g of event.games) expect(within(list).getByText(g.title)).toBeInTheDocument();
     expect(within(list).queryAllByRole("link")).toHaveLength(0);
     // Games a phone can play are locked; the rest say why they aren't up for grabs.
-    expect(within(list).getAllByText("Locked").length).toBe(2);
+    expect(within(list).getAllByText("Locked").length).toBe(
+      closed.games.filter((g) => g.mode === "solo" && g.type !== "photo-challenge").length,
+    );
     expect(within(list).getByText("Coming soon")).toBeInTheDocument();
     expect(within(list).getByText("On the TV when the host starts it")).toBeInTheDocument();
     // Nothing is up for grabs yet: every game is coming up, on a blank card.
@@ -152,7 +154,7 @@ describe("S01-AC8: the home page takes a code", () => {
 });
 
 describe("S08-AC7: the hub lists each game for the active player", () => {
-  test("grouped as scored and coming up, each with its score card; nothing unplayable says Play", async () => {
+  test("grouped as up for grabs, scored and coming up, each with its score card; nothing unplayable says Play", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn((url: string) =>
@@ -185,9 +187,11 @@ describe("S08-AC7: the hub lists each game for the active player", () => {
     const scored = await within(list).findByRole("list", { name: "Scored" });
     expect(within(scored).getByRole("img", { name: "Holiday Trivia: 80 points" })).toBeVisible();
     expect(within(scored).getByText("Again")).toBeInTheDocument();
-    // Nothing else is playable on a phone yet: a live game and an unbuilt one
-    // wait under Coming up instead of offering a dead-end Play.
-    expect(within(list).queryByRole("list", { name: "Up for grabs" })).toBeNull();
+    // The quick games are up for grabs; a live game and an unbuilt one wait
+    // under Coming up instead of offering a dead-end Play.
+    const open = within(list).getByRole("list", { name: "Up for grabs" });
+    expect(within(open).getByText("T-Timer")).toBeInTheDocument();
+    expect(within(open).queryByText("Jeopardy")).toBeNull();
     const later = within(list).getByRole("list", { name: "Coming up" });
     expect(within(later).getByText("Coming soon")).toBeInTheDocument();
     expect(within(later).getByText("On the TV when the host starts it")).toBeInTheDocument();

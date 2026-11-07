@@ -6,7 +6,16 @@ import { StyleRef } from "@/lib/themes";
 export const CODE_PATTERN = /^[A-HJKMNP-Z2-9]{5}$/;
 
 /** Game types the platform knows (spec 08 adds their logic). */
-export const GAME_TYPES = ["trivia", "photo-challenge", "jeopardy"] as const;
+export const GAME_TYPES = [
+  "trivia",
+  "timer",
+  "taps",
+  "trail",
+  "stacker",
+  "recall",
+  "photo-challenge",
+  "jeopardy",
+] as const;
 
 export const EVENT_STATUSES = ["upcoming", "live", "ended"] as const;
 
