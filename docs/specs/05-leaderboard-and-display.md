@@ -11,8 +11,8 @@ A big-screen page for the room shows how to join and a live leaderboard. Players
 ## Behavior
 
 1. **Ranks:** highest points first; ties share a rank (1, 2, 2, 4). Only active players are listed (spec 04 keeps the summary).
-2. **Phone** (the **Leaderboard** tab, its own page at `/[event]/leaderboard`): the top 10, and your own rank and points underneath when you're outside the top 10. Your row is highlighted. It refreshes every 15 seconds.
-3. **TV** (`/[slug]/display`), sized for 1920×1080 with no scrolling:
+2. **Phone** (the **Leaderboard** tab, its own page at `/[event]/leaderboard`; the host can hide it, spec 07): the top 10, and your own rank and points underneath when you're outside the top 10. Your row is highlighted. It refreshes every 15 seconds.
+3. **TV** (`/[slug]/display`), sized for 1920×1080 with no scrolling (the host can hide the standings, spec 07):
    - **Join panel:** a QR code for `/join?code=…`, the short URL and the join code in big type. (The display is the one page that shows the join code; it's on the poster anyway.)
    - **Leaderboard:** the top 10 as a judges' results board: the pack's `LeaderboardRow` at TV size, place in gold, silver and bronze for the top three, and each score on a card that flips up when it changes (spec 14 AC-12).
    - **Toasts:** each new award shows as a toast ("Mai +40 · Holiday Trivia", "Mai +10 · Holiday Trivia · new best"), at most four at a time (spec 14).

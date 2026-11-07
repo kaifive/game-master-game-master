@@ -15,7 +15,10 @@ type Props = { slug: string; name: string; joinUrl: string; shortUrl: string; jo
 function useAnnouncements() {
   const celebrate = useCelebrate();
   return useCallback(
-    (next: DisplayStandings, previous: DisplayStandings | null) => {
+    (next: DisplayStandings, prior: DisplayStandings | null) => {
+      // Nothing to announce while hidden, and nothing old to replay when it comes back.
+      if (next.hidden) return;
+      const previous = prior?.hidden ? null : prior;
       for (const a of newAwards(previous?.recent ?? null, next.recent))
         celebrate({
           id: a.id,
@@ -114,6 +117,13 @@ function Latest({ recent }: { recent: DisplayStandings["recent"] }) {
 const LATEST = 3;
 
 function Board({ data }: { data: DisplayStandings }) {
+  if (data.hidden)
+    return (
+      <div className="grid h-full content-center justify-items-center gap-4 text-center">
+        <p className="m-0 font-gm-display text-6xl font-bold">Scores are secret for now</p>
+        <p className="m-0 text-3xl text-gm-text-muted">Keep playing. The judges will reveal all!</p>
+      </div>
+    );
   const players = data.players.map((p) => ({
     id: p.id,
     rank: p.rank,
@@ -179,7 +189,7 @@ function Screen({ slug, name, joinUrl, shortUrl, joinCode }: Props) {
             </p>
           </section>
           <ToastChainView />
-          {data && <Latest recent={data.recent} />}
+          {data && !data.hidden && <Latest recent={data.recent} />}
         </aside>
       </div>
     </div>

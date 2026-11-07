@@ -4,7 +4,14 @@ import { z } from "zod";
 import { AppError } from "@/lib/errors";
 import { requireEvent } from "@/lib/events/server";
 import { playRepo } from "@/lib/games/server";
-import { changeCaptain, makeCaptain, moveToTeam, setPhase, setTeamSize } from "@/lib/teams";
+import {
+  changeCaptain,
+  makeCaptain,
+  moveToTeam,
+  setBoardVisibility,
+  setPhase,
+  setTeamSize,
+} from "@/lib/teams";
 import { teamDeps } from "@/lib/teams/server";
 import {
   adjustPoints,
@@ -132,6 +139,11 @@ export const ControlsAction = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("clear"), confirm: z.string().max(20) }),
   z.object({ action: z.literal("donations") }),
+  z.object({
+    action: z.literal("board"),
+    phones: z.boolean().optional(),
+    tv: z.boolean().optional(),
+  }),
   z.object({ action: z.literal("voidDonation"), donationId: z.string().min(1).max(64) }),
 ]);
 export type ControlsAction = z.infer<typeof ControlsAction>;
@@ -186,6 +198,12 @@ export async function runAction(slug: Slug, body: ControlsAction) {
       await changeCaptain(d, event, body.teamId, body.playerId);
       break;
     case "donations":
+      break;
+    case "board":
+      await setBoardVisibility(d, event, {
+        ...(body.phones !== undefined ? { phones: body.phones } : {}),
+        ...(body.tv !== undefined ? { tv: body.tv } : {}),
+      });
       break;
     case "voidDonation":
       await voidPlayerDonation(d, event, body.donationId);

@@ -27,6 +27,7 @@ function serve(...responses: unknown[]) {
     vi.fn(() =>
       Promise.resolve(
         Response.json({
+          hidden: false,
           phase: "individual",
           teams: [],
           ...(responses[Math.min(i++, responses.length - 1)] as object),
@@ -151,5 +152,26 @@ describe("DisplayView", () => {
     expect(screen.getByRole("list", { name: "Top players" })).toBeInTheDocument();
     await next();
     expect(await screen.findByText("Mai gave 50 to Dragons")).toBeInTheDocument();
+  });
+
+  test("S07-AC11: hidden on the TV, the board says scores are secret, with no toasts or latest points", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    serve(
+      { hidden: true, players: [], recent: [] },
+      { hidden: true, players: [], recent: [] },
+      {
+        hidden: false,
+        players: [row("p1", 1, "Mai", 60)],
+        recent: [award("a1", "Mai", 60, "Holiday Trivia", 1)],
+      },
+    );
+    show();
+    expect(await screen.findByText("Scores are secret for now")).toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Latest points" })).toBeNull();
+    await next();
+    await next();
+    // Shown again: the board is back, and old awards aren't replayed as toasts.
+    expect(await screen.findByRole("list", { name: "Leaderboard" })).toBeInTheDocument();
+    expect(screen.queryByText(/Mai \+60/)).toBeNull();
   });
 });

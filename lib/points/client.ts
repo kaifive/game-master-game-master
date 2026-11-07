@@ -6,6 +6,8 @@ import type { Ranked, RankedTeam } from "./rules";
 type Phase = "individual" | "team";
 
 export type PhoneStandings = {
+  /** The host has hidden the standings on phones (S07-AC11). */
+  hidden: boolean;
   top: Ranked[];
   me: { rank: number; points: number } | null;
   phase: Phase;
@@ -23,6 +25,8 @@ export type DisplayAward = {
   from?: string;
 };
 export type DisplayStandings = {
+  /** The host has hidden the standings on the TV (S07-AC11). */
+  hidden: boolean;
   phase: Phase;
   players: Ranked[];
   teams: RankedTeam[];

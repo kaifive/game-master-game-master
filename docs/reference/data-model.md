@@ -58,6 +58,8 @@ events/{slug}
   status: "upcoming" | "live" | "ended"   set only by the admin (Start, End); missing = upcoming
   phase: "individual" | "team"            both events; missing = individual (spec 03)
   maxTeamSize: number                     set by the host; missing = players ÷ teams
+  boardHiddenOnPhones?: boolean           the host hid the standings on phones (S07-AC11)
+  boardHiddenOnTv?: boolean               the host hid the standings on the TV
   phase: "individual" | "team"            when scoring is "both"
   joinCode: string                        on the QR poster and display
   adminLastSeenAt: timestamp              for "new since you last looked"
@@ -175,7 +177,8 @@ leaderboard/{slug}           written only by the server after each ledger entry,
   teams/{teamId}: { name, color, points }     team score; name and color written on every team change
 
 teams/{slug}                 spec 03, ADR-031: what phones see of teams, as one JSON string
-  { phase, maxTeamSize, teams: [{ id, name, named, color, captain, members, room }] }
+  { phase, maxTeamSize, teams: [{ id, name, named, color, captain, members, room }],
+    board: { phones, tv } }   whether the standings show (spec 07)
   Written by the server after every team change; phones poll it instead of reading Firestore.
 
 live/{slug}/settings         admin-set, live display settings

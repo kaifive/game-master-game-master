@@ -14,8 +14,14 @@ export const EVENT_STATUSES = ["upcoming", "live", "ended"] as const;
 export const PHASES = ["individual", "team"] as const;
 export type Phase = (typeof PHASES)[number];
 
-/** What the host sets at runtime besides the status (spec 03). */
-export type EventSettings = { phase?: Phase; maxTeamSize?: number };
+/** What the host sets at runtime besides the status (spec 03, spec 07). */
+export type EventSettings = {
+  phase?: Phase;
+  maxTeamSize?: number;
+  /** The host hides the standings on phones or the TV, say for a reveal (S07-AC11). */
+  boardHiddenOnPhones?: boolean;
+  boardHiddenOnTv?: boolean;
+};
 export const EventStatus = z.enum(EVENT_STATUSES);
 export type EventStatus = z.infer<typeof EventStatus>;
 

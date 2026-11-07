@@ -17,9 +17,13 @@ export class FirebaseEventRuntimeRepo implements EventRuntimeRepo {
     const doc = await this.admin.firestore.doc(fs.event(slug)).get();
     const phase: unknown = doc.get("phase");
     const size: unknown = doc.get("maxTeamSize");
+    const phones: unknown = doc.get("boardHiddenOnPhones");
+    const tv: unknown = doc.get("boardHiddenOnTv");
     return {
       ...(phase === "individual" || phase === "team" ? { phase } : {}),
       ...(typeof size === "number" ? { maxTeamSize: size } : {}),
+      ...(typeof phones === "boolean" ? { boardHiddenOnPhones: phones } : {}),
+      ...(typeof tv === "boolean" ? { boardHiddenOnTv: tv } : {}),
     };
   }
 

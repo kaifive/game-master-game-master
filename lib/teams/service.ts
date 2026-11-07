@@ -8,7 +8,7 @@ import {
 } from "@/lib/events";
 import type { PlayerRepo, PlayerSummary } from "@/lib/players";
 import { donate, type PointsDeps } from "@/lib/points";
-import type { TeamsSummary, TeamView } from "./model";
+import { BOARD_SHOWN, type BoardVisibility, type TeamsSummary, type TeamView } from "./model";
 import type { TeamRepo, TeamSummaryRepo } from "./repo";
 import { checkTeamName, nextColor, viewTeam } from "./rules";
 
@@ -42,6 +42,7 @@ export async function currentTeams(deps: TeamDeps, event: EventConfig): Promise<
     phase: phaseOf(event.scoring, settings.phase),
     maxTeamSize,
     teams: teams.map((t) => viewTeam(t, (id) => nicknames.get(id), maxTeamSize)),
+    board: { phones: !settings.boardHiddenOnPhones, tv: !settings.boardHiddenOnTv },
   };
 }
 
@@ -75,10 +76,14 @@ export async function teamsView(
   event: EventConfig,
   playerId: string | null,
 ): Promise<TeamsView> {
-  const summary = (await deps.summary.read(event.slug)) ?? {
+  const stored = await deps.summary.read(event.slug);
+  // A summary written before the board switches existed shows the board.
+  const summary: TeamsSummary = {
     phase: phaseOf(event.scoring, undefined),
     maxTeamSize: 1,
     teams: [],
+    ...stored,
+    board: { ...BOARD_SHOWN, ...stored?.board },
   };
   return { ...summary, mine: mineIn(summary, playerId) };
 }
@@ -188,6 +193,22 @@ export async function setPhase(deps: TeamDeps, event: EventConfig, phase: Phase)
   if (event.scoring !== "both")
     throw new AppError("BAD_REQUEST", "Only events with both competitions switch phases.");
   await deps.events.setSettings(event.slug, { phase });
+  await publishTeams(deps, event);
+}
+
+/**
+ * The host shows or hides the standings on phones and on the TV, say to
+ * keep the winners secret until the end (S07-AC11).
+ */
+export async function setBoardVisibility(
+  deps: TeamDeps,
+  event: EventConfig,
+  board: Partial<BoardVisibility>,
+) {
+  await deps.events.setSettings(event.slug, {
+    ...(board.phones !== undefined ? { boardHiddenOnPhones: !board.phones } : {}),
+    ...(board.tv !== undefined ? { boardHiddenOnTv: !board.tv } : {}),
+  });
   await publishTeams(deps, event);
 }
 

@@ -27,6 +27,8 @@ type View = {
   status: EventStatus;
   players: Player[];
   teams: Teams | null;
+  /** Missing from a server that predates the switches: shown. */
+  board?: { phones: boolean; tv: boolean };
   donations?: Donation[];
 };
 type Game = { id: string; title: string };
@@ -42,7 +44,8 @@ type Action =
   | { action: "moveTeam"; playerId: string; teamId: string }
   | { action: "setCaptain"; teamId: string; playerId: string }
   | { action: "donations" }
-  | { action: "voidDonation"; donationId: string };
+  | { action: "voidDonation"; donationId: string }
+  | { action: "board"; phones?: boolean; tv?: boolean };
 
 /** Each refresh reads every player, so once a minute (free-tier budget); actions refresh at once. */
 const REFRESH_MS = 60_000;
@@ -110,6 +113,49 @@ function DonationsCard({
         )}
       </div>
     </Card>
+  );
+}
+
+/**
+ * Show or hide the standings on phones and on the TV, say to keep the
+ * winners secret until the end; final standings still show once ended (S07-AC11).
+ */
+function BoardSwitches({
+  board,
+  run,
+  busy,
+}: {
+  board: { phones: boolean; tv: boolean };
+  run: (action: Action) => void;
+  busy: boolean;
+}) {
+  const row = (where: "phones" | "tv", label: string) => (
+    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-gm-border pt-3">
+      <p className="m-0 font-bold">
+        {label}:{" "}
+        <span className={board[where] ? "" : "text-gm-danger"}>
+          {board[where] ? "Shown" : "Hidden"}
+        </span>
+      </p>
+      <AdminButton
+        tone="secondary"
+        disabled={busy}
+        aria-pressed={!board[where]}
+        onClick={() => {
+          run({ action: "board", [where]: !board[where] });
+        }}
+      >
+        {board[where]
+          ? `Hide on ${where === "tv" ? "the TV" : "phones"}`
+          : `Show on ${where === "tv" ? "the TV" : "phones"}`}
+      </AdminButton>
+    </div>
+  );
+  return (
+    <div className="mt-3 grid gap-3">
+      {row("phones", "Leaderboard on phones")}
+      {row("tv", "Leaderboard on the TV")}
+    </div>
   );
 }
 
@@ -587,6 +633,7 @@ export function Controls({
             {view.status === "ended" && "Games are closed and final standings show."}
           </p>
         </div>
+        <BoardSwitches board={view.board ?? { phones: true, tv: true }} run={run} busy={busy} />
       </Card>
 
       {view.teams && (

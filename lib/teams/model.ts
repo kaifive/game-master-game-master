@@ -32,4 +32,9 @@ export type TeamsSummary = {
   phase: "individual" | "team";
   maxTeamSize: number;
   teams: TeamView[];
+  /** Whether the standings show on phones and on the TV (S07-AC11). */
+  board: BoardVisibility;
 };
+
+export type BoardVisibility = { phones: boolean; tv: boolean };
+export const BOARD_SHOWN: BoardVisibility = { phones: true, tv: true };
