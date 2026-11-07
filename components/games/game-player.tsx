@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PointsIcon } from "@/components/icons/points";
 import { useReducedMotion } from "@/components/motion";
@@ -84,9 +85,13 @@ function Result({
           value={play.points}
           state={newBest ? "highlight" : "scored"}
           size="xl"
+          fresh
         />
       </div>
       {summary && <p className="m-0 text-xl font-bold">{summary}</p>}
+      {play.points === 0 && (
+        <p className="m-0 text-lg">No points this time. There&apos;s plenty more to play!</p>
+      )}
       {onAgain && (
         <p className="m-0 text-lg text-gm-text-muted">
           {newBest ? "New best!" : `Your best: ${String(play.best)}`}
@@ -105,6 +110,7 @@ function Result({
 export function GamePlayer({ gameId, type, instructions, replayable, title = "This game" }: Props) {
   const { Panel } = useSlots();
   const { slug, load, active, token, plays, setLeaveWarning } = useDevice();
+  const router = useRouter();
   const renderer = rendererFor(type);
   const [phase, setPhase] = useState<Phase>({ kind: "checking" });
   const [busy, setBusy] = useState(false);
@@ -206,7 +212,14 @@ export function GamePlayer({ gameId, type, instructions, replayable, title = "Th
         </p>
       )}
       {phase.kind === "instructions" && (
-        <InstructionsDialog instructions={instructions} busy={busy} onStart={() => void begin()} />
+        <InstructionsDialog
+          instructions={instructions}
+          busy={busy}
+          onStart={() => void begin()}
+          onLeave={() => {
+            router.push(`/${slug}`);
+          }}
+        />
       )}
       {phase.kind === "playing" && renderer && phase.play.status === "finished" && (
         <Result

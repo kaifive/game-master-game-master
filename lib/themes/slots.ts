@@ -16,6 +16,8 @@ export type BannerProps = {
   aside?: ReactNode;
   /** Shown before the title, such as a back arrow to the games. */
   lead?: ReactNode;
+  /** lg is the TV's band, read from across the room. */
+  size?: "md" | "lg";
 };
 export type ButtonProps = {
   children: ReactNode;
@@ -33,6 +35,8 @@ export type ScoreCardProps = {
   state: "scored" | "blank" | "highlight";
   /** xl is the result held up when a game ends. */
   size?: "sm" | "md" | "lg" | "xl";
+  /** A score that has just landed, so the card is held up as it appears (a game's result). */
+  fresh?: boolean;
 };
 export type TileState = "empty" | "typed" | "correct" | "present" | "absent";
 export type TileProps = { letter?: string; state: TileState };
@@ -51,6 +55,8 @@ export type LeaderboardRowProps = {
   score: number;
   team?: number;
   highlight?: boolean;
+  /** lg for the TV's results board. */
+  size?: "md" | "lg";
 };
 export type BuzzerState = "ready" | "locked" | "buzzed";
 export type BuzzerProps = { state: BuzzerState; onBuzz: () => void };

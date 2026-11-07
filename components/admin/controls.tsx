@@ -78,7 +78,9 @@ function DonationsCard({
           </AdminButton>
         </div>
         {donations?.length === 0 && (
-          <p className="m-0 text-sm text-gm-text-muted">Nobody has given points to a team yet.</p>
+          <p className="m-0 text-sm text-pretty text-gm-text-muted">
+            Nobody has given points to a team yet.
+          </p>
         )}
         {donations && donations.length > 0 && (
           <ul aria-label="Donations" className="m-0 grid list-none gap-2 p-0">
@@ -355,6 +357,7 @@ function TeamsCard({
             <Confirm
               label="Back to individual"
               sure="Yes, go back"
+              tone="primary"
               disabled={busy}
               onConfirm={() => {
                 run({ action: "phase", phase: "individual" });
@@ -389,7 +392,7 @@ function TeamsCard({
           </span>
         </form>
         {teams.teams.length === 0 ? (
-          <p className="m-0 text-sm text-gm-text-muted">
+          <p className="m-0 text-sm text-pretty text-gm-text-muted">
             No teams yet. Open a player below and tap Make captain.
           </p>
         ) : (
@@ -407,7 +410,7 @@ function TeamsCard({
                     {t.members.length} / {teams.maxTeamSize}
                   </span>
                 </div>
-                <p className="m-0 text-sm text-gm-text-muted">
+                <p className="m-0 text-sm text-pretty text-gm-text-muted">
                   {t.members.map((m) => m.nickname).join(", ") || "No members"}
                 </p>
                 {t.members.length > 1 && (
@@ -577,7 +580,7 @@ export function Controls({
               }}
             />
           )}
-          <p className="m-0 text-sm text-gm-text-muted">
+          <p className="m-0 text-sm text-pretty text-gm-text-muted">
             {view.status === "upcoming" &&
               "Games open when you start (except ones that are always open)."}
             {view.status === "live" && "Games are open."}
@@ -661,7 +664,7 @@ export function Controls({
             >
               Rebuild points
             </AdminButton>
-            <p className="m-0 text-sm text-gm-text-muted">
+            <p className="m-0 text-sm text-pretty text-gm-text-muted">
               Recounts everyone&apos;s points if totals look wrong.
             </p>
           </div>
@@ -675,7 +678,7 @@ export function Controls({
               }}
             >
               <p className="m-0 font-bold text-gm-danger">Clear test data</p>
-              <p className="m-0 text-sm text-gm-text-muted">
+              <p className="m-0 text-sm text-pretty text-gm-text-muted">
                 Deletes every player, score and the leaderboard for this event. It can&apos;t be
                 undone. Type CLEAR to confirm.
               </p>

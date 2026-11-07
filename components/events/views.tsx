@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { GamePlayer } from "@/components/games/game-player";
+import { rendererFor } from "@/components/games/renderers";
 import { PhoneLeaderboard } from "@/components/leaderboard/phone-leaderboard";
 import { useOptionalDevice } from "@/components/players/device";
 import { PlayerHub } from "@/components/players/hub";
@@ -51,7 +52,7 @@ function EventBanner({
 }
 
 const Body = ({ children }: { children: React.ReactNode }) => (
-  <div className="mx-auto grid w-full max-w-xl gap-5 px-4 py-5">{children}</div>
+  <main className="mx-auto grid w-full max-w-xl gap-5 px-4 py-5">{children}</main>
 );
 
 const listed = (event: PublicEvent) => event.games.filter((g) => g.visibility === "listed");
@@ -92,7 +93,15 @@ export function hubRows(
     // A solo team game is the captain's to play (S03-AC5); live team games run from the host.
     const blocked =
       game.phase === "team" && game.mode === "solo" ? teamGameBlock(seat, play) : null;
-    const open = gameOpen(status, game) && !blocked;
+    // Only games this phone can play are up for grabs: a live game runs from
+    // the host and the TV, and a type with no phone renderer isn't ready yet.
+    const wait =
+      game.mode !== "solo"
+        ? "On the TV when the host starts it"
+        : !rendererFor(game.type)
+          ? "Coming soon"
+          : null;
+    const open = gameOpen(status, game) && !blocked && !wait;
     const href = open ? `/${event.slug}/play/${game.id}` : null;
     if (play?.status === "finished") {
       const again = open && event.replayable;
@@ -109,7 +118,7 @@ export function hubRows(
       game,
       group: "later",
       href: null,
-      note: gameOpen(status, game) ? (blocked ?? "Locked") : "Locked",
+      note: wait ?? (gameOpen(status, game) ? (blocked ?? "Locked") : "Locked"),
       best: null,
     };
   });
@@ -169,7 +178,8 @@ function GameList({ event, status }: { event: PublicEvent; status: EventStatus }
     void refresh?.();
   }, [refresh]);
   const rows = hubRows(event, status, plays, seat);
-  const scorable = rows.filter((r) => r.game.mode === "solo");
+  // The pips count what this phone can score.
+  const scorable = rows.filter((r) => r.game.mode === "solo" && rendererFor(r.game.type));
   return (
     <section aria-label="Tonight's games" className="grid gap-4">
       {device?.active && scorable.length > 0 && (

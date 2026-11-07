@@ -7,7 +7,8 @@ import { useOptionalDevice } from "./device";
 /** The active player's total in the event header; points from games fly here (S08-AC15). */
 export function TotalScore() {
   const device = useOptionalDevice();
-  if (!device?.active) return null;
+  // Nothing until the real total arrives, so it never counts up from 0 on a reload.
+  if (!device?.active || !device.totalKnown) return null;
   return (
     <span
       data-total-score
