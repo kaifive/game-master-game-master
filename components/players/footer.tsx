@@ -70,7 +70,8 @@ export function PlayerFooter({ hasTeams }: { hasTeams: boolean }) {
             className={cx(tab, idle)}
           >
             <YouIcon />
-            <span className="max-w-full truncate">{device.active.nickname}</span>
+            {/* A fixed label, so a long name never squeezes the tabs; the name is in the panel. */}
+            You<span className="sr-only">, playing as {device.active.nickname}</span>
           </button>
         </div>
       </nav>

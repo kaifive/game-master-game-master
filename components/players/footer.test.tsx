@@ -50,6 +50,8 @@ describe("PlayerFooter", () => {
   test("S08-AC14: tabs for the games, the leaderboard and you, marking where you are", () => {
     footer();
     const bar = screen.getByRole("navigation", { name: "Party" });
+    // A fixed "You" tab, whatever the name's length; the name is for screen readers.
+    expect(screen.getByRole("button", { name: "You, playing as Mai" })).toBeInTheDocument();
     expect(bar).toHaveTextContent("Mai");
     expect(screen.getByRole("link", { name: /Games/ })).toHaveAttribute("href", "/holiday-2026");
     expect(screen.getByRole("link", { name: /Games/ })).toHaveAttribute("aria-current", "page");

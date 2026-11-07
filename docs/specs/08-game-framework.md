@@ -29,7 +29,7 @@ The contract every game type follows (ADR-007): pure logic, a content shape, and
 6. **Score once:** when a play ends, its points are fixed and `scored: true` is set in the same transaction. Spec 04 turns that into a ledger award; until spec 04 ships, the points show on the result screen only.
 7. A game is playable while the event is `live`, or before the start too when the game is `alwaysOpen` (for testing or warm-ups), by a player on the calling device. Every game closes when the event ends. Before the start it shows "This game opens when the host starts the party."; after the end, "This game has closed."
 8. The games list (the **Games** tab, the party page) groups the games as **Up for grabs**, **Scored** and **Coming up**, under progress pips. Each row ends in its score card (blank until scored) and says **Play**, **Continue** (started), **Again** (scored, replayable), **Done** or why it's locked, for the active player.
-10. **Tabs:** once joined, every event page has a bottom tab bar: **Games**, **Leaderboard**, **Team** (events with teams) and the player's name. The name opens a player panel: who's playing, their total, and **Not you? Start over** (spec 02). A game page's header has a back arrow to the games before its title. Leaving a run in progress (by a tab or the back arrow) asks first: the clock keeps running, so the current question may count as wrong.
+10. **Tabs:** once joined, every event page has a bottom tab bar: **Games**, **Leaderboard**, **Team** (events with teams) and **You**. You opens a player panel: who's playing, their total, and **Not you? Start over** (spec 02). A game page's header has a back arrow to the games before its title. Leaving a run in progress (by a tab or the back arrow) asks first: the clock keeps running, so the current question may count as wrong.
 11. **Header:** a game page shows the game's title in the banner instead of the event name, for more room.
 12. **Header total:** the event banner shows the active player's total, the sum of their best scores (until spec 04's ledger), instead of the Live badge. When a run sets a new best, a "+N" chip flies from the score to the total, which then counts up. Under reduced motion it just updates.
 9. The game page shows which player is playing and lets the hub's switcher change it.
@@ -75,7 +75,7 @@ Player phone, in the event's pack: game header (title, "Playing as"), the instru
 - [x] AC-11: The result screen holds up the final score as a large score card that flips up (it appears at once under reduced motion), with a way back to the games.
 - [x] AC-12: In a replayable event, a finished game offers Play again, which starts a new run; the game's score is the best run, never lowered by a worse one.
 - [x] AC-13: An `alwaysOpen` game can be played before the event starts; every game closes when it ends.
-- [x] AC-14: Event pages have a tab bar (Games, Leaderboard, Team for events with teams, the player's name) marking where you are; leaving a run in progress asks first.
+- [x] AC-14: Event pages have a tab bar (Games, Leaderboard, Team for events with teams, You) marking where you are; leaving a run in progress asks first.
 - [x] AC-16: A game page's banner shows the game's title instead of the event name, with a back arrow to the games before it.
 - [x] AC-15: The header shows the active player's total (sum of best scores) instead of the Live badge; a new best flies from the result to the total, which then counts up (instant under reduced motion).
 
