@@ -84,6 +84,18 @@ describe("S09-AC11: Judges' Table provides its eight slots (plus Celebration, sp
     expect(flipping(later.container)).toBe(true); // a new best since the last visit
     const fresh = render(<ScoreCard label="Fresh result" value={0} state="scored" fresh />);
     expect(flipping(fresh.container)).toBe(true);
+    // A blank card filling in as the page loads isn't a score landing.
+    const loading = render(<ScoreCard label="Loading card" state="blank" />);
+    loading.rerender(<ScoreCard label="Loading card" value={40} state="scored" />);
+    expect(flipping(loading.container)).toBe(false);
+  });
+
+  test("a miss (0) is held up on the frosted card back, still reading 0", () => {
+    const { ScoreCard } = resolveSlots(judgesTableSlots);
+    const { container } = render(<ScoreCard label="Missed game" value={0} state="scored" />);
+    const face = container.querySelector('[data-slot="score-card"] > span');
+    expect(face?.className).toContain("card-back");
+    expect(face).toHaveTextContent("0");
   });
 });
 

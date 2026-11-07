@@ -7,9 +7,10 @@ import { rendererFor } from "@/components/games/renderers";
 import { PhoneLeaderboard } from "@/components/leaderboard/phone-leaderboard";
 import { useOptionalDevice } from "@/components/players/device";
 import { PlayerHub } from "@/components/players/hub";
-import { BackIcon } from "@/components/icons/nav";
+import { ArrowIcon, BackIcon } from "@/components/icons/nav";
 import { GuardedLink } from "@/components/players/leave-guard";
 import { TeamNudge, TeamPanel } from "@/components/teams/team-panel";
+import { PlayerStrip } from "@/components/players/player-strip";
 import { TotalScore } from "@/components/players/total-score";
 import { useSlots } from "@/components/slots/registry";
 import { gameOpen, type EventStatus, type FinalStandings, type PublicEvent } from "@/lib/events";
@@ -23,17 +24,20 @@ function EventBanner({
   event,
   title,
   back,
+  total = true,
 }: {
   event: PublicEvent;
   title?: string;
   /** A game page's way back to the games, before the title (S08-AC16). */
   back?: boolean;
+  /** The games list shows the total large in its player strip instead. */
+  total?: boolean;
 }) {
   const { Banner } = useSlots();
   return (
     <Banner
       title={title ?? event.name}
-      aside={<TotalScore />}
+      {...(total ? { aside: <TotalScore /> } : {})}
       {...(back
         ? {
             lead: (
@@ -59,8 +63,8 @@ const listed = (event: PublicEvent) => event.games.filter((g) => g.visibility ==
 
 /** The action at the end of an open row (S08-AC7, AC12). */
 function playLabel(play: HubPlays[string] | undefined): string {
-  if (!play) return "Play →";
-  return play.status === "playing" ? "Continue →" : "Again →";
+  if (!play) return "Play";
+  return play.status === "playing" ? "Continue" : "Again";
 }
 
 /** Why a team game can't be opened from this phone, or null when it can (S03-AC5). */
@@ -109,7 +113,7 @@ export function hubRows(
         game,
         group: "scored",
         href: again ? href : null,
-        note: again ? "Again →" : (blocked ?? "Done"),
+        note: again ? "Again" : (blocked ?? "Done"),
         best: play.best,
       };
     }
@@ -142,13 +146,14 @@ function GameRow({ row }: { row: Row }) {
     <>
       <span className="grid min-w-0 gap-0.5">
         <span className="truncate text-lg font-bold">{row.game.title}</span>
-        <span
-          className={
-            row.href ? "font-bold text-gm-accent-ink" : "text-sm font-bold text-gm-text-muted"
-          }
-        >
-          {row.note}
-        </span>
+        {row.href ? (
+          <span className="inline-flex items-center gap-1 font-bold text-gm-accent-ink">
+            {row.note}
+            <ArrowIcon />
+          </span>
+        ) : (
+          <span className="text-sm font-bold text-gm-text-muted">{row.note}</span>
+        )}
       </span>
       {card}
     </>
@@ -221,9 +226,10 @@ function JoinGate({ children }: { children: React.ReactNode }) {
 export function UpcomingView({ event }: { event: PublicEvent }) {
   return (
     <>
-      <EventBanner event={event} />
+      <EventBanner event={event} total={false} />
       <Body>
         <JoinGate>
+          <PlayerStrip />
           {event.scoring !== "individual" && <TeamNudge slug={event.slug} />}
           <p className="m-0 text-lg">
             {listed(event).some((g) => g.alwaysOpen)
@@ -241,9 +247,10 @@ export function UpcomingView({ event }: { event: PublicEvent }) {
 export function LiveView({ event }: { event: PublicEvent }) {
   return (
     <>
-      <EventBanner event={event} />
+      <EventBanner event={event} total={false} />
       <Body>
         <JoinGate>
+          <PlayerStrip />
           {event.scoring !== "individual" && <TeamNudge slug={event.slug} />}
           <GameList event={event} status="live" />
         </JoinGate>

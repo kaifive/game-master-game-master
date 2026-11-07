@@ -51,7 +51,14 @@ export async function teamAction(slug: Slug, uid: string, body: z.infer<typeof T
   const deps = teamDeps();
   if (body.action === "join") await joinTeam(deps, event, uid, body.playerId, body.teamId);
   else if (body.action === "name") await nameTeam(deps, event, uid, body.playerId, body.name);
-  else await donateToTeam(deps, event, uid, body.playerId, body.teamId, body.points);
+  else {
+    // The new totals ride along, so the phone can hold up the team's card at once.
+    const donated = await donateToTeam(deps, event, uid, body.playerId, body.teamId, body.points);
+    return {
+      ...(await teamsView(deps, event, body.playerId)),
+      donated: { teamId: body.teamId, ...donated },
+    };
+  }
   return teamsView(deps, event, body.playerId);
 }
 

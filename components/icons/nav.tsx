@@ -54,3 +54,11 @@ export const BackIcon = () => (
     <path d="M15 5l-7 7 7 7" />
   </svg>
 );
+
+/** An onward arrow, after a row's action ("Play", "Again"). */
+export const ArrowIcon = () => (
+  <svg {...base} width={18} height={18} strokeWidth={2.4}>
+    <path d="M5 12h13" />
+    <path d="M13 6l6 6-6 6" />
+  </svg>
+);

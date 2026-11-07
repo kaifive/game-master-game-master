@@ -34,3 +34,10 @@ The flip: score cards flip up on their handles when a score lands; snow drifts o
 ## Unresolved
 
 - Exact holiday copy and game names come from the event file.
+- "Enter a code" as the hub's last row arrives with game codes (spec 15). Until then the join gate and the QR / `/join/CODE` flow cover codes.
+
+## Adaptations (cited)
+
+- The hub's first viewport keeps the event name in the band and puts the player's line (name, team, total in large accent-ink numerals) in a strip just under it, so the band reads the same on every page.
+- Navigation is a bottom tab bar (Games, Leaderboard, Team, You) with drawn line icons, chosen by Khai for mixed-age, one-thumb use.
+- The TV's toasts and "Latest points" use the pack's Toast (a gold mini card beside the text).

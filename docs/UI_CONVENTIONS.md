@@ -167,7 +167,7 @@ about should be *seen* happening. Spec 14 has the full list of moments.
   60 fps on a mid-range phone.
 - Durations and easings come from motion tokens, never ad-hoc values:
   `--gm-motion-fast` (150 ms), `--gm-motion-base` (300 ms),
-  `--gm-motion-slow` (600 ms), `--gm-motion-stage` (1200 ms, display only),
+  `--gm-motion-slow` (600 ms), `--gm-motion-stage` (per pack; Judges' Table 1400 ms; display only),
   `--gm-ease-out`, `--gm-ease-emphasized`. Themes may tune them.
 - Motion explains change: things move *from* where they were *to* where
   they are. Nothing pops in or out without a transition.

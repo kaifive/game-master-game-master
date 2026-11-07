@@ -50,7 +50,7 @@ export function PlayerFooter({ hasTeams }: { hasTeams: boolean }) {
       <div aria-hidden="true" className="h-24" />
       <nav
         aria-label="Party"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-gm-border bg-gm-surface/95 px-2 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-gm-border bg-gm-surface px-2 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]"
       >
         <div className="mx-auto flex max-w-xl gap-1">
           <Tab

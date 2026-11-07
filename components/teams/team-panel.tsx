@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowIcon } from "@/components/icons/nav";
 import { useCallback, useId, useState, type ReactNode } from "react";
 import { usePoll } from "@/components/leaderboard/use-poll";
 import { useOptionalDevice } from "@/components/players/device";
 import { useSlots } from "@/components/slots/registry";
+import { standingsApi } from "@/lib/points";
 import { checkTeamName, teamsApi, type TeamsView, type TeamView } from "@/lib/teams";
 
 export const TEAMS_POLL_MS = 15_000;
@@ -110,7 +112,7 @@ export function Donate({
   has: number;
   onGive: (teamId: string, points: number) => Promise<string | null>;
 }) {
-  const { Button } = useSlots();
+  const { Button, ScoreCard } = useSlots();
   const id = useId();
   const [teamId, setTeamId] = useState(mine ?? teams[0]?.id ?? "");
   const [amount, setAmount] = useState("");
@@ -168,10 +170,15 @@ export function Donate({
         if (valid) setAsking(true);
       }}
     >
-      <h3 className="m-0 font-gm-display text-lg font-bold">Give points to a team</h3>
-      <p className="m-0 text-sm text-gm-text-muted">
-        You have {has}. What you give comes off your own score.
-      </p>
+      <div className="flex items-center justify-between gap-3">
+        <div className="grid gap-1">
+          <h3 className="m-0 font-gm-display text-lg font-bold">Give points to a team</h3>
+          <p className="m-0 text-base text-gm-text-muted">
+            You have {has}. What you give comes off your own score.
+          </p>
+        </div>
+        <ScoreCard label="Your points" value={has} state="scored" size="sm" />
+      </div>
       <div className="grid grid-cols-[1fr_6rem] gap-2">
         <label className="sr-only" htmlFor={`${id}-team`}>
           Team
@@ -245,15 +252,24 @@ function useTeams(slug: string, playerId: string | null) {
 
 /** Teams on the party page: pick your team, name it as captain, see yours, and donate (spec 03). */
 export function TeamPanel({ slug, fallback = null }: { slug: string; fallback?: ReactNode }) {
-  const { Panel, Button } = useSlots();
+  const { Panel, Button, ScoreCard } = useSlots();
   const device = useOptionalDevice();
   const playerId = device?.active?.id ?? null;
   const [data, setView] = useTeams(slug, playerId);
+  // The team's score, from the leaderboard; a donation's reply updates it at once.
+  const loadScore = useCallback(async () => {
+    const res = await standingsApi.phone(slug, playerId);
+    return res.ok ? res.data.myTeam : null;
+  }, [slug, playerId]);
+  const polledScore = usePoll(loadScore, TEAMS_POLL_MS);
+  const [given, setGiven] = useState<{ teamId: string; team: number } | null>(null);
   const [confirm, setConfirm] = useState<TeamView | null>(null);
   const [error, setError] = useState<string | null>(null);
   if (!data || !device || !playerId) return null;
 
   const mineTeam = data.mine ? data.teams.find((t) => t.id === data.mine?.teamId) : undefined;
+  const teamScore = (teamId: string): number | null =>
+    given?.teamId === teamId ? given.team : polledScore?.id === teamId ? polledScore.points : null;
   const donate =
     data.phase === "team" && data.teams.length > 0 ? (
       <Donate
@@ -265,6 +281,7 @@ export function TeamPanel({ slug, fallback = null }: { slug: string; fallback?: 
           await device.refreshPlays();
           if (!res.ok) return res.message;
           setView(res.data);
+          if (res.data.donated) setGiven(res.data.donated);
           return null;
         }}
       />
@@ -275,12 +292,21 @@ export function TeamPanel({ slug, fallback = null }: { slug: string; fallback?: 
     return (
       <Panel label="Your team">
         <div className="grid gap-3">
-          <p className="m-0 flex items-center gap-2 text-lg">
-            <Swatch color={mineTeam.color} />
-            <span>
-              You&apos;re on <strong className="font-gm-display text-2xl">{mineTeam.name}</strong>
-            </span>
-          </p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="m-0 flex min-w-0 items-center gap-2 text-lg">
+              <Swatch color={mineTeam.color} />
+              <span className="min-w-0 break-words">
+                You&apos;re on <strong className="font-gm-display text-2xl">{mineTeam.name}</strong>
+              </span>
+            </p>
+            {/* The team's score card; it flips up when a donation or a team game lands. */}
+            <ScoreCard
+              label={`${mineTeam.name} team score`}
+              {...(teamScore(mineTeam.id) !== null
+                ? { value: teamScore(mineTeam.id) ?? 0, state: "scored" as const }
+                : { state: "blank" as const })}
+            />
+          </div>
           <p className="m-0 text-sm text-gm-text-muted">
             {isCaptain
               ? "You're the captain: you play the team games for everyone."
@@ -386,7 +412,10 @@ export function TeamNudge({ slug }: { slug: string }) {
         className="flex min-h-11 items-center justify-between gap-3 text-lg font-bold text-gm-text no-underline"
       >
         {naming ? "You're a captain! Name your team" : "Teams are open! Pick your team"}
-        <span className="text-gm-accent-ink">Go →</span>
+        <span className="inline-flex items-center gap-1 text-gm-accent-ink">
+          Go
+          <ArrowIcon />
+        </span>
       </Link>
     </Panel>
   );
