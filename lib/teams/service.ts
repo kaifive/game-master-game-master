@@ -25,6 +25,8 @@ export type TeamDeps = {
 export type TeamsView = TeamsSummary & {
   /** The asking player's team, if they're on one. */
   mine: { teamId: string; isCaptain: boolean; named: boolean } | null;
+  /** After a donation: the giver's and the team's new totals (S03-AC6). */
+  donated?: { teamId: string; player: number; team: number };
 };
 
 const noTeams = () => new AppError("BAD_REQUEST", "This event has no teams.");

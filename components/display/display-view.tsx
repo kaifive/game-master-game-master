@@ -103,7 +103,7 @@ function Latest({ recent }: { recent: DisplayStandings["recent"] }) {
           {recent.slice(0, LATEST).map((a) => (
             <li key={a.id}>
               <Toast
-                text={a.from ? `${a.from} → ${a.nickname}` : `${a.nickname} · ${a.reason}`}
+                text={a.from ? `${a.from} gave to ${a.nickname}` : `${a.nickname} · ${a.reason}`}
                 value={a.points}
               />
             </li>

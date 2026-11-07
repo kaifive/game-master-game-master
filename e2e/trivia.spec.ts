@@ -26,7 +26,7 @@ test("S04-AC7 S08-AC9 S08-AC11 S08-AC13 S08-AC15 S10-AC6: play before the start,
   const total = page.locator("[data-total-score]");
   await expect(total).toHaveAttribute("aria-label", /: 0 points$/);
   const trivia = page.getByRole("link", { name: /Holiday Trivia/ });
-  await expect(trivia).toContainText("Play →");
+  await expect(trivia).toContainText("Play");
   await trivia.click();
 
   const rules = page.getByRole("dialog", { name: "How to play" });
@@ -48,7 +48,7 @@ test("S04-AC7 S08-AC9 S08-AC11 S08-AC13 S08-AC15 S10-AC6: play before the start,
     .getByRole("link", { name: /Games/ })
     .click();
   const again = page.getByRole("link", { name: /Holiday Trivia/ });
-  await expect(again).toContainText("Again →");
+  await expect(again).toContainText("Again");
   await expect(again.getByRole("img", { name: `Holiday Trivia: ${points} points` })).toBeVisible();
 });
 
@@ -84,7 +84,7 @@ test("S08-AC3 S08-AC14: leaving mid-game asks first, then resumes the same quest
   await games.click();
   await page.getByRole("button", { name: "Leave" }).click();
 
-  await expect(page.getByRole("link", { name: /Holiday Trivia/ })).toContainText("Continue →");
+  await expect(page.getByRole("link", { name: /Holiday Trivia/ })).toContainText("Continue");
   await page.getByRole("link", { name: /Holiday Trivia/ }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 2 }).last()).toHaveText(prompt ?? "");

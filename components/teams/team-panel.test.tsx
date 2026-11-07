@@ -137,6 +137,28 @@ describe("TeamPanel", () => {
     device.state.total = 0;
   });
 
+  test("S03-AC6: the team's score card shows the new total after a donation", async () => {
+    device.state.total = 40;
+    const view = {
+      phase: "team",
+      maxTeamSize: 4,
+      teams: [team("t1", "Dragons")],
+      mine: { teamId: "t1", isCaptain: false, named: true },
+    };
+    serve(view, { ...view, donated: { teamId: "t1", player: 15, team: 25 } });
+    panel();
+    expect(
+      await screen.findByRole("img", { name: "Dragons team score: not scored yet" }),
+    ).toBeVisible();
+    expect(screen.getByRole("img", { name: "Your points: 40 points" })).toBeVisible();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Points to give"), "25");
+    await user.click(screen.getByRole("button", { name: "Give points" }));
+    await user.click(screen.getByRole("button", { name: "Yes, give 25" }));
+    expect(await screen.findByRole("img", { name: "Dragons team score: 25 points" })).toBeVisible();
+    device.state.total = 0;
+  });
+
   test("S03-AC6: with no points, there's nothing to give", async () => {
     serve({
       phase: "team",

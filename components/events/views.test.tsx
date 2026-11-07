@@ -184,7 +184,7 @@ describe("S08-AC7: the hub lists each game for the active player", () => {
     // Trivia is replayable in the party's event file: scored, and open again.
     const scored = await within(list).findByRole("list", { name: "Scored" });
     expect(within(scored).getByRole("img", { name: "Holiday Trivia: 80 points" })).toBeVisible();
-    expect(within(scored).getByText("Again →")).toBeInTheDocument();
+    expect(within(scored).getByText("Again")).toBeInTheDocument();
     // Nothing else is playable on a phone yet: a live game and an unbuilt one
     // wait under Coming up instead of offering a dead-end Play.
     expect(within(list).queryByRole("list", { name: "Up for grabs" })).toBeNull();
@@ -295,7 +295,7 @@ describe("S08-AC7: sorting the games", () => {
   test("a playable game is up for grabs with Play, then Continue; live and unbuilt games wait", () => {
     const rows = hubRows(event, "live", {}, null);
     const byId = Object.fromEntries(rows.map((r) => [r.game.id, r]));
-    expect(byId.trivia).toMatchObject({ group: "open", note: "Play →" });
+    expect(byId.trivia).toMatchObject({ group: "open", note: "Play" });
     expect(byId.jeopardy).toMatchObject({ group: "later", href: null });
     expect(byId["ornament-hunt"]).toMatchObject({ group: "later", note: "Coming soon" });
     const playing = hubRows(
@@ -304,6 +304,6 @@ describe("S08-AC7: sorting the games", () => {
       { trivia: { status: "playing", best: 0, runs: 1 } },
       null,
     );
-    expect(playing.find((r) => r.game.id === "trivia")?.note).toBe("Continue →");
+    expect(playing.find((r) => r.game.id === "trivia")?.note).toBe("Continue");
   });
 });

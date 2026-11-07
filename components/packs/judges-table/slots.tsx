@@ -105,17 +105,19 @@ const BLANK = -1;
 /**
  * Whether a card should flip up: a fresh result, or a score that changed
  * since this card was last seen (on this page or an earlier one). Seeing the
- * same score again doesn't flip it.
+ * same score again doesn't flip it, and neither does a blank card filling in
+ * as the page loads: blank means "not known yet", not a score.
  */
 function useLanded(key: string, value: number, fresh: boolean): boolean {
   const [landed, setLanded] = useState<number | null>(() => {
     const before = seen.get(key);
-    return fresh || (before !== undefined && before !== value) ? value : null;
+    const changed = before !== undefined && before !== BLANK && before !== value;
+    return fresh || changed ? value : null;
   });
   const [last, setLast] = useState(value);
   if (last !== value) {
     setLast(value);
-    setLanded(value);
+    if (last !== BLANK) setLanded(value);
   }
   useEffect(() => {
     seen.set(key, value);
@@ -127,6 +129,8 @@ function useLanded(key: string, value: number, fresh: boolean): boolean {
 function ScoreCard({ label, value, state, size = "md", fresh = false }: ScoreCardProps) {
   const scored = state !== "blank" && value !== undefined;
   const landed = useLanded(label, scored ? value : BLANK, fresh);
+  // A miss (0) is held up on the frosted card back, as the judges' table does.
+  const look = scored && value === 0 && state === "scored" ? "blank" : state;
   return (
     <span
       role="img"
@@ -138,7 +142,7 @@ function ScoreCard({ label, value, state, size = "md", fresh = false }: ScoreCar
       <span
         aria-hidden="true"
         className={cx(
-          paddle({ state, size }),
+          paddle({ state: look, size }),
           landed && "motion-safe:animate-[jt-flip_420ms_cubic-bezier(0.16,1,0.3,1)]",
         )}
       >
@@ -150,7 +154,7 @@ function ScoreCard({ label, value, state, size = "md", fresh = false }: ScoreCar
         className={cx(
           "rounded-b-[2px]",
           { sm: "h-2.5 w-1.5", md: "h-5 w-2", lg: "h-5 w-2", xl: "h-12 w-3.5" }[size],
-          scored ? "jt-handle" : "bg-[var(--gm-card-back)]",
+          scored && look !== "blank" ? "jt-handle" : "bg-[var(--gm-card-back)]",
         )}
       />
     </span>
@@ -329,8 +333,8 @@ function LeaderboardRow({ rank, name, score, team, highlight, size = "md" }: Lea
             style={{ background: `var(--gm-team-${team})` }}
           />
         )}
-        {/* Long names wrap on the TV rather than lose their end; phones keep one line. */}
-        <span className={lg ? "text-balance break-words" : "truncate"}>{name}</span>
+        {/* Long names wrap rather than lose their end. */}
+        <span className="min-w-0 text-balance break-words">{name}</span>
       </span>
       {/* A score card on its handle; keyed by score so it flips again when the score changes. */}
       <span aria-hidden="true" className="inline-grid justify-items-center">

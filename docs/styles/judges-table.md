@@ -26,9 +26,10 @@ the same sprig as the band's (`icons.points`). Light mode is a snowy day
 | snow | `#d3dfe6` | `rgba(255,255,255,0.22)` |
 | ink | `#10181c` | `#eef4f6` |
 | soft ink | `#4a5960` | `#9fb1b8` |
-| accent (band, totals) | `#b3122e` cranberry | `#d92a48` |
+| accent (band, fills) | `#b3122e` cranberry | `#c41e3c` |
+| accent-ink (accent text, focus rings) | `#b3122e` | `#f5607a` (lifted for 4.5:1 on the night ground) |
 | gold | `#e5b553` (`#c48f22` for lines) | same |
-| holly | `#1f5c45` | same |
+| holly | drawn in `components/icons/holly.tsx` | same |
 | card / card ink | `#ffffff` / `#111111` | same |
 | card back (unscored, misses) | `#c9d4da` | `#263840` |
 
