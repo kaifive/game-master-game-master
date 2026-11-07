@@ -20,3 +20,4 @@ Statuses are explained in `../conventions/docs.md`.
 | 13 | [Photos, triage, votes and recap](13-photos-and-recap.md) | M2 | Draft |
 | 14 | [Motion and celebrations](14-motion-and-celebrations.md) | M0 | Done |
 | 15 | [Game codes and hidden games](15-game-codes.md) | Later | Draft |
+| 16 | [Quick games](16-quick-games.md) | M2 | Done |

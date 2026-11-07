@@ -1,4 +1,9 @@
 import { defineGame, type AnyGameLogic } from "./model";
+import { recall } from "./recall/logic";
+import { stacker } from "./stacker/logic";
+import { taps } from "./taps/logic";
+import { timer } from "./timer/logic";
+import { trail } from "./trail/logic";
 import { trivia } from "./trivia/logic";
 
 /**
@@ -7,6 +12,11 @@ import { trivia } from "./trivia/logic";
  */
 const LOGIC: Readonly<Record<string, AnyGameLogic>> = {
   trivia: defineGame(trivia),
+  timer: defineGame(timer),
+  taps: defineGame(taps),
+  trail: defineGame(trail),
+  stacker: defineGame(stacker),
+  recall: defineGame(recall),
 };
 
 export const gameLogic = (type: string): AnyGameLogic | undefined => LOGIC[type];

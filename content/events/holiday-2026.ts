@@ -26,6 +26,25 @@ export const holiday2026: EventConfig = {
       // Open now for testing. Decide before the party (runbooks/event-checklist.md).
       alwaysOpen: true,
     },
+    // Quick games (spec 16). Open now for testing, like trivia; decide before the party.
+    ...(
+      [
+        ["t-timer", "timer", "T-Timer", { targetSeconds: 10, visibleSeconds: 3 }],
+        ["tap-masher", "taps", "Tap Masher", { seconds: 5, target: 45 }],
+        ["snow-trail", "trail", "Snow Trail", { size: 6, checkpoints: 8 }],
+        ["stack-attack", "stacker", "Stack Attack", { rows: 12, width: 7 }],
+        ["rapid-recall", "recall", "Rapid Recall", {}],
+      ] as const
+    ).map(([id, type, title, content]) => ({
+      id,
+      type,
+      title,
+      mode: "solo" as const,
+      visibility: "listed" as const,
+      content,
+      scoring: { awardTo: "player" as const },
+      alwaysOpen: true,
+    })),
     {
       // A team game: the captain plays on their phone for the team (spec 03). Placeholder questions.
       id: "team-trivia",
