@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useId, useState } from "react";
+import Link from "next/link";
+import { useCallback, useId, useState, type ReactNode } from "react";
 import { usePoll } from "@/components/leaderboard/use-poll";
 import { useOptionalDevice } from "@/components/players/device";
 import { useSlots } from "@/components/slots/registry";
@@ -243,7 +244,7 @@ function useTeams(slug: string, playerId: string | null) {
 }
 
 /** Teams on the party page: pick your team, name it as captain, see yours, and donate (spec 03). */
-export function TeamPanel({ slug }: { slug: string }) {
+export function TeamPanel({ slug, fallback = null }: { slug: string; fallback?: ReactNode }) {
   const { Panel, Button } = useSlots();
   const device = useOptionalDevice();
   const playerId = device?.active?.id ?? null;
@@ -302,7 +303,7 @@ export function TeamPanel({ slug }: { slug: string }) {
     );
   }
 
-  if (data.phase !== "team" || data.teams.length === 0) return null;
+  if (data.phase !== "team" || data.teams.length === 0) return fallback;
 
   return (
     <Panel label="Pick your team">
@@ -362,6 +363,31 @@ export function TeamPanel({ slug }: { slug: string }) {
         )}
         {!confirm && donate}
       </div>
+    </Panel>
+  );
+}
+
+/**
+ * On the games list, a nudge to the Team tab when there's something to do
+ * there: teams just opened, or a new captain's team needs a name (spec 03).
+ */
+export function TeamNudge({ slug }: { slug: string }) {
+  const { Panel } = useSlots();
+  const device = useOptionalDevice();
+  const [data] = useTeams(slug, device?.active?.id ?? null);
+  if (!data || !device?.active) return null;
+  const naming = data.mine?.isCaptain === true && !data.mine.named;
+  const picking = !data.mine && data.phase === "team" && data.teams.length > 0;
+  if (!naming && !picking) return null;
+  return (
+    <Panel label="Teams">
+      <Link
+        href={`/${slug}/team`}
+        className="flex min-h-11 items-center justify-between gap-3 text-lg font-bold text-gm-text no-underline"
+      >
+        {naming ? "You're a captain! Name your team" : "Teams are open! Pick your team"}
+        <span className="text-gm-accent-ink">Go →</span>
+      </Link>
     </Panel>
   );
 }

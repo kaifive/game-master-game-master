@@ -54,7 +54,7 @@ export function PhoneLeaderboard({ slug }: { slug: string }) {
       )}
       <section aria-labelledby="board-heading" className="grid gap-2">
         <h2 id="board-heading" className="m-0 font-gm-display text-2xl font-bold">
-          Leaderboard
+          Players
         </h2>
         {top.length === 0 ? (
           <p className="m-0 text-gm-text-muted">No scores yet. Play a game to get on the board.</p>

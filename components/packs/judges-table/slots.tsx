@@ -46,7 +46,7 @@ function Holly() {
   );
 }
 
-function Banner({ title, subtitle, live, level = 1, aside }: BannerProps) {
+function Banner({ title, subtitle, live, level = 1, aside, lead }: BannerProps) {
   const H = level === 1 ? "h1" : "h2";
   const holly = useDecoration("holly");
   return (
@@ -54,6 +54,7 @@ function Banner({ title, subtitle, live, level = 1, aside }: BannerProps) {
       data-slot="banner"
       className="jt-band flex items-center gap-3 bg-[var(--gm-band)] px-4 pt-3 pb-4 text-[var(--gm-band-ink)]"
     >
+      {lead}
       <div className="min-w-0">
         <H className="m-0 font-gm-display text-base font-medium tracking-[0.1em] uppercase">
           {title}

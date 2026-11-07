@@ -122,7 +122,7 @@ describe("GamePlayer", () => {
     });
   });
 
-  test("S08-AC11 S08-AC3: a finished play holds up its score card, the summary and a way back", async () => {
+  test("S08-AC11 S08-AC3: a finished play holds up its score card and the summary", async () => {
     setReducedMotion(true);
     api.plays.mockReturnValue(ok({ plays: { trivia: { status: "finished", points: 80 } } }));
     api.start.mockReturnValue(ok(finished));
@@ -132,10 +132,6 @@ describe("GamePlayer", () => {
     expect(
       within(score).getByRole("img", { name: "This game, your score: 80 points" }),
     ).toHaveTextContent("80");
-    expect(within(score).getByRole("link", { name: "Back to games" })).toHaveAttribute(
-      "href",
-      "/holiday-2026",
-    );
   });
 
   test("shows the server's message when a game can't start", async () => {

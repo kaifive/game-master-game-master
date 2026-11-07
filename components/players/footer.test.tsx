@@ -2,10 +2,12 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { PlayerFooter } from "./footer";
+import { LeaveGuard } from "./leave-guard";
 import { TotalScore } from "./total-score";
 
 const push = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+const nav = vi.hoisted(() => ({ path: "/holiday-2026" }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }), usePathname: () => nav.path }));
 
 const device = vi.hoisted(() => ({
   state: null as null | {
@@ -25,7 +27,15 @@ vi.mock("./player-sheet", () => ({
   ),
 }));
 
+const footer = (hasTeams = false) =>
+  render(
+    <LeaveGuard>
+      <PlayerFooter hasTeams={hasTeams} />
+    </LeaveGuard>,
+  );
+
 beforeEach(() => {
+  nav.path = "/holiday-2026";
   push.mockClear();
   device.state = {
     slug: "holiday-2026",
@@ -37,16 +47,32 @@ beforeEach(() => {
 });
 
 describe("PlayerFooter", () => {
-  test("S08-AC14: shows who's playing and the way back to the games", () => {
-    render(<PlayerFooter hasTeams={false} />);
-    const nav = screen.getByRole("navigation", { name: "Party" });
-    expect(nav).toHaveTextContent("Mai");
+  test("S08-AC14: tabs for the games, the leaderboard and you, marking where you are", () => {
+    footer();
+    const bar = screen.getByRole("navigation", { name: "Party" });
+    expect(bar).toHaveTextContent("Mai");
     expect(screen.getByRole("link", { name: /Games/ })).toHaveAttribute("href", "/holiday-2026");
+    expect(screen.getByRole("link", { name: /Games/ })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: /Leaderboard/ })).toHaveAttribute(
+      "href",
+      "/holiday-2026/leaderboard",
+    );
+    expect(screen.queryByRole("link", { name: /Team/ })).toBeNull();
+  });
+
+  test("S03-AC3: events with teams get a Team tab; a game page still counts as Games", () => {
+    nav.path = "/holiday-2026/play/trivia";
+    footer(true);
+    expect(screen.getByRole("link", { name: /Team/ })).toHaveAttribute(
+      "href",
+      "/holiday-2026/team",
+    );
+    expect(screen.getByRole("link", { name: /Games/ })).toHaveAttribute("aria-current", "page");
   });
 
   test("S08-AC14: asks before leaving a game in progress", async () => {
     if (device.state) device.state.leaveWarning = "Leave the game?";
-    render(<PlayerFooter hasTeams={false} />);
+    footer();
     const user = userEvent.setup();
     await user.click(screen.getByRole("link", { name: /Games/ }));
     expect(screen.getByRole("alertdialog", { name: "Leave the game?" })).toBeInTheDocument();

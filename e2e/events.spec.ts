@@ -33,16 +33,16 @@ test("an unknown code returns home with an error", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("S01-AC11: the holiday party page renders in its style without sideways scroll", async ({
+test("S01-AC11 S02-AC14: the holiday party page renders in its style without sideways scroll", async ({
   page,
 }, info) => {
   await page.goto("/holiday-2026");
   await expect(
     page.locator('[data-pack="judges-table"][data-variant="winter"][data-color-mode="dark"]'),
   ).toBeVisible();
-  await expect(
-    page.getByText("Some games are open now. The rest open when the host starts them."),
-  ).toBeVisible();
+  // S02-AC14: before joining, the join form is the whole page.
+  await expect(page.getByRole("heading", { name: "Join the party" })).toBeVisible();
+  await expect(page.getByText("Holiday Trivia")).toHaveCount(0);
   expect(await noSideScroll(page)).toBe(0);
   const fills = await page.evaluate(() => {
     const surface = document.querySelector('[data-slot="surface"]');

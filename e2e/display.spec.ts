@@ -47,6 +47,6 @@ test("S05-AC2 S05-AC4: a player's points show on their phone and on the display"
   await tv.goto("/holiday-2026/display");
   await expect(tv.getByRole("list", { name: "Leaderboard" })).toContainText(name);
 
-  await phone.goto("/holiday-2026");
+  await phone.goto("/holiday-2026/leaderboard");
   await expect(phone.getByRole("list", { name: "Leaderboard" })).toContainText(name);
 });

@@ -14,6 +14,8 @@ export type BannerProps = {
   level?: 1 | 2;
   /** Shown at the banner's end, such as the player's total points. */
   aside?: ReactNode;
+  /** Shown before the title, such as a back arrow to the games. */
+  lead?: ReactNode;
 };
 export type ButtonProps = {
   children: ReactNode;

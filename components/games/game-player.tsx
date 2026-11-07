@@ -49,7 +49,7 @@ function Result({
   onAgain?: (() => void) | undefined;
 }) {
   const { Button, ScoreCard } = useSlots();
-  const { refreshPlays, slug } = useDevice();
+  const { refreshPlays } = useDevice();
   const reduced = useReducedMotion();
   const score = useRef<HTMLDivElement>(null);
   const icon = useRef<HTMLSpanElement>(null);
@@ -92,19 +92,11 @@ function Result({
           {newBest ? "New best!" : `Your best: ${String(play.best)}`}
         </p>
       )}
-      <div className="flex flex-wrap justify-center gap-2">
-        {onAgain && (
-          <Button size="lg" onClick={onAgain}>
-            Play again
-          </Button>
-        )}
-        <Link
-          href={`/${slug}`}
-          className="inline-flex min-h-14 items-center px-4 text-lg font-bold text-gm-accent-ink"
-        >
-          Back to games
-        </Link>
-      </div>
+      {onAgain && (
+        <Button size="lg" onClick={onAgain}>
+          Play again
+        </Button>
+      )}
     </section>
   );
 }

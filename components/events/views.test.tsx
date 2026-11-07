@@ -11,9 +11,11 @@ import {
   EndedView,
   EventNotFound,
   GameView,
+  LeaderboardView,
   LiveView,
   QuickEventView,
   teamGameBlock,
+  TeamView,
   UpcomingView,
 } from "./views";
 
@@ -174,7 +176,7 @@ describe("S08-AC7: the hub lists each game for the active player", () => {
         <LiveView event={event} />
       </DeviceProvider>,
     );
-    const list = screen.getByRole("region", { name: "Tonight's games" });
+    const list = await screen.findByRole("region", { name: "Tonight's games" });
     // Trivia is replayable in the party's event file: scored, and open again.
     const scored = await within(list).findByRole("list", { name: "Scored" });
     expect(within(scored).getByRole("img", { name: "Holiday Trivia: 80 points" })).toBeVisible();
@@ -196,6 +198,32 @@ describe("S08-AC16: a game page names the game in the banner", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Holiday Trivia" })).toBeInTheDocument();
     expect(screen.queryByText("Nova Wushu Holiday Party")).toBeNull();
   });
+
+  test("a back arrow before the title goes to the games", () => {
+    inPack(<GameView event={event} game={event.games[0]!} status="live" />);
+    expect(screen.getByRole("link", { name: "Back to games" })).toHaveAttribute(
+      "href",
+      `/${event.slug}`,
+    );
+  });
+});
+
+describe("S02-AC14: before joining, the join form is the whole page", () => {
+  test("no game names, no leaderboard: just the form", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(Response.json({ banned: false, player: null, restartsLeft: 1 }))),
+    );
+    inPack(
+      <DeviceProvider slug={event.slug} identity="dev">
+        <LiveView event={event} />
+      </DeviceProvider>,
+    );
+    expect(await screen.findByRole("region", { name: "Join the party" })).toBeInTheDocument();
+    expect(screen.queryByText("Holiday Trivia")).toBeNull();
+    expect(screen.queryByRole("region", { name: "Tonight's games" })).toBeNull();
+    vi.unstubAllGlobals();
+  });
 });
 
 describe("S03-AC5: team games on the list", () => {
@@ -215,5 +243,43 @@ describe("S03-AC5: team games on the list", () => {
         { status: "finished", best: 70, runs: 1 },
       ),
     ).toBe("Team · +70");
+  });
+});
+
+describe("S05-AC2 S03-AC3: the Leaderboard and Team tabs", () => {
+  const joined = (url: string) =>
+    Promise.resolve(
+      Response.json(
+        url.includes("/leaderboard")
+          ? { top: [], me: null, phase: "individual", teams: [], myTeam: null }
+          : url.includes("/teams")
+            ? { phase: "individual", maxTeamSize: 4, teams: [], mine: null }
+            : url.includes("/plays")
+              ? { plays: {}, total: 0, seat: null }
+              : { banned: false, player: { id: "p1", nickname: "Mai" }, restartsLeft: 1 },
+      ),
+    );
+
+  test("the Leaderboard tab is its own page", async () => {
+    vi.stubGlobal("fetch", vi.fn(joined));
+    inPack(
+      <DeviceProvider slug={event.slug} identity="dev">
+        <LeaderboardView event={event} />
+      </DeviceProvider>,
+    );
+    expect(screen.getByRole("heading", { level: 1, name: "Leaderboard" })).toBeInTheDocument();
+    expect(await screen.findByText(/No scores yet/)).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
+  test("before the team phase, the Team tab says when teams open", async () => {
+    vi.stubGlobal("fetch", vi.fn(joined));
+    inPack(
+      <DeviceProvider slug={event.slug} identity="dev">
+        <TeamView event={event} />
+      </DeviceProvider>,
+    );
+    expect(await screen.findByText(/Teams open when the host starts/)).toBeInTheDocument();
+    vi.unstubAllGlobals();
   });
 });
