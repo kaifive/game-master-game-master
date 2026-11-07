@@ -17,13 +17,13 @@ Players join an event from a QR code with a nickname and start playing at once. 
 ## Behavior
 
 1. The event page signs the phone in anonymously on first visit. The uid is the device and survives reloads.
-2. The hub shows "Join the party" while the device has no player in this event. Joining needs a nickname and the event's join code. A `?code=` in the URL fills the code in and hides the code box (the QR poster links to `/join?code=…`, which redirects with the code kept).
+2. While the device has no player in this event, the party page is only "Join the party": no game names, leaderboard or tabs (the same on the Leaderboard and Team pages). Joining needs a nickname and the event's join code. A `?code=` in the URL fills the code in and hides the code box (the QR poster links to `/join?code=…`, which redirects with the code kept).
 3. Nicknames are trimmed and inner spaces collapsed. 2–16 characters; letters (any language), numbers, spaces and `' - . _` only.
 4. Nicknames are unique per event, ignoring case, spacing and accents ("Mai", "mai", "Maï" are the same name). A taken name gets "That name is taken. Pick another name."
 5. The name filter (`lib/players/filter.ts`) normalizes before matching: lower case, accents removed, look-alikes mapped (0→o, 1→i, 3→e, 4→a, 5→s, 7→t, @→a, $→s, !→i), separators removed, repeated letters collapsed. Strong words are blocked anywhere in the name; short ambiguous words are blocked only as a whole word, so "Cassie" and "Dickens" pass. An event may add its own words (`blockedNames`), which stay on the server. The phone checks the shared list as the name is typed; the server checks again, with the event's words too. A blocked name gets "Pick another name."
 6. Joining works while the event is `upcoming` or `live`, not once it is `ended`.
 7. A device has **one player** per event (ADR-027). Joining again with another name is refused: "This phone already has a player. Start over to play as someone new."
-8. Once joined, the footer shows the player's name; tapping it opens a player panel with **Not you? Start over** while the phone has restarts left. It confirms first: "<name>'s N points will be lost[, including any given to teams]. This phone can only start over once at this party." (the team part only when the event has teams). Then a name box (no code); the old player is forfeited (off the leaderboard, name freed) and the new one becomes the phone's player. `restartsPerDevice` in the event file sets the limit (the party: 1).
+8. Once joined, the tab bar's last tab shows the player's name; tapping it opens a player panel with **Not you? Start over** while the phone has restarts left. It confirms first: "<name>'s N points will be lost[, including any given to teams]. This phone can only start over once at this party." (the team part only when the event has teams). Then a name box (no code); the old player is forfeited (off the leaderboard, name freed) and the new one becomes the phone's player. `restartsPerDevice` in the event file sets the limit (the party: 1).
 9. Reopening the event on the same device shows its player with no new join.
 12. Team captains can't start over (spec 03 marks captains; until then nobody is one).
 10. A banned device (`devices/{uid}.banned`, set from Controls in spec 07) can't join and sees "This phone can't join this event."
@@ -56,7 +56,7 @@ Without Firebase (CI e2e, local runs with no emulators) the server uses in-memor
 
 ## UI
 
-Player phone, in the event's style pack, above the game list on the upcoming and live pages: a `Panel` with a name box (and code box when needed), the live filter message, and the join `Button`. After joining, the hub shows nothing; the footer name opens the player panel (spec 08).
+Player phone, in the event's style pack: until joined, a `Panel` with a name box (and code box when needed), the live filter message and the join `Button` is the whole page under the banner. After joining, the page is the games (spec 08) and the tab bar's name tab opens the player panel.
 
 ## Edge cases
 
@@ -80,6 +80,7 @@ Player phone, in the event's style pack, above the game list on the upcoming and
 - [x] AC-11: Player routes refuse requests without a valid device token (401), and production refuses dev tokens and in-memory storage.
 - [x] AC-12: The memory and Firebase player repos pass the same contract, including two devices racing for one name (exactly one wins).
 - [x] AC-13: A team captain can't start over.
+- [x] AC-14: Until the phone has joined, the party page shows only the join form: no game names, leaderboard or tabs.
 
 ## Tests
 

@@ -43,8 +43,11 @@ test("S03-AC1 S03-AC2 S03-AC3 S03-AC5 S03-AC6 S03-AC8: teams from captain to TV"
   await page.getByRole("button", { name: "Make captain" }).click();
   await expect(page.getByRole("list", { name: "Teams" })).toContainText(`Team ${captain}`);
 
-  await cap.reload();
-  await cap.getByLabel(/Name your team/).fill(team);
+  // The games list nudges a new captain to the Team tab.
+  await cap.goto("/holiday-2026");
+  await cap.getByRole("link", { name: /Name your team/ }).click();
+  await expect(cap).toHaveURL(/\/holiday-2026\/team$/);
+  await cap.getByRole("textbox", { name: /Name your team/ }).fill(team);
   await cap.getByRole("button", { name: "Name the team" }).click();
   await expect(cap.getByText(`You're on ${team}`)).toBeVisible();
 
@@ -52,7 +55,9 @@ test("S03-AC1 S03-AC2 S03-AC3 S03-AC5 S03-AC6 S03-AC8: teams from captain to TV"
   await page.getByRole("button", { name: "Yes, start teams" }).click();
   await expect(page.getByText("Phase: Team")).toBeVisible();
 
-  await mem.reload();
+  await mem.goto("/holiday-2026");
+  await mem.getByRole("link", { name: /Pick your team/ }).click();
+  await expect(mem).toHaveURL(/\/holiday-2026\/team$/);
   await mem.getByRole("button", { name: `Join ${team}` }).click();
   await mem
     .getByRole("alertdialog")
@@ -69,14 +74,14 @@ test("S03-AC1 S03-AC2 S03-AC3 S03-AC5 S03-AC6 S03-AC8: teams from captain to TV"
   await page.getByLabel("Points to add (negative to take away)").fill("40");
   await page.getByRole("button", { name: "Change points" }).click();
   await expect(page.getByRole("list", { name: "Players" })).toContainText("40");
-  await mem.reload();
+  await mem.goto("/holiday-2026/team");
   await mem.getByLabel("Points to give").fill("15");
   await mem.getByRole("button", { name: "Give points" }).click();
   await mem.getByRole("button", { name: "Yes, give 15" }).click();
   await expect(mem.getByText(`You gave 15 to ${team}.`)).toBeVisible();
 
   // Members can't play the team game; the captain plays it, and it never pays the captain (S03-AC5).
-  await mem.reload();
+  await mem.getByRole("navigation", { name: "Party" }).getByRole("link", { name: /Games/ }).click();
   await expect(mem.getByRole("region", { name: "Tonight's games" })).toContainText("Captain plays");
   await cap.goto("/holiday-2026/play/team-trivia");
   await cap
@@ -92,6 +97,10 @@ test("S03-AC1 S03-AC2 S03-AC3 S03-AC5 S03-AC6 S03-AC8: teams from captain to TV"
   await expect(cap.locator("[data-total-score]")).toHaveAttribute("aria-label", /: 0 points$/);
 
   // Team standings on the phone and the TV (S03-AC8).
+  await mem
+    .getByRole("navigation", { name: "Party" })
+    .getByRole("link", { name: /Leaderboard/ })
+    .click();
   await expect(mem.getByRole("list", { name: "Team standings" })).toContainText(team);
   const tv = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
   await tv.goto("/holiday-2026/display");

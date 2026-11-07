@@ -11,7 +11,7 @@ A big-screen page for the room shows how to join and a live leaderboard. Players
 ## Behavior
 
 1. **Ranks:** highest points first; ties share a rank (1, 2, 2, 4). Only active players are listed (spec 04 keeps the summary).
-2. **Phone** (party page, below the games): the top 10, and your own rank and points underneath when you're outside the top 10. Your row is highlighted. It refreshes every 15 seconds.
+2. **Phone** (the **Leaderboard** tab, its own page at `/[event]/leaderboard`): the top 10, and your own rank and points underneath when you're outside the top 10. Your row is highlighted. It refreshes every 15 seconds.
 3. **TV** (`/[slug]/display`), sized for 1920×1080 with no scrolling:
    - **Join panel:** a QR code for `/join?code=…`, the short URL and the join code in big type. (The display is the one page that shows the join code; it's on the poster anyway.)
    - **Leaderboard:** the top 10 as racing bars (spec 14's `BarRace`): bars grow, rows slide to their new rank and scores count up.

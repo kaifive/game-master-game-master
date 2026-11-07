@@ -42,6 +42,12 @@ const suites: { [N in SlotName]: Suite<N> } = {
       expect(screen.getByText("Dec 19")).toBeInTheDocument();
       expect(screen.queryByText(/live/i)).toBeNull();
     });
+    test("shows its lead before the title, such as a back link", () => {
+      render(<Banner title="Holiday Trivia" lead={<button type="button">Back to games</button>} />);
+      const back = screen.getByRole("button", { name: "Back to games" });
+      const title = screen.getByRole("heading", { name: "Holiday Trivia" });
+      expect(back.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
     test("shows its aside, such as the player's total", () => {
       render(<Banner title="Party" aside={<span>★ 180</span>} />);
       expect(screen.getByText("★ 180")).toBeInTheDocument();

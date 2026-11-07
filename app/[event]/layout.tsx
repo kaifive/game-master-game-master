@@ -5,6 +5,7 @@ import { EventSurface } from "@/components/events/surface";
 import { loadPackRoot } from "@/components/packs/loaders";
 import { DeviceProvider } from "@/components/players/device";
 import { PlayerFooter } from "@/components/players/footer";
+import { LeaveGuard } from "@/components/players/leave-guard";
 import { getEvent } from "@/lib/events/server";
 import { deviceIdentity } from "@/lib/players/server";
 
@@ -27,8 +28,10 @@ export default async function EventLayout({ params, children }: Props & { childr
     <PackRoot styleRef={event.style}>
       <EventSurface>
         <DeviceProvider slug={event.slug} identity={deviceIdentity()}>
-          {children}
-          <PlayerFooter hasTeams={event.scoring !== "individual"} />
+          <LeaveGuard>
+            {children}
+            <PlayerFooter hasTeams={event.scoring !== "individual"} />
+          </LeaveGuard>
         </DeviceProvider>
       </EventSurface>
     </PackRoot>

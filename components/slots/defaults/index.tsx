@@ -36,13 +36,14 @@ export function Surface({ children, className }: SurfaceProps) {
   );
 }
 
-export function Banner({ title, subtitle, live, level = 1, aside }: BannerProps) {
+export function Banner({ title, subtitle, live, level = 1, aside, lead }: BannerProps) {
   const H = level === 1 ? "h1" : "h2";
   return (
     <header
       data-slot="banner"
       className="flex items-center gap-3 bg-gm-accent px-4 py-3 text-gm-text-on-accent"
     >
+      {lead}
       <div className="min-w-0">
         <H className="m-0 font-gm-display text-xl font-bold">{title}</H>
         {subtitle && <p className="m-0 text-sm opacity-90">{subtitle}</p>}

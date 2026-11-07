@@ -21,12 +21,14 @@ Controls and Display are separate pages so the TV never shows admin buttons.
 /admin/[event]                  controls for one event
 /admin/[event]/photos           photo triage (swipe to approve or hide)
 /admin/[event]/recap            recap: standings and approved photos (admin only)
-/[event]                        player hub: join, switch player, games, team, my points
-/[event]/play/[game]            a solo game
+/[event]                        join (only that, until joined), then the Games tab
+/[event]/leaderboard            Leaderboard tab: team standings (team phase) and players
+/[event]/team                   Team tab: pick or name your team, give points
+/[event]/play/[game]            a solo game (back arrow in the header to the games)
 /[event]/live                   player view of the current live session (buzzer)
 /[event]/vote/[game]            vote on approved photos
 /[event]/display                big-screen display
-/join?code=ABCDE                enter or scan any code; finds its event and game
+/join?code=ABCDE, /join/ABCDE   enter or scan any code; finds its event and game
 ```
 
 Any page accepts `?code=` so a QR code can carry a code straight in. See

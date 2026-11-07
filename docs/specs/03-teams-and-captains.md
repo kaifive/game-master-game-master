@@ -21,7 +21,7 @@ Two competitions in one event (ADR-030): **individual** (solo games on your own 
 4. In Controls the host makes a player a **captain**. That creates their team with the next team color, and the captain is its first member.
 5. The captain's phone asks them to **name the team**: 2–20 characters, the same characters and name filter as nicknames (spec 02), unique per event. Until named, it shows as "Team <captain's name>".
 6. The host sets a **maximum team size** in Controls (suggested: active players ÷ teams, rounded up). Once a team is full, nobody else can join it.
-7. In the team phase, a player who isn't on a team sees **Pick your team** on the party page: every team with its name, color, captain, members and room left. Joining takes one tap and a confirm ("You can't switch later"). Players can't leave or switch; the host can **move** them.
+7. Teams live on the **Team** tab (`/[event]/team`); the games list nudges there when teams open or a new captain needs to name their team. In the team phase, a player who isn't on a team sees **Pick your team** on the Team tab: every team with its name, color, captain, members and room left. Joining takes one tap and a confirm ("You can't switch later"). Players can't leave or switch; the host can **move** them.
 8. The host can **change a team's captain** to another member, for example if the captain leaves. A team with no captain (its captain was removed) can't play team games until it has one.
 9. Captains can't start over (ADR-027).
 

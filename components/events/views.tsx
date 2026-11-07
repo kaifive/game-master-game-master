@@ -6,7 +6,9 @@ import { GamePlayer } from "@/components/games/game-player";
 import { PhoneLeaderboard } from "@/components/leaderboard/phone-leaderboard";
 import { useOptionalDevice } from "@/components/players/device";
 import { PlayerHub } from "@/components/players/hub";
-import { TeamPanel } from "@/components/teams/team-panel";
+import { BackIcon } from "@/components/icons/nav";
+import { GuardedLink } from "@/components/players/leave-guard";
+import { TeamNudge, TeamPanel } from "@/components/teams/team-panel";
 import { TotalScore } from "@/components/players/total-score";
 import { useSlots } from "@/components/slots/registry";
 import { gameOpen, type EventStatus, type FinalStandings, type PublicEvent } from "@/lib/events";
@@ -16,9 +18,36 @@ type Game = PublicEvent["games"][number];
 
 /** The event's banner, with the active player's total where the Live badge was (S08-AC15). */
 /** The banner, with the active player's total; a game page names the game instead (S08-AC16). */
-function EventBanner({ event, title }: { event: PublicEvent; title?: string }) {
+function EventBanner({
+  event,
+  title,
+  back,
+}: {
+  event: PublicEvent;
+  title?: string;
+  /** A game page's way back to the games, before the title (S08-AC16). */
+  back?: boolean;
+}) {
   const { Banner } = useSlots();
-  return <Banner title={title ?? event.name} aside={<TotalScore />} />;
+  return (
+    <Banner
+      title={title ?? event.name}
+      aside={<TotalScore />}
+      {...(back
+        ? {
+            lead: (
+              <GuardedLink
+                href={`/${event.slug}`}
+                label="Back to games"
+                className="-my-2 -ml-2 grid size-11 shrink-0 place-items-center rounded-gm text-inherit"
+              >
+                <BackIcon />
+              </GuardedLink>
+            ),
+          }
+        : {})}
+    />
+  );
 }
 
 const Body = ({ children }: { children: React.ReactNode }) => (
@@ -168,45 +197,81 @@ function GameList({ event, status }: { event: PublicEvent; status: EventStatus }
   );
 }
 
-/** Joining, when the page has this phone's device (spec 02). */
-function Hub({ event }: { event: PublicEvent }) {
-  if (!useOptionalDevice()) return null;
-  return (
-    <>
-      <PlayerHub />
-      {event.scoring !== "individual" && <TeamPanel slug={event.slug} />}
-    </>
-  );
+/**
+ * Until this phone has joined, the join form is the whole page: no game
+ * names, no leaderboard (spec 02). Without a device (tests), the page shows.
+ */
+function JoinGate({ children }: { children: React.ReactNode }) {
+  const device = useOptionalDevice();
+  if (device && !device.active) return <PlayerHub />;
+  return <>{children}</>;
 }
 
-/** Before the host starts the party (S01-AC5), with the player hub (spec 02). */
+/** Before the host starts the party (S01-AC5): the games, once joined (spec 02). */
 export function UpcomingView({ event }: { event: PublicEvent }) {
   return (
     <>
       <EventBanner event={event} />
       <Body>
-        <Hub event={event} />
-        <p className="m-0 text-lg">
-          {listed(event).some((g) => g.alwaysOpen)
-            ? "Some games are open now. The rest open when the host starts them."
-            : "Waiting for the host to start the games."}
-        </p>
-        <GameList event={event} status="upcoming" />
-        <PhoneLeaderboard slug={event.slug} />
+        <JoinGate>
+          {event.scoring !== "individual" && <TeamNudge slug={event.slug} />}
+          <p className="m-0 text-lg">
+            {listed(event).some((g) => g.alwaysOpen)
+              ? "Some games are open now. The rest open when the host starts them."
+              : "Waiting for the host to start the games."}
+          </p>
+          <GameList event={event} status="upcoming" />
+        </JoinGate>
       </Body>
     </>
   );
 }
 
-/** While the party is on: the hub, filled in by specs 02, 03 and 08. */
+/** While the party is on: the games (specs 02, 03 and 08). */
 export function LiveView({ event }: { event: PublicEvent }) {
   return (
     <>
       <EventBanner event={event} />
       <Body>
-        <Hub event={event} />
-        <GameList event={event} status="live" />
-        <PhoneLeaderboard slug={event.slug} />
+        <JoinGate>
+          {event.scoring !== "individual" && <TeamNudge slug={event.slug} />}
+          <GameList event={event} status="live" />
+        </JoinGate>
+      </Body>
+    </>
+  );
+}
+
+/** The Leaderboard tab: teams in the team phase, then players (S05-AC2, S03-AC8). */
+export function LeaderboardView({ event }: { event: PublicEvent }) {
+  return (
+    <>
+      <EventBanner event={event} title="Leaderboard" />
+      <Body>
+        <JoinGate>
+          <PhoneLeaderboard slug={event.slug} />
+        </JoinGate>
+      </Body>
+    </>
+  );
+}
+
+/** The Team tab: pick or name your team, and give points (spec 03). */
+export function TeamView({ event }: { event: PublicEvent }) {
+  return (
+    <>
+      <EventBanner event={event} title="Team" />
+      <Body>
+        <JoinGate>
+          <TeamPanel
+            slug={event.slug}
+            fallback={
+              <p className="m-0 text-lg">
+                Teams open when the host starts the team phase. Keep playing until then!
+              </p>
+            }
+          />
+        </JoinGate>
       </Body>
     </>
   );
@@ -284,7 +349,7 @@ export function GameView({
 }) {
   return (
     <>
-      <EventBanner event={event} title={game.title} />
+      <EventBanner event={event} title={game.title} back={event.kind === "event"} />
       <Body>
         {gameOpen(status, game) && play ? (
           <GamePlayer
@@ -296,11 +361,6 @@ export function GameView({
           />
         ) : (
           <p className="m-0 text-gm-text-muted">{GAME_STATE[status]}</p>
-        )}
-        {event.kind === "event" && !(gameOpen(status, game) && play) && (
-          <Link href={`/${event.slug}`} className="font-bold text-gm-accent-ink">
-            All games
-          </Link>
         )}
       </Body>
     </>

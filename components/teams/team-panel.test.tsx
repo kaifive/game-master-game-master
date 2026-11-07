@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { PackRoot } from "@/components/packs/judges-table/root";
 import { holiday2026 } from "@/content/events/holiday-2026";
-import { TeamPanel } from "./team-panel";
+import { TeamNudge, TeamPanel } from "./team-panel";
 
 const device = vi.hoisted(() => ({
   state: {
@@ -147,5 +147,31 @@ describe("TeamPanel", () => {
     panel();
     expect(await screen.findByText(/on the team/)).toBeInTheDocument();
     expect(screen.queryByLabelText("Points to give")).toBeNull();
+  });
+
+  test("S03-AC3: the games list nudges to the Team tab once teams open, or a captain must name one", async () => {
+    serve({ phase: "team", maxTeamSize: 4, teams: [team("t1", "Dragons")], mine: null });
+    const { unmount } = render(
+      <PackRoot styleRef={holiday2026.style}>
+        <TeamNudge slug="holiday-2026" />
+      </PackRoot>,
+    );
+    expect(await screen.findByRole("link", { name: /Pick your team/ })).toHaveAttribute(
+      "href",
+      "/holiday-2026/team",
+    );
+    unmount();
+    serve({
+      phase: "individual",
+      maxTeamSize: 4,
+      teams: [team("t1", "Team Lan", { named: false })],
+      mine: { teamId: "t1", isCaptain: true, named: false },
+    });
+    render(
+      <PackRoot styleRef={holiday2026.style}>
+        <TeamNudge slug="holiday-2026" />
+      </PackRoot>,
+    );
+    expect(await screen.findByRole("link", { name: /Name your team/ })).toBeInTheDocument();
   });
 });

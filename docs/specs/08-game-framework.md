@@ -28,8 +28,8 @@ The contract every game type follows (ADR-007): pure logic, a content shape, and
 5. Leaving mid-game and coming back resumes the same play. Anything timed keeps running while you're away.
 6. **Score once:** when a play ends, its points are fixed and `scored: true` is set in the same transaction. Spec 04 turns that into a ledger award; until spec 04 ships, the points show on the result screen only.
 7. A game is playable while the event is `live`, or before the start too when the game is `alwaysOpen` (for testing or warm-ups), by a player on the calling device. Every game closes when the event ends. Before the start it shows "This game opens when the host starts the party."; after the end, "This game has closed."
-8. The hub's game list shows each game as **Play**, **Continue** (started), **Done · +N** (finished), **Best N · Again** (finished, replayable) or **Locked** (not open), for the active player.
-10. **Footer:** every event page has a bottom bar with the player's name and **Games**. The name opens a player panel: who's playing, their total, and **Not you? Start over** (spec 02). Once joined, the party page shows no player card. Leaving a run in progress asks first: the clock keeps running, so the current question may count as wrong.
+8. The games list (the **Games** tab, the party page) groups the games as **Up for grabs**, **Scored** and **Coming up**, under progress pips. Each row ends in its score card (blank until scored) and says **Play**, **Continue** (started), **Again** (scored, replayable), **Done** or why it's locked, for the active player.
+10. **Tabs:** once joined, every event page has a bottom tab bar: **Games**, **Leaderboard**, **Team** (events with teams) and the player's name. The name opens a player panel: who's playing, their total, and **Not you? Start over** (spec 02). A game page's header has a back arrow to the games before its title. Leaving a run in progress (by a tab or the back arrow) asks first: the clock keeps running, so the current question may count as wrong.
 11. **Header:** a game page shows the game's title in the banner instead of the event name, for more room.
 12. **Header total:** the event banner shows the active player's total, the sum of their best scores (until spec 04's ledger), instead of the Live badge. When a run sets a new best, a "+N" chip flies from the score to the total, which then counts up. Under reduced motion it just updates.
 9. The game page shows which player is playing and lets the hub's switcher change it.
@@ -51,7 +51,7 @@ All need the device token (spec 02) and an active player on that device.
 
 ## UI
 
-Player phone, in the event's pack: game header (title, "Playing as"), the instructions box, the game's renderer, and a result screen where the run's score is held up as a large score card that flips up on its handle (the pack's `ScoreCard`, size `xl`; it just appears under reduced motion), with "Play again" (replayable events) and "Back to games". Back to the hub at any time.
+Player phone, in the event's pack: game header (title, "Playing as"), the instructions box, the game's renderer, and a result screen where the run's score is held up as a large score card that flips up on its handle (the pack's `ScoreCard`, size `xl`; it just appears under reduced motion), with "Play again" (replayable events). The header's back arrow returns to the games at any time.
 
 ## Edge cases
 
@@ -68,15 +68,15 @@ Player phone, in the event's pack: game header (title, "Playing as"), the instru
 - [x] AC-4: A play's points are fixed once, when it ends (`scored: true`), and never change after.
 - [x] AC-5: A move for an old step (double tap) changes nothing and returns the current view.
 - [x] AC-6: Games can be played only while open, by a player on the calling device.
-- [x] AC-7: The hub lists each game as Play, Continue, Done · +N or Locked for the active player.
+- [x] AC-7: The games list groups each game as up for grabs, scored or coming up, with its score card and Play, Continue, Again, Done or why it's locked, for the active player.
 - [x] AC-8: The memory and Firebase play repos pass the same contract.
 - [x] AC-9: Every game opens with an instructions box (the type's default or the event's own), and the play and its timer start only when it is closed with Start; a resumed play skips it.
 - [x] AC-10: Every solo game is worth the event's `soloGamePoints`; an event file that sets points on a solo game fails validation.
 - [x] AC-11: The result screen holds up the final score as a large score card that flips up (it appears at once under reduced motion), with a way back to the games.
 - [x] AC-12: In a replayable event, a finished game offers Play again, which starts a new run; the game's score is the best run, never lowered by a worse one.
 - [x] AC-13: An `alwaysOpen` game can be played before the event starts; every game closes when it ends.
-- [x] AC-14: Event pages have a footer with the active player and Games; leaving a run in progress asks first.
-- [x] AC-16: A game page's banner shows the game's title instead of the event name.
+- [x] AC-14: Event pages have a tab bar (Games, Leaderboard, Team for events with teams, the player's name) marking where you are; leaving a run in progress asks first.
+- [x] AC-16: A game page's banner shows the game's title instead of the event name, with a back arrow to the games before it.
 - [x] AC-15: The header shows the active player's total (sum of best scores) instead of the Live badge; a new best flies from the result to the total, which then counts up (instant under reduced motion).
 
 ## Tests
