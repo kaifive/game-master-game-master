@@ -16,6 +16,7 @@ import {
   dropFromTeam,
   teamsView,
   type TeamDeps,
+  type BoardVisibility,
   type TeamsSummary,
 } from "@/lib/teams";
 
@@ -38,6 +39,8 @@ export type ControlsView = {
   players: ControlsPlayer[];
   /** Phase, team size and teams, for events with teams (spec 03). */
   teams: TeamsSummary | null;
+  /** Whether the standings show on phones and on the TV (S07-AC11). */
+  board: BoardVisibility;
   /** Only when asked for: reading them costs a read per donation (S03-AC6). */
   donations?: ControlsDonation[];
 };
@@ -58,12 +61,15 @@ export async function controlsView(
   withDonations = false,
 ): Promise<ControlsView> {
   // Points and teams come from the summaries: no read per player or team (ADR-031).
-  const [status, players, teams, board] = await Promise.all([
+  const [status, players, published, board] = await Promise.all([
     deps.events.status(event.slug),
     deps.players.list(event.slug),
-    event.scoring === "individual" ? Promise.resolve(null) : publishedTeams(deps, event),
+    teamsView(deps, event, null),
     deps.points.board.read(event.slug),
   ]);
+  const { phase, maxTeamSize, teams: list, board: shown } = published;
+  const teams: TeamsSummary | null =
+    event.scoring === "individual" ? null : { phase, maxTeamSize, teams: list, board: shown };
   const pointsOf = new Map(board.players.map((r) => [r.id, r.points]));
   const teamOf = new Map(
     teams?.teams.flatMap((t) => t.members.map((m) => [m.id, t.id] as const)) ?? [],
@@ -76,13 +82,9 @@ export async function controlsView(
       teamId: teamOf.get(p.id) ?? null,
     })),
     teams,
+    board: shown,
     ...(withDonations ? { donations: await donationList(deps, event, players, teams) } : {}),
   };
-}
-
-async function publishedTeams(deps: AdminDeps, event: EventConfig): Promise<TeamsSummary> {
-  const { phase, maxTeamSize, teams } = await teamsView(deps, event, null);
-  return { phase, maxTeamSize, teams };
 }
 
 async function donationList(

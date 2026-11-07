@@ -28,6 +28,14 @@ export function eventRuntimeContract(seed: Seed) {
     await repo.setSettings("holiday-2026", { phase: "team" });
     await repo.setSettings("holiday-2026", { maxTeamSize: 6 });
     expect(await repo.settings("holiday-2026")).toEqual({ phase: "team", maxTeamSize: 6 });
+    // S07-AC11: hiding the standings is stored alongside.
+    await repo.setSettings("holiday-2026", { boardHiddenOnPhones: true, boardHiddenOnTv: false });
+    expect(await repo.settings("holiday-2026")).toEqual({
+      phase: "team",
+      maxTeamSize: 6,
+      boardHiddenOnPhones: true,
+      boardHiddenOnTv: false,
+    });
     expect(await repo.settings("other-party")).toEqual({});
   });
 

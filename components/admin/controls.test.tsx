@@ -289,4 +289,33 @@ describe("Controls teams", () => {
     expect(await within(list).findByText("Voided")).toBeInTheDocument();
     expect(sent).toEqual([{ action: "donations" }, { action: "voidDonation", donationId: "d1" }]);
   });
+
+  test("S07-AC11: the host hides and shows the leaderboard on phones and the TV separately", async () => {
+    server((body) => ({
+      status: 200,
+      json: {
+        status: "live",
+        players,
+        teams: null,
+        board: { phones: body.phones ?? true, tv: body.tv ?? true },
+      },
+    }));
+    render(
+      <AdminRoot>
+        <Controls
+          slug="holiday-2026"
+          name="Party"
+          games={[]}
+          initial={{ status: "live", players, teams: null, board: { phones: true, tv: true } }}
+        />
+      </AdminRoot>,
+    );
+    const user = userEvent.setup();
+    expect(screen.getByText("Leaderboard on phones:")).toHaveTextContent("Shown");
+    await user.click(screen.getByRole("button", { name: "Hide on phones" }));
+    expect(await screen.findByRole("button", { name: "Show on phones" })).toBeInTheDocument();
+    expect(screen.getByText("Leaderboard on phones:")).toHaveTextContent("Hidden");
+    expect(screen.getByRole("button", { name: "Hide on the TV" })).toBeInTheDocument();
+    expect(sent).toEqual([{ action: "board", phones: false }]);
+  });
 });

@@ -21,6 +21,12 @@ export function PhoneLeaderboard({ slug }: { slug: string }) {
   }, [slug, playerId]);
   const standings = usePoll(load, PHONE_POLL_MS);
   if (!standings) return null;
+  if (standings.hidden)
+    return (
+      <p className="m-0 text-lg">
+        The host is keeping the scores secret for now. Keep playing: every point still counts!
+      </p>
+    );
   const { top, me, teams, myTeam } = standings;
   const inTop = playerId !== null && top.some((r) => r.id === playerId);
   const mine = myTeam ? teams.find((t) => t.id === myTeam.id) : undefined;

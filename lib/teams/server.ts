@@ -59,17 +59,25 @@ export async function teamAction(slug: Slug, uid: string, body: z.infer<typeof T
 export async function leaderboardFor(slug: Slug, playerId: string | null) {
   const event = requireEvent(slug);
   const view = await teamsView({ summary: teamSummary() }, event, playerId);
-  return phoneStandings(pointsDeps(), event.slug, playerId, {
-    phase: view.phase,
-    teamId: view.mine?.teamId ?? null,
-  });
+  // Hidden by the host: nothing about the standings leaves the server (S07-AC11).
+  if (!view.board.phones)
+    return { hidden: true, top: [], me: null, phase: view.phase, teams: [], myTeam: null };
+  return {
+    hidden: false,
+    ...(await phoneStandings(pointsDeps(), event.slug, playerId, {
+      phase: view.phase,
+      teamId: view.mine?.teamId ?? null,
+    })),
+  };
 }
 
 /** GET /display: public; team bars and the top players in the team phase (S05-AC4, S03-AC8). */
 export async function displayFor(slug: Slug) {
   const event = requireEvent(slug);
   const view = await teamsView({ summary: teamSummary() }, event, null);
-  return displayStandings(pointsDeps(), event.slug, view.phase);
+  if (!view.board.tv)
+    return { hidden: true, phase: view.phase, players: [], teams: [], recent: [] };
+  return { hidden: false, ...(await displayStandings(pointsDeps(), event.slug, view.phase)) };
 }
 
 /** The player's team, from the summary, for team games (S03-AC5). */

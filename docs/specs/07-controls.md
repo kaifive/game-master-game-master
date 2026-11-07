@@ -22,6 +22,7 @@ The admin's page for running an event, built for quick glances rather than const
 5. **Rebuild points** (spec 04) for when totals look wrong.
 6. **Clear test data**, only while the event is upcoming, after typing CLEAR: deletes the event's players, devices, nicknames, plays, ledger and leaderboard. It can't be undone.
 7. Controls use the standard admin look (ADR-021) and work on a phone.
+8. **Leaderboard on phones / on the TV:** two switches in the Event card show or hide the standings, separately, say to keep the winners secret for a reveal. Hidden on phones, the Leaderboard tab says "The host is keeping the scores secret for now" and the server sends no standings (players still see their own total). Hidden on the TV, the board says "Scores are secret for now", with no latest points or toasts, and old awards aren't replayed when it comes back. Final standings still show once the event ends. Stored as `events/{slug}.boardHiddenOnPhones` / `boardHiddenOnTv` and published in the teams summary (ADR-031), so phones never read Firestore to check.
 
 ## Later passes
 
@@ -42,6 +43,7 @@ The admin's page for running an event, built for quick glances rather than const
 - [x] AC-8: Rebuild points runs spec 04's rebuild.
 - [x] AC-9: Clear test data, only while upcoming and after typing CLEAR, deletes the event's players, devices, nicknames, plays, ledger and leaderboard.
 - [x] AC-10: Every Controls route needs an admin session (spec 06).
+- [x] AC-11: The host hides or shows the leaderboard on phones and on the TV separately; while hidden, no standings reach that screen, and showing it again doesn't replay old awards.
 
 ## Tests
 

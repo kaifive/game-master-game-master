@@ -21,7 +21,7 @@ const top = Array.from({ length: 10 }, (_, i) => ({
 }));
 
 function stub(body: unknown) {
-  const full = { phase: "individual", teams: [], myTeam: null, ...(body as object) };
+  const full = { hidden: false, phase: "individual", teams: [], myTeam: null, ...(body as object) };
   const fetch = vi.fn((url: string) => Promise.resolve(Response.json(url ? full : null)));
   vi.stubGlobal("fetch", fetch);
   return fetch;
@@ -92,5 +92,12 @@ describe("PhoneLeaderboard", () => {
       "Dragons is #2 with 120 points",
     );
     expect(screen.getByRole("list", { name: "Leaderboard" })).toBeInTheDocument();
+  });
+
+  test("S07-AC11: when the host hides the standings, the tab says so and shows none", async () => {
+    stub({ hidden: true, top: [], me: null });
+    board();
+    expect(await screen.findByText(/keeping the scores secret/)).toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Leaderboard" })).toBeNull();
   });
 });
