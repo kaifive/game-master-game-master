@@ -172,6 +172,16 @@ describe("GamePlayer", () => {
     ).toBeInTheDocument();
   });
 
+  test("S08-AC11: a result has Back to games beside Play again", async () => {
+    setReducedMotion(true);
+    api.plays.mockReturnValue(ok({ plays: { trivia: { status: "playing", best: 0, runs: 1 } } }));
+    api.start.mockReturnValue(ok(finished));
+    page(true);
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Back to games" }));
+    expect(push).toHaveBeenCalledWith("/holiday-2026");
+    expect(screen.getByRole("button", { name: "Play again" })).toBeInTheDocument();
+  });
+
   test("S08-AC12: Play again on a result shows the instructions before the new run", async () => {
     setReducedMotion(true);
     api.plays.mockReturnValue(ok({ plays: { trivia: { status: "playing", best: 0, runs: 1 } } }));

@@ -43,12 +43,14 @@ function Result({
   summary,
   title,
   onAgain,
+  onBack,
 }: {
   play: PlayResponse;
   bestBefore: number;
   summary: string | null;
   title: string;
   onAgain?: (() => void) | undefined;
+  onBack: () => void;
 }) {
   const { Button, ScoreCard } = useSlots();
   const { refreshPlays } = useDevice();
@@ -98,11 +100,17 @@ function Result({
           {newBest ? "New best!" : `Your best: ${String(play.best)}`}
         </p>
       )}
-      {onAgain && (
-        <Button size="lg" onClick={onAgain}>
-          Play again
+      {/* The way back sits by Play again, not only in the header (Khai, 2026-11-10). */}
+      <div className="flex flex-wrap justify-center gap-3">
+        {onAgain && (
+          <Button size="lg" onClick={onAgain}>
+            Play again
+          </Button>
+        )}
+        <Button size="lg" tone={onAgain ? "secondary" : "primary"} onClick={onBack}>
+          Back to games
         </Button>
-      )}
+      </div>
     </section>
   );
 }
@@ -239,6 +247,9 @@ export function GamePlayer({ gameId, type, instructions, replayable, title = "Th
           bestBefore={phase.bestBefore}
           summary={renderer.summary(phase.play.view)}
           title={title}
+          onBack={() => {
+            router.push(`/${slug}`);
+          }}
           onAgain={
             replayable && !phase.play.once
               ? () => {
