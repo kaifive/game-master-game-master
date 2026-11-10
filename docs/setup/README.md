@@ -50,7 +50,8 @@ At vercel.com:
    `main`; the site has no player screens yet, so that's harmless.
 2. **Storage → Create → Blob**, name it `game-master-photos`, pick **Public**
    access, and connect it to the project (Production and Preview). That adds
-   `BLOB_READ_WRITE_TOKEN` by itself. It holds photos and the drawings of
+   `BLOB_STORE_ID` (or, for older stores, `BLOB_READ_WRITE_TOKEN`) by itself;
+   the site signs in to Blob with Vercel's own short-lived tokens. It holds photos and the drawings of
    games with `keepDrawings` (ADR-032); until it's connected, Controls says
    drawings aren't being kept.
 3. **Project → Settings → Environment Variables**, for **Production** and

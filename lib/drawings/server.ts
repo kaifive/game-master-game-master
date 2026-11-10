@@ -17,10 +17,17 @@ export const drawingRepo = (): DrawingRepo =>
     ? firebaseDrawings()
     : (shared.__gmMemoryDrawings ??= new MemoryDrawingRepo());
 
-/** Blob when a store is connected; memory locally; nothing on a server with neither. */
-export function drawingFiles(env = process.env): DrawingFiles | null {
+/**
+ * Blob when a store is connected, by a read-write token or by Vercel's OIDC
+ * sign-in with BLOB_STORE_ID (ADR-033); memory locally; nothing on a server
+ * with neither.
+ */
+export function drawingFiles(
+  env: Record<string, string | undefined> = process.env,
+): DrawingFiles | null {
   const token = env.BLOB_READ_WRITE_TOKEN?.trim();
   if (token) return new BlobDrawingFiles(token);
+  if (env.BLOB_STORE_ID?.trim()) return new BlobDrawingFiles(null);
   return backend(env) === "memory"
     ? (shared.__gmMemoryDrawingFiles ??= new MemoryDrawingFiles())
     : null;
