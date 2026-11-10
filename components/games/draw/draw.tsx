@@ -104,5 +104,5 @@ export function drawSummary(raw: unknown): string | null {
   if (view.kind !== "done") return null;
   return view.match === null
     ? "No drawing was sent"
-    : `The judge says ${String(Math.round(view.match * 100))}% like the logo`;
+    : `${String(Math.round(view.match * 100))}% match`;
 }
