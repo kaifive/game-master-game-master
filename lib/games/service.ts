@@ -10,6 +10,7 @@ import {
 } from "@/lib/events";
 import type { PlayerRepo, PlayerSummary } from "@/lib/players";
 import type { Recipient, TeamCompetitor } from "@/lib/points";
+import type { FinishedDrawing } from "@/lib/drawings";
 import type { AnyGameLogic, HubPlays, Instructions, PlayResponse, Seat } from "./model";
 import { gameLogic } from "./registry";
 import type { PlayChange, PlayRecord, PlayRepo } from "./repo";
@@ -26,6 +27,8 @@ export type GameDeps = {
   seat: (slug: string, playerId: string) => Promise<Seat>;
   /** The player's points from the ledger (S04-AC7). */
   pointsOf: (slug: string, playerId: string) => Promise<number>;
+  /** Keeps a finished run's drawing, for games with keepDrawings (ADR-032). */
+  keepDrawing?: (slug: string, drawing: FinishedDrawing) => Promise<unknown>;
 };
 
 /** A run that just finished, and how much it beat the player's best by. */
@@ -105,6 +108,21 @@ async function changePlay(
     await deps.onBest(event.slug, r.to, finished.run).catch((err: unknown) => {
       log.error("game award failed", { slug: event.slug, gameId, to: r.key, err });
     });
+  // A game that opts in keeps each finished run's drawing; a failed save never blocks the score (S18-AC7).
+  const strokes =
+    play && finished.run && r.game.keepDrawings ? r.logic.drawing?.(play.state) : null;
+  if (play && finished.run && strokes && deps.keepDrawing)
+    await deps
+      .keepDrawing(event.slug, {
+        gameId,
+        playerId: r.key,
+        run: finished.run.run,
+        points: play.points,
+        strokes,
+      })
+      .catch((err: unknown) => {
+        log.error("drawing not kept", { slug: event.slug, gameId, to: r.key, err });
+      });
   return play;
 }
 

@@ -21,6 +21,9 @@ export const GAME_TYPES = [
   "jeopardy",
 ] as const;
 
+/** Game types that make a drawing, so they may keep it (ADR-032). */
+export const DRAWING_TYPES: readonly (typeof GAME_TYPES)[number][] = ["draw"];
+
 export const EVENT_STATUSES = ["upcoming", "live", "ended"] as const;
 
 /** Which competition is on (ADR-030). Only `both` events switch. */
@@ -66,6 +69,8 @@ export const GameConfig = z.object({
     .object({ title: z.string().min(1), lines: z.array(z.string().min(1)).min(1) })
     .optional(),
   codes: z.array(GameCode).optional(),
+  /** Keep each finished run's drawing in Blob (ADR-032). Drawing game types only. */
+  keepDrawings: z.boolean().optional(),
 });
 export type GameConfig = z.infer<typeof GameConfig>;
 

@@ -28,6 +28,10 @@ At about 300 KB per photo:
 Showing a 250-photo slideshow on the display 10 times uses about 750 MB of
 transfer. Comfortable.
 
+Kept drawings (ADR-032) are SVGs of a few KB, one upload per finished run
+of a game with `keepDrawings`: 50 players × 3 Quick Draw runs is ~150
+uploads and under 10 MB.
+
 Rules: always shrink on the phone first; cap at 2 MB per file; cap photos
 per player per prompt. After every event, back up and clear its photos
 (ADR-012, `runbooks/event-checklist.md`), so each event starts with the

@@ -36,6 +36,8 @@ export const fs = {
   ledgerEntry: (s: string, entryId: string) => `${event(s)}/ledger/${id(entryId)}`,
   play: (s: string, gameId: string, playerId: string) =>
     `${event(s)}/plays/${id(gameId)}_${id(playerId)}`,
+  drawings: (s: string) => `${event(s)}/drawings`,
+  drawing: (s: string, drawingId: string) => `${event(s)}/drawings/${id(drawingId)}`,
   photos: (s: string) => `${event(s)}/photos`,
   photo: (s: string, photoId: string) => `${event(s)}/photos/${id(photoId)}`,
   vote: (s: string, gameId: string, promptId: string, playerId: string) =>

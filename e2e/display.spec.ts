@@ -35,11 +35,27 @@ test("S05-AC2 S05-AC4: a player's points show on their phone and on the display"
     await phone.getByRole("list", { name: "Answers" }).getByRole("button").first().click();
     await expect(phone.getByRole("status")).toBeVisible();
   }
-  const score = phone.getByRole("region", { name: "Your score" });
-  const label =
-    (await score.getByRole("img", { name: /points$/ }).getAttribute("aria-label")) ?? "";
-  const points = Number(/(\d+) points$/.exec(label)?.[1] ?? 0);
-  test.skip(points === 0, "No right answers this time, so there's nothing on the board");
+  await expect(phone.getByRole("region", { name: "Your score" })).toBeVisible();
+
+  // Other tests fill the board at the same time: a big bonus from the host keeps
+  // this player in the TV's top ten, whatever the run order.
+  const host = await (
+    await browser.newContext({ viewport: { width: 1024, height: 900 } })
+  ).newPage();
+  await host.goto("/admin");
+  await host.getByLabel("Passphrase").fill("e2e-host-pass");
+  await host.getByRole("button", { name: "Sign in" }).click();
+  await host.getByRole("link", { name: /Nova Wushu Holiday Party/ }).click();
+  await host.getByPlaceholder("Find a player").fill(name);
+  const row = host
+    .getByRole("list", { name: "Players" })
+    .getByRole("listitem")
+    .filter({ hasText: name });
+  await row.getByRole("button", { name: new RegExp(name) }).click();
+  await row.getByPlaceholder("+50 or -20").fill("100000");
+  await row.getByPlaceholder(/Reason/).fill("Display test");
+  await row.getByRole("button", { name: "Change points" }).click();
+  await expect(row.getByRole("button", { name: new RegExp(name) })).toContainText("100");
 
   const tv = await (
     await browser.newContext({ viewport: { width: 1920, height: 1080 } })

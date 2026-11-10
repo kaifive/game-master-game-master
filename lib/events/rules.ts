@@ -2,6 +2,7 @@ import { contentErrors } from "@/lib/games";
 import { normalizeCode, validateStyleRef } from "@/lib/themes";
 import {
   CODE_PATTERN,
+  DRAWING_TYPES,
   EventConfig,
   type EventStatus,
   type Phase,
@@ -36,6 +37,8 @@ export function validateEvent(file: string, value: unknown): string[] {
     seen.add(g.id);
     if (g.mode === "solo" && g.scoring.points !== undefined)
       add(`games.${g.id}.scoring.points`, "solo games all use soloGamePoints; remove this.");
+    if (g.keepDrawings && !DRAWING_TYPES.includes(g.type))
+      add(`games.${g.id}.keepDrawings`, `a ${g.type} game makes no drawing to keep.`);
     for (const problem of contentErrors(g.type, g.content))
       add(
         `games.${g.id}.content.${problem.split(": ")[0] ?? ""}`,

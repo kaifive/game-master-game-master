@@ -69,6 +69,8 @@ export const holiday2026: EventConfig = {
       },
       scoring: { awardTo: "player" },
       alwaysOpen: true,
+      // ADR-032: each drawing is kept in Blob for the host (Controls → Drawings).
+      keepDrawings: true,
     },
     {
       // Spec 17: one guess; points when the host scores it in Controls.

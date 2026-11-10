@@ -4,8 +4,9 @@ import { expect, test, type Page } from "@playwright/test";
 const unique = (base: string) => `${base}${String(Math.floor(Math.random() * 1e6))}`;
 
 async function joinAndOpen(page: Page, title: string) {
+  const name = unique("Qg");
   await page.goto("/holiday-2026?code=WUSH7");
-  await page.getByLabel("Your name").fill(unique("Qg"));
+  await page.getByLabel("Your name").fill(name);
   await page.getByRole("button", { name: "Join", exact: true }).click();
   await expect(page.getByRole("navigation", { name: "Party" })).toBeVisible();
   await page.getByRole("link", { name: new RegExp(title) }).click();
@@ -13,6 +14,7 @@ async function joinAndOpen(page: Page, title: string) {
     .getByRole("dialog", { name: "How to play" })
     .getByRole("button", { name: "Start" })
     .click();
+  return name;
 }
 
 const scored = (page: Page) =>
@@ -187,8 +189,8 @@ test("S18-AC5: Color Matcher", async ({ page }) => {
   await expect(page.getByRole("region", { name: "Your score" })).toContainText(/\d+% match/);
 });
 
-test("S18-AC5: Quick Draw", async ({ page }) => {
-  await joinAndOpen(page, "Quick Draw");
+test("S18-AC5: Quick Draw", async ({ page, browser }) => {
+  const name = await joinAndOpen(page, "Quick Draw");
   const box = await page.getByLabel("Drawing area").boundingBox();
   if (!box) throw new Error("no canvas");
   // A circle: the outer ring alone, which shouldn't score much.
@@ -205,4 +207,19 @@ test("S18-AC5: Quick Draw", async ({ page }) => {
   await page.mouse.up();
   await page.getByRole("button", { name: "I'm done" }).click();
   await expect(page.getByRole("region", { name: "Your score" })).toContainText(/% match/);
+
+  // S18-AC8: the party keeps Quick Draw drawings; the host sees this one in Controls.
+  const admin = await (
+    await browser.newContext({ viewport: { width: 1024, height: 900 } })
+  ).newPage();
+  await admin.goto("/admin");
+  await admin.getByLabel("Passphrase").fill("e2e-host-pass");
+  await admin.getByRole("button", { name: "Sign in" }).click();
+  await admin.getByRole("link", { name: /Nova Wushu Holiday Party/ }).click();
+  await admin.getByRole("button", { name: "Show drawings" }).click();
+  await expect(
+    admin
+      .getByRole("list", { name: "Kept drawings" })
+      .getByRole("img", { name: new RegExp(`Quick Draw by ${name}`) }),
+  ).toBeVisible();
 });

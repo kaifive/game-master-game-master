@@ -36,6 +36,8 @@ export type GameLogic<C, S, V> = {
   progressive?: boolean;
   /** Finished, but scored later by the host (S17-AC2). */
   waiting?: (state: S) => boolean;
+  /** The run's drawing, for games that make one: kept when the game opts in (ADR-032). */
+  drawing?: (state: S) => [number, number][][] | null;
 };
 
 /** A game's logic with its types erased, for the registry. */

@@ -82,6 +82,7 @@ export const draw: GameLogic<DrawContent, DrawState, DrawView> = {
     return { ok: true, state: { ...s, phase: "done", strokes, match, step: s.step + 1 } };
   },
   isOver: (s) => s.phase === "done",
+  drawing: (s) => s.strokes,
   score: (s, points) => (s.match === null ? 0 : Math.round(points * drawShare(s.match))),
   step: (s) => s.step,
 };

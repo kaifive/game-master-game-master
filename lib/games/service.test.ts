@@ -352,3 +352,58 @@ describe("game service", () => {
     expect(hub.plays["guessing-jar"]).toMatchObject({ once: true, waiting: true });
   });
 });
+
+describe("kept drawings (ADR-032)", () => {
+  const doodle = (keepDrawings: boolean) =>
+    ({
+      ...event,
+      games: [
+        {
+          id: "doodle",
+          type: "draw",
+          title: "Doodle",
+          mode: "solo",
+          visibility: "listed",
+          content: {},
+          scoring: { awardTo: "player" },
+          keepDrawings,
+        },
+      ],
+    }) satisfies EventConfig;
+  const strokes = [
+    [
+      [0.1, 0.1],
+      [0.9, 0.9],
+    ],
+  ];
+  const drawOnce = async (e: EventConfig) => {
+    const res = await startPlay(deps, e, UID, "doodle", { playerId });
+    return makeMove(deps, e, UID, "doodle", {
+      playerId,
+      step: res.step,
+      move: { type: "submit", strokes },
+    });
+  };
+
+  it("S18-AC7: a game that keeps drawings hands each finished run's drawing over, once", async () => {
+    const kept: unknown[] = [];
+    deps.keepDrawing = (_slug, d) => Promise.resolve(kept.push(d));
+    const res = await drawOnce(doodle(true));
+    expect(res.status).toBe("finished");
+    expect(kept).toEqual([{ gameId: "doodle", playerId, run: 1, points: res.points, strokes }]);
+  });
+
+  it("S18-AC7: a game without the flag keeps nothing", async () => {
+    const kept: unknown[] = [];
+    deps.keepDrawing = (_slug, d) => Promise.resolve(kept.push(d));
+    await drawOnce(doodle(false));
+    expect(kept).toEqual([]);
+  });
+
+  it("S18-AC7: a failed save doesn't block the score", async () => {
+    deps.keepDrawing = () => Promise.reject(new Error("Blob is down"));
+    const res = await drawOnce(doodle(true));
+    expect(res.status).toBe("finished");
+    expect(bests).toHaveLength(res.points > 0 ? 1 : 0);
+  });
+});
