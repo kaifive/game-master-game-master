@@ -232,7 +232,7 @@ export function GamePlayer({ gameId, type, instructions, replayable, title = "Th
           bestBefore={phase.bestBefore}
           summary={renderer.summary(phase.play.view)}
           title={title}
-          onAgain={replayable ? () => void begin(true) : undefined}
+          onAgain={replayable && !phase.play.once ? () => void begin(true) : undefined}
         />
       )}
       {phase.kind === "playing" && renderer && phase.play.status === "playing" && (

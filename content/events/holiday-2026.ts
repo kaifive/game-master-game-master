@@ -46,6 +46,32 @@ export const holiday2026: EventConfig = {
       alwaysOpen: true,
     })),
     {
+      // Spec 18: the target is the logo's purple (public/events/nova-wushu-logo.png).
+      id: "color-matcher",
+      type: "color",
+      title: "Color Matcher",
+      mode: "solo",
+      visibility: "listed",
+      content: { target: "#882E7E", prompt: "Pick the color of the Nova Wushu logo" },
+      scoring: { awardTo: "player" },
+      alwaysOpen: true,
+    },
+    {
+      // Spec 18: judged against the logo's outline (lib/games/draw/nova-logo.ts).
+      id: "quick-draw",
+      type: "draw",
+      title: "Quick Draw",
+      mode: "solo",
+      visibility: "listed",
+      content: {
+        prompt: "Draw the Nova Wushu logo from memory",
+        reference: "nova-logo",
+        seconds: 30,
+      },
+      scoring: { awardTo: "player" },
+      alwaysOpen: true,
+    },
+    {
       // Spec 17: one guess; points when the host scores it in Controls.
       id: "guessing-jar",
       type: "jar",

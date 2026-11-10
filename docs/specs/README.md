@@ -22,3 +22,4 @@ Statuses are explained in `../conventions/docs.md`.
 | 15 | [Game codes and hidden games](15-game-codes.md) | Later | Draft |
 | 16 | [Quick games](16-quick-games.md) | M2 | Done |
 | 17 | [Guessing Jar and Geocache](17-jar-and-geocache.md) | M2 | Done |
+| 18 | [Color Matcher and Quick Draw](18-color-and-draw.md) | M2 | Done |

@@ -15,6 +15,8 @@ export const GAME_TYPES = [
   "recall",
   "jar",
   "cache",
+  "color",
+  "draw",
   "photo-challenge",
   "jeopardy",
 ] as const;

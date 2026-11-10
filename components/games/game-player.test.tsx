@@ -260,4 +260,12 @@ describe("GamePlayer", () => {
     });
     expect(device.setLeaveWarning).not.toHaveBeenCalledWith(LEAVE_WARNING);
   });
+
+  test("S18-AC3: a one-run game's result offers no Play again, even in a replayable event", async () => {
+    api.plays.mockReturnValue(ok({ plays: { trivia: { status: "finished", best: 80, runs: 1 } } }));
+    api.start.mockReturnValue(ok({ ...finished, once: true }));
+    page(true);
+    expect(await screen.findByRole("region", { name: "Your score" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Play again" })).toBeNull();
+  });
 });

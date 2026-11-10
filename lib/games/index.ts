@@ -14,4 +14,6 @@ export type { RecallView } from "./recall/logic";
 export type { TrailView } from "./trail/logic";
 export { jarShare, type JarState, type JarView } from "./jar/logic";
 export type { CacheView } from "./cache/logic";
+export { toHex, type ColorView } from "./color/logic";
+export type { DrawView } from "./draw/logic";
 export { adjacent, checkPath } from "./trail/puzzle";
