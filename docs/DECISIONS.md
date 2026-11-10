@@ -600,3 +600,23 @@ recap or slideshow later (spec 13).
 **Consequences:** one Blob upload and one Firestore write per finished run
 of an opted-in game. The party's ~50 players playing Quick Draw a few times
 is about 150 uploads (of 2,000 a month) and under 10 MB.
+
+---
+
+## ADR-033: Blob signs in with Vercel's OIDC tokens or a read-write token
+
+**Status:** accepted. Refines ADR-032.
+
+New Vercel Blob stores connect to a project with OIDC: Vercel sets
+`BLOB_STORE_ID` and gives each function a short-lived token, and no
+`BLOB_READ_WRITE_TOKEN` is created. ADR-032 assumed the token, so the live
+site said no Blob store was connected (Khai, 2026-11-10).
+
+**Decision:** a Blob store counts as connected when either
+`BLOB_READ_WRITE_TOKEN` or `BLOB_STORE_ID` is set. With the token, the
+server passes it to the Blob SDK; without it, the SDK signs in by OIDC on
+its own. Photo uploads straight from phones (spec 13) will still need a
+read-write token to sign upload tokens, so that spec checks for one.
+
+**Consequences:** nothing long-lived to rotate for drawings. Local runs
+still use memory, since there's no OIDC token off Vercel.
