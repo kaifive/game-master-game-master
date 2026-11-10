@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useSlots } from "@/components/slots/registry";
 import { barStart, START_LENGTH, trim, type Bar, type StackerView } from "@/lib/games";
 import { cx } from "@/lib/ui";
 import type { GameRendererProps } from "../types";
@@ -9,8 +8,7 @@ import type { GameRendererProps } from "../types";
 type Run = { placed: Bar[]; length: number; rowStart: number; over: boolean };
 
 /** Stack Attack (spec 16): the phone runs the arcade game and sends the rows stacked. */
-export function StackerGame({ view: raw, onMove, busy }: GameRendererProps) {
-  const { Button } = useSlots();
+export function StackerGame({ view: raw, onMove }: GameRendererProps) {
   const view = raw as StackerView;
   const [run, setRun] = useState<Run | null>(null);
   const [now, setNow] = useState(0);
@@ -19,6 +17,12 @@ export function StackerGame({ view: raw, onMove, busy }: GameRendererProps) {
     move.current = onMove;
   }, [onMove]);
   const running = view.kind === "running";
+  const kind = view.kind;
+
+  // A play made before auto-start still waits on Start: send it for them.
+  useEffect(() => {
+    if (kind === "ready") move.current({ type: "start" });
+  }, [kind]);
 
   useEffect(() => {
     if (!running || run?.over) return;
@@ -61,7 +65,7 @@ export function StackerGame({ view: raw, onMove, busy }: GameRendererProps) {
   return (
     <section aria-label="Stack Attack" className="grid gap-4 text-center">
       <p className="m-0 font-gm-display text-2xl font-bold" aria-live="polite">
-        {running ? `${String(row)} of ${String(rows)} rows` : `Stack up to ${String(rows)} rows`}
+        {`${String(row)} of ${String(rows)} rows`}
       </p>
       <button
         type="button"
@@ -95,18 +99,6 @@ export function StackerGame({ view: raw, onMove, busy }: GameRendererProps) {
           </span>
         ))}
       </button>
-      {view.kind === "ready" && (
-        <Button
-          size="lg"
-          disabled={busy}
-          onClick={() => {
-            setRun({ placed: [], length: START_LENGTH, rowStart: performance.now(), over: false });
-            onMove({ type: "start" });
-          }}
-        >
-          Start
-        </Button>
-      )}
     </section>
   );
 }

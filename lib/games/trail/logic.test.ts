@@ -5,7 +5,7 @@ import { checkPath, makePuzzle } from "./puzzle";
 const c = TrailContent.parse({});
 const at = (now: number) => ({ now });
 
-describe("Snow Trail", () => {
+describe("Pathfinder", () => {
   it("S16-AC4: every seed makes a different puzzle that has a solution", () => {
     const seen = new Set<string>();
     for (let seed = 1; seed <= 200; seed++) {
@@ -30,21 +30,22 @@ describe("Snow Trail", () => {
     expect(checkPath(p, jumped)).not.toBeNull();
   });
 
-  it("S16-AC4: half the points for solving, up to half more for speed; it gives up after 3 minutes", () => {
+  it("S16-AC4: a 7×7 grid; half the points for solving, up to half more for speed; no time limit", () => {
     const s = trail.create(c, 5, at(0));
-    const { path } = makePuzzle(6, 8, 5);
-    expect(trail.view(s, c, at(1000))).toMatchObject({ kind: "playing", size: 6 });
+    const { path } = makePuzzle(7, 8, 5);
+    expect(trail.view(s, c, at(1000))).toMatchObject({ kind: "playing", size: 7, elapsedMs: 1000 });
     expect(trail.move(s, c, { type: "solve", path: path.slice(0, 10) }, at(1000)).ok).toBe(false);
     const fast = trail.move(s, c, { type: "solve", path }, at(15_000));
     if (!fast.ok) throw new Error(fast.message);
     expect(trail.score(fast.state, 100)).toBe(100);
-    const slow = trail.move(s, c, { type: "solve", path }, at(70_000));
-    if (!slow.ok) throw new Error(slow.message);
-    expect(trail.score(slow.state, 100)).toBe(75);
+    const slower = trail.move(s, c, { type: "solve", path }, at(30_000));
+    if (!slower.ok) throw new Error(slower.message);
+    expect(trail.score(slower.state, 100)).toBe(90);
     expect(trailShare(200_000)).toBe(0.5);
-    const timedOut = trail.tick(s, c, at(181_000));
-    expect(trail.isOver(timedOut)).toBe(true);
-    expect(trail.score(timedOut, 100)).toBe(0);
-    expect(trail.instructions(c).lines[0]).toMatch(/every square/);
+    // No limit: an hour later it's still waiting to be solved.
+    expect(trail.tick(s, c, at(3_600_000))).toBe(s);
+    const lines = trail.instructions(c).lines.join(" ");
+    expect(lines).toMatch(/every square/);
+    expect(lines).not.toMatch(/minutes/);
   });
 });

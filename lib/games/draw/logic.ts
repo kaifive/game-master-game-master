@@ -50,14 +50,12 @@ const fail = (message: string): MoveResult<DrawState> => ({ ok: false, message }
 /** Untimed (Khai, 2026-11-10): draw as long as you like, then send it. */
 export const draw: GameLogic<DrawContent, DrawState, DrawView> = {
   content: DrawContent,
-  once: true,
   instructions: (c) => ({
     title: "How to play",
     lines: [
       `${prompt(c)}.`,
       "One pen, no peeking, and no rush. Tap I'm done when it's ready.",
       "The judge compares the shapes, not the size or where you drew it.",
-      "You get one drawing.",
     ],
   }),
   create: (c) => ({

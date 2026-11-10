@@ -66,7 +66,7 @@ export const color: GameLogic<ColorContent, ColorState, ColorView> = {
     title: "How to play",
     lines: [
       `${prompt(c)}.`,
-      "Slide red, green and blue until the swatch looks right, then lock it in.",
+      "Tap the color wheel for the shade and set the brightness, then lock it in.",
       "The closer the color, the more points.",
     ],
   }),

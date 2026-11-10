@@ -39,7 +39,7 @@ A feature item needs its spec at `Ready` before it starts.
 - [x] Spec 08, game framework: game type contract, move route, results, score once (points reach the ledger with spec 04)
 - [ ] Spec 09, theming: tokens, color modes, variants, icon sets; holiday variant
 - [x] Spec 10, trivia: the first solo game (replaces word guess)
-- [x] Spec 16, quick games: T-Timer, Tap Masher, Snow Trail, Stack Attack, Rapid Recall
+- [x] Spec 16, quick games: T-Timer, Tap Masher, Pathfinder, Stack Attack, Rapid Recall
 - [x] Spec 17, Guessing Jar (scored when the host enters the count) and Geocache (hidden codes)
 - [x] Spec 18, Color Matcher and Quick Draw (auto-judged against the logo)
 - [ ] Spec 13, photos: upload, swipe triage, photo challenge, photo vote, slideshow

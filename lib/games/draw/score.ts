@@ -11,15 +11,15 @@ export type Point = [number, number];
 export type Reference = { size: number; edges: number[] };
 
 /** Grid squares of slack between a line and the reference. */
-export const TOLERANCE = 1;
+export const TOLERANCE = 2;
 /** Ink beyond this many times the reference's lines counts against the drawing (a scribble covers everything). */
 export const INK_LIMIT = 1.2;
 /** The outer ring is everything this far from the centre (as a share of the half-width). */
 export const RING_FROM = 0.84;
 export const RING_WEIGHT = 0.15;
-/** Matches at or below LOW earn nothing; at or above HIGH, everything. */
-export const LOW = 0.3;
-export const HIGH = 0.8;
+/** Matches at or below LOW earn nothing; at or above HIGH, everything. Tuned forgiving (Khai: too hard). */
+export const LOW = 0.42;
+export const HIGH = 0.85;
 
 /** Ink on the grid: the strokes fitted to fill it, keeping their shape. */
 export function rasterize(strokes: Point[][], size: number): Set<number> {

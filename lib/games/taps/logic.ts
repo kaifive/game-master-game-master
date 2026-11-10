@@ -11,7 +11,7 @@ export const TapsContent = z
 export type TapsContent = z.infer<typeof TapsContent>;
 
 const seconds = (c: TapsContent) => c.seconds ?? 5;
-const goal = (c: TapsContent) => c.target ?? 45;
+const goal = (c: TapsContent) => c.target ?? 50;
 
 /** The countdown before tapping starts. */
 export const COUNTDOWN_MS = 3000;
@@ -49,14 +49,15 @@ export const taps: GameLogic<TapsContent, TapsState, TapsView> = {
   instructions: (c) => ({
     title: "How to play",
     lines: [
-      "Tap Start, then wait for the countdown.",
-      `Tap the big button as fast as you can for ${String(seconds(c))} seconds.`,
-      `${String(goal(c))} taps scores all the points.`,
+      "A countdown starts as soon as you close this box.",
+      `Then tap the big button as fast as you can for ${String(seconds(c))} seconds.`,
+      "The more taps, the more points.",
     ],
   }),
-  create: (c) => ({
-    phase: "ready",
-    goAt: null,
+  // The countdown starts with the game: no second Start button.
+  create: (c, _seed, { now }) => ({
+    phase: "running",
+    goAt: now + COUNTDOWN_MS,
     taps: 0,
     seconds: seconds(c),
     target: goal(c),

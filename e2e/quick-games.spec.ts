@@ -24,7 +24,6 @@ test.beforeEach(({}, info) => {
 
 test("S16-AC7: T-Timer", async ({ page }) => {
   await joinAndOpen(page, "T-Timer");
-  await page.getByRole("button", { name: "Start", exact: true }).click();
   await page.waitForTimeout(1200);
   await page.getByRole("button", { name: "Stop" }).click();
   await scored(page);
@@ -33,7 +32,6 @@ test("S16-AC7: T-Timer", async ({ page }) => {
 
 test("S16-AC7: Tap Masher", async ({ page }) => {
   await joinAndOpen(page, "Tap Masher");
-  await page.getByRole("button", { name: "Start", exact: true }).click();
   const pad = page.getByRole("button", { name: /Tap!/ });
   await expect(pad).toBeEnabled({ timeout: 6000 });
   for (let i = 0; i < 12; i++) await pad.dispatchEvent("pointerdown");
@@ -43,7 +41,6 @@ test("S16-AC7: Tap Masher", async ({ page }) => {
 
 test("S16-AC7: Stack Attack", async ({ page }) => {
   await joinAndOpen(page, "Stack Attack");
-  await page.getByRole("button", { name: "Start", exact: true }).click();
   const board = page.getByRole("button", { name: "Stop the bar" });
   const score = page.getByRole("region", { name: "Your score" });
   for (let i = 0; i < 40 && !(await score.isVisible()); i++) {
@@ -65,7 +62,7 @@ test("S16-AC7: Rapid Recall", async ({ page }) => {
     for (const name of lit) await page.getByRole("button", { name, exact: true }).click();
   }
   await scored(page);
-  await expect(page.getByRole("region", { name: "Your score" })).toContainText("15 of 15 squares");
+  await expect(page.getByRole("region", { name: "Your score" })).toContainText("24 of 24 squares");
 });
 
 /** A small solver: a path from dot 1 through every square, passing the dots in order. */
@@ -96,10 +93,10 @@ function solve(size: number, dots: number[]): number[] {
   return path;
 }
 
-test("S16-AC7: Snow Trail", async ({ page }) => {
-  await joinAndOpen(page, "Snow Trail");
+test("S16-AC7: Pathfinder", async ({ page }) => {
+  await joinAndOpen(page, "Pathfinder");
   const cells = page.locator("[data-cell]");
-  await expect(cells).toHaveCount(36);
+  await expect(cells).toHaveCount(49);
   const labels = await cells.evaluateAll((els) =>
     els.map((e) => e.getAttribute("aria-label") ?? ""),
   );
@@ -108,7 +105,7 @@ test("S16-AC7: Snow Trail", async ({ page }) => {
     const m = /Number (\d+)/.exec(l);
     if (m) dots[Number(m[1]) - 1] = i;
   });
-  const path = solve(6, dots);
+  const path = solve(7, dots);
   const centre = async (cell: number) => {
     const box = await cells.nth(cell).boundingBox();
     if (!box) throw new Error("no box");
@@ -207,6 +204,4 @@ test("S18-AC5: Quick Draw", async ({ page }) => {
   await page.mouse.up();
   await page.getByRole("button", { name: "I'm done" }).click();
   await expect(page.getByRole("region", { name: "Your score" })).toContainText(/% match/);
-  // One drawing per player: no Play again.
-  await expect(page.getByRole("button", { name: "Play again" })).toHaveCount(0);
 });

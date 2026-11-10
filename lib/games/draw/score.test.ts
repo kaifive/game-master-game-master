@@ -50,6 +50,15 @@ describe("Quick Draw's judge", () => {
       ),
     );
     expect(faithful).toBeGreaterThan(0.85);
+    // A hand-drawn take: stretched, tilted, wobbly, half the lines. It should still score well.
+    const warped = NOVA_LOGO.edges
+      .filter((_, i) => i % 2 === 0)
+      .map((c, i): Point[] => {
+        const [x, y] = [((c % N) - 32) * 1.15, (Math.floor(c / N) - 32) * 0.92];
+        const wobble = Math.sin(i) * 2;
+        return [[32 + x * 0.99 - y * 0.14 + wobble, 32 + x * 0.14 + y * 0.99 - wobble]];
+      });
+    expect(drawShare(matchOf(warped, NOVA_LOGO))).toBeGreaterThan(0.7);
     expect(rough).toBeGreaterThan(ringOnly);
     expect(rough).toBeGreaterThan(scribble);
     expect(ringOnly).toBeLessThan(0.2);

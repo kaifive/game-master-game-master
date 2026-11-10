@@ -18,10 +18,10 @@ Two games about the Nova Wushu logo (`public/events/nova-wushu-logo.png`, from K
 
 ### Quick Draw (`draw`)
 
-4. Content: a `prompt` and the `reference` outline (`nova-logo`). One drawing per player, not replayable.
+4. Content: a `prompt` and the `reference` outline (`nova-logo`). Replayable when the event is, like the other games (Khai, 2026-11-10).
 5. No clock (Khai, 2026-11-10): one pen draws on a square canvas; **Clear** wipes it; **I'm done** sends the strokes.
-6. The judge (`lib/games/draw/score.ts`) fits the drawing and the reference to the same 64×64 grid, so size and position don't matter, then compares them within a square of slack: how much of the ink lands near the logo's lines, and how much of the logo the ink comes near, the inner shapes counting more than the outer ring. Heavy scribbling counts against it. A match of 0.3 or less earns nothing and 0.8 or more earns everything. The outline comes from the logo image, edges only.
-7. The result shows the match as the share of points earned ("72% match"), with no Play again. The host can change any score in Controls.
+6. The judge (`lib/games/draw/score.ts`) fits the drawing and the reference to the same 64×64 grid, so size and position don't matter, then compares them within two squares of slack: how much of the ink lands near the logo's lines, and how much of the logo the ink comes near, the inner shapes counting more than the outer ring. Heavy scribbling counts against it. A match of 0.42 or less earns nothing and 0.85 or more earns everything; a careful hand drawing of the logo scores well (loosened 2026-11-10: Khai found it too hard). The outline comes from the logo image, edges only.
+7. The result shows the match as the share of points earned ("72% match"), with Play again in a replayable event. The host can change any score in Controls.
 
 ## Data
 
@@ -32,7 +32,7 @@ Two games about the Nova Wushu logo (`public/events/nova-wushu-logo.png`, from K
 
 - [x] AC-1: Color Matcher's target is validated and never sent to phones before the pick.
 - [x] AC-2: The pick scores all points within ΔE 3 of the target, falling to 0 at ΔE 50, once per run; a replayable event never shows the target.
-- [x] AC-3: Quick Draw takes one untimed drawing, judged on the server, and it can't be replayed.
+- [x] AC-3: Quick Draw takes an untimed drawing, judged on the server, and is replayable when the event is.
 - [x] AC-4: The judge ignores size and position, ranks a faithful sketch above a rough one, and gives a circle alone or a scribble almost nothing.
 - [x] AC-5: Both games are in the party's event file and play end to end on a phone.
 

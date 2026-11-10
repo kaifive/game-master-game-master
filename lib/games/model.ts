@@ -52,7 +52,7 @@ export type PlayResponse = {
   /** The best finished run, which is what counts (S08-AC12). */
   best: number;
   step: number;
-  /** One run only: the result offers no Play again (S17-AC2, S18-AC3). */
+  /** One run only: the result offers no Play again (S17-AC2). */
   once?: true;
 };
 

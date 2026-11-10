@@ -2,26 +2,24 @@ import { z } from "zod";
 import type { GameLogic, MoveResult } from "../model";
 import { checkPath, makePuzzle } from "./puzzle";
 
-/** Snow Trail (spec 16): our own path puzzle; a new one every play. */
+/** Pathfinder (spec 16): our own path puzzle, for any event; a new one every play. */
 export const TrailContent = z
   .object({
     size: z.number().int().min(4).max(8).optional(),
     checkpoints: z.number().int().min(2).max(16).optional(),
   })
   .strict()
-  .refine((c) => (c.checkpoints ?? 8) <= (c.size ?? 6) * (c.size ?? 6), {
+  .refine((c) => (c.checkpoints ?? 8) <= (c.size ?? 7) * (c.size ?? 7), {
     message: "checkpoints can't be more than the squares.",
   });
 export type TrailContent = z.infer<typeof TrailContent>;
 
-const size = (c: TrailContent) => c.size ?? 6;
+const size = (c: TrailContent) => c.size ?? 7;
 const count = (c: TrailContent) => c.checkpoints ?? 8;
 
-/** All the speed points within this; none at SLOW_MS (S16-AC4). */
-export const FAST_MS = 20_000;
-export const SLOW_MS = 120_000;
-/** Gives up after this. */
-export const LIMIT_MS = 180_000;
+/** All the speed points within this; none at SLOW_MS (S16-AC4). Harder than the first cut. */
+export const FAST_MS = 15_000;
+export const SLOW_MS = 90_000;
 
 export type TrailState = {
   size: number;
@@ -33,7 +31,7 @@ export type TrailState = {
 };
 
 export type TrailView =
-  | { kind: "playing"; size: number; dots: number[]; msLeft: number }
+  | { kind: "playing"; size: number; dots: number[]; elapsedMs: number }
   | { kind: "done"; solved: boolean; tookMs: number | null; size: number; dots: number[] };
 
 const Move = z.object({
@@ -60,24 +58,21 @@ export const trail: GameLogic<TrailContent, TrailState, TrailView> = {
       "Draw one trail from 1 to the last number, through every square.",
       "Pass the numbers in order. Drag back to undo.",
       "Solving it scores half the points. Solving it fast scores the rest.",
-      `You have ${String(LIMIT_MS / 60_000)} minutes.`,
     ],
   }),
   create(c, seed, { now }) {
     const { dots } = makePuzzle(size(c), count(c), seed);
     return { size: size(c), dots, startedAt: now, phase: "playing", tookMs: null, step: 0 };
   },
-  tick(s, _c, { now }) {
-    if (s.phase !== "playing" || now <= s.startedAt + LIMIT_MS) return s;
-    return { ...s, phase: "timeout", step: s.step + 1 };
-  },
+  // No time limit (Khai, 2026-11-10): the clock only counts for the speed points.
+  tick: (s) => s,
   view: (s, _c, { now }) =>
     s.phase === "playing"
       ? {
           kind: "playing",
           size: s.size,
           dots: s.dots,
-          msLeft: Math.max(0, s.startedAt + LIMIT_MS - now),
+          elapsedMs: Math.max(0, now - s.startedAt),
         }
       : {
           kind: "done",

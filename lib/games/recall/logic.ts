@@ -14,13 +14,14 @@ export const RecallContent = z
   .strict();
 export type RecallContent = z.infer<typeof RecallContent>;
 
+/** Harder than the first cut (Khai: too easy). */
 export const DEFAULT_ROUNDS = [
-  { size: 3, lit: 3 },
   { size: 4, lit: 5 },
-  { size: 5, lit: 7 },
+  { size: 5, lit: 8 },
+  { size: 6, lit: 11 },
 ];
 const roundsOf = (c: RecallContent) => c.rounds ?? DEFAULT_ROUNDS;
-const showMs = (c: RecallContent) => c.showMs ?? 1500;
+const showMs = (c: RecallContent) => c.showMs ?? 1200;
 
 export type RecallState = {
   rounds: { size: number; lit: number[] }[];
