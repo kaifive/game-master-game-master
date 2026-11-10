@@ -38,5 +38,9 @@ describe("Color Matcher", () => {
     });
     expect(color.move(picked.state, c, { type: "pick", color: "#000000" }, at).ok).toBe(false);
     expect(toHex([136, 46, 126])).toBe("#882E7E");
+    // A replayable event keeps the target back.
+    expect(color.view(picked.state, c, { now: 0, replayable: true })).toMatchObject({
+      target: null,
+    });
   });
 });

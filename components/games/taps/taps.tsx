@@ -44,9 +44,6 @@ export function TapsGame({ view: raw, onMove, busy }: GameRendererProps) {
   if (view.kind === "ready")
     return (
       <section aria-label="Tap Masher" className="grid justify-items-center gap-6 py-6 text-center">
-        <p className="m-0 text-lg">
-          {view.seconds} seconds. {view.target} taps scores all the points.
-        </p>
         <Button
           size="lg"
           disabled={busy}

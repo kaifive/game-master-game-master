@@ -187,7 +187,6 @@ test("S18-AC5: Color Matcher", async ({ page }) => {
 
 test("S18-AC5: Quick Draw", async ({ page }) => {
   await joinAndOpen(page, "Quick Draw");
-  await page.getByRole("button", { name: "Start drawing" }).click();
   const box = await page.getByLabel("Drawing area").boundingBox();
   if (!box) throw new Error("no canvas");
   // A circle: the outer ring alone, which shouldn't score much.

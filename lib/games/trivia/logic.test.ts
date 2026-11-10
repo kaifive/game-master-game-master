@@ -77,9 +77,19 @@ describe("trivia", () => {
     const v = view(s, 3000);
     expect(v.kind).toBe("answered");
     expect(v).toMatchObject({ right: false });
-    expect(v.choices[(v as Extract<TriviaView, { kind: "answered" }>).correct]?.text).toBe("Right");
+    expect(v.choices[(v as Extract<TriviaView, { kind: "answered" }>).correct ?? -1]?.text).toBe(
+      "Right",
+    );
     const good = view(answerRight(start(), 3000), 3000);
     expect(good).toMatchObject({ kind: "answered", right: true });
+  });
+
+  it("S10-AC16: in a replayable event a wrong answer doesn't give away the right one", () => {
+    const wrong = trivia.view(answerWrong(start(), 3000), content, { now: 3000, replayable: true });
+    expect(wrong).toMatchObject({ kind: "answered", right: false, correct: null, reveal: false });
+    const right = trivia.view(answerRight(start(), 3000), content, { now: 3000, replayable: true });
+    expect(right).toMatchObject({ kind: "answered", right: true });
+    expect((right as Extract<TriviaView, { kind: "answered" }>).correct).not.toBeNull();
   });
 
   it("S10-AC5: late answers and no answer count as wrong; the clock runs while away", () => {

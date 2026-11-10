@@ -188,9 +188,9 @@ function settle(play: PlayRecord, state: unknown, r: Ready): PlayRecord {
   };
 }
 
-function respond(play: PlayRecord, r: Ready, now: number): PlayResponse {
+function respond(play: PlayRecord, r: Ready, now: number, event: EventConfig): PlayResponse {
   return {
-    view: r.logic.view(play.state, r.content, { now }),
+    view: r.logic.view(play.state, r.content, { now, replayable: event.replayable === true }),
     status: play.status,
     points: play.points,
     best: play.best,
@@ -240,7 +240,7 @@ export async function startPlay(
     return ticked === cur.state ? null : settle(cur, ticked, r);
   });
   if (!play) throw new AppError("INTERNAL", "The game didn't start. Try again.");
-  return respond(play, r, now);
+  return respond(play, r, now, event);
 }
 
 /** Applies one move on the server (S08-AC2). A move for an old step changes nothing (S08-AC5). */
@@ -264,7 +264,7 @@ export async function makeMove(
     return settle(cur, result.state, r);
   });
   if (!play) throw new AppError("NOT_FOUND", "Start the game first.");
-  return respond(play, r, now);
+  return respond(play, r, now, event);
 }
 
 /**

@@ -40,6 +40,8 @@ type Asked = {
   layout: "grid" | "list";
   seconds: number;
   msLeft: number;
+  /** False when the event is replayable: a wrong answer doesn't show the right one. */
+  reveal?: boolean;
 };
 /**
  * The question's answer, lightly scrambled, so the phone can say right or
@@ -57,7 +59,13 @@ export function readAnswerKey(key: string, number: number, choices: number): num
 
 export type TriviaView =
   | ({ kind: "question"; key: string } & Asked)
-  | ({ kind: "answered"; chosen: number | null; correct: number; right: boolean } & Asked)
+  | ({
+      kind: "answered";
+      chosen: number | null;
+      /** The right choice, or null when it's kept back (a replayable event, S10-AC16). */
+      correct: number | null;
+      right: boolean;
+    } & Asked)
   | {
       kind: "done";
       right: number;
@@ -164,7 +172,7 @@ export const trivia: GameLogic<TriviaContent, TriviaState, TriviaView> = {
     };
   },
 
-  view(s, c, { now }) {
+  view(s, c, { now, replayable }) {
     if (s.phase === "done")
       return {
         kind: "done",
@@ -183,6 +191,7 @@ export const trivia: GameLogic<TriviaContent, TriviaState, TriviaView> = {
       layout: layoutOf(choices),
       seconds: seconds(c),
       msLeft: Math.max(0, s.deadline - now),
+      reveal: replayable !== true,
     };
     if (s.phase === "question")
       return {
@@ -192,12 +201,15 @@ export const trivia: GameLogic<TriviaContent, TriviaState, TriviaView> = {
       };
     const answer = s.answers[s.index];
     const chosen = answer?.choice ?? null;
+    const right = answer?.right ?? false;
+    const correct = order.indexOf(question.answer);
     return {
       kind: "answered",
       ...asked,
       chosen: chosen === null ? null : order.indexOf(chosen),
-      correct: order.indexOf(question.answer),
-      right: answer?.right ?? false,
+      // A replayable game shows a right answer as right, but never gives away the answer.
+      correct: asked.reveal === true || right ? correct : null,
+      right,
     };
   },
 

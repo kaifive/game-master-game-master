@@ -68,7 +68,8 @@ export function ColorGame({ view: raw, onMove, busy }: GameRendererProps) {
 
 export function colorSummary(raw: unknown): string | null {
   const view = raw as ColorView;
-  return view.kind === "done"
-    ? `${String(view.match)}% match · yours ${view.picked}, the logo ${view.target}`
-    : null;
+  if (view.kind !== "done") return null;
+  return view.target === null
+    ? `${String(view.match)}% match`
+    : `${String(view.match)}% match · yours ${view.picked}, the logo ${view.target}`;
 }

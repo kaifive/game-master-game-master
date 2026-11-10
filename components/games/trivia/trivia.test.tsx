@@ -194,6 +194,16 @@ describe("TriviaGame tap feedback", () => {
     expect(screen.getByRole("button", { name: "6 (Your answer)" })).toBeInTheDocument();
   });
 
+  test("S10-AC16: in a replayable event, a wrong tap doesn't show the right answer", async () => {
+    show({ ...question(), key: answerKey(1, 2), reveal: false });
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "6" }));
+    expect(screen.getByRole("status")).toHaveTextContent("Not quite.");
+    expect(screen.getByRole("button", { name: "6 (Your answer)" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Right answer/ })).toBeNull();
+    expect(screen.getByRole("button", { name: "8" })).toBeInTheDocument();
+  });
+
   test("S10-AC13: without a usable key, the tapped answer still lights up while the server checks", async () => {
     const onMove = vi.fn();
     show(question(), { onMove });

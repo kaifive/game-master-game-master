@@ -186,7 +186,10 @@ function judgedLocally(view: Asked, picked: number): Asked {
   if (view.kind !== "question") return view;
   const correct = readAnswerKey(view.key, view.number, view.choices.length);
   if (correct === null) return view;
-  return { ...view, kind: "answered", chosen: picked, correct, right: picked === correct };
+  const right = picked === correct;
+  // A replayable game keeps the answer back after a wrong pick (S10-AC16).
+  const shown = view.reveal === false && !right ? null : correct;
+  return { ...view, kind: "answered", chosen: picked, correct: shown, right };
 }
 
 const FEEDBACK = { right: "Right!", wrong: "Not quite.", late: "Time's up." };

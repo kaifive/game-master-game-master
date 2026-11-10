@@ -18,12 +18,12 @@ Five more solo games for the party, so there's plenty to play and test. Each is 
 
 ### T-Timer (`timer`)
 
-4. Tap **Start**: a clock counts up. It shows for the first `visibleSeconds` (3) and then hides. Tap **Stop** when you think `targetSeconds` (10) have passed.
+4. One big round stopwatch button: tap **Start** and a clock counts up. It shows for the first `visibleSeconds` (3) and then hides. Tap **Stop** when you think `targetSeconds` (10) have passed. The screen repeats no instructions (How to play has them).
 5. The result shows your time to the hundredth and how far off you were. Within ±0.05 s earns all the points; it drops linearly to 0 at 2 s off. A run not stopped within the target plus 10 s scores 0.
 
 ### Tap Masher (`taps`)
 
-6. Tap **Start**: a 3-2-1 countdown, then `seconds` (5) of tapping a big target anywhere in the play area. The count shows live.
+6. Tap **Start** (no instruction line on the screen; How to play has it): a 3-2-1 countdown, then `seconds` (5) of tapping a big target anywhere in the play area. The count shows live.
 7. Points scale with taps up to `target` taps (45) for all of them. More than 20 taps a second isn't accepted.
 
 ### Snow Trail (`trail`)
@@ -48,7 +48,7 @@ Each play's `state` holds that game's run (start time, taps, path, picks, rows),
 
 ## UI
 
-Phone, in the pack: one big primary action per screen, the game's numbers in the display font, results held up on the pack's score card (spec 08). Snow Trail's dots are white score-card chips; the path is the accent ink.
+Phone, in the pack: one big primary action per screen, the game's numbers in the display font, results held up on the pack's score card (spec 08). Snow Trail is built to read in a dim room: light empty squares, squares on the trail filled with the accent, a thick light trail line, large white numbered chips, and the trail's end ringed.
 
 ## Acceptance criteria
 

@@ -2,7 +2,11 @@ import type { z } from "zod";
 import type { PlayStatus } from "./repo";
 
 /** What every game's logic gets besides its state: the server's clock. Keeps logic pure. */
-export type GameContext = { now: number };
+export type GameContext = {
+  now: number;
+  /** The event allows replays, so views keep answers back (they could be learned by replaying). */
+  replayable?: boolean;
+};
 
 /** The box shown before a game starts (S08-AC9). */
 export type Instructions = { title: string; lines: string[] };
