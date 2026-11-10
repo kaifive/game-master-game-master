@@ -1,7 +1,8 @@
 import { z } from "zod";
+import { deltaE2000 } from "./de2000";
 import type { GameLogic, MoveResult } from "../model";
 
-/** Color Matcher (spec 18): mix red, green and blue to match a color from memory. */
+/** Color Matcher (spec 18): pick on a color wheel to match a color from memory. */
 const Hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Use a color like #882E7E.");
 export const ColorContent = z
   .object({ target: Hex, prompt: z.string().min(1).max(120).optional() })
@@ -10,9 +11,14 @@ export type ColorContent = z.infer<typeof ColorContent>;
 
 const prompt = (c: ColorContent) => c.prompt ?? "Match the color";
 
-/** All the points within this difference; none at ZERO_AT (CIE76 ΔE, where 2 is barely visible). */
-export const FULL_DE = 3;
-export const ZERO_AT_DE = 50;
+/**
+ * All the points within this difference; none at ZERO_AT (CIEDE2000 ΔE, where
+ * about 2 is the smallest difference eyes notice). Tuned 2026-11-10 (Khai:
+ * scores felt random): a slightly pinker or bluer purple ~90%, a clearly
+ * lighter one ~65%, grey or hot pink next to nothing.
+ */
+export const FULL_DE = 2;
+export const ZERO_AT_DE = 25;
 
 type Rgb = [number, number, number];
 
@@ -35,12 +41,12 @@ function lab([r, g, b]: Rgb): Rgb {
   return [116 * f(y) - 16, 500 * (f(x) - f(y)), 200 * (f(y) - f(z))];
 }
 
-/** How far apart two colors look (CIE76 ΔE). */
-export function colorDistance(a: string, b: string): number {
-  const [l1, a1, b1] = lab(fromHex(a));
-  const [l2, a2, b2] = lab(fromHex(b));
-  return Math.hypot(l1 - l2, a1 - a2, b1 - b2);
-}
+/**
+ * How far apart two colors look (CIEDE2000 ΔE). The older CIE76 distance
+ * judged purples, greys and vividness unlike eyes do, so scores felt random.
+ */
+export const colorDistance = (a: string, b: string): number =>
+  deltaE2000(lab(fromHex(a)), lab(fromHex(b)));
 
 /** The share of points for a difference (S18-AC2). */
 export const colorShare = (de: number) =>
