@@ -22,7 +22,7 @@ A feature item needs its spec at `Ready` before it starts.
 - [x] GitHub Actions CI running `verify` and e2e on every PR; PR template; git hooks
 - [x] `.claude/commands/` for `/next`, `/spec`, `/verify`
 - [x] Firebase project on Spark: Anonymous Auth, Firestore, Realtime Database; env vars in `.env.example`; client and admin wiring (`lib/firebase`)
-- [ ] Vercel project and Blob store on Hobby; preview deploys per PR (ask before production)
+- [x] Vercel project and Blob store on Hobby; preview deploys per PR (ask before production)
 
 ## M1: Core event loop (by Nov 26)
 
@@ -37,7 +37,7 @@ A feature item needs its spec at `Ready` before it starts.
 ## M2: Solo games and photos (by Dec 6)
 
 - [x] Spec 08, game framework: game type contract, move route, results, score once (points reach the ledger with spec 04)
-- [ ] Spec 09, theming: tokens, color modes, variants, icon sets; holiday variant
+- [x] Spec 09, theming: tokens, color modes, variants, icon sets; holiday variant
 - [x] Spec 10, trivia: the first solo game (replaces word guess)
 - [x] Spec 16, quick games: T-Timer, Tap Masher, Pathfinder, Stack Attack, Rapid Recall
 - [x] Spec 17, Guessing Jar (scored when the host enters the count) and Geocache (hidden codes)
