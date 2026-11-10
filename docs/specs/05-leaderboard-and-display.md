@@ -12,9 +12,9 @@ A big-screen page for the room shows how to join and a live leaderboard. Players
 
 1. **Ranks:** highest points first; ties share a rank (1, 2, 2, 4). Only active players are listed (spec 04 keeps the summary).
 2. **Phone** (the **Leaderboard** tab, its own page at `/[event]/leaderboard`; the host can hide it, spec 07): the top 10, and your own rank and points underneath when you're outside the top 10. Your row is highlighted. It refreshes every 15 seconds.
-3. **TV** (`/[slug]/display`), sized for 1920×1080 with no scrolling (the host can hide the standings, spec 07):
+3. **TV** (`/[slug]/display`), sized for 1920×1080 with no scrolling, and scaling with the screen's height as well as its width so nothing is cut off on a laptop, a browser with toolbars or a TV that crops its edges (Khai, 2026-11-10). The host can hide the standings (spec 07).
    - **Join panel:** a QR code for `/join?code=…`, the short URL and the join code in big type. (The display is the one page that shows the join code; it's on the poster anyway.)
-   - **Leaderboard:** the top 10 as a judges' results board: the pack's `LeaderboardRow` at TV size, place in gold, silver and bronze for the top three, and each score on a card that flips up when it changes (spec 14 AC-12).
+   - **Leaderboard:** the top 10 as a judges' results board. The top three stand on a podium (2, 1, 3; the leader's card in gold), and places 4 to 10 follow in two columns of dense rows, reading down then across. It uses the pack's `LeaderboardRow` (its `podium` variant and `tv` size), with places in gold, silver and bronze for the top three, and each score on a card that flips up when it changes (spec 14 AC-12). The team phase does the same for team standings, with the top players in one column beside it.
    - **Toasts:** each new award shows as a toast ("Mai +40 · Holiday Trivia", "Mai +10 · Holiday Trivia · new best"), at most four at a time (spec 14).
    - **Latest points:** under the join panel, the last three awards stay on screen, so the room always sees what just landed.
    - **Lead change:** when someone new takes first place, a callout plays ("Mai takes the lead!").
@@ -35,8 +35,8 @@ Display uses the event's style pack; the whole page scales with the screen width
 
 - [x] AC-1: Ranks go highest points first and ties share a rank; only active players are listed.
 - [x] AC-2: The phone shows the top 10, highlights the player, and adds their own rank and points below when they're outside the top 10, refreshing every 15 seconds.
-- [x] AC-3: The display shows a QR code for the join link, the URL and the join code, and fits 1920×1080 with no scrolling.
-- [x] AC-4: The display shows the top 10 as a results board whose score cards flip when scores change, updating every 3 seconds, with the latest three awards beside it.
+- [x] AC-3: The display shows a QR code for the join link, the URL and the join code, and fits 1920×1080 with no scrolling; it scales with the screen's height too, so a shorter screen cuts nothing off.
+- [x] AC-4: The display shows the top 10 as a results board (top three on a podium) whose score cards flip when scores change, updating every 3 seconds, with the latest three awards beside it.
 - [x] AC-5: Each new award since the last update shows as a toast, a replay's marked "new best"; the first load shows none.
 - [x] AC-6: When a different player takes first place, a lead-change callout plays.
 

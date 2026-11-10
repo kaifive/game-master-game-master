@@ -253,13 +253,13 @@ Controls run on a fixed theme (`lib/themes/admin.ts`): cool slate ground (`admin
 
 **The Two Faces Rule.** Oswald for numerals and headings, Atkinson Hyperlegible for anything read as a sentence or a name. No third face on event surfaces.
 
-**The Room Size Rule.** Body text is at least 16 px on phones and 32 px on the TV; display components use display sizes, never player sizes.
+**The Room Size Rule.** Body text is at least 16 px on phones and 1.125rem on the TV (about 26 px on a 1080p screen, read from across the room); display components use display sizes, never player sizes. Bigger isn't better on the TV: everything must fit one screen (Khai, 2026-11-10: the board was too big and cut off).
 
 ## Layout
 
 Phones design for 375 px: a single column, `max-w-xl` centered, 16 px side padding, 20 px between blocks. The band sits flush at the top; the bottom tab bar is fixed, 56 px tall tabs with a safe-area inset, and a 96 px spacer keeps content clear of it. Hub rows are at least 64 px tall, divided by a 1 px `border` line, with the game name and its note left and the row's own score card right. Scored games fold away past three. Pages scroll vertically only.
 
-The TV is a fixed 1920 x 1080 grid that never scrolls: band across the top, then a 32 px padded area with the results board(s) left (`3fr 2fr` for team standings and top players) and a 26rem aside right holding the join panel (QR, short URL, code) and the latest-points toast chain. Columns are 40 px apart.
+The TV is a grid that never scrolls and never cuts off: the root size scales with the smaller of the screen's width and height (`clamp(11px, min(1.2vw, 2.1vh), 32px)`), so a laptop, a browser with toolbars or a TV that crops its edges shows the same layout as a 1080p screen. Band across the top, then a padded area with the results board(s) left (`2fr 1fr` for team standings and top players) and a 22rem aside right holding the join panel (a 10rem QR, short URL, code) and the latest-points toast chain. Each board puts its top three on the podium and the rest in two columns of dense `tv` rows, reading down then across. Columns are 40 px apart.
 
 Controls design for 1024 px and up: a `max-w-3xl` column of stacked cards with gray header strips, 16 px gaps, dense lists.
 
@@ -309,9 +309,13 @@ The signature. A white card with black Oswald numerals on a candy-striped handle
 - **Motion:** the flip, `jt-flip` (rotateX from -80 degrees with a 400px perspective, 420 ms, `cubic-bezier(0.16, 1, 0.3, 1)`), behind `motion-safe`, only when a score lands: a fresh result or a score that changed since the card was last seen. Seeing the same score again never flips it, and neither does a blank card filling in while the page loads.
 - Always carries an accessible name ("Holiday Trivia: 20 points" / "not scored yet").
 
+### Podium (TV)
+
+The TV's top three stand on the judges' podium: 2 left, 1 in the middle, 3 right. Each holds up a score card that grows with its score (the leader's on `gold` with `tile-correct-ink`, the others white), their name below, then a flat `surface-raised` step carrying the place numeral in its medal ink with a 4 px medal rule along its top. Steps are 5.5rem, 4rem and 3rem tall and four-fifths of the spot wide. It is the `podium` variant of the Leaderboard Row slot, so each pack draws its own.
+
 ### Leaderboard Row (results-board row)
 
-Place, name, score card. Grid of `3.5rem 1fr auto` on phones, `5rem 1fr auto` on the TV, 1 px `border` divider. Place numerals in `gold`, `rank-silver`, `rank-bronze` for 1 to 3, `text-muted` after. Team rows lead the name with the team swatch. Long names wrap (balanced) rather than truncate. The viewer's own row is highlighted on `surface` with the pack radius. The row's card flips when its score changes.
+Place, name, score card. Grid of `3.5rem 1fr auto` on phones (`md`), `2.75rem 1fr auto` for the TV's dense `tv` rows under the podium (rank 1.875rem, name 1.25rem, card 1.5rem), 1 px `border` divider. Place numerals in `gold`, `rank-silver`, `rank-bronze` for 1 to 3, `text-muted` after. Team rows lead the name with the team swatch. Long names wrap (balanced) rather than truncate. The viewer's own row is highlighted on `surface` with the pack radius. The row's card flips when its score changes.
 
 ### Buttons
 

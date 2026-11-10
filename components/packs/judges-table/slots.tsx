@@ -300,16 +300,124 @@ const RANK_INK: Record<number, string> = {
 };
 
 /** A results-board row: place, name, and a score card on its handle. */
-function LeaderboardRow({ rank, name, score, team, highlight, size = "md" }: LeaderboardRowProps) {
+/** The medal behind each place, for the podium step's top rule. */
+const RANK_RULE: Record<number, string> = {
+  1: "var(--gm-gold)",
+  2: "var(--gm-rank-silver)",
+  3: "var(--gm-rank-bronze)",
+};
+
+/** Podium spots: 2 left, 1 in the middle and tallest, 3 right. */
+const PODIUM = {
+  1: { place: "col-start-2 row-start-1", step: "h-[5.5rem]" },
+  2: { place: "col-start-1 row-start-1", step: "h-16" },
+  3: { place: "col-start-3 row-start-1", step: "h-12" },
+};
+
+/**
+ * The TV's top three, standing on the judges' podium: each holds up their
+ * score card (the leader's in gold) above their name and a stepped block
+ * carrying the place in its medal ink (Khai, 2026-11-10: more engaging).
+ */
+function PodiumSpot({ rank, name, score, team, spot }: LeaderboardRowProps & { spot: 1 | 2 | 3 }) {
   const landed = useLanded(`row:${name}`, score, false);
-  const lg = size === "lg";
+  const look = PODIUM[spot];
+  return (
+    <li
+      aria-label={`${rank}. ${name}, ${fmt(score)} points`}
+      data-slot="leaderboard-row"
+      data-podium={spot}
+      className={cx("grid min-w-0 content-end justify-items-center gap-3 text-center", look.place)}
+    >
+      <span aria-hidden="true" className="inline-grid justify-items-center">
+        <span
+          key={score}
+          className={cx(
+            // Grows with the score, so 12,000 fits as well as 40.
+            "grid place-items-center rounded-[4px] font-gm-display leading-none font-bold tabular-nums",
+            spot === 1
+              ? "h-24 min-w-32 bg-[var(--gm-gold)] px-4 text-5xl text-gm-tile-correct-ink shadow-md"
+              : "jt-card-shadow h-14 min-w-[4.5rem] bg-[var(--gm-card)] px-3 text-3xl text-[var(--gm-card-ink)]",
+            landed && "motion-safe:animate-[jt-flip_420ms_cubic-bezier(0.16,1,0.3,1)]",
+          )}
+        >
+          {fmt(score)}
+        </span>
+        <span className="jt-handle h-5 w-2 rounded-b-[2px]" />
+      </span>
+      <span
+        aria-hidden="true"
+        className="flex max-w-full min-w-0 items-center justify-center gap-2 text-2xl font-bold"
+      >
+        {team !== undefined && (
+          <i
+            className="size-4 shrink-0 rounded-[3px]"
+            style={{ background: `var(--gm-team-${team})` }}
+          />
+        )}
+        <span className="min-w-0 text-balance break-words">{name}</span>
+      </span>
+      <span
+        aria-hidden="true"
+        className={cx(
+          "grid w-4/5 place-items-center rounded-t-gm bg-gm-surface-raised font-gm-display font-bold",
+          spot === 1 ? "text-6xl" : "text-5xl",
+          look.step,
+          RANK_INK[rank] ?? "text-gm-text-muted",
+        )}
+        style={{
+          boxShadow: `inset 0 4px 0 ${RANK_RULE[rank] ?? "var(--gm-border)"}, inset 0 0 0 1px var(--gm-border)`,
+        }}
+      >
+        {rank}
+      </span>
+    </li>
+  );
+}
+
+function LeaderboardRow(props: LeaderboardRowProps) {
+  if (props.podium) return <PodiumSpot {...props} spot={props.podium} />;
+  return <BoardRow {...props} />;
+}
+
+/** Row sizes: tv is the dense row under the TV's podium; md phones; lg a full-height board. */
+const ROW = {
+  tv: {
+    grid: "grid-cols-[2.75rem_1fr_auto] py-2",
+    rank: "text-3xl",
+    name: "text-xl",
+    swatch: "size-3.5",
+    card: "text-2xl",
+    handle: "h-2.5 w-1.5",
+  },
+  md: {
+    grid: "grid-cols-[3.5rem_1fr_auto] py-3",
+    rank: "text-4xl",
+    name: "text-2xl",
+    swatch: "size-4",
+    card: "text-3xl",
+    handle: "h-3 w-1.5",
+  },
+  lg: {
+    grid: "grid-cols-[5rem_1fr_auto] py-4",
+    rank: "text-6xl",
+    name: "text-4xl",
+    swatch: "size-6",
+    card: "text-5xl",
+    handle: "h-5 w-2",
+  },
+};
+
+function BoardRow({ rank, name, score, team, highlight, size = "md" }: LeaderboardRowProps) {
+  const landed = useLanded(`row:${name}`, score, false);
+  const look = ROW[size];
   return (
     <li
       aria-label={`${rank}. ${name}, ${fmt(score)} points`}
       data-slot="leaderboard-row"
       className={cx(
         "grid items-center gap-3 border-b border-gm-border px-2",
-        lg ? "grid-cols-[5rem_1fr_auto] py-4" : "grid-cols-[3.5rem_1fr_auto] py-3",
+        look.grid,
         highlight && "rounded-gm bg-gm-surface",
       )}
     >
@@ -317,7 +425,7 @@ function LeaderboardRow({ rank, name, score, team, highlight, size = "md" }: Lea
         aria-hidden="true"
         className={cx(
           "font-gm-display font-bold",
-          lg ? "text-6xl" : "text-4xl",
+          look.rank,
           RANK_INK[rank] ?? "text-gm-text-muted",
         )}
       >
@@ -325,15 +433,15 @@ function LeaderboardRow({ rank, name, score, team, highlight, size = "md" }: Lea
       </span>
       <span
         aria-hidden="true"
-        className={cx("flex min-w-0 items-center gap-2.5 font-bold", lg ? "text-4xl" : "text-2xl")}
+        className={cx("flex min-w-0 items-center gap-2.5 font-bold", look.name)}
       >
         {team !== undefined && (
           <i
-            className={cx("shrink-0 rounded-[3px]", lg ? "size-6" : "size-4")}
+            className={cx("shrink-0 rounded-[3px]", look.swatch)}
             style={{ background: `var(--gm-team-${team})` }}
           />
         )}
-        {/* Long names wrap rather than lose their end. */}
+        {/* Long names wrap between words rather than lose their end. */}
         <span className="min-w-0 text-balance break-words">{name}</span>
       </span>
       {/* A score card on its handle; keyed by score so it flips again when the score changes. */}
@@ -342,13 +450,13 @@ function LeaderboardRow({ rank, name, score, team, highlight, size = "md" }: Lea
           key={score}
           className={cx(
             "jt-card-shadow inline-grid min-w-[2.2em] place-items-center rounded-[4px] bg-[var(--gm-card)] px-1.5 py-0.5 font-gm-display font-bold text-[var(--gm-card-ink)] tabular-nums",
-            lg ? "text-5xl" : "text-3xl",
+            look.card,
             landed && "motion-safe:animate-[jt-flip_420ms_cubic-bezier(0.16,1,0.3,1)]",
           )}
         >
           {fmt(score)}
         </span>
-        <span className={cx("jt-handle rounded-b-[2px]", lg ? "h-5 w-2" : "h-3 w-1.5")} />
+        <span className={cx("jt-handle rounded-b-[2px]", look.handle)} />
       </span>
     </li>
   );

@@ -55,8 +55,13 @@ export type LeaderboardRowProps = {
   score: number;
   team?: number;
   highlight?: boolean;
-  /** lg for the TV's results board. */
-  size?: "md" | "lg";
+  /** md on phones; tv for the TV's dense rows under the podium; lg for a full-height board. */
+  size?: "tv" | "md" | "lg";
+  /**
+   * The TV's top three stand on a podium: the spot, 1 in the middle. The
+   * slot places itself (1 centre, 2 left, 3 right) in its board's grid.
+   */
+  podium?: 1 | 2 | 3;
 };
 export type BuzzerState = "ready" | "locked" | "buzzed";
 export type BuzzerProps = { state: BuzzerState; onBuzz: () => void };
