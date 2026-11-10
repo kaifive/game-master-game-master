@@ -101,6 +101,30 @@ describe("DisplayView", () => {
     expect(within(latest).getByText("Bao · Holiday Trivia")).toBeInTheDocument();
   });
 
+  test("S05-AC4: the top three stand on a podium, the rest of the top ten in rows below, sized to fit any screen", async () => {
+    serve({
+      players: Array.from({ length: 10 }, (_, i) =>
+        row(`p${String(i)}`, i + 1, `P${String(i + 1)}`, 100 - i),
+      ),
+      recent: [],
+    });
+    const { container } = show();
+    const board = await screen.findByRole("list", { name: "Leaderboard" });
+    const podium = [...board.querySelectorAll("[data-podium]")];
+    expect(
+      podium.map((li) => [li.getAttribute("aria-label"), li.getAttribute("data-podium")]),
+    ).toEqual([
+      ["1. P1, 100 points", "1"],
+      ["2. P2, 99 points", "2"],
+      ["3. P3, 98 points", "3"],
+    ]);
+    const rest = within(board).getByRole("list", { name: "Places 4 and below" });
+    expect(within(rest).getAllByRole("listitem")).toHaveLength(7);
+    expect(within(rest).getByLabelText("10. P10, 91 points")).toBeInTheDocument();
+    // The page scales with the screen's height as well as its width, so nothing is cut off.
+    expect(container.querySelector("style")?.textContent).toMatch(/min\(1\.2vw,2\.1vh\)/);
+  });
+
   test("S05-AC1: tied players share a rank on the bars", async () => {
     serve({
       players: [row("p1", 1, "Mai", 60), row("p2", 2, "Bao", 40), row("p3", 2, "Lan", 40)],

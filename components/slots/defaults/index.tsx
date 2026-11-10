@@ -268,7 +268,49 @@ export function Toast({ text, value }: ToastProps) {
   );
 }
 
-export function LeaderboardRow({ rank, name, score, team, highlight }: LeaderboardRowProps) {
+/** Where each podium spot sits in its three-column board: 2 left, 1 in the middle, 3 right. */
+const PODIUM_ORDER = {
+  1: "col-start-2 row-start-1",
+  2: "col-start-1 row-start-1",
+  3: "col-start-3 row-start-1",
+} as const;
+
+export function LeaderboardRow({
+  rank,
+  name,
+  score,
+  team,
+  highlight,
+  podium,
+}: LeaderboardRowProps) {
+  if (podium)
+    return (
+      <li
+        aria-label={`${rank}. ${name}, ${fmt(score)} points`}
+        data-slot="leaderboard-row"
+        data-podium={podium}
+        className={cx(
+          "grid content-end justify-items-center gap-2 text-center",
+          PODIUM_ORDER[podium],
+        )}
+      >
+        <span aria-hidden="true" className="font-gm-display text-4xl font-bold tabular-nums">
+          {fmt(score)}
+        </span>
+        <span aria-hidden="true" className="text-xl font-bold text-balance">
+          {name}
+        </span>
+        <span
+          aria-hidden="true"
+          className={cx(
+            "grid w-full place-items-center rounded-t-gm bg-gm-surface-raised font-gm-display text-3xl font-bold text-gm-accent-ink",
+            podium === 1 ? "h-20" : podium === 2 ? "h-14" : "h-10",
+          )}
+        >
+          {rank}
+        </span>
+      </li>
+    );
   return (
     <li
       aria-label={`${rank}. ${name}, ${fmt(score)} points`}

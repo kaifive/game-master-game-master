@@ -15,6 +15,19 @@ test("S05-AC3: the display shows how to join and fits a TV with no scrolling", a
     y: document.documentElement.scrollHeight - window.innerHeight,
   }));
   expect(overflow).toEqual({ x: 0, y: 0 });
+  // Nothing inside is cut off either, on a TV or a short laptop screen.
+  for (const size of [
+    { width: 1920, height: 1080 },
+    { width: 1366, height: 680 },
+  ]) {
+    await page.setViewportSize(size);
+    const clipped = await page.evaluate(() =>
+      [...document.querySelectorAll("main, aside")]
+        .filter((e) => e.scrollHeight > e.clientHeight + 1)
+        .map((e) => e.tagName),
+    );
+    expect(clipped).toEqual([]);
+  }
 });
 
 test("S05-AC2 S05-AC4: a player's points show on their phone and on the display", async ({
