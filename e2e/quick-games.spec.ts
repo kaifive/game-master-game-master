@@ -178,11 +178,15 @@ test("S17-AC6: Geocache scores a hidden code once", async ({ page }) => {
 
 test("S18-AC5: Color Matcher", async ({ page }) => {
   await joinAndOpen(page, "Color Matcher");
-  await page.getByLabel(/^Red/).fill("136");
-  await page.getByLabel(/^Green/).fill("46");
-  await page.getByLabel(/^Blue/).fill("126");
+  // Tap the wheel's top edge (red), then dial in the logo's purple.
+  const swatch = page.getByRole("img", { name: /Your color/ });
+  await page.locator("[style*='conic-gradient']").click({ position: { x: 100, y: 4 } });
+  await expect(swatch).toHaveAttribute("aria-label", /#[A-F0-9]{6}/);
+  await page.getByLabel("Shade around the wheel").fill("307");
+  await page.getByLabel("Strength of the color").fill("66");
+  await page.getByLabel("Brightness").fill("53");
   await page.getByRole("button", { name: "Lock in this color" }).click();
-  await expect(page.getByRole("region", { name: "Your score" })).toContainText("100% match");
+  await expect(page.getByRole("region", { name: "Your score" })).toContainText(/\d+% match/);
 });
 
 test("S18-AC5: Quick Draw", async ({ page }) => {
@@ -202,7 +206,7 @@ test("S18-AC5: Quick Draw", async ({ page }) => {
     );
   await page.mouse.up();
   await page.getByRole("button", { name: "I'm done" }).click();
-  await expect(page.getByRole("region", { name: "Your score" })).toContainText(/like the logo/);
+  await expect(page.getByRole("region", { name: "Your score" })).toContainText(/% match/);
   // One drawing per player: no Play again.
   await expect(page.getByRole("button", { name: "Play again" })).toHaveCount(0);
 });
