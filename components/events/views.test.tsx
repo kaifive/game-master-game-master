@@ -50,17 +50,20 @@ describe("S01-AC5: an upcoming event waits for the host and lists its games, loc
     inPack(<UpcomingView event={closed} />);
     expect(screen.getByText("Waiting for the host to start the games.")).toBeInTheDocument();
     const list = screen.getByRole("region", { name: "Tonight's games" });
-    for (const g of event.games) expect(within(list).getByText(g.title)).toBeInTheDocument();
+    for (const g of event.games.filter((x) => x.id !== "ornament-hunt"))
+      expect(within(list).getByText(g.title)).toBeInTheDocument();
+    // A game with no phone screen yet isn't listed: no "Coming soon".
+    expect(within(list).queryByText("Ornament Hunt")).toBeNull();
     expect(within(list).queryAllByRole("link")).toHaveLength(0);
     // Games a phone can play are locked; the rest say why they aren't up for grabs.
     expect(within(list).getAllByText("Locked").length).toBe(
       closed.games.filter((g) => g.mode === "solo" && g.type !== "photo-challenge").length,
     );
-    expect(within(list).getByText("Coming soon")).toBeInTheDocument();
+    expect(within(list).queryByText("Coming soon")).toBeNull();
     expect(within(list).getByText("On the TV when the host starts it")).toBeInTheDocument();
-    // Nothing is up for grabs yet: every game is coming up, on a blank card.
-    expect(within(list).getByRole("list", { name: "Coming up" })).toBeInTheDocument();
-    expect(within(list).queryByRole("list", { name: "Up for grabs" })).toBeNull();
+    // One list of every game, with no sections.
+    expect(within(list).getByRole("list", { name: "Games" })).toBeInTheDocument();
+    expect(within(list).queryByRole("heading")).toBeNull();
   });
 
   test("S08-AC13: an alwaysOpen game can be played before the start", () => {
@@ -184,20 +187,19 @@ describe("S08-AC7: the hub lists each game for the active player", () => {
     );
     const list = await screen.findByRole("region", { name: "Tonight's games" });
     // Trivia is replayable in the party's event file: scored, and open again.
-    const scored = await within(list).findByRole("list", { name: "Scored" });
-    expect(within(scored).getByRole("img", { name: "Holiday Trivia: 80 points" })).toBeVisible();
-    expect(within(scored).getByText("Again")).toBeInTheDocument();
-    // The quick games are up for grabs; a live game and an unbuilt one wait
-    // under Coming up instead of offering a dead-end Play.
-    const open = within(list).getByRole("list", { name: "Up for grabs" });
-    expect(within(open).getByText("T-Timer")).toBeInTheDocument();
-    expect(within(open).queryByText("Jeopardy")).toBeNull();
-    const later = within(list).getByRole("list", { name: "Coming up" });
-    expect(within(later).getByText("Coming soon")).toBeInTheDocument();
-    expect(within(later).getByText("On the TV when the host starts it")).toBeInTheDocument();
-    expect(within(later).queryByRole("link")).toBeNull();
+    const games = within(list).getByRole("list", { name: "Games" });
+    expect(
+      await within(games).findByRole("img", { name: "Holiday Trivia: 80 points" }),
+    ).toBeVisible();
+    expect(within(games).getByText("Again")).toBeInTheDocument();
+    // Every game is in one list: open ones link, a live game says it's on the TV.
+    expect(within(games).getByRole("link", { name: /T-Timer/ })).toBeInTheDocument();
+    expect(within(games).queryByRole("link", { name: /Jeopardy/ })).toBeNull();
+    expect(within(games).getByText("On the TV when the host starts it")).toBeInTheDocument();
+    expect(within(games).queryByText("Coming soon")).toBeNull();
+    expect(within(games).queryByText("Ornament Hunt")).toBeNull();
     // S03-AC5: a team game waits for the team phase.
-    expect(within(later).getByText("Team phase")).toBeInTheDocument();
+    expect(within(games).getByText("Team phase")).toBeInTheDocument();
     expect(within(list).getByRole("progressbar", { name: "Games scored" })).toBeInTheDocument();
     vi.unstubAllGlobals();
   });
@@ -296,12 +298,12 @@ describe("S05-AC2 S03-AC3: the Leaderboard and Team tabs", () => {
 });
 
 describe("S08-AC7: sorting the games", () => {
-  test("a playable game is up for grabs with Play, then Continue; live and unbuilt games wait", () => {
+  test("a playable game says Play, then Continue; a live game waits; an unbuilt one isn't listed", () => {
     const rows = hubRows(event, "live", {}, null);
     const byId = Object.fromEntries(rows.map((r) => [r.game.id, r]));
     expect(byId.trivia).toMatchObject({ group: "open", note: "Play" });
     expect(byId.jeopardy).toMatchObject({ group: "later", href: null });
-    expect(byId["ornament-hunt"]).toMatchObject({ group: "later", note: "Coming soon" });
+    expect(byId["ornament-hunt"]).toBeUndefined();
     const playing = hubRows(
       event,
       "live",

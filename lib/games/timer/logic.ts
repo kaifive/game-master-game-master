@@ -8,21 +8,21 @@ export const TimerContent = z
     visibleSeconds: z.number().min(0).max(30).optional(),
   })
   .strict()
-  .refine((c) => (c.visibleSeconds ?? 3) < (c.targetSeconds ?? 10), {
+  .refine((c) => (c.visibleSeconds ?? 3) < (c.targetSeconds ?? 7), {
     message: "visibleSeconds must be less than targetSeconds.",
   });
 export type TimerContent = z.infer<typeof TimerContent>;
 
-const target = (c: TimerContent) => (c.targetSeconds ?? 10) * 1000;
+const target = (c: TimerContent) => (c.targetSeconds ?? 7) * 1000;
 const visible = (c: TimerContent) => (c.visibleSeconds ?? 3) * 1000;
 
 /** How much later than the server's clock a phone's time may be (network on both taps). */
 export const CLAIM_SLACK_MS = 1000;
 /** How much earlier: a slower network can't be used to shave time. */
 export const LATE_SLACK_MS = 1500;
-/** All points within this; none at FULL + ZERO_AT ms off. */
-export const FULL_MS = 50;
-export const ZERO_AT_MS = 2000;
+/** All points within this; none at ZERO_AT ms off (Khai: the first rule was too hard). */
+export const FULL_MS = 100;
+export const ZERO_AT_MS = 3000;
 /** A run left running this long past the target times out. */
 export const TIMEOUT_MS = 10_000;
 
@@ -58,15 +58,16 @@ export const timer: GameLogic<TimerContent, TimerState, TimerView> = {
   instructions: (c) => ({
     title: "How to play",
     lines: [
-      "Tap Start and count in your head.",
-      `The clock shows for ${String(visible(c) / 1000)} seconds, then hides.`,
+      "The clock starts as soon as you close this box. Count in your head.",
+      `It shows for ${String(visible(c) / 1000)} seconds, then hides.`,
       `Tap Stop at exactly ${String(target(c) / 1000)} seconds.`,
-      "The closer you are, the more points. Within a twentieth of a second scores them all.",
+      "The closer you are, the more points.",
     ],
   }),
-  create: (c) => ({
-    phase: "ready",
-    startedAt: null,
+  // The clock starts with the game: no second Start button (Khai, 2026-11-10).
+  create: (c, _seed, { now }) => ({
+    phase: "running",
+    startedAt: now,
     elapsedMs: null,
     targetMs: target(c),
     step: 0,

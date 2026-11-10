@@ -25,13 +25,14 @@ describe("quick game screens (spec 16)", () => {
     });
     const onMove = vi.fn();
     const { rerender } = render(
-      <TimerGame {...props({ kind: "ready", targetSeconds: 10, visibleSeconds: 3 }, onMove)} />,
+      <TimerGame {...props({ kind: "ready", targetSeconds: 7, visibleSeconds: 3 }, onMove)} />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Start" }));
+    // An old play still waiting on Start is started for the player: no second button.
     expect(onMove).toHaveBeenLastCalledWith({ type: "start" });
+    expect(screen.queryByRole("button", { name: "Start" })).toBeNull();
     rerender(
       <TimerGame
-        {...props({ kind: "running", targetSeconds: 10, visibleSeconds: 3, elapsedMs: 0 }, onMove)}
+        {...props({ kind: "running", targetSeconds: 7, visibleSeconds: 3, elapsedMs: 0 }, onMove)}
       />,
     );
     await act(async () => {
@@ -42,10 +43,15 @@ describe("quick game screens (spec 16)", () => {
       await vi.advanceTimersByTimeAsync(3000);
     });
     expect(screen.getByTestId("timer-clock")).toHaveTextContent("?.??");
-    fireEvent.click(screen.getByRole("button", { name: "Stop" }));
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Stop" }));
     const sent = onMove.mock.calls.at(-1)?.[0] as { type: string; elapsedMs: number };
     expect(sent.type).toBe("stop");
     expect(sent.elapsedMs).toBeGreaterThanOrEqual(3900);
+    // Stop freezes at once, before the server answers: the time shows and the button rests.
+    expect(screen.getByTestId("timer-clock").textContent).toMatch(/^\d\.\d\d$/);
+    expect(screen.getByRole("button", { name: "Stop" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Stop" }));
+    expect(onMove).toHaveBeenCalledTimes(2);
     expect(timerSummary({ kind: "done", targetSeconds: 10, elapsedMs: 10_120, offMs: 120 })).toBe(
       "10.12 s · 0.12 s off",
     );
@@ -58,9 +64,10 @@ describe("quick game screens (spec 16)", () => {
     vi.useFakeTimers({ shouldAdvanceTime: true, toFake: ["performance", "requestAnimationFrame"] });
     const onMove = vi.fn();
     const { rerender } = render(
-      <TapsGame {...props({ kind: "ready", seconds: 5, target: 45 }, onMove)} />,
+      <TapsGame {...props({ kind: "ready", seconds: 5, target: 50 }, onMove)} />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Start" }));
+    expect(onMove).toHaveBeenLastCalledWith({ type: "start" });
+    expect(screen.queryByRole("button", { name: "Start" })).toBeNull();
     rerender(<TapsGame {...props({ kind: "running", seconds: 5, goInMs: 1000 }, onMove)} />);
     expect(screen.getByText(/Get ready/)).toBeInTheDocument();
     await act(async () => {
@@ -73,6 +80,7 @@ describe("quick game screens (spec 16)", () => {
       await vi.advanceTimersByTimeAsync(5100);
     });
     expect(onMove).toHaveBeenLastCalledWith({ type: "finish", taps: 7 });
+    expect(screen.queryByText(/50/)).toBeNull(); // the top score stays hidden
     expect(tapsSummary({ kind: "done", taps: 33, target: 45 })).toBe("33 taps");
   });
 
@@ -82,7 +90,8 @@ describe("quick game screens (spec 16)", () => {
     const { rerender } = render(
       <StackerGame {...props({ kind: "ready", rows: 12, width: 7 }, onMove)} />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Start" }));
+    expect(onMove).toHaveBeenLastCalledWith({ type: "start" });
+    expect(screen.queryByRole("button", { name: "Start" })).toBeNull();
     rerender(<StackerGame {...props({ kind: "running", rows: 12, width: 7 }, onMove)} />);
     const board = screen.getByRole("button", { name: "Stop the bar" });
     fireEvent.pointerDown(board); // row 1 always lands
@@ -137,8 +146,8 @@ describe("quick game screens (spec 16)", () => {
     );
   });
 
-  test("S16-AC4: Snow Trail builds the trail square by square, undoes by stepping back, and sends a solved one", () => {
-    const view = { kind: "playing" as const, size: 2, dots: [0, 2], msLeft: 1000 };
+  test("S16-AC4: Pathfinder builds the path square by square, undoes by stepping back, and sends a solved one", () => {
+    const view = { kind: "playing" as const, size: 2, dots: [0, 2], elapsedMs: 1000 };
     expect(extendTrail([], 1, view)).toEqual([]); // must start on 1
     expect(extendTrail([], 0, view)).toEqual([0]);
     expect(extendTrail([0], 3, view)).toEqual([0]); // not a neighbour

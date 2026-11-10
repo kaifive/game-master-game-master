@@ -49,9 +49,10 @@ export const stacker: GameLogic<StackerContent, StackerState, StackerView> = {
       `Stack as many rows as you can, up to ${String(rows(c))}. Each row climbs faster.`,
     ],
   }),
-  create: (c) => ({
-    phase: "ready",
-    startedAt: null,
+  // The bars start with the game: no second Start button.
+  create: (c, _seed, { now }) => ({
+    phase: "running",
+    startedAt: now,
     rows: 0,
     maxRows: rows(c),
     width: width(c),

@@ -5,13 +5,27 @@ const c = RecallContent.parse({});
 const at = { now: 0 };
 
 describe("Rapid Recall", () => {
-  it("S16-AC6: three growing rounds from the seed, an equal share per square found", () => {
+  it("S16-AC6: the default three rounds are hard ones: 4×4 with 5, 5×5 with 8, 6×6 with 11, shown 1.2 s", () => {
     const s = recall.create(c, 7, at);
     expect(s.rounds.map((r) => [r.size, r.lit.length])).toEqual([
-      [3, 3],
       [4, 5],
-      [5, 7],
+      [5, 8],
+      [6, 11],
     ]);
+    expect(recall.view(s, c, at)).toMatchObject({ showMs: 1200 });
+  });
+
+  it("S16-AC6: rounds come from the seed, an equal share per square found", () => {
+    const easy = RecallContent.parse({
+      rounds: [
+        { size: 3, lit: 3 },
+        { size: 4, lit: 5 },
+        { size: 5, lit: 7 },
+      ],
+      showMs: 1500,
+    });
+    const c = easy;
+    const s = recall.create(c, 7, at);
     expect(recall.create(c, 7, at)).toEqual(s);
     expect(recall.create(c, 8, at).rounds).not.toEqual(s.rounds);
     let state = s;

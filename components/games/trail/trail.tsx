@@ -25,7 +25,7 @@ export function extendTrail(path: number[], cell: number, view: Pick<Playing, "s
   return adjacent(last, cell, view.size) ? [...path, cell] : path;
 }
 
-/** Snow Trail (spec 16): drag one trail through every square, passing the numbers in order. */
+/** Pathfinder (spec 16): drag one path through every square, passing the numbers in order. */
 export function TrailGame({ view: raw, onMove, busy }: GameRendererProps) {
   const { Button } = useSlots();
   const view = raw as TrailView;
@@ -53,7 +53,7 @@ export function TrailGame({ view: raw, onMove, busy }: GameRendererProps) {
   });
 
   return (
-    <section aria-label="Snow Trail" className="grid gap-3">
+    <section aria-label="Pathfinder" className="grid gap-3">
       <p className="m-0 text-center text-lg font-bold" aria-live="polite">
         {problem ??
           (path.length === 0 ? "Start on 1" : `${String(path.length)} of ${String(total)} squares`)}

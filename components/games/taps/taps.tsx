@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useSlots } from "@/components/slots/registry";
 import type { TapsView } from "@/lib/games";
 import type { GameRendererProps } from "../types";
 
 /** Tap Masher (spec 16): a countdown, then as many taps as you can. */
-export function TapsGame({ view: raw, onMove, busy }: GameRendererProps) {
-  const { Button } = useSlots();
+export function TapsGame({ view: raw, onMove }: GameRendererProps) {
   const view = raw as TapsView;
   const goAt = useRef<number | null>(null);
   const count = useRef(0);
@@ -21,6 +19,12 @@ export function TapsGame({ view: raw, onMove, busy }: GameRendererProps) {
   const running = view.kind === "running";
   const goIn = running ? view.goInMs : 0;
   const seconds = view.kind === "running" ? view.seconds : 0;
+  const kind = view.kind;
+
+  // A play made before auto-start still waits on Start: send it for them.
+  useEffect(() => {
+    if (kind === "ready") move.current({ type: "start" });
+  }, [kind]);
 
   useEffect(() => {
     if (!running) return;
@@ -41,20 +45,7 @@ export function TapsGame({ view: raw, onMove, busy }: GameRendererProps) {
   }, [running, goIn, seconds]);
 
   if (view.kind === "done") return null;
-  if (view.kind === "ready")
-    return (
-      <section aria-label="Tap Masher" className="grid justify-items-center gap-6 py-6 text-center">
-        <Button
-          size="lg"
-          disabled={busy}
-          onClick={() => {
-            onMove({ type: "start" });
-          }}
-        >
-          Start
-        </Button>
-      </section>
-    );
+  if (view.kind === "ready") return null;
 
   const toGo = goAt.current === null ? view.goInMs : goAt.current - now;
   const tapping = toGo <= 0 && !sent.current;

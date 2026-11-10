@@ -213,7 +213,7 @@ A cold winter-night ground, one warm cranberry voice, gold for winning, and whit
 - **Winter Night** (`bg`): the page ground under the snow.
 - **Deep Spruce** (`surface`) and **Raised Spruce** (`surface-raised`): panels, the tab bar, dialogs, the highlighted own row, the active tab.
 - **Frost Line** (`border`): row dividers and panel outlines.
-- **Snow Ink** (`text`) and **Frosted Ink** (`text-muted`): reading text and notes ("Team phase", "Coming soon", "1 of 2").
+- **Snow Ink** (`text`) and **Frosted Ink** (`text-muted`): reading text and notes ("Team phase", "Locked", "1 of 2").
 - **Card White / Card Ink** (`card`, `card-ink`): score-card faces and on-screen keys; the same in every mode, because a judge's card is white.
 - **Frosted Card Back** (`card-back`, `card-back-ink`): unscored cards, their plain handles, missed letters, undone pips.
 - **Snow** (`snow`): the flake mask color and the snowbank glow at the foot of the page.
@@ -243,7 +243,7 @@ Controls run on a fixed theme (`lib/themes/admin.ts`): cool slate ground (`admin
 
 - **Board numerals** (Oswald 700, 3.75 to 6rem on the TV, 2.25rem on phones, line-height 1): places and score cards on the results board, the extra-large celebration card.
 - **Band title** (Oswald 500, 1rem on phones / 2.25rem on the TV, uppercase, 0.1em tracking): the event name in the band. The only uppercase tracked text in the system besides the LIVE chip.
-- **Headline** (Oswald 700, 1.5rem on phones, 2.25rem on the TV): group headings ("Up for grabs", "Scored", "Coming up"), "Team standings", "Scan to join", dialog titles (1.875rem).
+- **Headline** (Oswald 700, 1.5rem on phones, 2.25rem on the TV): "Team standings", "Scan to join", dialog titles (1.875rem).
 - **Score** (Oswald 700, tabular numerals, 1.125 / 1.875 / 3rem / 6rem for sm / md / lg / xl cards): every number on a card.
 - **Title** (Atkinson 700, 1.125rem): game names in hub rows; player names on the board (1.5rem phone, 2.25rem TV).
 - **Body** (Atkinson 400, 1rem minimum on phones, 1.125rem in dialogs and the TV aside): sentences, empty states.

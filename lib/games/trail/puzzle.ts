@@ -1,7 +1,7 @@
 import { seededRandom, shuffled } from "../random";
 
 /**
- * Snow Trail puzzles (spec 16): a path through every square of a grid,
+ * Pathfinder puzzles (spec 16): a path through every square of a grid,
  * visiting numbered dots in order. Squares are numbered row by row from 0.
  */
 export type Puzzle = { size: number; dots: number[] };

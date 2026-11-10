@@ -83,8 +83,9 @@ type Group = "open" | "scored" | "later";
 type Row = { game: Game; group: Group; href: string | null; note: string; best: number | null };
 
 /**
- * Sorts the listed games the way the judges' table reads them: what's up for
- * grabs, what's scored, what's coming up (docs/styles/judges-table.md).
+ * One row per listed game, in the event file's order: one list, no sections
+ * (Khai, 2026-11-10). `group` still feeds the progress pips. A solo game with
+ * no phone renderer yet isn't listed at all.
  */
 export function hubRows(
   event: PublicEvent,
@@ -92,19 +93,14 @@ export function hubRows(
   plays: HubPlays,
   seat: Seat | null,
 ): Row[] {
-  return listed(event).map((game) => {
+  const ready = listed(event).filter((g) => g.mode !== "solo" || rendererFor(g.type));
+  return ready.map((game) => {
     const play = plays[game.id];
     // A solo team game is the captain's to play (S03-AC5); live team games run from the host.
     const blocked =
       game.phase === "team" && game.mode === "solo" ? teamGameBlock(seat, play) : null;
-    // Only games this phone can play are up for grabs: a live game runs from
-    // the host and the TV, and a type with no phone renderer isn't ready yet.
-    const wait =
-      game.mode !== "solo"
-        ? "On the TV when the host starts it"
-        : !rendererFor(game.type)
-          ? "Coming soon"
-          : null;
+    // A live game runs from the host and the TV, not from here.
+    const wait = game.mode !== "solo" ? "On the TV when the host starts it" : null;
     const open = gameOpen(status, game) && !blocked && !wait;
     const href = open ? `/${event.slug}/play/${game.id}` : null;
     if (play?.waiting)
@@ -137,12 +133,6 @@ export function hubRows(
     };
   });
 }
-
-const GROUPS: { id: Group; title: string }[] = [
-  { id: "open", title: "Up for grabs" },
-  { id: "scored", title: "Scored" },
-  { id: "later", title: "Coming up" },
-];
 
 function GameRow({ row }: { row: Row }) {
   const { ScoreCard } = useSlots();
@@ -194,7 +184,7 @@ function GameList({ event, status }: { event: PublicEvent; status: EventStatus }
   }, [refresh]);
   const rows = hubRows(event, status, plays, seat);
   // The pips count what this phone can score.
-  const scorable = rows.filter((r) => r.game.mode === "solo" && rendererFor(r.game.type));
+  const scorable = rows.filter((r) => r.game.mode === "solo");
   return (
     <section aria-label="Tonight's games" className="grid gap-4">
       {device?.active && scorable.length > 0 && (
@@ -204,20 +194,11 @@ function GameList({ event, status }: { event: PublicEvent; status: EventStatus }
           label="Games scored"
         />
       )}
-      {GROUPS.map(({ id, title }) => {
-        const group = rows.filter((r) => r.group === id);
-        if (group.length === 0) return null;
-        return (
-          <div key={id} className="grid gap-1">
-            <h2 className="m-0 font-gm-display text-2xl font-bold">{title}</h2>
-            <ul aria-label={title} className="m-0 grid list-none p-0">
-              {group.map((r) => (
-                <GameRow key={r.game.id} row={r} />
-              ))}
-            </ul>
-          </div>
-        );
-      })}
+      <ul aria-label="Games" className="m-0 grid list-none p-0">
+        {rows.map((r) => (
+          <GameRow key={r.game.id} row={r} />
+        ))}
+      </ul>
     </section>
   );
 }

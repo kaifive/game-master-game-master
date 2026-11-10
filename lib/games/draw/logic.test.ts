@@ -10,9 +10,10 @@ const logoStrokes: Point[][] = NOVA_LOGO.edges.map((e) => [
 ]);
 
 describe("Quick Draw", () => {
-  it("S18-AC3: one untimed drawing, judged on the server, and no replays", () => {
+  it("S18-AC3: an untimed drawing, judged on the server, replayable like other games", () => {
     expect(draw.instructions(c).lines.join(" ")).toMatch(/Nova Wushu logo.*no rush/);
-    expect(draw.once).toBe(true);
+    expect(draw.instructions(c).lines.join(" ")).not.toMatch(/one drawing/);
+    expect(draw.once).toBeUndefined();
     const s = draw.create(c, 1, at(0));
     expect(draw.view(s, c, at(0))).toEqual({
       kind: "drawing",

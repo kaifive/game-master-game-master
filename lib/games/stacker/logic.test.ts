@@ -19,8 +19,9 @@ describe("Stack Attack", () => {
 
   it("S16-AC5: scores by rows stacked; a count too high or too fast is refused", () => {
     expect(stacker.instructions(c).lines.join(" ")).toMatch(/up to 12/);
-    const started = stacker.move(stacker.create(c, 1, at(0)), c, { type: "start" }, at(0));
-    if (!started.ok) throw new Error(started.message);
+    // The bars start with the game: no Start move.
+    const started = { state: stacker.create(c, 1, at(0)) };
+    expect(stacker.view(started.state, c, at(0))).toMatchObject({ kind: "running" });
     expect(stacker.move(started.state, c, { type: "finish", rows: 13 }, at(60_000)).ok).toBe(false);
     expect(stacker.move(started.state, c, { type: "finish", rows: 12 }, at(100)).ok).toBe(false);
     const done = stacker.move(started.state, c, { type: "finish", rows: 6 }, at(20_000));

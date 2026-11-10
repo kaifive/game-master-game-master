@@ -23,12 +23,12 @@ The contract every game type follows (ADR-007): pure logic, a content shape, and
    - `isOver(state)`, and `score(state, scoring)` → points earned.
 3. A play is one player's run at one game: `plays/{gameId}_{playerId}` (`reference/data-model.md`). The server owns its state.
 4. **One play per player per game**, unless the event is `replayable` (one setting for all its games, ADR-026): then **Play again** starts a new run, and the player's score for the game is their **best** run; a worse run never lowers it. Opening a finished game shows your result (with Play again when replayable).
-4a. **Instructions first.** Every game opens with an instructions box (the game type's default, or the event file's `instructions` for that game). The play, and any timer, starts only when the player closes it with **Start**. A resumed play skips it.
+4a. **Instructions first.** Every game opens with an instructions box (the game type's default, or the event file's `instructions` for that game). The play, and any timer, starts only when the player closes it with **Start**, and the game begins at once: no second Start button on the game screen (Khai, 2026-11-10). A resumed play skips it.
 4b. **Same points for every solo game.** The event file sets `soloGamePoints` (the party uses 100); every solo game is worth that, and a solo game may not set its own `scoring.points`. A game's score is its share of those points.
 5. Leaving mid-game and coming back resumes the same play. Anything timed keeps running while you're away.
 6. **Score once:** when a play ends, its points are fixed and `scored: true` is set in the same transaction. Spec 04 turns that into a ledger award; until spec 04 ships, the points show on the result screen only.
 7. A game is playable while the event is `live`, or before the start too when the game is `alwaysOpen` (for testing or warm-ups), by a player on the calling device. Every game closes when the event ends. Before the start it shows "This game opens when the host starts the party."; after the end, "This game has closed."
-8. The games list (the **Games** tab, the party page) groups the games as **Up for grabs**, **Scored** and **Coming up**, under progress pips. Each row ends in its score card (blank until scored) and says **Play**, **Continue** (started), **Again** (scored, replayable), **Done** or why it's locked, for the active player.
+8. The games list (the **Games** tab, the party page) is one list of every game, in the event file's order, under progress pips: no sections, and a game with no phone screen yet isn't listed (Khai, 2026-11-10). Each row ends in its score card (blank until scored) and says **Play**, **Continue** (started), **Again** (scored, replayable), **Done** or why it's locked, for the active player.
 10. **Tabs:** once joined, every event page has a bottom tab bar: **Games**, **Leaderboard**, **Team** (events with teams) and **You**. You opens a player panel: who's playing, their total, and **Not you? Start over** (spec 02). A game page's header has a back arrow to the games before its title. Leaving a run in progress (by a tab or the back arrow) asks first: the clock keeps running, so the current question may count as wrong.
 11. **Header:** a game page shows the game's title in the banner instead of the event name, for more room.
 12. **Header total:** the event banner shows the active player's total, the sum of their best scores (until spec 04's ledger), instead of the Live badge. When a run sets a new best, a "+N" chip flies from the score to the total, which then counts up. Under reduced motion it just updates.
@@ -68,9 +68,9 @@ Player phone, in the event's pack: game header (title, "Playing as"), the instru
 - [x] AC-4: A play's points are fixed once, when it ends (`scored: true`), and never change after.
 - [x] AC-5: A move for an old step (double tap) changes nothing and returns the current view.
 - [x] AC-6: Games can be played only while open, by a player on the calling device.
-- [x] AC-7: The games list groups each game as up for grabs, scored or coming up, with its score card and Play, Continue, Again, Done or why it's locked, for the active player.
+- [x] AC-7: The games list shows every game in one list (a game with no phone screen yet left out), with its score card and Play, Continue, Again, Done or why it's locked, for the active player.
 - [x] AC-8: The memory and Firebase play repos pass the same contract.
-- [x] AC-9: Every game opens with an instructions box (the type's default or the event's own), and the play and its timer start only when it is closed with Start; a resumed play skips it.
+- [x] AC-9: Every game opens with an instructions box (the type's default or the event's own), and the play and its timer start only when it is closed with Start, with no second Start in the game; a resumed play skips it.
 - [x] AC-10: Every solo game is worth the event's `soloGamePoints`; an event file that sets points on a solo game fails validation.
 - [x] AC-11: The result screen holds up the final score as a large score card that flips up (it appears at once under reduced motion), with a way back to the games.
 - [x] AC-12: In a replayable event, a finished game offers Play again, which starts a new run; the game's score is the best run, never lowered by a worse one.
