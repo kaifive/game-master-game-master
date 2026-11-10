@@ -48,8 +48,11 @@ At vercel.com:
    (install the Vercel GitHub app on the repo if asked). Framework: Next.js
    (detected). **Deploy.** This makes the first production deploy of
    `main`; the site has no player screens yet, so that's harmless.
-2. **Storage → Create → Blob**, name it `game-master-photos`, and connect it
-   to the project. That adds `BLOB_READ_WRITE_TOKEN` by itself.
+2. **Storage → Create → Blob**, name it `game-master-photos`, pick **Public**
+   access, and connect it to the project (Production and Preview). That adds
+   `BLOB_READ_WRITE_TOKEN` by itself. It holds photos and the drawings of
+   games with `keepDrawings` (ADR-032); until it's connected, Controls says
+   drawings aren't being kept.
 3. **Project → Settings → Environment Variables**, for **Production** and
    **Preview**:
    - The five public Firebase values are already committed in

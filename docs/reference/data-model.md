@@ -146,6 +146,14 @@ events/{slug}/photos/{photoId}
   createdAt, reviewedAt
   archived?: { at: timestamp; backup: string }   ADR-012
 
+events/{slug}/drawings/{drawingId}          ADR-032, kept drawings
+  gameId: string
+  playerId: string
+  run: number                which run of the play
+  points: number             what the run scored
+  url: string                the SVG in Blob
+  createdAt: number          ms
+
 events/{slug}/votes/{gameId}_{promptId}_{playerId}
   photoId: string            one vote per player per prompt
   createdAt
@@ -155,6 +163,7 @@ events/{slug}/votes/{gameId}_{promptId}_{playerId}
 
 ```
 events/{slug}/photos/{photoId}.jpg     shrunk JPEG, about 300 KB
+events/{slug}/drawings/{gameId}/{playerId}-{run}-<random>.svg   kept drawing, a few KB
 ```
 
 Blob URLs are long and unguessable but public to anyone who has one. Only

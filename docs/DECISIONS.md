@@ -567,3 +567,36 @@ per poll. The summary can't drift for long, since every team write rewrites
 it. Team rows on the leaderboard get their name and color from the same
 step, so a renamed team shows its new name on the TV at once.
 
+
+---
+
+## ADR-032: Drawings a game opts into are kept in Vercel Blob as SVG
+
+**Status:** accepted. Builds on ADR-008.
+
+Khai wants to keep the drawings from some games (Quick Draw first), not
+every game, so they can be looked at after the run: by the host now, in a
+recap or slideshow later (spec 13).
+
+**Decision:**
+- A game opts in with `keepDrawings: true` in the event file. Only game
+  types that make a drawing may set it (validation refuses it elsewhere);
+  today that's `draw`.
+- When a run of such a game finishes, the server turns its strokes into a
+  small SVG (dark ink on white, a few KB) and puts it in Vercel Blob at
+  `events/{slug}/drawings/{gameId}/{playerId}-{run}.svg`, with a random
+  suffix so the public URL can't be guessed. The strokes are already on the
+  server (the judge scores them), so the phone uploads nothing.
+- Each drawing has a Firestore record (`events/{slug}/drawings/{id}`): the
+  game, player, run, points and blob URL. As with photos, the record is the
+  source of truth.
+- Every finished run is kept, not just the best, so a recap can show them
+  all. A failed save is logged and never blocks the score.
+- Without `BLOB_READ_WRITE_TOKEN` (no Blob store connected) the server keeps
+  nothing and Controls says so. The memory backend keeps drawings as data
+  URLs, so local runs and tests need no Blob.
+- Clearing test data deletes the drawings' records and files.
+
+**Consequences:** one Blob upload and one Firestore write per finished run
+of an opted-in game. The party's ~50 players playing Quick Draw a few times
+is about 150 uploads (of 2,000 a month) and under 10 MB.

@@ -1,4 +1,5 @@
 import { AppError } from "@/lib/errors";
+import { clearDrawings, type DrawingDeps } from "@/lib/drawings";
 import { pointsFor, type EventConfig, type EventStatus } from "@/lib/events";
 import { jarShare, type JarState, type PlayRepo } from "@/lib/games";
 import type { AdminPlayer } from "@/lib/players";
@@ -21,7 +22,11 @@ import {
 } from "@/lib/teams";
 
 /** Everything teams need, plus the plays. `id` gives a fresh id for a manual award. */
-export type AdminDeps = TeamDeps & { plays: PlayRepo };
+export type AdminDeps = TeamDeps & {
+  plays: PlayRepo;
+  /** Kept drawings (ADR-032); left out where no test needs them. */
+  drawings?: DrawingDeps;
+};
 
 export type ControlsPlayer = AdminPlayer & { points: number; teamId: string | null };
 
@@ -45,6 +50,15 @@ export type ControlsView = {
   donations?: ControlsDonation[];
   /** Only when asked for: reading them costs a read per play (S17-AC3). */
   jars?: ControlsJar[];
+  /** Only when asked for: a read per drawing (S18-AC8). */
+  drawings?: ControlsDrawings;
+};
+
+/** Kept drawings as Controls shows them, newest first (S18-AC8). */
+export type ControlsDrawings = {
+  /** False when no Blob store is connected, so nothing is being kept. */
+  keeping: boolean;
+  list: { id: string; title: string; nickname: string; points: number; run: number; url: string }[];
 };
 
 /** A Guessing Jar as Controls shows it: how many guessed, the count if scored, the closest. */
@@ -70,7 +84,7 @@ export async function controlsView(
   deps: AdminDeps,
   event: EventConfig,
   /** The lists that cost a read per row, loaded only when asked for. */
-  extra: { donations?: boolean; jars?: boolean } = {},
+  extra: { donations?: boolean; jars?: boolean; drawings?: boolean } = {},
 ): Promise<ControlsView> {
   // Points and teams come from the summaries: no read per player or team (ADR-031).
   const [status, players, published, board] = await Promise.all([
@@ -97,6 +111,7 @@ export async function controlsView(
     board: shown,
     ...(extra.donations ? { donations: await donationList(deps, event, players, teams) } : {}),
     ...(extra.jars ? { jars: await jarResults(deps, event) } : {}),
+    ...(extra.drawings ? { drawings: await drawingList(deps, event, players) } : {}),
   };
 }
 
@@ -257,6 +272,30 @@ export async function clearTestData(deps: AdminDeps, event: EventConfig, confirm
     deps.points.board.clear(event.slug),
   ]);
   await clearTeams(deps, event);
+  if (deps.drawings) await clearDrawings(deps.drawings, event.slug);
+}
+
+/** The kept drawings, with each player's name and game title (S18-AC8). */
+async function drawingList(
+  deps: AdminDeps,
+  event: EventConfig,
+  players: AdminPlayer[],
+): Promise<ControlsDrawings> {
+  if (!deps.drawings) return { keeping: false, list: [] };
+  const nickname = new Map(players.map((p) => [p.id, p.nickname]));
+  const title = new Map(event.games.map((g) => [g.id, g.title]));
+  const all = await deps.drawings.drawings.list(event.slug);
+  return {
+    keeping: deps.drawings.files !== null,
+    list: all.map((d) => ({
+      id: d.id,
+      title: title.get(d.gameId) ?? d.gameId,
+      nickname: nickname.get(d.playerId) ?? "Someone who left",
+      points: d.points,
+      run: d.run,
+      url: d.url,
+    })),
+  };
 }
 
 const isJar = (event: EventConfig, gameId: string) =>

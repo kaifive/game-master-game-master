@@ -23,9 +23,16 @@ Two games about the Nova Wushu logo (`public/events/nova-wushu-logo.png`, from K
 6. The judge (`lib/games/draw/score.ts`) fits the drawing and the reference to the same 64×64 grid, so size and position don't matter, then compares them within two squares of slack: how much of the ink lands near the logo's lines, and how much of the logo the ink comes near, the inner shapes counting more than the outer ring. Heavy scribbling counts against it. A match of 0.42 or less earns nothing and 0.85 or more earns everything; a careful hand drawing of the logo scores well (loosened 2026-11-10: Khai found it too hard). The outline comes from the logo image, edges only.
 7. The result shows the match as the share of points earned ("72% match"), with Play again in a replayable event. The host can change any score in Controls.
 
+### Keeping drawings (ADR-032)
+
+8. A drawing game opts in with `keepDrawings: true` in the event file (Khai, 2026-11-10: only the games he picks, not all). The event file is refused if a game that makes no drawing sets it.
+9. Each finished run of such a game is kept: the server saves the strokes as an SVG image in Vercel Blob, with a record of the player, game, run and points. A game without the flag keeps nothing. A save that fails is logged and never blocks the score.
+10. In Controls, a **Drawings** card (only for events with such a game) loads the kept drawings on request (each costs a read): a picture, the player's name and the points, newest first. Without a Blob store connected it says drawings aren't being kept. Clearing test data deletes them.
+
 ## Data
 
 - Color play `state`: the picked color. Draw play `state`: the strokes (points as shares of the canvas, at most 600 strokes and 4,000 points) and the match.
+- Kept drawings: `events/{slug}/drawings/{id}` (game, player, run, points, blob URL, when) and the SVG in Blob at `events/{slug}/drawings/{gameId}/{playerId}-{run}-<random>.svg`.
 - `lib/games/draw/nova-logo.ts`: the logo's outline, generated from the image.
 
 ## Acceptance criteria
@@ -35,6 +42,9 @@ Two games about the Nova Wushu logo (`public/events/nova-wushu-logo.png`, from K
 - [x] AC-3: Quick Draw takes an untimed drawing, judged on the server, and is replayable when the event is.
 - [x] AC-4: The judge ignores size and position, ranks a faithful sketch above a rough one, and gives a circle alone or a scribble almost nothing.
 - [x] AC-5: Both games are in the party's event file and play end to end on a phone.
+- [x] AC-6: `keepDrawings` is accepted only on a game type that makes a drawing.
+- [x] AC-7: A finished run of a game that keeps drawings saves its drawing as an SVG with a record; a game without the flag saves nothing; a failed save doesn't block the score.
+- [x] AC-8: Controls shows the kept drawings on request with the player and points, says when no Blob store is connected, and clearing test data deletes them.
 
 ## Tests
 
@@ -44,5 +54,5 @@ Two games about the Nova Wushu logo (`public/events/nova-wushu-logo.png`, from K
 
 ## Out of scope
 
-- Showing drawings on the TV (with photos, spec 13).
+- Showing drawings on the TV or in a recap (with photos, spec 13).
 - Votes on drawings.

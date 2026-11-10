@@ -73,6 +73,25 @@ describe("S01-AC1: event files are validated", () => {
     expect(errors[0]).toContain(`content/events/${file}.ts`);
   });
 
+  test("S18-AC6: only a game that makes a drawing may keep it", () => {
+    const draw = {
+      id: "doodle",
+      type: "draw",
+      title: "Doodle",
+      mode: "solo",
+      visibility: "listed",
+      content: {},
+      scoring: { awardTo: "player" },
+      keepDrawings: true,
+    } as const;
+    expect(validateEvent("test-party", { ...valid, games: [draw] })).toEqual([]);
+    const errors = validateEvent("test-party", {
+      ...valid,
+      games: [{ ...valid.games[0]!, keepDrawings: true }],
+    });
+    expect(errors.join("\n")).toMatch(/games\.quiz\.keepDrawings: a trivia game makes no drawing/);
+  });
+
   test("S08-AC1: each game's content is checked against its type, naming the game and field", () => {
     const bad = {
       ...valid.games[0]!,

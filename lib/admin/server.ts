@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { AppError } from "@/lib/errors";
 import { requireEvent } from "@/lib/events/server";
+import { drawingDeps } from "@/lib/drawings/server";
 import { playRepo } from "@/lib/games/server";
 import {
   changeCaptain,
@@ -106,7 +107,7 @@ export function signIn(request: Request, body: z.infer<typeof SignInBody>): Resp
 export const signOut = (request: Request) =>
   new Response(null, { status: 204, headers: { "set-cookie": sessionCookie(request, "", 0) } });
 
-const deps = (): AdminDeps => ({ ...teamDeps(), plays: playRepo() });
+const deps = (): AdminDeps => ({ ...teamDeps(), plays: playRepo(), drawings: drawingDeps() });
 
 type Slug = string | string[] | undefined;
 
@@ -141,6 +142,7 @@ export const ControlsAction = z.discriminatedUnion("action", [
   z.object({ action: z.literal("clear"), confirm: z.string().max(20) }),
   z.object({ action: z.literal("donations") }),
   z.object({ action: z.literal("jars") }),
+  z.object({ action: z.literal("drawings") }),
   z.object({
     action: z.literal("scoreJar"),
     gameId: z.string().min(1).max(64),
@@ -206,6 +208,7 @@ export async function runAction(slug: Slug, body: ControlsAction) {
       break;
     case "donations":
     case "jars":
+    case "drawings":
       break;
     case "scoreJar":
       await scoreJar(d, event, body.gameId, body.actual);
@@ -223,5 +226,6 @@ export async function runAction(slug: Slug, body: ControlsAction) {
   return controlsView(d, event, {
     donations: body.action === "donations" || body.action === "voidDonation",
     jars: body.action === "jars" || body.action === "scoreJar",
+    drawings: body.action === "drawings",
   });
 }

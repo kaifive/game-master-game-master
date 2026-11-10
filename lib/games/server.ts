@@ -4,6 +4,8 @@ import { eventRuntime, requireEvent } from "@/lib/events/server";
 import { playerRepo } from "@/lib/players/server";
 import { awardGame, pointsDeps, pointsOf } from "@/lib/points/server";
 import { teamOfPlayer } from "@/lib/teams/server";
+import { keepDrawing } from "@/lib/drawings";
+import { drawingDeps } from "@/lib/drawings/server";
 import { playRepo } from "./runtime";
 import {
   hubPlays,
@@ -35,6 +37,7 @@ function deps(): GameDeps {
       };
     },
     pointsOf: (slug, playerId) => pointsOf(pointsDeps(), slug, playerId),
+    keepDrawing: (slug, drawing) => keepDrawing(drawingDeps(), slug, drawing),
   };
 }
 

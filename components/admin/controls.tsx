@@ -31,8 +31,13 @@ type View = {
   board?: { phones: boolean; tv: boolean };
   donations?: Donation[];
   jars?: Jar[];
+  drawings?: Drawings;
 };
-type Game = { id: string; title: string; type?: string };
+type Game = { id: string; title: string; type?: string; keepDrawings?: boolean };
+type Drawings = {
+  keeping: boolean;
+  list: { id: string; title: string; nickname: string; points: number; run: number; url: string }[];
+};
 type Jar = {
   gameId: string;
   title: string;
@@ -55,6 +60,7 @@ type Action =
   | { action: "voidDonation"; donationId: string }
   | { action: "board"; phones?: boolean; tv?: boolean }
   | { action: "jars" }
+  | { action: "drawings" }
   | { action: "scoreJar"; gameId: string; actual: number };
 
 /** Each refresh reads every player, so once a minute (free-tier budget); actions refresh at once. */
@@ -248,6 +254,69 @@ function JarsCard({
             </section>
           );
         })}
+      </div>
+    </Card>
+  );
+}
+
+/**
+ * Kept drawings (ADR-032): loaded on request, since each costs a read
+ * (S18-AC8). Newest first, with who drew it and what it scored.
+ */
+function DrawingsCard({
+  drawings,
+  run,
+  busy,
+}: {
+  drawings: Drawings | null;
+  run: (action: Action) => void;
+  busy: boolean;
+}) {
+  return (
+    <Card title="Drawings">
+      <div className="grid gap-4">
+        <div>
+          <AdminButton
+            tone="secondary"
+            disabled={busy}
+            onClick={() => {
+              run({ action: "drawings" });
+            }}
+          >
+            {drawings ? "Refresh drawings" : "Show drawings"}
+          </AdminButton>
+        </div>
+        {drawings && !drawings.keeping && (
+          <p className="m-0 font-bold" role="status">
+            No Blob store is connected, so drawings aren&apos;t being kept. Connect one in Vercel
+            (docs/setup/README.md).
+          </p>
+        )}
+        {drawings?.keeping && drawings.list.length === 0 && <p className="m-0">No drawings yet.</p>}
+        {drawings && drawings.list.length > 0 && (
+          <ul
+            aria-label="Kept drawings"
+            className="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-3"
+          >
+            {drawings.list.map((d) => (
+              <li key={d.id} className="grid gap-1">
+                <a href={d.url} target="_blank" rel="noreferrer">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- a small SVG from Blob, no resizing needed */}
+                  <img
+                    src={d.url}
+                    alt={`${d.title} by ${d.nickname}`}
+                    loading="lazy"
+                    className="aspect-square w-full rounded-gm border border-gm-border bg-white"
+                  />
+                </a>
+                <span className="text-sm">
+                  <strong>{d.nickname}</strong> · {d.points} points
+                  {d.run > 1 && ` · run ${String(d.run)}`}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </Card>
   );
@@ -597,6 +666,7 @@ export function Controls({
   const [view, setView] = useState(initial);
   const [donations, setDonations] = useState<Donation[] | null>(null);
   const [jars, setJars] = useState<Jar[] | null>(null);
+  const [drawings, setDrawings] = useState<Drawings | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
@@ -634,6 +704,7 @@ export function Controls({
           setView(body);
           if (body.donations) setDonations(body.donations);
           if (body.jars) setJars(body.jars);
+          if (body.drawings) setDrawings(body.drawings);
         } else setError(body?.error ?? "That didn't work. Try again.");
       })
       .catch(() => {
@@ -741,6 +812,10 @@ export function Controls({
 
       {games.some((g) => g.type === "jar") && (
         <JarsCard jars={jars} titles={games} run={run} busy={busy} />
+      )}
+
+      {games.some((g) => g.keepDrawings) && (
+        <DrawingsCard drawings={drawings} run={run} busy={busy} />
       )}
 
       <Card title={`Players (${String(view.players.length)})`}>

@@ -370,4 +370,64 @@ describe("Controls teams", () => {
       { action: "scoreJar", gameId: "guessing-jar", actual: 300 },
     ]);
   });
+
+  test("S18-AC8: the drawings card loads kept drawings on request, or says none are being kept", async () => {
+    let keeping = true;
+    server(() => ({
+      status: 200,
+      json: {
+        status: "live",
+        players,
+        teams: null,
+        drawings: keeping
+          ? {
+              keeping: true,
+              list: [
+                {
+                  id: "d1",
+                  title: "Quick Draw",
+                  nickname: "Mai",
+                  points: 72,
+                  run: 2,
+                  url: "data:image/svg+xml;utf8,%3Csvg%2F%3E",
+                },
+              ],
+            }
+          : { keeping: false, list: [] },
+      },
+    }));
+    render(
+      <AdminRoot>
+        <Controls
+          slug="holiday-2026"
+          name="Party"
+          games={[{ id: "quick-draw", title: "Quick Draw", type: "draw", keepDrawings: true }]}
+          initial={{ status: "live", players, teams: null }}
+        />
+      </AdminRoot>,
+    );
+    const user = userEvent.setup();
+    expect(screen.queryByRole("list", { name: "Kept drawings" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Show drawings" }));
+    const list = await screen.findByRole("list", { name: "Kept drawings" });
+    expect(list).toHaveTextContent("Mai · 72 points · run 2");
+    expect(screen.getByRole("img", { name: "Quick Draw by Mai" })).toBeInTheDocument();
+    keeping = false;
+    await user.click(screen.getByRole("button", { name: "Refresh drawings" }));
+    expect(await screen.findByText(/drawings aren't being kept/)).toBeInTheDocument();
+  });
+
+  test("S18-AC8: no drawings card when no game keeps drawings", () => {
+    render(
+      <AdminRoot>
+        <Controls
+          slug="holiday-2026"
+          name="Party"
+          games={[{ id: "quick-draw", title: "Quick Draw", type: "draw" }]}
+          initial={{ status: "live", players, teams: null }}
+        />
+      </AdminRoot>,
+    );
+    expect(screen.queryByRole("button", { name: "Show drawings" })).toBeNull();
+  });
 });

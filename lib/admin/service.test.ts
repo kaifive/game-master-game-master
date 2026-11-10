@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { holiday2026 } from "@/content/events/holiday-2026";
 import { isAppError } from "@/lib/errors";
 import { MemoryEventRuntimeRepo } from "@/lib/events";
+import { keepDrawing, MemoryDrawingFiles, MemoryDrawingRepo } from "@/lib/drawings";
 import { MemoryPlayRepo, type PlayRecord } from "@/lib/games";
 import { MemoryPlayerRepo } from "@/lib/players";
 import { awardGame, donate, MemoryBoardRepo, MemoryPointsRepo } from "@/lib/points";
@@ -260,5 +261,73 @@ describe("controls", () => {
       status: 409,
       message: "Test data can only be cleared before the event starts.",
     });
+  });
+});
+
+describe("kept drawings in Controls (ADR-032)", () => {
+  const withDrawings = (files: MemoryDrawingFiles | null) => {
+    let n = 0;
+    deps.drawings = {
+      drawings: new MemoryDrawingRepo(),
+      files,
+      now: () => ++n * 1000,
+      id: () => `d${String(n)}`,
+    };
+    return deps.drawings;
+  };
+  const strokes: [number, number][][] = [
+    [
+      [0, 0],
+      [1, 1],
+    ],
+  ];
+
+  it("S18-AC8: lists kept drawings on request, newest first, with the name and points", async () => {
+    const d = withDrawings(new MemoryDrawingFiles());
+    await keepDrawing(d, SLUG, {
+      gameId: "quick-draw",
+      playerId: mai.id,
+      run: 1,
+      points: 40,
+      strokes,
+    });
+    await keepDrawing(d, SLUG, {
+      gameId: "quick-draw",
+      playerId: bao.id,
+      run: 2,
+      points: 90,
+      strokes,
+    });
+    expect((await controlsView(deps, event)).drawings).toBeUndefined();
+    const shown = (await controlsView(deps, event, { drawings: true })).drawings;
+    expect(shown?.keeping).toBe(true);
+    expect(shown?.list.map((x) => [x.nickname, x.title, x.points, x.run])).toEqual([
+      ["Bao", "Quick Draw", 90, 2],
+      ["Mai", "Quick Draw", 40, 1],
+    ]);
+    expect(shown?.list[0]?.url).toMatch(/^data:image\/svg\+xml/);
+  });
+
+  it("S18-AC8: says so when no Blob store is connected", async () => {
+    withDrawings(null);
+    expect((await controlsView(deps, event, { drawings: true })).drawings).toEqual({
+      keeping: false,
+      list: [],
+    });
+  });
+
+  it("S18-AC8: clearing test data deletes the drawings and their files", async () => {
+    const files = new MemoryDrawingFiles();
+    const d = withDrawings(files);
+    const kept = await keepDrawing(d, SLUG, {
+      gameId: "quick-draw",
+      playerId: mai.id,
+      run: 1,
+      points: 40,
+      strokes,
+    });
+    await clearTestData(deps, event, "CLEAR");
+    expect(await d.drawings.list(SLUG)).toEqual([]);
+    expect(files.removed).toEqual([kept?.url]);
   });
 });
