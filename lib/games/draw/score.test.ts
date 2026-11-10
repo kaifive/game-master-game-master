@@ -17,7 +17,33 @@ const circle = (cx: number, cy: number, radius: number, points = 120): Point[] =
     cy + radius * Math.sin((i / points) * 2 * Math.PI),
   ]);
 
+/** A hand-drawn take: stretched, tilted and wobbly, with half the lines (seeded). */
+const hand = (seed: number, wobble = 2): Point[][] => {
+  const r = seededRandom(seed);
+  const phase = r() * 6;
+  return NOVA_LOGO.edges
+    .filter((_, i) => i % 2 === 0)
+    .map((c, i): Point[] => {
+      const [x, y] = [((c % N) - 32) * 1.15, (Math.floor(c / N) - 32) * 0.92];
+      const w = Math.sin(i * 0.3 + phase) * wobble + (r() - 0.5) * wobble;
+      return [[32 + x - y * 0.14 + w, 32 + x * 0.14 + y - w]];
+    });
+};
+
 describe("Quick Draw's judge", () => {
+  it("S18-AC4: scores are steady: similar drawings score alike, and a stray mark costs little", () => {
+    const shares = [1, 2, 3, 4, 5].map((seed) => drawShare(matchOf(hand(seed), NOVA_LOGO)));
+    expect(Math.min(...shares)).toBeGreaterThan(0.8);
+    expect(Math.max(...shares) - Math.min(...shares)).toBeLessThan(0.12);
+    const clean = drawShare(matchOf(hand(1), NOVA_LOGO));
+    const stray = drawShare(matchOf([...hand(1), [[-40, -40]]], NOVA_LOGO));
+    expect(clean - stray).toBeLessThan(0.05);
+    // Messier drawings score lower, but not to nothing.
+    const messy = drawShare(matchOf(hand(1, 5), NOVA_LOGO));
+    expect(messy).toBeLessThan(clean);
+    expect(messy).toBeGreaterThan(0.6);
+  });
+
   it("S18-AC4: size and position don't matter: a smaller, shifted copy matches like the original", () => {
     const original = matchOf(asDots(NOVA_LOGO.edges), NOVA_LOGO);
     const moved = asDots(NOVA_LOGO.edges).map((s) =>
