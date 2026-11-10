@@ -84,7 +84,7 @@ describe("quick game screens (spec 16)", () => {
     expect(tapsSummary({ kind: "done", taps: 33, target: 45 })).toBe("33 taps");
   });
 
-  test("S16-AC5: Stack Attack stops the bar on a tap and sends the rows when it misses", async () => {
+  test("S16-AC5: Stack Attack stops the bar on a tap anywhere and sends the rows when it misses", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true, toFake: ["performance", "requestAnimationFrame"] });
     const onMove = vi.fn();
     const { rerender } = render(
@@ -94,7 +94,8 @@ describe("quick game screens (spec 16)", () => {
     expect(screen.queryByRole("button", { name: "Start" })).toBeNull();
     rerender(<StackerGame {...props({ kind: "running", rows: 12, width: 7 }, onMove)} />);
     const board = screen.getByRole("button", { name: "Stop the bar" });
-    fireEvent.pointerDown(board); // row 1 always lands
+    // A tap anywhere on the screen stops the bar, not just on the board.
+    fireEvent.pointerDown(document.body); // row 1 always lands
     expect(screen.getByText("1 of 12 rows")).toBeInTheDocument();
     // Keep stopping until a bar misses or the tower is full; it always ends.
     for (let i = 0; i < 40 && onMove.mock.calls.length < 2; i++) {

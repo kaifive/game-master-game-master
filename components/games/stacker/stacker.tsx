@@ -5,6 +5,9 @@ import { barStart, START_LENGTH, trim, type Bar, type StackerView } from "@/lib/
 import { cx } from "@/lib/ui";
 import type { GameRendererProps } from "../types";
 
+/** Where a tap doesn't stop the bar: links, the header, the tab bar and dialogs. */
+const LEAVE_ALONE = "a, header, nav, [role='dialog']";
+
 type Run = { placed: Bar[]; length: number; rowStart: number; over: boolean };
 
 /** Stack Attack (spec 16): the phone runs the arcade game and sends the rows stacked. */
@@ -38,8 +41,7 @@ export function StackerGame({ view: raw, onMove }: GameRendererProps) {
     };
   }, [running, run]);
 
-  if (view.kind === "done") return null;
-  const width = view.width;
+  const width = view.kind === "done" ? 0 : view.width;
   const rows = view.rows;
   const current = run ?? { placed: [], length: START_LENGTH, rowStart: now, over: false };
   const row = current.placed.length;
@@ -57,11 +59,30 @@ export function StackerGame({ view: raw, onMove }: GameRendererProps) {
     if (over) move.current({ type: "finish", rows: placed.length });
   };
 
+  // A tap anywhere on the screen stops the bar (Khai, 2026-11-10), except on
+  // links, the header and the tab bar, which still take you places.
+  const stopRef = useRef(stop);
+  useEffect(() => {
+    stopRef.current = stop;
+  });
+  useEffect(() => {
+    if (!running) return;
+    const onDown = (e: PointerEvent) => {
+      if (e.target instanceof Element && e.target.closest(LEAVE_ALONE)) return;
+      stopRef.current();
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+    };
+  }, [running]);
+
   const cellOf = (r: number, c: number) => {
     const bar = r < row ? current.placed[r] : r === row && !current.over ? sliding : null;
     return bar !== null && bar !== undefined && c >= bar.start && c < bar.start + bar.length;
   };
 
+  if (view.kind === "done") return null;
   return (
     <section aria-label="Stack Attack" className="grid gap-4 text-center">
       <p className="m-0 font-gm-display text-2xl font-bold" aria-live="polite">
@@ -72,7 +93,10 @@ export function StackerGame({ view: raw, onMove }: GameRendererProps) {
         disabled={!running || current.over}
         onPointerDown={(e) => {
           e.preventDefault();
-          stop();
+        }}
+        onClick={(e) => {
+          // Keyboard presses arrive as clicks with no pointer; taps go through the screen-wide listener.
+          if (e.detail === 0) stop();
         }}
         aria-label="Stop the bar"
         className="mx-auto grid h-[min(58dvh,36rem)] max-w-full touch-none gap-1 rounded-gm bg-gm-surface p-2 ring-1 ring-gm-border select-none"

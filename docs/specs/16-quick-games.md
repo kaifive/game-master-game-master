@@ -35,7 +35,7 @@ Five more solo games for the party, so there's plenty to play and test. Each is 
 
 ### Stack Attack (`stacker`)
 
-11. The bar starts as the instructions close. A bar slides side to side across a `width`-square row (7). Tap to stop it; the part that overhangs the row below falls away and the next bar is that wide, a row higher, and a little faster. The game ends when a bar misses completely or after `rows` rows (12).
+11. The bar starts as the instructions close. A bar slides side to side across a `width`-square row (7). Tap anywhere on the screen (not just the board) to stop it; the part that overhangs the row below falls away and the next bar is that wide, a row higher, and a little faster. The game ends when a bar misses completely or after `rows` rows (12).
 12. Points scale with rows stacked (all of them for all rows). The phone runs the game; the server accepts a row count up to `rows`.
 
 ### Rapid Recall (`recall`)

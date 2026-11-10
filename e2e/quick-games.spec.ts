@@ -41,10 +41,11 @@ test("S16-AC7: Tap Masher", async ({ page }) => {
 
 test("S16-AC7: Stack Attack", async ({ page }) => {
   await joinAndOpen(page, "Stack Attack");
-  const board = page.getByRole("button", { name: "Stop the bar" });
+  await expect(page.getByRole("button", { name: "Stop the bar" })).toBeVisible();
   const score = page.getByRole("region", { name: "Your score" });
+  // A tap anywhere stops the bar: tap the page, not the board.
   for (let i = 0; i < 40 && !(await score.isVisible()); i++) {
-    await board.dispatchEvent("pointerdown");
+    await page.locator("body").dispatchEvent("pointerdown");
     await page.waitForTimeout(150 + (i % 5) * 70);
   }
   await expect(score).toContainText(/of 12 rows/);
