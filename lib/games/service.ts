@@ -195,6 +195,7 @@ function respond(play: PlayRecord, r: Ready, now: number): PlayResponse {
     points: play.points,
     best: play.best,
     step: r.logic.step(play.state),
+    ...(r.logic.once ? { once: true as const } : {}),
   };
 }
 

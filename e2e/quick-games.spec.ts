@@ -175,3 +175,35 @@ test("S17-AC6: Geocache scores a hidden code once", async ({ page }) => {
     page.getByRole("link", { name: /Geocache/ }).getByRole("img", { name: /Geocache: 33 points/ }),
   ).toBeVisible();
 });
+
+test("S18-AC5: Color Matcher", async ({ page }) => {
+  await joinAndOpen(page, "Color Matcher");
+  await page.getByLabel(/^Red/).fill("136");
+  await page.getByLabel(/^Green/).fill("46");
+  await page.getByLabel(/^Blue/).fill("126");
+  await page.getByRole("button", { name: "Lock in this color" }).click();
+  await expect(page.getByRole("region", { name: "Your score" })).toContainText("100% match");
+});
+
+test("S18-AC5: Quick Draw", async ({ page }) => {
+  await joinAndOpen(page, "Quick Draw");
+  await page.getByRole("button", { name: "Start drawing" }).click();
+  const box = await page.getByLabel("Drawing area").boundingBox();
+  if (!box) throw new Error("no canvas");
+  // A circle: the outer ring alone, which shouldn't score much.
+  const cx = box.x + box.width / 2;
+  const cy = box.y + box.height / 2;
+  const r = box.width * 0.45;
+  await page.mouse.move(cx + r, cy);
+  await page.mouse.down();
+  for (let i = 1; i <= 40; i++)
+    await page.mouse.move(
+      cx + r * Math.cos((i / 40) * 2 * Math.PI),
+      cy + r * Math.sin((i / 40) * 2 * Math.PI),
+    );
+  await page.mouse.up();
+  await page.getByRole("button", { name: "I'm done" }).click();
+  await expect(page.getByRole("region", { name: "Your score" })).toContainText(/like the logo/);
+  // One drawing per player: no Play again.
+  await expect(page.getByRole("button", { name: "Play again" })).toHaveCount(0);
+});
