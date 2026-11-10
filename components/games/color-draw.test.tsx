@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { ColorGame, colorSummary } from "./color/color";
 import { DrawGame, drawSummary } from "./draw/draw";
@@ -33,34 +33,25 @@ describe("Color Matcher and Quick Draw screens (spec 18)", () => {
     expect(colorSummary({ kind: "done", picked: "#902F80", target: "#882E7E", match: 96 })).toBe(
       "96% match · yours #902F80, the logo #882E7E",
     );
+    expect(colorSummary({ kind: "done", picked: "#902F80", target: null, match: 96 })).toBe(
+      "96% match",
+    );
   });
 
-  test("S18-AC3: Quick Draw records strokes on the canvas and sends them when done, or when time runs out", async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
+  test("S18-AC3: Quick Draw has no clock; strokes go when the player taps I'm done", () => {
     HTMLElement.prototype.setPointerCapture = () => undefined;
     const onMove = vi.fn();
-    const { rerender } = render(
-      <DrawGame
-        {...props({ kind: "ready", prompt: "Draw the logo", seconds: 30, msLeft: 30_000 }, onMove)}
-      />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Start drawing" }));
-    expect(onMove).toHaveBeenLastCalledWith({ type: "start" });
-    rerender(
-      <DrawGame
-        {...props({ kind: "drawing", prompt: "Draw the logo", seconds: 30, msLeft: 2000 }, onMove)}
-      />,
-    );
+    render(<DrawGame {...props({ kind: "drawing", prompt: "Draw the logo" }, onMove)} />);
+    expect(screen.queryByText(/\d+ s$/)).toBeNull();
+    const done = screen.getByRole("button", { name: "I'm done" });
+    expect(done).toBeDisabled();
     const pad = screen.getByLabelText("Drawing area");
     pad.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100 }) as DOMRect;
     fireEvent.pointerDown(pad, { clientX: 10, clientY: 10 });
     fireEvent.pointerMove(pad, { clientX: 50, clientY: 50 });
     fireEvent.pointerUp(pad);
-    expect(screen.getByRole("button", { name: "I'm done" })).toBeEnabled();
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(2400);
-    });
-    expect(onMove).toHaveBeenLastCalledWith({
+    fireEvent.click(done);
+    expect(onMove).toHaveBeenCalledWith({
       type: "submit",
       strokes: [
         [
@@ -69,7 +60,8 @@ describe("Color Matcher and Quick Draw screens (spec 18)", () => {
         ],
       ],
     });
+    expect(screen.getByRole("button", { name: "I'm done" })).toBeDisabled();
     expect(drawSummary({ kind: "done", match: 0.724 })).toBe("The judge says 72% like the logo");
-    expect(drawSummary({ kind: "done", match: null })).toBe("Time ran out before it was sent");
+    expect(drawSummary({ kind: "done", match: null })).toBe("No drawing was sent");
   });
 });

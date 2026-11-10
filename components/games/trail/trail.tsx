@@ -76,6 +76,7 @@ export function TrailGame({ view: raw, onMove, busy }: GameRendererProps) {
         {Array.from({ length: total }, (_, cell) => {
           const dot = view.dots.indexOf(cell);
           const on = path.includes(cell);
+          const head = path[path.length - 1] === cell;
           return (
             <span
               key={cell}
@@ -83,14 +84,16 @@ export function TrailGame({ view: raw, onMove, busy }: GameRendererProps) {
               role="img"
               aria-label={`${dot >= 0 ? `Number ${String(dot + 1)}` : "Square"}${on ? ", on the trail" : ""}`}
               className={cx(
-                "grid aspect-square min-h-11 place-items-center rounded-gm",
+                "grid aspect-square min-h-11 place-items-center rounded-gm ring-2",
+                // High contrast in a dim room: empty squares are clearly squares; the trail fills them.
                 on
-                  ? "bg-gm-surface-raised ring-2 ring-gm-accent-ink"
-                  : "bg-gm-surface ring-1 ring-gm-border",
+                  ? "bg-[color-mix(in_srgb,var(--gm-accent-ink)_60%,var(--gm-surface))] ring-[var(--gm-accent-ink)]"
+                  : "bg-[color-mix(in_srgb,var(--gm-text)_14%,var(--gm-surface))] ring-[color-mix(in_srgb,var(--gm-text)_22%,transparent)]",
+                head && "ring-4 ring-[var(--gm-text)]",
               )}
             >
               {dot >= 0 && (
-                <span className="jt-card-shadow z-10 grid size-8 place-items-center rounded-[4px] bg-[var(--gm-card,white)] font-gm-display text-lg font-bold text-[var(--gm-card-ink,black)]">
+                <span className="jt-card-shadow z-10 grid size-10 place-items-center rounded-[5px] bg-[var(--gm-card,white)] font-gm-display text-2xl font-bold text-[var(--gm-card-ink,black)]">
                   {dot + 1}
                 </span>
               )}
@@ -106,8 +109,8 @@ export function TrailGame({ view: raw, onMove, busy }: GameRendererProps) {
           <polyline
             points={path.map((c) => `${String(centre(c).x)},${String(centre(c).y)}`).join(" ")}
             fill="none"
-            stroke="var(--gm-accent-ink)"
-            strokeWidth={3}
+            stroke="var(--gm-text)"
+            strokeWidth={7}
             strokeLinecap="round"
             strokeLinejoin="round"
             vectorEffect="non-scaling-stroke"

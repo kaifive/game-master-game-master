@@ -49,7 +49,13 @@ export const colorShare = (de: number) =>
 export type ColorState = { picked: string | null; target: string; step: number };
 export type ColorView =
   | { kind: "pick"; prompt: string }
-  | { kind: "done"; picked: string; target: string; match: number };
+  | {
+      kind: "done";
+      picked: string;
+      /** Kept back when the event is replayable, so a replay can't just copy it (S18-AC2). */
+      target: string | null;
+      match: number;
+    };
 
 const Move = z.object({ type: z.literal("pick"), color: Hex });
 const fail = (message: string): MoveResult<ColorState> => ({ ok: false, message });
@@ -66,13 +72,13 @@ export const color: GameLogic<ColorContent, ColorState, ColorView> = {
   }),
   create: (c) => ({ picked: null, target: c.target.toUpperCase(), step: 0 }),
   tick: (s) => s,
-  view: (s, c) =>
+  view: (s, c, { replayable }) =>
     s.picked === null
       ? { kind: "pick", prompt: prompt(c) }
       : {
           kind: "done",
           picked: s.picked,
-          target: s.target,
+          target: replayable === true ? null : s.target,
           match: Math.round(colorShare(colorDistance(s.picked, s.target)) * 100),
         },
   move(s, _c, raw) {

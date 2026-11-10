@@ -66,7 +66,6 @@ export const holiday2026: EventConfig = {
       content: {
         prompt: "Draw the Nova Wushu logo from memory",
         reference: "nova-logo",
-        seconds: 30,
       },
       scoring: { awardTo: "player" },
       alwaysOpen: true,
