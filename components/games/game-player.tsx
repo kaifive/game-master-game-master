@@ -23,7 +23,8 @@ type Props = {
 
 type Phase =
   | { kind: "checking" }
-  | { kind: "instructions" }
+  /** `again` starts a new run of a finished, replayable game on Start (S08-AC12). */
+  | { kind: "instructions"; again: boolean }
   | { kind: "playing"; play: PlayResponse; bestBefore: number }
   | { kind: "error"; message: string };
 
@@ -42,12 +43,14 @@ function Result({
   summary,
   title,
   onAgain,
+  onBack,
 }: {
   play: PlayResponse;
   bestBefore: number;
   summary: string | null;
   title: string;
   onAgain?: (() => void) | undefined;
+  onBack: () => void;
 }) {
   const { Button, ScoreCard } = useSlots();
   const { refreshPlays } = useDevice();
@@ -97,11 +100,17 @@ function Result({
           {newBest ? "New best!" : `Your best: ${String(play.best)}`}
         </p>
       )}
-      {onAgain && (
-        <Button size="lg" onClick={onAgain}>
-          Play again
+      {/* The way back sits by Play again, not only in the header (Khai, 2026-11-10). */}
+      <div className="flex flex-wrap justify-center gap-3">
+        {onAgain && (
+          <Button size="lg" onClick={onAgain}>
+            Play again
+          </Button>
+        )}
+        <Button size="lg" tone={onAgain ? "secondary" : "primary"} onClick={onBack}>
+          Back to games
         </Button>
-      )}
+      </div>
     </section>
   );
 }
@@ -136,16 +145,22 @@ export function GamePlayer({ gameId, type, instructions, replayable, title = "Th
     [slug, gameId, token, playerId, bestNow],
   );
 
-  // A started play resumes with no instructions; a new one waits for Start (S08-AC9).
+  // A started play resumes with no instructions; a new one, or a replay of a
+  // finished one, waits on the instructions' Start (S08-AC9, Khai 2026-11-10).
   useEffect(() => {
     if (!playerId) return;
     const alive = { current: true };
     void (async () => {
       const res = await gamesApi.plays(slug, await token(), playerId);
       if (!alive.current) return;
-      if (!res.ok) setPhase({ kind: "error", message: res.message });
-      else if (res.data.plays[gameId]) await begin();
-      else setPhase({ kind: "instructions" });
+      if (!res.ok) {
+        setPhase({ kind: "error", message: res.message });
+        return;
+      }
+      const play = res.data.plays[gameId];
+      const replay = play?.status === "finished" && replayable && !play.once && !play.waiting;
+      if (!play || replay) setPhase({ kind: "instructions", again: replay });
+      else await begin();
     })();
     return () => {
       alive.current = false;
@@ -219,7 +234,7 @@ export function GamePlayer({ gameId, type, instructions, replayable, title = "Th
         <InstructionsDialog
           instructions={instructions}
           busy={busy}
-          onStart={() => void begin()}
+          onStart={() => void begin(phase.again)}
           onLeave={() => {
             router.push(`/${slug}`);
           }}
@@ -232,7 +247,16 @@ export function GamePlayer({ gameId, type, instructions, replayable, title = "Th
           bestBefore={phase.bestBefore}
           summary={renderer.summary(phase.play.view)}
           title={title}
-          onAgain={replayable && !phase.play.once ? () => void begin(true) : undefined}
+          onBack={() => {
+            router.push(`/${slug}`);
+          }}
+          onAgain={
+            replayable && !phase.play.once
+              ? () => {
+                  setPhase({ kind: "instructions", again: true });
+                }
+              : undefined
+          }
         />
       )}
       {phase.kind === "playing" && renderer && phase.play.status === "playing" && (

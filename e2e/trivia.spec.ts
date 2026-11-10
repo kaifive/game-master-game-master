@@ -52,17 +52,30 @@ test("S04-AC7 S08-AC9 S08-AC11 S08-AC13 S08-AC15 S10-AC6: play before the start,
   await expect(again.getByRole("img", { name: `Holiday Trivia: ${points} points` })).toBeVisible();
 });
 
-test("S08-AC12 S08-AC3: a finished replayable game shows its result and plays again", async ({
+test("S08-AC12: Play again and Again both show the instructions before the new run", async ({
   page,
 }) => {
   await joinParty(page);
   await page.getByRole("link", { name: /Holiday Trivia/ }).click();
   await page.getByRole("button", { name: "Start" }).click();
   await playToEnd(page);
-  await page.reload();
   await expect(page.getByRole("region", { name: "Your score" })).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  // Play again on the result: the instructions, then the new run.
   await page.getByRole("button", { name: "Play again" }).click();
+  const rules = page.getByRole("dialog", { name: "How to play" });
+  await expect(rules).toBeVisible();
+  await rules.getByRole("button", { name: "Start" }).click();
+  await expect(page.getByText("Question 1 of 5")).toBeVisible();
+  await playToEnd(page);
+  await expect(page.getByRole("region", { name: "Your score" })).toBeVisible();
+  // Again from the games list: the instructions too.
+  await page
+    .getByRole("navigation", { name: "Party" })
+    .getByRole("link", { name: /Games/ })
+    .click();
+  await page.getByRole("link", { name: /Holiday Trivia/ }).click();
+  await expect(rules).toBeVisible();
+  await rules.getByRole("button", { name: "Start" }).click();
   await expect(page.getByText("Question 1 of 5")).toBeVisible();
 });
 

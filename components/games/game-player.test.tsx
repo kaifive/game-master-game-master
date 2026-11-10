@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { PlayResponse } from "@/lib/games";
@@ -150,13 +150,48 @@ describe("GamePlayer", () => {
     expect(screen.getByRole("link", { name: "Join now" })).toHaveAttribute("href", "/holiday-2026");
   });
 
-  test("S08-AC12: a replayable game offers Play again and starts a new run", async () => {
+  test("S08-AC12: Play again shows the instructions, then starts a new run on Start", async () => {
     setReducedMotion(true);
     api.plays.mockReturnValue(ok({ plays: { trivia: { status: "finished", best: 80, runs: 1 } } }));
     api.start.mockReturnValueOnce(ok(finished)).mockReturnValueOnce(ok(question));
+    page();
+    // Not replayable: opening a finished game shows its result.
+    expect(await screen.findByRole("region", { name: "Your score" })).toBeInTheDocument();
+    cleanup();
+    api.start.mockReset();
+    api.start.mockReturnValueOnce(ok(question));
+    // Replayable, from the menu: the instructions first, then a new run.
     page(true);
-    expect(await screen.findByText("Your best: 80")).toBeInTheDocument();
-    await userEvent.setup().click(screen.getByRole("button", { name: "Play again" }));
+    const user = userEvent.setup();
+    expect(await screen.findByRole("dialog", { name: "How to play" })).toBeInTheDocument();
+    expect(api.start).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Start" }));
+    expect(api.start).toHaveBeenLastCalledWith("holiday-2026", "trivia", "dev:phone", "p1", true);
+    expect(
+      await screen.findByRole("heading", { name: "Which reindeer has a red nose?" }),
+    ).toBeInTheDocument();
+  });
+
+  test("S08-AC11: a result has Back to games beside Play again", async () => {
+    setReducedMotion(true);
+    api.plays.mockReturnValue(ok({ plays: { trivia: { status: "playing", best: 0, runs: 1 } } }));
+    api.start.mockReturnValue(ok(finished));
+    page(true);
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Back to games" }));
+    expect(push).toHaveBeenCalledWith("/holiday-2026");
+    expect(screen.getByRole("button", { name: "Play again" })).toBeInTheDocument();
+  });
+
+  test("S08-AC12: Play again on a result shows the instructions before the new run", async () => {
+    setReducedMotion(true);
+    api.plays.mockReturnValue(ok({ plays: { trivia: { status: "playing", best: 0, runs: 1 } } }));
+    api.start.mockReturnValueOnce(ok(finished)).mockReturnValueOnce(ok(question));
+    page(true);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Play again" }));
+    expect(await screen.findByRole("dialog", { name: "How to play" })).toBeInTheDocument();
+    expect(api.start).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole("button", { name: "Start" }));
     expect(api.start).toHaveBeenLastCalledWith("holiday-2026", "trivia", "dev:phone", "p1", true);
     expect(
       await screen.findByRole("heading", { name: "Which reindeer has a red nose?" }),
@@ -261,8 +296,10 @@ describe("GamePlayer", () => {
     expect(device.setLeaveWarning).not.toHaveBeenCalledWith(LEAVE_WARNING);
   });
 
-  test("S18-AC3: a one-run game's result offers no Play again, even in a replayable event", async () => {
-    api.plays.mockReturnValue(ok({ plays: { trivia: { status: "finished", best: 80, runs: 1 } } }));
+  test("S17-AC2: a one-run game's result offers no Play again, even in a replayable event", async () => {
+    api.plays.mockReturnValue(
+      ok({ plays: { trivia: { status: "finished", best: 80, runs: 1, once: true } } }),
+    );
     api.start.mockReturnValue(ok({ ...finished, once: true }));
     page(true);
     expect(await screen.findByRole("region", { name: "Your score" })).toBeInTheDocument();
