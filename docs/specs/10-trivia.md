@@ -6,7 +6,7 @@
 
 ## Summary
 
-A multiple-choice quiz on the player's phone: a question, a few answers, a timer. Generic over its questions, so every event can bring its own (wushu, the club, the holidays). The party starts with placeholder questions; Khai swaps in real ones later. Replaces word guess, which Khai doesn't want (Q6).
+A multiple-choice quiz on the player's phone: a question, a few answers, a timer. Generic over its questions, so every event can bring its own (wushu, the club, the holidays). The party has two trivia games (Khai, 2026-11-13): **Holiday Trivia**, easy holiday questions for every age, and **Wushu Trivia**, club facts and rule codes (deduction and nandu codes from the IWUF 2024 rules). Replaces word guess, which Khai doesn't want (Q6).
 
 ## Behavior
 
@@ -37,7 +37,7 @@ The play's `state`: the drawn question ids, choice order per question, the curre
 - [x] AC-4: An answer is checked on the server and the reply shows whether it was right and which choice was correct.
 - [x] AC-5: An answer after the deadline plus 2 s, or no answer in time, counts as wrong, and the timer keeps running while the player is away.
 - [x] AC-6: A right answer earns half its share for being right and up to half for speed (instant earns all, the buzzer half), and the result shows correct out of total and the average time.
-- [x] AC-7: The party's event file has a trivia game with a placeholder pool, and word guess is gone from it.
+- [x] AC-7: The party's event file has its trivia games (Holiday Trivia and Wushu Trivia), and word guess is gone from it.
 - [x] AC-8: Answers show as a 2×2 grid when there are at most 4 short or picture answers, and as a list otherwise.
 - [x] AC-9: Questions and answers can show images, each with alt text.
 - [x] AC-15: Each question's clock starts clean, never shows more than its seconds, moves smoothly, and freezes where it is once an answer is tapped.
@@ -56,7 +56,7 @@ The play's `state`: the drawn question ids, choice order per question, the curre
 
 ## Out of scope
 
-- Real party questions (Khai adds them later).
+- More party questions (Khai can add to either pool).
 - Streaks.
 - Live trivia on the TV (that's Jeopardy, spec 12).
 

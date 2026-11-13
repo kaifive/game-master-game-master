@@ -3,8 +3,9 @@ import type { TriviaContent } from "@/lib/games";
 const img = (name: string, alt: string) => ({ src: `/events/holiday-2026/${name}.svg`, alt });
 
 /**
- * Placeholder trivia for the party (spec 10, S10-AC7). Khai swaps in real
- * questions later. Each player gets 5 drawn at random from this pool.
+ * Easy holiday trivia for the party (spec 10): questions every age can get,
+ * kept apart from the wushu questions (Khai, 2026-11-13). Each player gets 5
+ * drawn at random from this pool.
  */
 export const holidayTrivia: TriviaContent = {
   questionsPerPlay: 5,
@@ -23,87 +24,76 @@ export const holidayTrivia: TriviaContent = {
       answer: 1,
     },
     {
-      id: "canada-capital",
-      prompt: "What is the capital of Canada?",
-      choices: ["Toronto", "Vancouver", "Ottawa", "Montreal"],
-      answer: 2,
-    },
-    {
-      id: "wushu-country",
-      prompt: "Which country does wushu come from?",
-      choices: ["Japan", "China", "Korea", "Thailand"],
+      id: "santa-home",
+      prompt: "Where does Santa live?",
+      choices: ["The South Pole", "The North Pole", "The Moon", "Hawaii"],
       answer: 1,
     },
     {
-      id: "leap-year",
-      prompt: "How many days are in a leap year?",
-      choices: ["364", "365", "366", "367"],
+      id: "santa-suit",
+      prompt: "What color is Santa's suit?",
+      choices: ["Green", "Blue", "Red", "Purple"],
       answer: 2,
     },
     {
-      id: "near-sun",
-      prompt: "Which planet is closest to the sun?",
-      choices: ["Venus", "Mercury", "Mars", "Earth"],
-      answer: 1,
-    },
-    {
-      id: "blue-yellow",
-      prompt: "Mix blue and yellow paint. What color do you get?",
-      choices: ["Green", "Purple", "Orange", "Brown"],
+      id: "frosty",
+      prompt: "Frosty the ___?",
+      choices: ["Snowman", "Reindeer", "Elf", "Penguin"],
       answer: 0,
     },
     {
-      id: "spider-legs",
-      prompt: "How many legs does a spider have?",
-      choices: ["6", "8", "10", "12"],
-      answer: 1,
-    },
-    {
-      id: "bees",
-      prompt: "What do bees make?",
-      choices: ["Milk", "Silk", "Honey", "Wax paper"],
-      answer: 2,
-    },
-    {
-      id: "short-month",
-      prompt: "Which month has the fewest days?",
-      choices: ["January", "February", "April", "June"],
-      answer: 1,
-    },
-    {
-      id: "h2o",
-      prompt: "What is H₂O better known as?",
-      choices: ["Salt", "Air", "Water", "Sugar"],
-      answer: 2,
-    },
-    {
-      id: "big-ocean",
-      prompt: "Which ocean is the largest?",
-      choices: ["Atlantic", "Indian", "Arctic", "Pacific"],
-      answer: 3,
-    },
-    {
-      id: "wushu-meaning",
-      prompt: "What does the Chinese word “wushu” mean?",
-      choices: ["Martial arts", "Dragon dance", "Tea ceremony", "Kite flying"],
+      id: "jingle",
+      prompt: "Jingle ___, jingle all the way!",
+      choices: ["Bells", "Balls", "Boots", "Bears"],
       answer: 0,
     },
     {
-      id: "gun-weapon",
-      prompt: "In wushu, what kind of weapon is a “gun”?",
-      choices: [
-        "A long wooden staff",
-        "A spear with a tassel",
-        "A double-edged sword",
-        "A folding fan",
-      ],
+      id: "grinch",
+      prompt: "What color is the Grinch?",
+      choices: ["Blue", "Green", "Orange", "Pink"],
+      answer: 1,
+    },
+    {
+      id: "santa-snack",
+      prompt: "What do kids leave out for Santa?",
+      choices: ["Pizza", "Cookies and milk", "Carrots and soup", "Popcorn"],
+      answer: 1,
+    },
+    {
+      id: "sleigh",
+      prompt: "What pulls Santa's sleigh?",
+      choices: ["Horses", "Dogs", "Reindeer", "Penguins"],
+      answer: 2,
+    },
+    {
+      id: "candy-cane",
+      prompt: "What colors is a classic candy cane?",
+      choices: ["Red and white", "Green and gold", "Blue and white", "Pink and purple"],
       answer: 0,
     },
     {
-      id: "zodiac-2026",
-      prompt: "Which zodiac animal is 2026, the next Lunar New Year?",
-      choices: ["Dragon", "Snake", "Horse", "Goat"],
+      id: "gingerbread",
+      prompt: "What kind of house do people build out of cookies?",
+      choices: ["Sugar cottage", "Gingerbread house", "Cookie castle", "Candy cabin"],
+      answer: 1,
+    },
+    {
+      id: "hanukkah-nights",
+      prompt: "How many nights does Hanukkah last?",
+      choices: ["3", "5", "8", "12"],
       answer: 2,
+    },
+    {
+      id: "new-year",
+      prompt: "What date is New Year's Day?",
+      choices: ["December 25", "December 31", "January 1", "February 14"],
+      answer: 2,
+    },
+    {
+      id: "santa-helpers",
+      prompt: "Who makes the toys in Santa's workshop?",
+      choices: ["Elves", "Gnomes", "Fairies", "Robots"],
+      answer: 0,
     },
     {
       id: "tree-holiday",
@@ -124,22 +114,17 @@ export const holidayTrivia: TriviaContent = {
       answer: 0,
     },
     {
-      id: "melts-fastest",
-      prompt: "Left out in the sun, which of these melts first?",
-      choices: ["An ice cube", "A rock", "A metal spoon", "A brick"],
+      id: "tree-top",
+      prompt: "What often goes on top of a Christmas tree?",
+      image: img("star", "A gold star"),
+      choices: ["A star", "A hat", "A sock", "A pumpkin"],
       answer: 0,
     },
     {
-      id: "tallest-animal",
-      prompt: "What is the tallest animal?",
-      choices: ["Elephant", "Giraffe", "Horse", "Ostrich"],
+      id: "stocking",
+      prompt: "What do people hang by the fireplace for Santa to fill?",
+      choices: ["Gloves", "Stockings", "Hats", "Scarves"],
       answer: 1,
-    },
-    {
-      id: "rainbow-colors",
-      prompt: "How many colors are in a rainbow?",
-      choices: ["5", "6", "7", "8"],
-      answer: 2,
     },
   ],
 };
