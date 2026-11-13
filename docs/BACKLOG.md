@@ -42,6 +42,7 @@ A feature item needs its spec at `Ready` before it starts.
 - [x] Spec 16, quick games: T-Timer, Tap Masher, Pathfinder, Stack Attack, Rapid Recall
 - [x] Spec 17, Guessing Jar (scored when the host enters the count) and Geocache (hidden codes)
 - [x] Spec 18, Color Matcher and Quick Draw (auto-judged against the logo)
+- [x] Spec 19, Secret Word: a five-letter word puzzle; wushu answers at the party
 - [ ] Spec 13, photos: upload, swipe triage, photo challenge, photo vote, slideshow
 - [ ] Photo export and prune scripts (ADR-012)
 

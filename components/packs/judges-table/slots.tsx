@@ -200,7 +200,8 @@ function Tile({ letter, state }: TileProps) {
 }
 
 const keyLook = variants({
-  base: "grid h-10 place-items-center rounded-[5px] font-gm-display text-sm font-medium",
+  // Keys share their row's width and stand 48px tall: a full row fits a 375px phone (spec 19).
+  base: "grid h-12 min-w-0 touch-manipulation place-items-center rounded-[5px] font-gm-display text-xl font-medium select-none",
   variants: {
     state: {
       unused: "jt-card-shadow bg-[var(--gm-card)] text-[var(--gm-card-ink)]",
@@ -209,7 +210,7 @@ const keyLook = variants({
         "jt-card-shadow bg-[var(--gm-card)] text-[var(--gm-card-ink)] shadow-[inset_0_-4px_0_var(--gm-accent)]",
       absent: "bg-gm-tile-absent text-gm-tile-absent-ink",
     },
-    width: { normal: "w-[23px]", wide: "w-11 font-gm-body text-[11px] font-bold" },
+    width: { normal: "flex-1", wide: "flex-[1.6] font-gm-body text-sm font-bold" },
   },
   defaults: { state: "unused", width: "normal" },
 });

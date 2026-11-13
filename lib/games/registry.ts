@@ -9,6 +9,7 @@ import { taps } from "./taps/logic";
 import { timer } from "./timer/logic";
 import { trail } from "./trail/logic";
 import { trivia } from "./trivia/logic";
+import { word } from "./word/logic";
 
 /**
  * Game types with server-run logic (spec 08). Types without an entry (photo
@@ -25,6 +26,7 @@ const LOGIC: Readonly<Record<string, AnyGameLogic>> = {
   cache: defineGame(cache),
   color: defineGame(color),
   draw: defineGame(draw),
+  word: defineGame(word),
 };
 
 export const gameLogic = (type: string): AnyGameLogic | undefined => LOGIC[type];

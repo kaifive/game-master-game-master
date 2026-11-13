@@ -223,3 +223,36 @@ test("S18-AC5: Quick Draw", async ({ page, browser }) => {
       .getByRole("img", { name: new RegExp(`Quick Draw by ${name}`) }),
   ).toBeVisible();
 });
+
+test("S19-AC5: Secret Word turns away a non-word, then plays to the end", async ({ page }) => {
+  await joinAndOpen(page, "Secret Word");
+  const type = async (word: string) => {
+    // A key's name grows its mark once played ("S, correct").
+    for (const l of word)
+      await page.getByRole("button", { name: new RegExp(`^${l}(,|$)`) }).click();
+    await page.getByRole("button", { name: "Enter" }).click();
+  };
+  await type("XQZVB");
+  await expect(page.getByRole("status")).toHaveText("Not in the word list");
+  for (let i = 0; i < 5; i++) await page.getByRole("button", { name: "Delete" }).click();
+  const score = page.getByRole("region", { name: "Your score" });
+  // Real guesses until the word is found or the tries run out.
+  for (const word of ["SPEAR", "HORSE", "FLOOR", "PUNCH", "BLOCK", "TAOLU"]) {
+    if (await score.isVisible()) break;
+    const rows = await page
+      .locator(
+        "[data-slot=tile][data-state=correct], [data-slot=tile][data-state=present], [data-slot=tile][data-state=absent]",
+      )
+      .count();
+    await type(word);
+    await expect(async () => {
+      const now = await page
+        .locator(
+          "[data-slot=tile][data-state=correct], [data-slot=tile][data-state=present], [data-slot=tile][data-state=absent]",
+        )
+        .count();
+      expect(now > rows || (await score.isVisible())).toBe(true);
+    }).toPass();
+  }
+  await expect(score).toContainText(/Solved in|Not this time/);
+});
