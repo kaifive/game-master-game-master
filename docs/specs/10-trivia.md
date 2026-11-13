@@ -6,7 +6,7 @@
 
 ## Summary
 
-A multiple-choice quiz on the player's phone: a question, a few answers, a timer. Generic over its questions, so every event can bring its own (wushu, the club, the holidays). The party has two trivia games (Khai, 2026-11-13): **Holiday Trivia**, easy holiday questions for every age, and **Wushu Trivia**, club facts and rule codes (deduction and nandu codes from the IWUF 2024 rules). Replaces word guess, which Khai doesn't want (Q6).
+A multiple-choice quiz on the player's phone: a question, a few answers, a timer. Generic over its questions, so every event can bring its own (wushu, the club, the holidays). The party has two trivia games (Khai, 2026-11-13): **Holiday Trivia**, 30 easy holiday questions for every age, and **Wushu Trivia**, club facts and rule codes (deduction and nandu codes from the IWUF 2024 rules). Replaces word guess, which Khai doesn't want (Q6).
 
 ## Behavior
 
