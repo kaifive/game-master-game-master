@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { deltaE2000 } from "./de2000";
 import type { GameLogic, MoveResult } from "../model";
 
 /** Color Matcher (spec 18): pick on a color wheel to match a color from memory. */
@@ -12,13 +11,12 @@ export type ColorContent = z.infer<typeof ColorContent>;
 const prompt = (c: ColorContent) => c.prompt ?? "Match the color";
 
 /**
- * All the points within this difference; none at ZERO_AT (CIEDE2000 ΔE, where
- * about 2 is the smallest difference eyes notice). Tuned 2026-11-10 (Khai:
- * scores felt random): a slightly pinker or bluer purple ~90%, a clearly
- * lighter one ~65%, grey or hot pink next to nothing.
+ * All the points within this distance; none at ZERO_AT. The distance is
+ * measured on the game's own controls (below), so being a quarter off on
+ * any one of them lands near half the points (Khai, 2026-11-13).
  */
-export const FULL_DE = 2;
-export const ZERO_AT_DE = 25;
+export const FULL_AT = 0.04;
+export const ZERO_AT = 0.5;
 
 type Rgb = [number, number, number];
 
@@ -27,30 +25,44 @@ export const toHex = ([r, g, b]: Rgb) =>
 const fromHex = (hex: string): Rgb =>
   [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as Rgb;
 
-/** sRGB to CIE Lab (D65), so differences match what eyes see. */
-function lab([r, g, b]: Rgb): Rgb {
-  const lin = (v: number) => {
-    const c = v / 255;
-    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  };
-  const [R, G, B] = [lin(r), lin(g), lin(b)];
-  const x = (R * 0.4124 + G * 0.3576 + B * 0.1805) / 0.95047;
-  const y = R * 0.2126 + G * 0.7152 + B * 0.0722;
-  const z = (R * 0.0193 + G * 0.1192 + B * 0.9505) / 1.08883;
-  const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
-  return [116 * f(y) - 16, 500 * (f(x) - f(y)), 200 * (f(y) - f(z))];
+/** Red, green and blue to the wheel's shade (degrees), strength and brightness (0 to 1). */
+export function toHsv([r, g, b]: Rgb): { h: number; s: number; v: number } {
+  const [R, G, B] = [r / 255, g / 255, b / 255];
+  const max = Math.max(R, G, B);
+  const d = max - Math.min(R, G, B);
+  let h = 0;
+  if (d > 0)
+    h =
+      max === R
+        ? 60 * (((G - B) / d + 6) % 6)
+        : max === G
+          ? 60 * ((B - R) / d + 2)
+          : 60 * ((R - G) / d + 4);
+  return { h, s: max === 0 ? 0 : d / max, v: max };
 }
 
 /**
- * How far apart two colors look (CIEDE2000 ΔE). The older CIE76 distance
- * judged purples, greys and vividness unlike eyes do, so scores felt random.
+ * How far apart two colors are on the game's controls: the distance between
+ * the two points on the color wheel (shade around it, strength out from the
+ * middle, the wheel's radius being 1), together with the gap on the
+ * brightness slider (0 to 1). Each control counts the same, so a too-vivid
+ * magenta no longer beats a slightly-too-light purple, as it did when the
+ * score used CIEDE2000 (Khai, 2026-11-13: scores still felt off).
  */
-export const colorDistance = (a: string, b: string): number =>
-  deltaE2000(lab(fromHex(a)), lab(fromHex(b)));
+export function colorDistance(a: string, b: string): number {
+  const p = toHsv(fromHex(a));
+  const q = toHsv(fromHex(b));
+  const rad = Math.PI / 180;
+  const wheel = Math.hypot(
+    p.s * Math.cos(p.h * rad) - q.s * Math.cos(q.h * rad),
+    p.s * Math.sin(p.h * rad) - q.s * Math.sin(q.h * rad),
+  );
+  return Math.hypot(wheel, p.v - q.v);
+}
 
-/** The share of points for a difference (S18-AC2). */
-export const colorShare = (de: number) =>
-  de <= FULL_DE ? 1 : Math.max(0, 1 - (de - FULL_DE) / (ZERO_AT_DE - FULL_DE));
+/** The share of points for a distance (S18-AC2). */
+export const colorShare = (d: number) =>
+  d <= FULL_AT ? 1 : Math.max(0, 1 - (d - FULL_AT) / (ZERO_AT - FULL_AT));
 
 export type ColorState = { picked: string | null; target: string; step: number };
 export type ColorView =
