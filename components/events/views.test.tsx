@@ -28,10 +28,11 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/components/motion/confetti", () => ({ fireConfetti: vi.fn() }));
 
 // The party's games, plus one with no phone screen yet (a solo Jeopardy) to show it isn't listed.
+// Team Trivia and Jeopardy are hidden at the party; listed here to cover team and live games.
 const event = toPublicEvent({
   ...holiday2026,
   games: [
-    ...holiday2026.games,
+    ...holiday2026.games.map((g) => ({ ...g, visibility: "listed" as const })),
     {
       id: "ornament-hunt",
       type: "jeopardy",
@@ -313,6 +314,13 @@ describe("S05-AC2 S03-AC3: the Leaderboard and Team tabs", () => {
 });
 
 describe("S08-AC7: sorting the games", () => {
+  test("the party's list leaves out Team Trivia and Jeopardy and ends with the one-play games", () => {
+    const ids = hubRows(toPublicEvent(holiday2026), "live", {}, null).map((r) => r.game.id);
+    expect(ids).not.toContain("team-trivia");
+    expect(ids).not.toContain("jeopardy");
+    expect(ids.slice(-3)).toEqual(["guessing-jar", "geocache", "spot-and-snipe"]);
+  });
+
   test("a playable game says Play, then Continue; a live game waits; an unbuilt one isn't listed", () => {
     const rows = hubRows(event, "live", {}, null);
     const byId = Object.fromEntries(rows.map((r) => [r.game.id, r]));
