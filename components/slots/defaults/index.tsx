@@ -202,7 +202,7 @@ const KEY_NAME = {
 };
 
 const key = variants({
-  base: "grid h-10 place-items-center rounded-gm font-gm-display text-sm font-bold",
+  base: "grid h-12 min-w-0 touch-manipulation place-items-center rounded-gm font-gm-display text-lg font-bold select-none",
   variants: {
     state: {
       unused: "bg-gm-surface-raised text-gm-text ring-1 ring-gm-border",
@@ -210,7 +210,7 @@ const key = variants({
       present: "bg-gm-tile-present text-gm-tile-present-ink ring-2 ring-gm-tile-correct",
       absent: "bg-gm-tile-absent text-gm-tile-absent-ink",
     },
-    width: { normal: "w-7", wide: "w-12 text-xs" },
+    width: { normal: "flex-1", wide: "flex-[1.6] text-sm" },
   },
   defaults: { state: "unused", width: "normal" },
 });

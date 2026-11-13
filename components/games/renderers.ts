@@ -8,6 +8,7 @@ import { TapsGame, tapsSummary } from "./taps/taps";
 import { TimerGame, timerSummary } from "./timer/timer";
 import { TrailGame, trailSummary } from "./trail/trail";
 import { TriviaGame, triviaSummary } from "./trivia/trivia";
+import { WordGame, wordSummary } from "./word/word";
 import type { GameRenderer } from "./types";
 
 /** Each game type's phone renderer (spec 08). */
@@ -22,6 +23,7 @@ const RENDERERS: Readonly<Record<string, GameRenderer>> = {
   cache: { Play: CacheGame, summary: cacheSummary },
   color: { Play: ColorGame, summary: colorSummary },
   draw: { Play: DrawGame, summary: drawSummary },
+  word: { Play: WordGame, summary: wordSummary },
 };
 
 export const rendererFor = (type: string): GameRenderer | undefined => RENDERERS[type];

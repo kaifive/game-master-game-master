@@ -7,6 +7,7 @@ import { teamOfPlayer } from "@/lib/teams/server";
 import { keepDrawing } from "@/lib/drawings";
 import { drawingDeps } from "@/lib/drawings/server";
 import { playRepo } from "./runtime";
+import { isWord } from "./word/dictionary";
 import {
   hubPlays,
   makeMove,
@@ -38,6 +39,7 @@ function deps(): GameDeps {
     },
     pointsOf: (slug, playerId) => pointsOf(pointsDeps(), slug, playerId),
     keepDrawing: (slug, drawing) => keepDrawing(drawingDeps(), slug, drawing),
+    isWord,
   };
 }
 

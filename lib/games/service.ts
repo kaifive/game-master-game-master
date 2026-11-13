@@ -29,6 +29,8 @@ export type GameDeps = {
   pointsOf: (slug: string, playerId: string) => Promise<number>;
   /** Keeps a finished run's drawing, for games with keepDrawings (ADR-032). */
   keepDrawing?: (slug: string, drawing: FinishedDrawing) => Promise<unknown>;
+  /** Whether a guess is a real word, for word games (spec 19). Server only. */
+  isWord?: (word: string) => boolean;
 };
 
 /** A run that just finished, and how much it beat the player's best by. */
@@ -277,7 +279,10 @@ export async function makeMove(
     const ticked = r.logic.tick(cur.state, r.content, { now });
     if (r.logic.step(ticked) !== body.step)
       return ticked === cur.state ? null : settle(cur, ticked, r);
-    const result = r.logic.move(ticked, r.content, body.move, { now });
+    const result = r.logic.move(ticked, r.content, body.move, {
+      now,
+      ...(deps.isWord ? { isWord: deps.isWord } : {}),
+    });
     if (!result.ok) throw new AppError("BAD_REQUEST", result.message);
     return settle(cur, result.state, r);
   });

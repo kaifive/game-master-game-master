@@ -6,6 +6,8 @@ export type GameContext = {
   now: number;
   /** The event allows replays, so views keep answers back (they could be learned by replaying). */
   replayable?: boolean;
+  /** Whether a guess is a real word, from the server's word list (Secret Word, spec 19). */
+  isWord?: (word: string) => boolean;
 };
 
 /** The box shown before a game starts (S08-AC9). */
