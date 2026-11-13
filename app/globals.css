@@ -57,6 +57,36 @@ body {
 }
 
 /* Shared keyframes for components/motion (spec 14); used only behind motion-safe. */
+/* Word tiles (spec 19): a letter pops in, a marked tile flips over, a solved row bounces. */
+@keyframes gm-tile-pop {
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+@keyframes gm-tile-flip {
+  0%,
+  100% {
+    transform: perspective(300px) rotateX(0);
+  }
+  50% {
+    transform: perspective(300px) rotateX(-90deg);
+  }
+}
+
+@keyframes gm-tile-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-18px);
+  }
+  60% {
+    transform: translateY(-6px);
+  }
+}
+
 @keyframes gm-drain {
   from {
     transform: scaleX(1);
