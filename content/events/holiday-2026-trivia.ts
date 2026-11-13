@@ -103,14 +103,9 @@ export const holidayTrivia: TriviaContent = {
       answer: 0,
     },
     {
-      id: "which-bell",
-      prompt: "Which one is a bell?",
-      choices: [
-        { image: img("bell", "A gold bell") },
-        { image: img("star", "A gold star") },
-        { image: img("gift", "A red gift box") },
-        { image: img("snowflake", "A white snowflake") },
-      ],
+      id: "carols",
+      prompt: "What do people sing door to door at Christmas?",
+      choices: ["Carols", "Lullabies", "Anthems", "Raps"],
       answer: 0,
     },
     {
