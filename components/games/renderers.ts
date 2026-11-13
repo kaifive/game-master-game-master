@@ -2,6 +2,7 @@ import { CacheGame, cacheSummary } from "./cache/cache";
 import { ColorGame, colorSummary } from "./color/color";
 import { DrawGame, drawSummary } from "./draw/draw";
 import { JarGame, jarSummary } from "./jar/jar";
+import { PhotoGame, photoSummary } from "./photo/photo";
 import { RecallGame, recallSummary } from "./recall/recall";
 import { StackerGame, stackerSummary } from "./stacker/stacker";
 import { TapsGame, tapsSummary } from "./taps/taps";
@@ -24,6 +25,7 @@ const RENDERERS: Readonly<Record<string, GameRenderer>> = {
   color: { Play: ColorGame, summary: colorSummary },
   draw: { Play: DrawGame, summary: drawSummary },
   word: { Play: WordGame, summary: wordSummary },
+  "photo-challenge": { Play: PhotoGame, summary: photoSummary },
 };
 
 export const rendererFor = (type: string): GameRenderer | undefined => RENDERERS[type];

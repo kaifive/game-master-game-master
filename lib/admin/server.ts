@@ -24,6 +24,7 @@ import {
   rebuildPoints,
   removePlayer,
   resetGame,
+  ratePhoto,
   scoreJar,
   voidPlayerDonation,
   type AdminDeps,
@@ -143,6 +144,14 @@ export const ControlsAction = z.discriminatedUnion("action", [
   z.object({ action: z.literal("donations") }),
   z.object({ action: z.literal("jars") }),
   z.object({ action: z.literal("drawings") }),
+  z.object({ action: z.literal("photos") }),
+  z.object({
+    action: z.literal("ratePhoto"),
+    gameId: z.string().min(1).max(64),
+    playerId: z.string().min(1).max(64),
+    photoId: z.string().min(1).max(64),
+    rating: z.number().int().min(0).max(100),
+  }),
   z.object({
     action: z.literal("scoreJar"),
     gameId: z.string().min(1).max(64),
@@ -209,6 +218,10 @@ export async function runAction(slug: Slug, body: ControlsAction) {
     case "donations":
     case "jars":
     case "drawings":
+    case "photos":
+      break;
+    case "ratePhoto":
+      await ratePhoto(d, event, body);
       break;
     case "scoreJar":
       await scoreJar(d, event, body.gameId, body.actual);
@@ -227,5 +240,6 @@ export async function runAction(slug: Slug, body: ControlsAction) {
     donations: body.action === "donations" || body.action === "voidDonation",
     jars: body.action === "jars" || body.action === "scoreJar",
     drawings: body.action === "drawings",
+    photos: body.action === "photos" || body.action === "ratePhoto",
   });
 }

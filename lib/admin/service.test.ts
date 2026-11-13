@@ -15,6 +15,7 @@ import {
   controlsView,
   giveRestart,
   rebuildPoints,
+  ratePhoto,
   removePlayer,
   resetGame,
   scoreJar,
@@ -329,5 +330,104 @@ describe("kept drawings in Controls (ADR-032)", () => {
     await clearTestData(deps, event, "CLEAR");
     expect(await d.drawings.list(SLUG)).toEqual([]);
     expect(files.removed).toEqual([kept?.url]);
+  });
+});
+
+describe("rating photos (spec 20)", () => {
+  const snapped = (
+    playerId: string,
+    photos: { id: string; rating: number | null; at: number }[],
+  ): PlayRecord => ({
+    gameId: "spot-and-snipe",
+    playerId,
+    deviceUid: "x",
+    seed: 1,
+    state: {
+      photos: photos.map((p) => ({ ...p, url: `https://blob.test/${p.id}.jpg` })),
+      max: 3,
+      step: photos.length,
+    },
+    status: "playing",
+    points: 0,
+    best: 0,
+    runs: 1,
+    scored: false,
+  });
+
+  it("S20-AC4: lists photos unrated first, then newest; the best rating sets the points; re-rating voids the old award", async () => {
+    await deps.plays.update(SLUG, "spot-and-snipe", mai.id, () =>
+      snapped(mai.id, [
+        { id: "m1", rating: null, at: 1 },
+        { id: "m2", rating: null, at: 3 },
+      ]),
+    );
+    await deps.plays.update(SLUG, "spot-and-snipe", bao.id, () =>
+      snapped(bao.id, [{ id: "b1", rating: 70, at: 2 }]),
+    );
+    const list = (await controlsView(deps, event, { photos: true })).photos?.[0];
+    expect(list?.title).toBe("Spot and Snipe");
+    expect(list?.photos.map((p) => [p.nickname, p.photoId, p.rating])).toEqual([
+      ["Mai", "m2", null],
+      ["Mai", "m1", null],
+      ["Bao", "b1", 70],
+    ]);
+    await ratePhoto(deps, event, {
+      gameId: "spot-and-snipe",
+      playerId: mai.id,
+      photoId: "m1",
+      rating: 40,
+    });
+    expect(await total(mai.id)).toBe(40);
+    // A better photo raises the points; the old award is voided, not added to.
+    await ratePhoto(deps, event, {
+      gameId: "spot-and-snipe",
+      playerId: mai.id,
+      photoId: "m2",
+      rating: 90,
+    });
+    expect(await total(mai.id)).toBe(90);
+    expect((await deps.plays.get(SLUG, "spot-and-snipe", mai.id))?.best).toBe(90);
+    // Lowering the best lowers the points.
+    await ratePhoto(deps, event, {
+      gameId: "spot-and-snipe",
+      playerId: mai.id,
+      photoId: "m2",
+      rating: 20,
+    });
+    expect(await total(mai.id)).toBe(40);
+    expect(
+      (
+        await failure(
+          ratePhoto(deps, event, {
+            gameId: "spot-and-snipe",
+            playerId: mai.id,
+            photoId: "nope",
+            rating: 50,
+          }),
+        )
+      ).status,
+    ).toBe(404);
+    expect(
+      (
+        await failure(
+          ratePhoto(deps, event, {
+            gameId: "spot-and-snipe",
+            playerId: mai.id,
+            photoId: "m1",
+            rating: 101,
+          }),
+        )
+      ).status,
+    ).toBe(400);
+  });
+
+  it("S20-AC5: clearing test data deletes the photo files", async () => {
+    const files = new MemoryDrawingFiles();
+    deps.drawings = { drawings: new MemoryDrawingRepo(), files, now: () => 1, id: () => "d" };
+    await deps.plays.update(SLUG, "spot-and-snipe", mai.id, () =>
+      snapped(mai.id, [{ id: "m1", rating: null, at: 1 }]),
+    );
+    await clearTestData(deps, event, "CLEAR");
+    expect(files.removed).toEqual(["https://blob.test/m1.jpg"]);
   });
 });

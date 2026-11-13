@@ -28,6 +28,20 @@ export const holiday2026: EventConfig = {
       alwaysOpen: true,
     },
     {
+      // Spec 20: the host rates each photo in Controls (Khai, 2026-11-13).
+      id: "spot-and-snipe",
+      type: "photo-challenge",
+      title: "Spot and Snipe",
+      mode: "solo",
+      visibility: "listed",
+      content: {
+        prompt: "Snipe a photo of Coach. The funnier, the more points!",
+        maxPhotos: 3,
+      },
+      scoring: { awardTo: "player" },
+      alwaysOpen: true,
+    },
+    {
       // Spec 19: every answer is a wushu word; the instructions don't say so (Khai, 2026-11-13).
       id: "secret-word",
       type: "word",
@@ -170,15 +184,6 @@ export const holiday2026: EventConfig = {
       visibility: "listed",
       content: holidayTrivia,
       scoring: { awardTo: "team" },
-    },
-    {
-      id: "ornament-hunt",
-      type: "photo-challenge",
-      title: "Ornament Hunt",
-      mode: "solo",
-      visibility: "listed",
-      content: {},
-      scoring: { awardTo: "player" },
     },
     {
       id: "jeopardy",

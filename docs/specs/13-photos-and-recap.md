@@ -6,6 +6,8 @@
 
 ## Summary
 
+> The photo challenge itself shipped first as spec 20 (Spot and Snipe: photos rated by the host with a slider, uploads through our route per ADR-034). This spec keeps triage, votes, the slideshow and the recap, and can adopt spec 20's photos.
+
 Players take photos as part of games. Every photo is saved (files in Vercel Blob, records in Firestore, ADR-008). Photos only reach other people at moments the admin starts, after a quick swipe triage (ADR-010). Approved photos can go to a player vote and the display slideshow. The recap is admin only. Photos are backed up and cleared after each event (ADR-012).
 
 ## In scope (first pass)

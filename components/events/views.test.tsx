@@ -27,7 +27,22 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/components/motion/confetti", () => ({ fireConfetti: vi.fn() }));
 
-const event = toPublicEvent(holiday2026);
+// The party's games, plus one with no phone screen yet (a solo Jeopardy) to show it isn't listed.
+const event = toPublicEvent({
+  ...holiday2026,
+  games: [
+    ...holiday2026.games,
+    {
+      id: "ornament-hunt",
+      type: "jeopardy",
+      title: "Ornament Hunt",
+      mode: "solo",
+      visibility: "listed",
+      content: {},
+      scoring: { awardTo: "player" },
+    },
+  ],
+});
 const inPack = (node: ReactNode) =>
   render(<PackRoot styleRef={holiday2026.style}>{node}</PackRoot>);
 
@@ -57,7 +72,7 @@ describe("S01-AC5: an upcoming event waits for the host and lists its games, loc
     expect(within(list).queryAllByRole("link")).toHaveLength(0);
     // Games a phone can play are locked; the rest say why they aren't up for grabs.
     expect(within(list).getAllByText("Locked").length).toBe(
-      closed.games.filter((g) => g.mode === "solo" && g.type !== "photo-challenge").length,
+      closed.games.filter((g) => g.mode === "solo" && g.id !== "ornament-hunt").length,
     );
     expect(within(list).queryByText("Coming soon")).toBeNull();
     expect(within(list).getByText("On the TV when the host starts it")).toBeInTheDocument();

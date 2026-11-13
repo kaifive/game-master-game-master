@@ -43,7 +43,8 @@ A feature item needs its spec at `Ready` before it starts.
 - [x] Spec 17, Guessing Jar (scored when the host enters the count) and Geocache (hidden codes)
 - [x] Spec 18, Color Matcher and Quick Draw (auto-judged against the logo)
 - [x] Spec 19, Secret Word: a five-letter word puzzle; wushu answers at the party
-- [ ] Spec 13, photos: upload, swipe triage, photo challenge, photo vote, slideshow
+- [x] Spec 20, photo challenge (Spot and Snipe): photos rated by the host with a slider
+- [ ] Spec 13, photos: swipe triage, photo vote, slideshow (the photo challenge is spec 20)
 - [ ] Photo export and prune scripts (ADR-012)
 
 ## M3: Live sessions (by Dec 13)

@@ -32,6 +32,18 @@ type View = {
   donations?: Donation[];
   jars?: Jar[];
   drawings?: Drawings;
+  photos?: PhotoGame[];
+};
+type PhotoGame = {
+  gameId: string;
+  title: string;
+  photos: {
+    playerId: string;
+    nickname: string;
+    photoId: string;
+    url: string;
+    rating: number | null;
+  }[];
 };
 type Game = { id: string; title: string; type?: string; keepDrawings?: boolean };
 type Drawings = {
@@ -61,6 +73,8 @@ type Action =
   | { action: "board"; phones?: boolean; tv?: boolean }
   | { action: "jars" }
   | { action: "drawings" }
+  | { action: "photos" }
+  | { action: "ratePhoto"; gameId: string; playerId: string; photoId: string; rating: number }
   | { action: "scoreJar"; gameId: string; actual: number };
 
 /** Each refresh reads every player, so once a minute (free-tier budget); actions refresh at once. */
@@ -317,6 +331,131 @@ function DrawingsCard({
             ))}
           </ul>
         )}
+      </div>
+    </Card>
+  );
+}
+
+/** One photo with its rating slider: drag, then Save (S20-AC4). */
+function RatePhoto({
+  gameId,
+  photo,
+  run,
+  busy,
+}: {
+  gameId: string;
+  photo: PhotoGame["photos"][number];
+  run: (action: Action) => void;
+  busy: boolean;
+}) {
+  const [rating, setRating] = useState(photo.rating ?? 50);
+  const id = useId();
+  const changed = photo.rating === null || rating !== photo.rating;
+  return (
+    <li className="grid gap-2 rounded-gm border border-gm-border p-2">
+      <a href={photo.url} target="_blank" rel="noreferrer">
+        {/* eslint-disable-next-line @next/next/no-img-element -- a player's upload from Blob */}
+        <img
+          src={photo.url}
+          alt={`Photo by ${photo.nickname}`}
+          loading="lazy"
+          className="aspect-square w-full rounded-gm bg-gm-surface object-cover"
+        />
+      </a>
+      <p className="m-0 text-sm">
+        <strong>{photo.nickname}</strong> ·{" "}
+        {photo.rating === null ? "Not rated yet" : `Rated ${String(photo.rating)}`}
+      </p>
+      <label htmlFor={id} className="flex items-center justify-between text-sm font-bold">
+        Rating <output htmlFor={id}>{rating}</output>
+      </label>
+      <input
+        id={id}
+        type="range"
+        min={0}
+        max={100}
+        step={5}
+        value={rating}
+        onChange={(e) => {
+          setRating(Number(e.target.value));
+        }}
+        className="h-11 w-full accent-gm-accent"
+      />
+      <AdminButton
+        tone={changed ? "primary" : "secondary"}
+        disabled={busy || !changed}
+        onClick={() => {
+          run({
+            action: "ratePhoto",
+            gameId,
+            playerId: photo.playerId,
+            photoId: photo.photoId,
+            rating,
+          });
+        }}
+      >
+        {photo.rating === null ? "Save rating" : "Change rating"}
+      </AdminButton>
+    </li>
+  );
+}
+
+/**
+ * Photo challenges (spec 20): load the photos on request (each play costs a
+ * read), unrated first, and rate each with a slider.
+ */
+function PhotosCard({
+  games,
+  run,
+  busy,
+}: {
+  games: PhotoGame[] | null;
+  run: (action: Action) => void;
+  busy: boolean;
+}) {
+  return (
+    <Card title="Photos to rate">
+      <div className="grid gap-4">
+        <div>
+          <AdminButton
+            tone="secondary"
+            disabled={busy}
+            onClick={() => {
+              run({ action: "photos" });
+            }}
+          >
+            {games ? "Refresh photos" : "Show photos"}
+          </AdminButton>
+        </div>
+        {games?.map((g) => {
+          const waiting = g.photos.filter((p) => p.rating === null).length;
+          return (
+            <section key={g.gameId} aria-label={g.title} className="grid gap-3">
+              <p className="m-0 font-bold">
+                {g.title}: {g.photos.length} {g.photos.length === 1 ? "photo" : "photos"}
+                {waiting > 0 && ` · ${String(waiting)} to rate`}
+              </p>
+              {g.photos.length === 0 ? (
+                <p className="m-0">No photos yet.</p>
+              ) : (
+                <ul
+                  aria-label={`Photos for ${g.title}`}
+                  className="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-3"
+                >
+                  {g.photos.map((p) => (
+                    <RatePhoto
+                      key={`${p.photoId}-${String(p.rating)}`}
+                      gameId={g.gameId}
+                      photo={p}
+                      run={run}
+                      busy={busy}
+                    />
+                  ))}
+                </ul>
+              )}
+            </section>
+          );
+        })}
       </div>
     </Card>
   );
@@ -667,6 +806,7 @@ export function Controls({
   const [donations, setDonations] = useState<Donation[] | null>(null);
   const [jars, setJars] = useState<Jar[] | null>(null);
   const [drawings, setDrawings] = useState<Drawings | null>(null);
+  const [photos, setPhotos] = useState<PhotoGame[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
@@ -705,6 +845,7 @@ export function Controls({
           if (body.donations) setDonations(body.donations);
           if (body.jars) setJars(body.jars);
           if (body.drawings) setDrawings(body.drawings);
+          if (body.photos) setPhotos(body.photos);
         } else setError(body?.error ?? "That didn't work. Try again.");
       })
       .catch(() => {
@@ -812,6 +953,10 @@ export function Controls({
 
       {games.some((g) => g.type === "jar") && (
         <JarsCard jars={jars} titles={games} run={run} busy={busy} />
+      )}
+
+      {games.some((g) => g.type === "photo-challenge") && (
+        <PhotosCard games={photos} run={run} busy={busy} />
       )}
 
       {games.some((g) => g.keepDrawings) && (

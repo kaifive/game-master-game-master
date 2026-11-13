@@ -620,3 +620,24 @@ read-write token to sign upload tokens, so that spec checks for one.
 
 **Consequences:** nothing long-lived to rotate for drawings. Local runs
 still use memory, since there's no OIDC token off Vercel.
+
+---
+
+## ADR-034: Photos upload through our route, shrunk on the phone
+
+**Status:** accepted. Supersedes ADR-008's direct upload; the rest of ADR-008 stands.
+
+ADR-008 had phones upload straight to Blob with a short-lived client token.
+Signing those tokens needs a read-write token, and the party's Blob store
+connects by OIDC with none (ADR-033).
+
+**Decision:** phones shrink each photo first (longest side 1600 px, JPEG,
+about 300 KB), then post it to `POST /api/events/[slug]/games/[gameId]/photo`.
+The route checks the player, the game, the type and the size (at most 3 MB),
+and puts the file in Blob from the server with a random suffix. Photo
+challenges keep each photo's URL and rating in the play (spec 20); spec 13's
+photo records can adopt them later.
+
+**Consequences:** each photo passes through one function call (well under
+Vercel's 4.5 MB request limit and the Hobby function budget at party
+scale), and nothing long-lived signs uploads.

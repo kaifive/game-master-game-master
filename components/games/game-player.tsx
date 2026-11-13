@@ -92,7 +92,7 @@ function Result({
         />
       </div>
       {summary && <p className="m-0 text-xl font-bold">{summary}</p>}
-      {play.points === 0 && (
+      {play.points === 0 && !play.waiting && (
         <p className="m-0 text-lg">No points this time. There&apos;s plenty more to play!</p>
       )}
       {onAgain && (
@@ -168,6 +168,15 @@ export function GamePlayer({ gameId, type, instructions, replayable, title = "Th
     // begin changes with the best score; only a new player or game should re-check.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, gameId, token, playerId]);
+
+  // A play the server returned outside a move, such as after a photo upload (spec 20).
+  const showPlay = useCallback((play: PlayResponse) => {
+    setPhase((p) => ({
+      kind: "playing",
+      play,
+      bestBefore: p.kind === "playing" ? p.bestBefore : play.best,
+    }));
+  }, []);
 
   // Leaving mid-run costs time in a timed game, so the footer asks first (S08-AC14).
   const inProgress =
@@ -265,6 +274,8 @@ export function GamePlayer({ gameId, type, instructions, replayable, title = "Th
           busy={busy}
           onMove={(m, options) => void move(m, options)}
           onTimeUp={() => void begin()}
+          gameId={gameId}
+          onPlay={showPlay}
         />
       )}
     </div>

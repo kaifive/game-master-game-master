@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { AdminRoot } from "@/components/theme";
@@ -429,5 +429,65 @@ describe("Controls teams", () => {
       </AdminRoot>,
     );
     expect(screen.queryByRole("button", { name: "Show drawings" })).toBeNull();
+  });
+
+  test("S20-AC4: the photos card loads photos and saves a slider rating", async () => {
+    let rating: number | null = null;
+    server((body) => {
+      if (body.action === "ratePhoto") rating = body.rating as number;
+      return {
+        status: 200,
+        json: {
+          status: "live",
+          players,
+          teams: null,
+          photos: [
+            {
+              gameId: "spot-and-snipe",
+              title: "Spot and Snipe",
+              photos: [
+                {
+                  playerId: "p1",
+                  nickname: "Mai",
+                  photoId: "ph1",
+                  url: "data:image/jpeg;base64,AA==",
+                  rating,
+                },
+              ],
+            },
+          ],
+        },
+      };
+    });
+    render(
+      <AdminRoot>
+        <Controls
+          slug="holiday-2026"
+          name="Party"
+          games={[{ id: "spot-and-snipe", title: "Spot and Snipe", type: "photo-challenge" }]}
+          initial={{ status: "live", players, teams: null }}
+        />
+      </AdminRoot>,
+    );
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Show photos" }));
+    expect(await screen.findByText(/Spot and Snipe: 1 photo · 1 to rate/)).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Photo by Mai" })).toBeInTheDocument();
+    const slider = screen.getByRole("slider", { name: /Rating/ });
+    fireEvent.change(slider, { target: { value: "85" } });
+    await user.click(screen.getByRole("button", { name: "Save rating" }));
+    expect(sent.at(-1)).toEqual({
+      action: "ratePhoto",
+      gameId: "spot-and-snipe",
+      playerId: "p1",
+      photoId: "ph1",
+      rating: 85,
+    });
+    expect(
+      await screen.findByText(
+        (_, el) => el?.tagName === "P" && el.textContent === "Mai · Rated 85",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Change rating" })).toBeDisabled();
   });
 });

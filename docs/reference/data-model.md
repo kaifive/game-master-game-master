@@ -164,6 +164,7 @@ events/{slug}/votes/{gameId}_{promptId}_{playerId}
 ```
 events/{slug}/photos/{photoId}.jpg     shrunk JPEG, about 300 KB
 events/{slug}/drawings/{gameId}/{playerId}-{run}-<random>.svg   kept drawing, a few KB
+events/{slug}/photos/{gameId}/{playerId}-{photoId}-<random>.jpg   photo challenge (spec 20), kept in the play's state
 ```
 
 Blob URLs are long and unguessable but public to anyone who has one. Only

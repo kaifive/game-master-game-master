@@ -58,6 +58,8 @@ export type PlayResponse = {
   step: number;
   /** One run only: the result offers no Play again (S17-AC2). */
   once?: true;
+  /** Finished, but its points come later from the host (a jar, unrated photos). */
+  waiting?: true;
 };
 
 /** A player's plays by game id, for the hub (S08-AC7). */

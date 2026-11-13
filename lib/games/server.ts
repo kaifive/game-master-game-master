@@ -1,14 +1,16 @@
 import "server-only";
-import { randomInt } from "node:crypto";
+import { randomInt, randomUUID } from "node:crypto";
 import { eventRuntime, requireEvent } from "@/lib/events/server";
 import { playerRepo } from "@/lib/players/server";
 import { awardGame, pointsDeps, pointsOf } from "@/lib/points/server";
 import { teamOfPlayer } from "@/lib/teams/server";
 import { keepDrawing } from "@/lib/drawings";
-import { drawingDeps } from "@/lib/drawings/server";
+import { drawingDeps, drawingFiles } from "@/lib/drawings/server";
 import { playRepo } from "./runtime";
 import { isWord } from "./word/dictionary";
+import { AppError } from "@/lib/errors";
 import {
+  addPhoto,
   hubPlays,
   makeMove,
   startPlay,
@@ -40,6 +42,8 @@ function deps(): GameDeps {
     pointsOf: (slug, playerId) => pointsOf(pointsDeps(), slug, playerId),
     keepDrawing: (slug, drawing) => keepDrawing(drawingDeps(), slug, drawing),
     isWord,
+    files: drawingFiles(),
+    id: () => randomUUID(),
   };
 }
 
@@ -51,6 +55,16 @@ export const startGame = (slug: Slug, gameId: Slug, uid: string, body: z.infer<t
 
 export const moveGame = (slug: Slug, gameId: Slug, uid: string, body: z.infer<typeof MoveBody>) =>
   makeMove(deps(), requireEvent(slug), uid, gameIdOf(gameId), body);
+
+/** POST photo: form data `playerId` and `photo` (S20-AC2). */
+export async function sendPhoto(slug: Slug, gameId: Slug, uid: string, request: Request) {
+  const form = await request.formData().catch(() => null);
+  const playerId = form?.get("playerId");
+  const file = form?.get("photo");
+  if (typeof playerId !== "string" || !playerId || playerId.length > 64 || !(file instanceof Blob))
+    throw new AppError("BAD_REQUEST", "Send a photo.");
+  return addPhoto(deps(), requireEvent(slug), uid, gameIdOf(gameId), { playerId, file });
+}
 
 export const playsFor = (slug: Slug, uid: string, playerId: string | null) =>
   hubPlays(deps(), requireEvent(slug), uid, playerId ?? "");
