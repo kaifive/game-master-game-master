@@ -28,21 +28,6 @@ export const holiday2026: EventConfig = {
       alwaysOpen: true,
     },
     {
-      // Spec 20: the host rates each photo in Controls (Khai, 2026-11-13).
-      id: "spot-and-snipe",
-      type: "photo-challenge",
-      title: "Spot and Snipe",
-      mode: "solo",
-      visibility: "listed",
-      content: {
-        prompt: "Snipe a photo of Coach. The funnier, the more points!",
-        // One chance: make it count (Khai, 2026-11-13).
-        maxPhotos: 1,
-      },
-      scoring: { awardTo: "player" },
-      alwaysOpen: true,
-    },
-    {
       // Spec 19: every answer is a wushu word; the instructions don't say so (Khai, 2026-11-13).
       id: "secret-word",
       type: "word",
@@ -170,13 +155,29 @@ export const holiday2026: EventConfig = {
       alwaysOpen: true,
     },
     {
+      // Spec 20: the host rates each photo in Controls (Khai, 2026-11-13).
+      id: "spot-and-snipe",
+      type: "photo-challenge",
+      title: "Spot and Snipe",
+      mode: "solo",
+      visibility: "listed",
+      content: {
+        prompt: "Snipe a photo of Coach. The funnier, the more points!",
+        // One chance: make it count (Khai, 2026-11-13).
+        maxPhotos: 1,
+      },
+      scoring: { awardTo: "player" },
+      alwaysOpen: true,
+    },
+    {
       // A team game: the captain plays on their phone for the team (spec 03). Placeholder questions.
       id: "team-trivia",
       type: "trivia",
       title: "Team Trivia",
       mode: "solo",
       phase: "team",
-      visibility: "listed",
+      // Off the games list for the party (Khai, 2026-11-13); kept for later.
+      visibility: "hidden",
       content: holidayTrivia,
       scoring: { awardTo: "team" },
     },
@@ -186,7 +187,8 @@ export const holiday2026: EventConfig = {
       title: "Jeopardy",
       mode: "live",
       phase: "team",
-      visibility: "listed",
+      // Off the games list for the party (Khai, 2026-11-13); kept for later.
+      visibility: "hidden",
       content: {},
       scoring: { points: 0, awardTo: "team" },
     },

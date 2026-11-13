@@ -80,9 +80,9 @@ test("S03-AC1 S03-AC2 S03-AC3 S03-AC5 S03-AC6 S03-AC8: teams from captain to TV"
   await mem.getByRole("button", { name: "Yes, give 15" }).click();
   await expect(mem.getByText(`You gave 15 to ${team}.`)).toBeVisible();
 
-  // Members can't play the team game; the captain plays it, and it never pays the captain (S03-AC5).
-  await mem.getByRole("navigation", { name: "Party" }).getByRole("link", { name: /Games/ }).click();
-  await expect(mem.getByRole("region", { name: "Tonight's games" })).toContainText("Captain plays");
+  // The captain plays the team game, and it never pays the captain (S03-AC5). Team Trivia is
+  // off the party's games list (Khai, 2026-11-13), so it opens by its link; the list's
+  // "Captain plays" note is covered in components/events/views.test.tsx.
   await cap.goto("/holiday-2026/play/team-trivia");
   await cap
     .getByRole("dialog", { name: "How to play" })
