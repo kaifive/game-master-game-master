@@ -9,9 +9,12 @@ export interface DrawingRepo {
   clear(slug: string): Promise<void>;
 }
 
-/** Where the drawings' files go: Vercel Blob, or memory for local runs and tests. */
+/**
+ * Where kept files go (drawings, ADR-032; photos, ADR-034): Vercel Blob, or
+ * memory for local runs and tests.
+ */
 export interface DrawingFiles {
-  /** Saves the SVG and returns its URL. */
-  put(path: string, svg: string): Promise<string>;
+  /** Saves a file and returns its URL. A string is an SVG drawing. */
+  put(path: string, body: string | Blob, contentType?: string): Promise<string>;
   remove(urls: string[]): Promise<void>;
 }

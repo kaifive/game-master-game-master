@@ -10,6 +10,8 @@ const STATUS = {
   CONFLICT: 409,
   RATE_LIMITED: 429,
   INTERNAL: 500,
+  /** A service the feature needs isn't set up, such as Blob for photos (spec 20). */
+  UNAVAILABLE: 503,
 } as const;
 
 export type ErrorCode = keyof typeof STATUS;

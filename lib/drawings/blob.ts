@@ -14,10 +14,10 @@ export class BlobDrawingFiles implements DrawingFiles {
     this.auth = token ? { token } : {};
   }
 
-  async put(path: string, svg: string) {
-    const blob = await put(path, svg, {
+  async put(path: string, body: string | Blob, contentType?: string) {
+    const blob = await put(path, body, {
       access: "public",
-      contentType: "image/svg+xml",
+      contentType: typeof body === "string" ? "image/svg+xml" : (contentType ?? body.type),
       addRandomSuffix: true,
       ...this.auth,
     });

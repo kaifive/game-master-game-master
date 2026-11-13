@@ -17,4 +17,11 @@ export type { CacheView } from "./cache/logic";
 export { toHex, type ColorView } from "./color/logic";
 export type { DrawView } from "./draw/logic";
 export type { Mark, WordView } from "./word/logic";
+export {
+  photoShare,
+  withRating,
+  type PhotoContent,
+  type PhotoState,
+  type PhotoView,
+} from "./photo/logic";
 export { adjacent, checkPath } from "./trail/puzzle";

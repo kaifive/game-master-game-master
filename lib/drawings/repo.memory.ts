@@ -26,8 +26,10 @@ export class MemoryDrawingRepo implements DrawingRepo {
 export class MemoryDrawingFiles implements DrawingFiles {
   readonly removed: string[] = [];
 
-  put(_path: string, svg: string) {
-    return Promise.resolve(`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`);
+  async put(_path: string, body: string | Blob, contentType = "image/jpeg") {
+    if (typeof body === "string") return `data:image/svg+xml;utf8,${encodeURIComponent(body)}`;
+    const base64 = Buffer.from(await body.arrayBuffer()).toString("base64");
+    return `data:${contentType};base64,${base64}`;
   }
 
   remove(urls: string[]) {

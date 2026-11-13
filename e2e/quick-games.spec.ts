@@ -256,3 +256,44 @@ test("S19-AC5: Secret Word turns away a non-word, then plays to the end", async 
   }
   await expect(score).toContainText(/Solved in|Not this time/);
 });
+
+test("S20-AC5: Spot and Snipe: send a photo, the host rates it, the points reach the phone", async ({
+  page,
+  browser,
+}) => {
+  const name = await joinAndOpen(page, "Spot and Snipe");
+  await page
+    .getByLabel("Take or choose a photo")
+    .setInputFiles("public/events/nova-wushu-logo.png");
+  await expect(page.getByRole("img", { name: "The photo you picked" })).toBeVisible();
+  await page.getByRole("button", { name: "Send it" }).click();
+  await expect(page.getByText("Waiting for a rating")).toBeVisible();
+  await expect(page.getByText("2 of 3 photos left")).toBeVisible();
+
+  const admin = await (
+    await browser.newContext({ viewport: { width: 1024, height: 900 } })
+  ).newPage();
+  await admin.goto("/admin");
+  await admin.getByLabel("Passphrase").fill("e2e-host-pass");
+  await admin.getByRole("button", { name: "Sign in" }).click();
+  await admin.getByRole("link", { name: /Nova Wushu Holiday Party/ }).click();
+  await admin.getByRole("button", { name: "Show photos" }).click();
+  const photo = admin
+    .getByRole("listitem")
+    .filter({ has: admin.getByRole("img", { name: `Photo by ${name}` }) });
+  await photo.getByRole("slider", { name: /Rating/ }).fill("80");
+  await photo.getByRole("button", { name: "Save rating" }).click();
+  await expect(photo.getByText("Rated 80")).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByText("Rated 80")).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Party" })
+    .getByRole("link", { name: /Games/ })
+    .click();
+  await expect(
+    page
+      .getByRole("link", { name: /Spot and Snipe/ })
+      .getByRole("img", { name: /Spot and Snipe: 80 points/ }),
+  ).toBeVisible();
+});

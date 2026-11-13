@@ -1,7 +1,14 @@
 import { AppError } from "@/lib/errors";
 import { clearDrawings, type DrawingDeps } from "@/lib/drawings";
 import { pointsFor, type EventConfig, type EventStatus } from "@/lib/events";
-import { jarShare, type JarState, type PlayRepo } from "@/lib/games";
+import {
+  jarShare,
+  photoShare,
+  withRating,
+  type JarState,
+  type PhotoState,
+  type PlayRepo,
+} from "@/lib/games";
 import type { AdminPlayer } from "@/lib/players";
 import {
   awardPoints,
@@ -52,6 +59,21 @@ export type ControlsView = {
   jars?: ControlsJar[];
   /** Only when asked for: a read per drawing (S18-AC8). */
   drawings?: ControlsDrawings;
+  /** Only when asked for: a read per play (S20-AC4). */
+  photos?: ControlsPhotoGame[];
+};
+
+/** A photo challenge's photos as Controls rates them: unrated first, then newest (S20-AC4). */
+export type ControlsPhotoGame = {
+  gameId: string;
+  title: string;
+  photos: {
+    playerId: string;
+    nickname: string;
+    photoId: string;
+    url: string;
+    rating: number | null;
+  }[];
 };
 
 /** Kept drawings as Controls shows them, newest first (S18-AC8). */
@@ -84,7 +106,7 @@ export async function controlsView(
   deps: AdminDeps,
   event: EventConfig,
   /** The lists that cost a read per row, loaded only when asked for. */
-  extra: { donations?: boolean; jars?: boolean; drawings?: boolean } = {},
+  extra: { donations?: boolean; jars?: boolean; drawings?: boolean; photos?: boolean } = {},
 ): Promise<ControlsView> {
   // Points and teams come from the summaries: no read per player or team (ADR-031).
   const [status, players, published, board] = await Promise.all([
@@ -112,6 +134,7 @@ export async function controlsView(
     ...(extra.donations ? { donations: await donationList(deps, event, players, teams) } : {}),
     ...(extra.jars ? { jars: await jarResults(deps, event) } : {}),
     ...(extra.drawings ? { drawings: await drawingList(deps, event, players) } : {}),
+    ...(extra.photos ? { photos: await photoResults(deps, event, players) } : {}),
   };
 }
 
@@ -265,6 +288,8 @@ export async function clearTestData(deps: AdminDeps, event: EventConfig, confirm
     throw new AppError("CONFLICT", "Test data can only be cleared before the event starts.");
   if (confirm.trim() !== CLEAR_CONFIRM)
     throw new AppError("BAD_REQUEST", `Type ${CLEAR_CONFIRM} to confirm.`);
+  // Photo files first: their URLs live in the plays (S20-AC5).
+  await clearPhotoFiles(deps, event);
   await Promise.all([
     deps.players.clear(event.slug),
     deps.plays.clear(event.slug),
@@ -379,4 +404,109 @@ export async function scoreJar(
         createdBy: "admin",
       });
   }
+}
+
+const photoGames = (event: EventConfig) => event.games.filter((g) => g.type === "photo-challenge");
+
+async function clearPhotoFiles(deps: AdminDeps, event: EventConfig) {
+  const files = deps.drawings?.files;
+  if (!files || photoGames(event).length === 0) return;
+  const ids = new Set(photoGames(event).map((g) => g.id));
+  const plays = await deps.plays.all(event.slug);
+  const urls = plays.flatMap((p) =>
+    ids.has(p.gameId) ? (p.state as PhotoState).photos.map((x) => x.url) : [],
+  );
+  if (urls.length > 0) await files.remove(urls).catch(() => undefined);
+}
+
+/** Every photo challenge's photos, unrated first, then newest (S20-AC4). */
+export async function photoResults(
+  deps: AdminDeps,
+  event: EventConfig,
+  players?: AdminPlayer[],
+): Promise<ControlsPhotoGame[]> {
+  const games = photoGames(event);
+  if (games.length === 0) return [];
+  const [plays, list] = await Promise.all([
+    deps.plays.all(event.slug),
+    players ? Promise.resolve(players) : deps.players.list(event.slug),
+  ]);
+  const nickname = new Map(list.map((p) => [p.id, p.nickname]));
+  return games.map((g) => ({
+    gameId: g.id,
+    title: g.title,
+    photos: plays
+      .filter((p) => p.gameId === g.id)
+      .flatMap((p) =>
+        (p.state as PhotoState).photos.map((x) => ({
+          playerId: p.playerId,
+          nickname: nickname.get(p.playerId) ?? "Someone who left",
+          photoId: x.id,
+          url: x.url,
+          rating: x.rating,
+          at: x.at,
+        })),
+      )
+      .sort((a, b) => Number(a.rating !== null) - Number(b.rating !== null) || b.at - a.at)
+      .map((x) => ({
+        playerId: x.playerId,
+        nickname: x.nickname,
+        photoId: x.photoId,
+        url: x.url,
+        rating: x.rating,
+      })),
+  }));
+}
+
+/**
+ * The host rates a photo from 0 to 100 (S20-AC4). The player's best rating
+ * sets their points for the game; a change voids the old award and awards
+ * the new one through the ledger.
+ */
+export async function ratePhoto(
+  deps: AdminDeps,
+  event: EventConfig,
+  body: { gameId: string; playerId: string; photoId: string; rating: number },
+) {
+  const game = photoGames(event).find((g) => g.id === body.gameId);
+  if (!game) throw new AppError("NOT_FOUND", "We couldn't find that photo game.");
+  if (!Number.isInteger(body.rating) || body.rating < 0 || body.rating > 100)
+    throw new AppError("BAD_REQUEST", "Rate from 0 to 100.");
+  const [play, players] = await Promise.all([
+    deps.plays.get(event.slug, game.id, body.playerId),
+    deps.players.list(event.slug),
+  ]);
+  const player = players.find((p) => p.id === body.playerId);
+  const state = play?.state as PhotoState | undefined;
+  if (!play || !state || !player || !state.photos.some((p) => p.id === body.photoId))
+    throw new AppError("NOT_FOUND", "We couldn't find that photo.");
+  const points = pointsFor(event, game);
+  const next = withRating(state, body.photoId, body.rating);
+  const earned = Math.round(points * photoShare(next));
+  const before = play.best;
+  await deps.plays.update(event.slug, game.id, player.id, (cur) =>
+    cur
+      ? { ...cur, state: next, points: earned, best: earned, scored: earned > 0 || cur.scored }
+      : null,
+  );
+  if (earned === before) return;
+  const entries = await deps.points.points.entries(event.slug);
+  const voided = new Set(entries.flatMap((e) => (e.voids ? [e.voids] : [])));
+  for (const e of entries)
+    if (
+      e.kind === "award" &&
+      e.to.id === player.id &&
+      e.source.kind === "game" &&
+      e.source.id === game.id &&
+      !voided.has(e.id)
+    )
+      await voidPoints(deps.points, event.slug, e.id, "Photo rated again", () => player);
+  if (earned > 0)
+    await awardPoints(deps.points, event.slug, player, {
+      id: `photo_${deps.id()}`,
+      points: earned,
+      reason: game.title,
+      source: { kind: "game", id: game.id },
+      createdBy: "admin",
+    });
 }

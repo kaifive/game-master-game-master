@@ -24,3 +24,4 @@ Statuses are explained in `../conventions/docs.md`.
 | 17 | [Guessing Jar and Geocache](17-jar-and-geocache.md) | M2 | Done |
 | 18 | [Color Matcher and Quick Draw](18-color-and-draw.md) | M2 | Done |
 | 19 | [Secret Word](19-secret-word.md) | M2 | Done |
+| 20 | [Photo challenge (Spot and Snipe)](20-photo-challenge.md) | M2 | Done |

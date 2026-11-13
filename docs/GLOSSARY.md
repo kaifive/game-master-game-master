@@ -43,7 +43,7 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Leaderboard** | Ranked totals, kept as a summary for live screens. | `LeaderboardSummary` |
 | **Teams summary** | What phones see of teams, rewritten by the server after every team change so polls never read Firestore (ADR-031). | `TeamsSummary` |
 | **Photo** | A picture a player uploaded in an event. File in Vercel Blob, record in Firestore. | `Photo` |
-| **Photo challenge** | A solo game type that asks for a photo of something; points on approval. | `type: "photo-challenge"` |
+| **Photo challenge** | A solo game type that asks for photos of something; the host rates each from 0 to 100 and the best rating sets the points (spec 20). Spot and Snipe at the holiday party. | `type: "photo-challenge"` |
 | **Triage** | The admin swiping through pending photos: right to approve, left to hide. | `/admin/[event]/photos` |
 | **Photo vote** | Approved photos for one prompt sent to every player to vote for the best. | `/[event]/vote/[game]` |
 | **Recap** | Final standings and approved photos of an event. Admin only. | `/admin/[event]/recap` |

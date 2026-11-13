@@ -1,3 +1,5 @@
+import type { PlayResponse } from "@/lib/games";
+
 /** What every game renderer gets from the game page (spec 08). */
 export type GameRendererProps = {
   view: unknown;
@@ -6,6 +8,10 @@ export type GameRendererProps = {
   /** The local timer ran out: the page asks the server for the timed-out view. */
   onTimeUp: () => void;
   busy: boolean;
+  /** The game's id, for games that send more than moves (photos, spec 20). */
+  gameId?: string;
+  /** Shows a play the server returned outside a move, such as after a photo upload. */
+  onPlay?: (play: PlayResponse) => void;
 };
 
 export type GameRenderer = {

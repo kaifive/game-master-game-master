@@ -4,7 +4,10 @@ import { isAppError } from "@/lib/errors";
 import type { EventConfig, EventStatus } from "@/lib/events";
 import { MemoryPlayerRepo } from "@/lib/players";
 import { MemoryPlayRepo } from "./repo.memory";
+import { MemoryDrawingFiles } from "@/lib/drawings";
 import {
+  addPhoto,
+  MAX_PHOTO_BYTES,
   hubPlays,
   instructionsFor,
   makeMove,
@@ -410,5 +413,47 @@ describe("kept drawings (ADR-032)", () => {
     const res = await drawOnce(doodle(true));
     expect(res.status).toBe("finished");
     expect(bests).toHaveLength(res.points > 0 ? 1 : 0);
+  });
+});
+
+describe("photo uploads (spec 20)", () => {
+  const jpeg = (bytes = 1000, type = "image/jpeg") => new Blob([new Uint8Array(bytes)], { type });
+  const snipe = { ...event, games: event.games.filter((g) => g.id === "spot-and-snipe") };
+  const send = (file: Blob, who = playerId) =>
+    addPhoto(deps, snipe, UID, "spot-and-snipe", { playerId: who, file });
+
+  it("S20-AC2: keeps a photo for this phone's player in an open game with room", async () => {
+    const files = new MemoryDrawingFiles();
+    let n = 0;
+    deps.files = files;
+    deps.id = () => `ph${String(++n)}`;
+    expect((await failure(send(jpeg()))).status).toBe(404); // start the game first
+    await startPlay(deps, snipe, UID, "spot-and-snipe", { playerId });
+    expect((await failure(send(jpeg(1000, "image/gif")))).status).toBe(400);
+    expect((await failure(send(jpeg(MAX_PHOTO_BYTES + 1)))).status).toBe(400);
+    expect((await failure(send(jpeg(), "someone-else"))).status).toBe(403);
+    const first = await send(jpeg());
+    expect(first.status).toBe("playing");
+    expect(first.view).toMatchObject({ photos: [{ id: "ph1", rating: null }] });
+    expect((first.view as { photos: { url: string }[] }).photos[0]?.url).toMatch(
+      /^data:image\/jpeg;base64,/,
+    );
+    await send(jpeg());
+    const third = await send(jpeg());
+    // Three photos fill the play: it's over and waits for the host's ratings.
+    expect(third).toMatchObject({ status: "finished", points: 0, waiting: true, once: true });
+    expect((await failure(send(jpeg()))).status).toBe(400);
+    status = "ended";
+    expect((await failure(send(jpeg()))).status).toBe(403);
+  });
+
+  it("S20-AC2: without a Blob store, photos can't be sent yet", async () => {
+    deps.files = null;
+    deps.id = () => "x";
+    await startPlay(deps, snipe, UID, "spot-and-snipe", { playerId });
+    expect(await failure(send(jpeg()))).toEqual({
+      status: 503,
+      message: "Photos can't be sent yet. Tell the host.",
+    });
   });
 });

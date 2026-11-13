@@ -10,8 +10,9 @@ import {
 } from "@/lib/events";
 import type { PlayerRepo, PlayerSummary } from "@/lib/players";
 import type { Recipient, TeamCompetitor } from "@/lib/points";
-import type { FinishedDrawing } from "@/lib/drawings";
+import type { DrawingFiles, FinishedDrawing } from "@/lib/drawings";
 import type { AnyGameLogic, HubPlays, Instructions, PlayResponse, Seat } from "./model";
+import { withPhoto, type PhotoState } from "./photo/logic";
 import { gameLogic } from "./registry";
 import type { PlayChange, PlayRecord, PlayRepo } from "./repo";
 
@@ -31,6 +32,10 @@ export type GameDeps = {
   keepDrawing?: (slug: string, drawing: FinishedDrawing) => Promise<unknown>;
   /** Whether a guess is a real word, for word games (spec 19). Server only. */
   isWord?: (word: string) => boolean;
+  /** Where photos go (spec 20, ADR-034); null when no Blob store is connected. */
+  files?: DrawingFiles | null;
+  /** A fresh id, for photos. */
+  id?: () => string;
 };
 
 /** A run that just finished, and how much it beat the player's best by. */
@@ -216,6 +221,7 @@ function respond(play: PlayRecord, r: Ready, now: number, event: EventConfig): P
     best: play.best,
     step: r.logic.step(play.state),
     ...(r.logic.once ? { once: true as const } : {}),
+    ...(r.logic.waiting?.(play.state) ? { waiting: true as const } : {}),
   };
 }
 
@@ -287,6 +293,61 @@ export async function makeMove(
     return settle(cur, result.state, r);
   });
   if (!play) throw new AppError("NOT_FOUND", "Start the game first.");
+  return respond(play, r, now, event);
+}
+
+/** Photo types and the largest file a phone may send (S20-AC2); phones shrink photos well under it. */
+export const PHOTO_TYPES: Readonly<Record<string, string>> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+export const MAX_PHOTO_BYTES = 3 * 1024 * 1024;
+
+/**
+ * Keeps a photo for a photo challenge (S20-AC2, ADR-034): this phone's
+ * player, an open game with room, an image of at most 3 MB. The file goes to
+ * Blob first, then into the play.
+ */
+export async function addPhoto(
+  deps: GameDeps,
+  event: EventConfig,
+  uid: string,
+  gameId: string,
+  upload: { playerId: string; file: Blob },
+): Promise<PlayResponse> {
+  const r = await guard(deps, event, uid, gameId, upload.playerId);
+  if (r.game.type !== "photo-challenge")
+    throw new AppError("NOT_FOUND", "That game doesn't take photos.");
+  if (!deps.files || !deps.id)
+    throw new AppError("UNAVAILABLE", "Photos can't be sent yet. Tell the host.");
+  const ext = PHOTO_TYPES[upload.file.type];
+  if (!ext) throw new AppError("BAD_REQUEST", "Send a photo (JPEG, PNG or WebP).");
+  if (upload.file.size === 0 || upload.file.size > MAX_PHOTO_BYTES)
+    throw new AppError("BAD_REQUEST", "That photo is too big. Try another one.");
+  const before = await deps.plays.get(event.slug, gameId, r.key);
+  const state = before?.state as PhotoState | undefined;
+  if (!before || !state) throw new AppError("NOT_FOUND", "Start the game first.");
+  if (state.photos.length >= state.max)
+    throw new AppError("BAD_REQUEST", "You've sent all your photos.");
+  const id = deps.id();
+  const url = await deps.files.put(
+    `events/${event.slug}/photos/${gameId}/${r.key}-${id}.${ext}`,
+    upload.file,
+    upload.file.type,
+  );
+  const now = deps.now();
+  const play = await changePlay(deps, event, gameId, r, (cur) => {
+    const s = cur?.state as PhotoState | undefined;
+    if (!cur || !s || s.photos.length >= s.max) return null;
+    return settle(cur, withPhoto(s, { id, url, at: now }), r);
+  });
+  const kept = (play?.state as PhotoState | undefined)?.photos.some((p) => p.id === id);
+  if (!play || !kept) {
+    // Two photos raced for the last spot: drop this one's file.
+    await deps.files.remove([url]).catch(() => undefined);
+    throw new AppError("CONFLICT", "You've sent all your photos.");
+  }
   return respond(play, r, now, event);
 }
 
