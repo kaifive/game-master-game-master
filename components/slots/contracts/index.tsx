@@ -95,11 +95,16 @@ const suites: { [N in SlotName]: Suite<N> } = {
       expect(screen.getByRole("img", { name: "Gift Guess: 150 points" })).toBeInTheDocument();
       expect(screen.getByText("150")).toBeInTheDocument();
     });
-    test("a blank card says it isn't scored and shows no number", () => {
+    test("a blank card says it isn't played and shows a dash, no number", () => {
       const { container } = render(<ScoreCard label="Word Sprint" state="blank" size="sm" />);
-      expect(screen.getByRole("img", { name: "Word Sprint: not scored yet" })).toBeInTheDocument();
-      expect(container.textContent).not.toMatch(/\d/);
+      expect(screen.getByRole("img", { name: "Word Sprint: not played yet" })).toBeInTheDocument();
+      expect(container.textContent).toBe("–");
       expectMotionSafe(container);
+    });
+    test("a pending card says its score is coming and shows ???", () => {
+      const { container } = render(<ScoreCard label="Guessing Jar" state="pending" size="sm" />);
+      expect(screen.getByRole("img", { name: "Guessing Jar: score coming" })).toBeInTheDocument();
+      expect(container.textContent).toBe("???");
     });
     test("a highlighted card still reads its score", () => {
       render(<ScoreCard label="Daily Word" value={100} state="highlight" size="lg" />);

@@ -148,7 +148,7 @@ describe("TeamPanel", () => {
     serve(view, { ...view, donated: { teamId: "t1", player: 15, team: 25 } });
     panel();
     expect(
-      await screen.findByRole("img", { name: "Dragons team score: not scored yet" }),
+      await screen.findByRole("img", { name: "Dragons team score: not played yet" }),
     ).toBeVisible();
     expect(screen.getByRole("img", { name: "Your points: 40 points" })).toBeVisible();
     const user = userEvent.setup();

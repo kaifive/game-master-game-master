@@ -119,7 +119,9 @@ export function PhotoGame({ view: raw, gameId, onPlay }: GameRendererProps) {
             />
           </label>
           <p className="m-0 text-center text-sm font-bold text-gm-text-muted">
-            {`${String(left)} of ${String(view.max)} ${view.max === 1 ? "photo" : "photos"} left`}
+            {view.max === 1
+              ? "Just one photo, so make it count!"
+              : `${String(left)} of ${String(view.max)} photos left`}
           </p>
         </div>
       )}
@@ -135,7 +137,12 @@ export function PhotoGame({ view: raw, gameId, onPlay }: GameRendererProps) {
 export function photoSummary(raw: unknown): string | null {
   const view = raw as PhotoView;
   if (view.kind !== "done") return null;
+  const one = view.photos.length === 1;
   const rated = view.photos.filter((p) => p.rating !== null);
-  if (rated.length < view.photos.length) return "Points come when the host rates your photos.";
-  return `Best rating ${String(Math.max(...rated.map((p) => p.rating ?? 0)))}`;
+  if (rated.length < view.photos.length)
+    return one
+      ? "Your score shows when the host rates your photo."
+      : "Your score shows when the host rates your photos.";
+  const best = String(Math.max(...rated.map((p) => p.rating ?? 0)));
+  return one ? `Rated ${best}` : `Best rating ${best}`;
 }

@@ -28,12 +28,13 @@ describe("Guessing Jar", () => {
     expect(jar.once).toBe(true);
   });
 
-  it("S17-AC3: all points when exact, 2 fewer per 1% off, none at 50% off", () => {
+  it("S17-AC3: all points when exact, 2 fewer per 1% off, never below a third", () => {
     expect(jarShare(312, 312)).toBe(1);
     expect(jarShare(330, 300)).toBeCloseTo(0.8);
-    expect(jarShare(150, 300)).toBe(0);
-    expect(jarShare(900, 300)).toBe(0);
+    expect(jarShare(270, 300)).toBeCloseTo(0.8);
+    expect(jarShare(150, 300)).toBe(0.33);
+    expect(jarShare(900, 300)).toBe(0.33);
     expect(jarShare(0, 0)).toBe(1);
-    expect(jarShare(3, 0)).toBe(0);
+    expect(jarShare(3, 0)).toBe(0.33);
   });
 });

@@ -183,7 +183,7 @@ Density follows the surface: phones are one-thumb, few words, 44 px minimum targ
 **Key Characteristics:**
 
 - Cranberry judges' band with a gold rule along its foot and a holly sprig at its end.
-- White score cards with black Oswald numerals on candy-striped handles; frosted card backs with "?" for unscored.
+- White score cards with black Oswald numerals on candy-striped handles; frosted card backs with "–" for unplayed and "???" for a score still to come.
 - Oswald for headings and numerals, Atkinson Hyperlegible for reading.
 - Places in gold, silver and bronze; everyone else in quiet muted ink.
 - Snow falls on every event screen; motion is transform and opacity only, and always optional.
@@ -302,7 +302,8 @@ The top of every event screen.
 The signature. A white card with black Oswald numerals on a candy-striped handle (`handle-a` / `handle-b` at 2px stripes, -45 degrees).
 
 - **Scored:** `card` / `card-ink`, card lift shadow.
-- **Blank (unscored):** `card-back` / `card-back-ink` with "?", plain handle in `card-back`.
+- **Blank (not played):** `card-back` / `card-back-ink` with "–", plain handle in `card-back`.
+- **Pending (played, the host scores it later):** the same frosted back with "???" (a jar before the reveal, an unrated photo). Revealing the score flips the card.
 - **Miss (a score of 0):** held up on the same frosted `card-back`, still reading "0", never as a white card.
 - **Highlight:** `gold` with `tile-correct-ink`, for celebrations.
 - **Sizes:** sm 48 x 36 px (hub rows), md 72 x 56, lg 128 x 96, xl 160 px tall (celebrations).
@@ -366,7 +367,7 @@ The fixed admin theme: white cards with a gray header strip ("Event", "Teams (2)
 - **Do** use `accent-ink` for any accent-colored text, line or focus ring on `bg`, `surface` or `surface-raised`, and keep `accent` for fills under `text-on-accent`.
 - **Do** show every score on a Score Card slot, and flip it only when a score lands (a fresh result or a changed value), never on a re-render or revisit.
 - **Do** put motion only behind `motion-safe` / `prefers-reduced-motion`, animate only transform and opacity, and take durations from `--gm-motion-*` (150 / 300 / 600 / 1400 ms) and `--gm-ease-*`.
-- **Do** give every color state a second signal: a check on correct tiles, a corner flag on present ones, "?" on blank cards, a mark and label on trivia answers, the team name beside its swatch, the place number beside its medal color.
+- **Do** give every color state a second signal: a check on correct tiles, a corner flag on present ones, "–" and "???" on blank and pending cards, a mark and label on trivia answers, the team name beside its swatch, the place number beside its medal color.
 - **Do** make every tappable thing at least 44 px (tabs 56 px, main action 56 px full width, game answers 80 px).
 - **Do** ask for slots (`useSlots()`) instead of importing a pack's component, and use `--gm-*` tokens instead of colors.
 - **Do** draw icons as inline one-stroke SVG resolved by semantic name (the holly sprig is the winter `points` icon).

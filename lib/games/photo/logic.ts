@@ -14,7 +14,8 @@ export const PhotoContent = z
   .strict();
 export type PhotoContent = z.infer<typeof PhotoContent>;
 
-export const maxPhotos = (c: PhotoContent) => c.maxPhotos ?? 3;
+/** One photo by default: one chance, so make it count (Khai, 2026-11-13). */
+export const maxPhotos = (c: PhotoContent) => c.maxPhotos ?? 1;
 
 export type Photo = { id: string; url: string; rating: number | null; at: number };
 export type PhotoState = { photos: Photo[]; max: number; step: number };
@@ -51,11 +52,18 @@ export const photo: GameLogic<PhotoContent, PhotoState, PhotoView> = {
   once: true,
   instructions: (c) => ({
     title: "How to play",
-    lines: [
-      c.prompt,
-      `Send up to ${String(maxPhotos(c))} photos. The host rates each one, and your best counts.`,
-      "Points arrive when the host rates your photos.",
-    ],
+    lines:
+      maxPhotos(c) === 1
+        ? [
+            c.prompt,
+            "You get just one photo, so make it count!",
+            "Your score shows as soon as the host rates it.",
+          ]
+        : [
+            c.prompt,
+            `Send up to ${String(maxPhotos(c))} photos. The host rates each one, and your best counts.`,
+            "Your score shows as soon as the host rates them.",
+          ],
   }),
   create: (c) => ({ photos: [], max: maxPhotos(c), step: 0 }),
   tick: (s) => s,

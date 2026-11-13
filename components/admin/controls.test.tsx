@@ -361,7 +361,7 @@ describe("Controls teams", () => {
     await user.click(screen.getByRole("button", { name: "Show guesses" }));
     expect(await screen.findByText(/Guessing Jar: 2 guesses/)).toBeInTheDocument();
     await user.type(screen.getByLabelText("Real count"), "300");
-    await user.click(screen.getByRole("button", { name: "Score the jar" }));
+    await user.click(screen.getByRole("button", { name: "Release the scores" }));
     await user.click(screen.getByRole("button", { name: "Yes, the jar has 300" }));
     const closest = await screen.findByRole("list", { name: "Closest guesses for Guessing Jar" });
     expect(closest).toHaveTextContent("Mai guessed 300 · 100 points");

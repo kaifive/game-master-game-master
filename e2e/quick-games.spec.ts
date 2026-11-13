@@ -147,7 +147,7 @@ test("S17-AC6: Guessing Jar is scored from Controls, and the points reach the ph
   await admin.getByRole("link", { name: /Nova Wushu Holiday Party/ }).click();
   await admin.getByRole("button", { name: "Show guesses" }).click();
   await admin.getByLabel("Real count").fill("300");
-  await admin.getByRole("button", { name: /Score (the jar|it again)/ }).click();
+  await admin.getByRole("button", { name: /Release (the scores|them again)/ }).click();
   await admin.getByRole("button", { name: "Yes, the jar has 300" }).click();
   await expect(admin.getByRole("list", { name: "Closest guesses for Guessing Jar" })).toBeVisible();
 
@@ -262,13 +262,17 @@ test("S20-AC5: Spot and Snipe: send a photo, the host rates it, the points reach
   browser,
 }) => {
   const name = await joinAndOpen(page, "Spot and Snipe");
+  await expect(page.getByText("Just one photo, so make it count!")).toBeVisible();
   await page
     .getByLabel("Take or choose a photo")
     .setInputFiles("public/events/nova-wushu-logo.png");
   await expect(page.getByRole("img", { name: "The photo you picked" })).toBeVisible();
   await page.getByRole("button", { name: "Send it" }).click();
-  await expect(page.getByText("Waiting for a rating")).toBeVisible();
-  await expect(page.getByText("2 of 3 photos left")).toBeVisible();
+  // One chance: the play is done, and its score reads ??? until the host rates it.
+  const result = page.getByRole("region", { name: "Your score" });
+  await expect(result.getByRole("img", { name: /your score: score coming/ })).toHaveText("???");
+  await expect(result).toContainText("Your score shows when the host rates your photo.");
+  await expect(result).not.toContainText("No points this time");
 
   const admin = await (
     await browser.newContext({ viewport: { width: 1024, height: 900 } })
@@ -286,14 +290,12 @@ test("S20-AC5: Spot and Snipe: send a photo, the host rates it, the points reach
   await expect(photo.getByText("Rated 80")).toBeVisible();
 
   await page.reload();
-  await expect(page.getByText("Rated 80")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Your score" })).toContainText("Rated 80");
   await page
     .getByRole("navigation", { name: "Party" })
     .getByRole("link", { name: /Games/ })
     .click();
-  await expect(
-    page
-      .getByRole("link", { name: /Spot and Snipe/ })
-      .getByRole("img", { name: /Spot and Snipe: 80 points/ }),
-  ).toBeVisible();
+  // One chance, used: the row says Done, with its score card.
+  const games = page.getByRole("list", { name: "Games" });
+  await expect(games.getByRole("img", { name: "Spot and Snipe: 80 points" })).toBeVisible();
 });

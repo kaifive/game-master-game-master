@@ -418,7 +418,13 @@ describe("kept drawings (ADR-032)", () => {
 
 describe("photo uploads (spec 20)", () => {
   const jpeg = (bytes = 1000, type = "image/jpeg") => new Blob([new Uint8Array(bytes)], { type });
-  const snipe = { ...event, games: event.games.filter((g) => g.id === "spot-and-snipe") };
+  // Three photos here, to check the play fills up; the party allows one.
+  const snipe = {
+    ...event,
+    games: event.games
+      .filter((g) => g.id === "spot-and-snipe")
+      .map((g) => ({ ...g, content: { ...(g.content as object), maxPhotos: 3 } })),
+  };
   const send = (file: Blob, who = playerId) =>
     addPhoto(deps, snipe, UID, "spot-and-snipe", { playerId: who, file });
 

@@ -80,7 +80,15 @@ export function teamGameBlock(
 }
 
 type Group = "open" | "scored" | "later";
-type Row = { game: Game; group: Group; href: string | null; note: string; best: number | null };
+type Row = {
+  game: Game;
+  group: Group;
+  href: string | null;
+  note: string;
+  best: number | null;
+  /** Played, its score still to come from the host: the card reads "???" (Khai, 2026-11-13). */
+  pending?: true;
+};
 
 /**
  * One row per listed game, in the event file's order: one list, no sections
@@ -103,8 +111,16 @@ export function hubRows(
     const wait = game.mode !== "solo" ? "On the TV when the host starts it" : null;
     const open = gameOpen(status, game) && !blocked && !wait;
     const href = open ? `/${event.slug}/play/${game.id}` : null;
+    // Played, but the host scores it later (a jar, a photo): "???" until then.
     if (play?.waiting)
-      return { game, group: "scored", href: null, note: "Waiting for the reveal", best: null };
+      return {
+        game,
+        group: "scored",
+        href: open ? href : null,
+        note: "Waiting for the host",
+        best: null,
+        pending: true,
+      };
     if (play?.status === "finished") {
       const again = open && event.replayable && !play.once;
       return {
@@ -138,7 +154,7 @@ function GameRow({ row }: { row: Row }) {
   const { ScoreCard } = useSlots();
   const card =
     row.best === null ? (
-      <ScoreCard label={row.game.title} state="blank" size="sm" />
+      <ScoreCard label={row.game.title} state={row.pending ? "pending" : "blank"} size="sm" />
     ) : (
       <ScoreCard label={row.game.title} value={row.best} state="scored" size="sm" />
     );
