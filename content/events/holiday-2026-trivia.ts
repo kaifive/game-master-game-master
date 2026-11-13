@@ -44,7 +44,7 @@ export const holidayTrivia: TriviaContent = {
     {
       id: "jingle",
       prompt: "Jingle ___, jingle all the way!",
-      choices: ["Bells", "Balls", "Boots", "Bears"],
+      choices: ["Bells", "Bows", "Boots", "Bears"],
       answer: 0,
     },
     {
@@ -116,7 +116,6 @@ export const holidayTrivia: TriviaContent = {
     {
       id: "tree-top",
       prompt: "What often goes on top of a Christmas tree?",
-      image: img("star", "A gold star"),
       choices: ["A star", "A hat", "A sock", "A pumpkin"],
       answer: 0,
     },
@@ -145,9 +144,9 @@ export const holidayTrivia: TriviaContent = {
       answer: 2,
     },
     {
-      id: "christmas-day",
-      prompt: "What date is Christmas Day?",
-      choices: ["December 24", "December 25", "December 31", "January 1"],
+      id: "under-tree",
+      prompt: "What do people put under the Christmas tree?",
+      choices: ["Shoes", "Presents", "Snow", "Pillows"],
       answer: 1,
     },
     {
