@@ -248,9 +248,14 @@ describe("game service", () => {
     };
     const right = (v: Asked) => {
       const q = content.questions.find((x) => x.prompt === v.prompt);
-      const text = q?.choices[q.answer];
-      const label = typeof text === "string" ? text : (text as { text?: string }).text;
-      return { type: "answer", choice: v.choices.findIndex((c) => c.text === label) };
+      const want = q?.choices[q.answer];
+      // A choice is text, or a picture: match whichever it is.
+      const same = (c: { text?: string | undefined; image?: { src: string } | undefined }) =>
+        typeof want === "string"
+          ? c.text === want
+          : c.text === (want as { text?: string }).text &&
+            c.image?.src === (want as { image?: { src: string } }).image?.src;
+      return { type: "answer", choice: v.choices.findIndex(same) };
     };
     const best = await run(right);
     expect(best.best).toBe(100);

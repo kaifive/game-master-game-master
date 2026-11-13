@@ -1,5 +1,6 @@
 import type { EventConfig } from "@/lib/events";
 import { holidayTrivia } from "./holiday-2026-trivia";
+import { wushuTrivia } from "./holiday-2026-wushu-trivia";
 
 /** The Nova Wushu Holiday Party. Started and ended by hand from Controls (ADR-024). */
 export const holiday2026: EventConfig = {
@@ -24,6 +25,17 @@ export const holiday2026: EventConfig = {
       content: holidayTrivia,
       scoring: { awardTo: "player" },
       // Open now for testing. Decide before the party (runbooks/event-checklist.md).
+      alwaysOpen: true,
+    },
+    {
+      // Khai, 2026-11-13: club facts and rule codes, apart from the easy holiday set.
+      id: "wushu-trivia",
+      type: "trivia",
+      title: "Wushu Trivia",
+      mode: "solo",
+      visibility: "listed",
+      content: wushuTrivia,
+      scoring: { awardTo: "player" },
       alwaysOpen: true,
     },
     // Quick games (spec 16). Open now for testing, like trivia; decide before the party.
