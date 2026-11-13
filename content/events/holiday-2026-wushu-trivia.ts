@@ -31,7 +31,7 @@ export const wushuTrivia: TriviaContent = {
     {
       id: "us-team",
       prompt: "How many times has a Nova Wushu athlete (including Coach) made the US team?",
-      choices: ["10", "15", "20", "25"],
+      choices: ["16", "18", "20", "23"],
       answer: 2,
     },
     {
