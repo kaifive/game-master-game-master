@@ -36,7 +36,8 @@ export const holiday2026: EventConfig = {
       visibility: "listed",
       content: {
         prompt: "Snipe a photo of Coach. The funnier, the more points!",
-        maxPhotos: 3,
+        // One chance: make it count (Khai, 2026-11-13).
+        maxPhotos: 1,
       },
       scoring: { awardTo: "player" },
       alwaysOpen: true,

@@ -13,8 +13,8 @@ Two games that don't score the moment you finish. **Guessing Jar**: one guess at
 ### Guessing Jar (`jar`)
 
 1. Content: a `prompt` ("How many candies are in the jar?") and an optional picture. One guess per player, a whole number; it can't be changed and the game can't be replayed, even in a replayable event.
-2. After guessing, the phone shows the guess and "Points come when the host reveals the jar."
-3. In Controls, the host loads the jar's guesses (on request, since it reads every play), enters the real count and taps **Score the jar** (with a confirm). Each guess earns `soloGamePoints × max(0, 1 − %off ÷ 50)`: exact earns all, 2 points fewer per 1% off (at 100 points), 0 at 50% off or more. Points land in the ledger at once, so the TV announces them and the phones' totals update.
+2. After guessing, the phone shows the guess, "Points come when the host reveals the jar.", and its score card reads **???** until then; the games list card does too (Khai, 2026-11-13). Unplayed games' cards read "–".
+3. In Controls, the host loads the jar's guesses (on request, since it reads every play), enters the real count and taps **Release the scores** (with a confirm). Each guess earns `soloGamePoints × max(0.33, 1 − %off ÷ 50)`: exact earns all, 2 points fewer per 1% off (at 100 points), and never less than a third, so everyone who guessed gets something (Khai, 2026-11-13). Points land in the ledger at once, so the TV announces them and the phones' totals update.
 4. Controls then lists the closest guesses (name, guess, points). Entering a different count re-scores: earlier jar points are voided and the new ones awarded.
 5. Once scored, the guesser's phone shows their guess, the real count, how far off and the points.
 
@@ -27,7 +27,7 @@ Two games that don't score the moment you finish. **Guessing Jar**: one guess at
 
 ### Both
 
-10. The games list shows the jar as scored only once it's scored; Geocache shows its points so far on its card while there are caches left.
+10. The games list shows the jar as "???" (Waiting for the host) until it's scored; Geocache shows its points so far on its card while there are caches left.
 
 ## Data
 
@@ -37,13 +37,13 @@ Two games that don't score the moment you finish. **Guessing Jar**: one guess at
 
 ## UI
 
-Phone: a big number box and **Lock in my guess** (with a confirm, since it's final) for the jar; a code box and **Check code** for Geocache, with found caches as score cards. Controls: a **Guessing Jar** card per jar game with **Show guesses**, the count box and **Score the jar**, and the closest guesses after.
+Phone: a big number box and **Lock in my guess** (with a confirm, since it's final) for the jar; a code box and **Check code** for Geocache, with found caches as score cards. Controls: a **Guessing Jar** card per jar game with **Show guesses**, the count box and **Release the scores**, and the closest guesses after.
 
 ## Acceptance criteria
 
 - [x] AC-1: Jar and Geocache content are validated; Geocache codes are unique and never sent to phones.
 - [x] AC-2: A jar takes one whole-number guess, can't be changed or replayed, and shows it's waiting for the reveal.
-- [x] AC-3: Scoring the jar awards each guess `points × max(0, 1 − %off ÷ 50)` through the ledger, lists the closest guesses, and re-scoring voids the old points first.
+- [x] AC-3: Releasing the scores awards each guess `points × max(0.33, 1 − %off ÷ 50)` through the ledger, lists the closest guesses, and re-scoring voids the old points first.
 - [x] AC-4: A right Geocache code scores its share at once and only once; a found or wrong code says so; 5 wrong codes in a row wait 30 seconds.
 - [x] AC-5: The games list shows a scored jar's points, and Geocache's points so far while it's open; neither offers Again.
 - [x] AC-6: The party's event file has a jar and a Geocache with placeholder codes, and both play end to end.

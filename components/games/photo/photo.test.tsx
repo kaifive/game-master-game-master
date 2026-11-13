@@ -75,6 +75,19 @@ describe("photo challenge screen (spec 20)", () => {
     expect(onPlay).toHaveBeenCalledWith(back);
   });
 
+  test("S20-AC1: one photo says so: make it count", () => {
+    render(
+      <PhotoGame
+        view={{ ...view(), max: 1 }}
+        gameId="spot-and-snipe"
+        onMove={vi.fn()}
+        onTimeUp={vi.fn()}
+        busy={false}
+      />,
+    );
+    expect(screen.getByText("Just one photo, so make it count!")).toBeInTheDocument();
+  });
+
   test("S20-AC3: sent photos say whether they're rated; an upload error shows", async () => {
     api.photo.mockResolvedValue({ ok: false, message: "Photos can't be sent yet. Tell the host." });
     render(
@@ -100,8 +113,9 @@ describe("photo challenge screen (spec 20)", () => {
     await user.click(await screen.findByRole("button", { name: "Send it" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Photos can't be sent yet");
     expect(photoSummary(view([{ id: "a", url: "u", rating: null }], "done"))).toBe(
-      "Points come when the host rates your photos.",
+      "Your score shows when the host rates your photo.",
     );
+    expect(photoSummary(view([{ id: "a", url: "u", rating: 70 }], "done"))).toBe("Rated 70");
     expect(
       photoSummary(
         view(

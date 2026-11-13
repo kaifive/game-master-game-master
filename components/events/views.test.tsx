@@ -330,7 +330,7 @@ describe("S08-AC7: sorting the games", () => {
 });
 
 describe("S17-AC5: jars and caches on the games list", () => {
-  test("a jar waits for the reveal; Geocache shows its points so far; neither offers Again", () => {
+  test("a played jar reads ??? until the host scores it; Geocache shows its points so far; neither offers Again", () => {
     const replay = { ...event, replayable: true };
     const rows = hubRows(
       replay,
@@ -345,8 +345,9 @@ describe("S17-AC5: jars and caches on the games list", () => {
     const byId = Object.fromEntries(rows.map((r) => [r.game.id, r]));
     expect(byId["guessing-jar"]).toMatchObject({
       group: "scored",
-      note: "Waiting for the reveal",
+      note: "Waiting for the host",
       best: null,
+      pending: true,
     });
     expect(byId.geocache).toMatchObject({ group: "open", note: "Continue", best: 33 });
     expect(byId.trivia).toMatchObject({ note: "Again" });

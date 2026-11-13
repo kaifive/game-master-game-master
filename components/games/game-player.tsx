@@ -83,10 +83,11 @@ function Result({
         <PointsIcon />
       </span>
       <div ref={score}>
+        {/* A score the host gives later reads "???" until then (Khai, 2026-11-13). */}
         <ScoreCard
           label={`${title}, your score`}
           value={play.points}
-          state={newBest ? "highlight" : "scored"}
+          state={play.waiting ? "pending" : newBest ? "highlight" : "scored"}
           size="xl"
           fresh
         />

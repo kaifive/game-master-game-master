@@ -32,7 +32,11 @@ export type PanelProps = { label: string; children: ReactNode };
 export type ScoreCardProps = {
   label: string;
   value?: number;
-  state: "scored" | "blank" | "highlight";
+  /**
+   * blank: not played ("–"); pending: played, its score still to come from
+   * the host ("???"); scored and highlight carry the value.
+   */
+  state: "scored" | "blank" | "pending" | "highlight";
   /** xl is the result held up when a game ends. */
   size?: "sm" | "md" | "lg" | "xl";
   /** A score that has just landed, so the card is held up as it appears (a game's result). */

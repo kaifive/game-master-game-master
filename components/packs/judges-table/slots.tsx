@@ -101,6 +101,8 @@ const paddle = variants({
 /** The last score each card showed, across pages, so a card flips only when its score changes. */
 const seen = new Map<string, number>();
 const BLANK = -1;
+/** Played, its score still to come: revealing it counts as a score landing. */
+const PENDING = -2;
 
 /**
  * Whether a card should flip up: a fresh result, or a score that changed
@@ -122,19 +124,26 @@ function useLanded(key: string, value: number, fresh: boolean): boolean {
   useEffect(() => {
     seen.set(key, value);
   }, [key, value]);
-  return landed === value && value !== BLANK;
+  return landed === value && value !== BLANK && value !== PENDING;
 }
 
 /** A judge's score card on a handle; flips up when a score lands. */
 function ScoreCard({ label, value, state, size = "md", fresh = false }: ScoreCardProps) {
-  const scored = state !== "blank" && value !== undefined;
-  const landed = useLanded(label, scored ? value : BLANK, fresh);
+  const pending = state === "pending";
+  const scored = state !== "blank" && !pending && value !== undefined;
+  const landed = useLanded(label, scored ? value : pending ? PENDING : BLANK, fresh);
   // A miss (0) is held up on the frosted card back, as the judges' table does.
-  const look = scored && value === 0 && state === "scored" ? "blank" : state;
+  const look = pending || (scored && value === 0 && state === "scored") ? "blank" : state;
   return (
     <span
       role="img"
-      aria-label={scored ? `${label}: ${fmt(value)} points` : `${label}: not scored yet`}
+      aria-label={
+        scored
+          ? `${label}: ${fmt(value)} points`
+          : pending
+            ? `${label}: score coming`
+            : `${label}: not played yet`
+      }
       data-slot="score-card"
       data-state={state}
       className="inline-grid justify-items-center"
@@ -146,7 +155,7 @@ function ScoreCard({ label, value, state, size = "md", fresh = false }: ScoreCar
           landed && "motion-safe:animate-[jt-flip_420ms_cubic-bezier(0.16,1,0.3,1)]",
         )}
       >
-        {scored ? fmt(value) : "?"}
+        {scored ? fmt(value) : pending ? "???" : "–"}
       </span>
       <span
         data-part="handle"

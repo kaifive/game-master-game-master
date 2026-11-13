@@ -30,11 +30,16 @@ const Move = z.object({
 
 const fail = (message: string): MoveResult<JarState> => ({ ok: false, message });
 
-/** The share of points for a guess: all when exact, 0 at 50% off or more (S17-AC3). */
+/** Everyone who guessed gets at least this share (Khai, 2026-11-13). */
+export const JAR_FLOOR = 0.33;
+
+/**
+ * The share of points for a guess: all when exact, 2 points fewer per 1% off
+ * (at 100 points), never below a third (S17-AC3).
+ */
 export function jarShare(guess: number, actual: number): number {
-  if (actual === 0) return guess === 0 ? 1 : 0;
-  const pctOff = (Math.abs(guess - actual) / actual) * 100;
-  return Math.max(0, 1 - pctOff / 50);
+  const pctOff = actual === 0 ? (guess === 0 ? 0 : 100) : (Math.abs(guess - actual) / actual) * 100;
+  return Math.max(JAR_FLOOR, 1 - pctOff / 50);
 }
 
 export const jar: GameLogic<JarContent, JarState, JarView> = {
@@ -44,7 +49,7 @@ export const jar: GameLogic<JarContent, JarState, JarView> = {
     title: "How to play",
     lines: [
       prompt(c),
-      "You get one guess, and you can't change it.",
+      "You get just one guess, so make it count.",
       "Points come when the host reveals the real count: the closer, the more.",
     ],
   }),

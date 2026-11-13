@@ -247,7 +247,7 @@ function JarsCard({
                   className={`${field} max-w-40`}
                 />
                 <Confirm
-                  label={j.actual === null ? "Score the jar" : "Score it again"}
+                  label={j.actual === null ? "Release the scores" : "Release them again"}
                   sure={`Yes, the jar has ${String(count)}`}
                   tone="primary"
                   disabled={busy || !ready}

@@ -109,16 +109,22 @@ const card = variants({
 });
 
 export function ScoreCard({ label, value, state, size }: ScoreCardProps) {
-  const scored = state !== "blank" && value !== undefined;
+  const scored = state !== "blank" && state !== "pending" && value !== undefined;
   return (
     <span
       role="img"
-      aria-label={scored ? `${label}: ${fmt(value)} points` : `${label}: not scored yet`}
+      aria-label={
+        scored
+          ? `${label}: ${fmt(value)} points`
+          : state === "pending"
+            ? `${label}: score coming`
+            : `${label}: not played yet`
+      }
       data-slot="score-card"
       data-state={state}
-      className={card({ state, size })}
+      className={card({ state: state === "pending" ? "blank" : state, size })}
     >
-      {scored ? fmt(value) : "–"}
+      {scored ? fmt(value) : state === "pending" ? "???" : "–"}
     </span>
   );
 }
