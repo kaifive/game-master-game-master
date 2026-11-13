@@ -13,7 +13,7 @@ Two games about the Nova Wushu logo (`public/events/nova-wushu-logo.png`, from K
 ### Color Matcher (`color`)
 
 1. Content: a `target` color (hex) and a `prompt`. The phone never sees the target before locking in.
-2. A color wheel (tap or drag: around the wheel picks the shade, toward the edge makes it stronger), a **Brightness** slider and a large live swatch; **Lock in this color** sends it (Khai, 2026-11-10: easier than red, green and blue sliders; the wheel also works by keyboard and screen reader as two sliders). The difference is measured the way eyes see it (CIEDE2000 ΔE, which judges purples, greys and vividness as eyes do; the older CIE76 made scores feel random, Khai 2026-11-10): within 2 earns all the points, falling to 0 at 25. Replayable when the event is.
+2. A color wheel (tap or drag: around the wheel picks the shade, toward the edge makes it stronger), a **Brightness** slider and a large live swatch; **Lock in this color** sends it (Khai, 2026-11-10: easier than red, green and blue sliders; the wheel also works by keyboard and screen reader as two sliders). The difference is measured on the game's own controls (Khai, 2026-11-13): the distance between the two points on the color wheel (its radius counting 1) together with the gap on the brightness slider (0 to 1), each control counting the same. Within 0.04 earns all the points, falling to 0 at 0.5, so being a quarter off on strength or brightness earns about half, and 45° off in shade almost nothing. (CIEDE2000, used before, forgave vividness and punished brightness, so a neon magenta could beat a slightly-too-light purple.) Replayable when the event is.
 3. The result shows the match as a percentage. In a replayable event it doesn't show the logo's color, so a replay can't just copy it; otherwise it shows yours and the logo's.
 
 ### Quick Draw (`draw`)
@@ -38,7 +38,7 @@ Two games about the Nova Wushu logo (`public/events/nova-wushu-logo.png`, from K
 ## Acceptance criteria
 
 - [x] AC-1: Color Matcher's target is validated and never sent to phones before the pick.
-- [x] AC-2: The pick scores all points within ΔE 2 (CIEDE2000) of the target, falling to 0 at ΔE 25, once per run; a replayable event never shows the target.
+- [x] AC-2: The pick scores all points within 0.04 of the target on the wheel and slider, falling to 0 at 0.5, each control counting the same, once per run; a replayable event never shows the target.
 - [x] AC-3: Quick Draw takes an untimed drawing, judged on the server, and is replayable when the event is.
 - [x] AC-4: The judge ignores size and position, ranks a faithful sketch above a rough one, and gives a circle alone or a scribble almost nothing.
 - [x] AC-5: Both games are in the party's event file and play end to end on a phone.
