@@ -25,8 +25,12 @@ type Phase =
   | { kind: "checking" }
   /** `again` starts a new run of a finished, replayable game on Start (S08-AC12). */
   | { kind: "instructions"; again: boolean }
-  | { kind: "playing"; play: PlayResponse; bestBefore: number }
+  /** `hold`: the run just ended, but the game stays on screen for its last animation. */
+  | { kind: "playing"; play: PlayResponse; bestBefore: number; hold?: boolean }
   | { kind: "error"; message: string };
+
+/** The wall clock, read when a reply lands (outside render). */
+const clockNow = () => Date.now();
 
 /** How long the score card takes to flip up before the points fly. */
 const FLIP_MS = 600;
@@ -202,14 +206,22 @@ export function GamePlayer({ gameId, type, instructions, replayable, title = "Th
       void refreshPlays();
     const apply = () => {
       setBusy(false);
+      const hold =
+        res.ok && res.data.status === "finished" && renderer?.holdResultMs
+          ? renderer.holdResultMs
+          : 0;
       setPhase(
         res.ok
-          ? { kind: "playing", play: res.data, bestBefore: phase.bestBefore }
+          ? { kind: "playing", play: res.data, bestBefore: phase.bestBefore, hold: hold > 0 }
           : { kind: "error", message: res.message },
       );
+      if (hold > 0)
+        setTimeout(() => {
+          setPhase((p) => (p.kind === "playing" ? { ...p, hold: false } : p));
+        }, hold);
     };
     // A reply that came back early waits for its moment, such as the end of an answer's pause.
-    const wait = (options.notBefore ?? 0) - Date.now();
+    const wait = (options.notBefore ?? 0) - clockNow();
     if (res.ok && wait > 0) setTimeout(apply, wait);
     else apply();
   };
@@ -250,7 +262,7 @@ export function GamePlayer({ gameId, type, instructions, replayable, title = "Th
           }}
         />
       )}
-      {phase.kind === "playing" && renderer && phase.play.status === "finished" && (
+      {phase.kind === "playing" && renderer && phase.play.status === "finished" && !phase.hold && (
         <Result
           key={`${String(phase.play.step)}-${String(phase.play.best)}`}
           play={phase.play}
@@ -269,16 +281,18 @@ export function GamePlayer({ gameId, type, instructions, replayable, title = "Th
           }
         />
       )}
-      {phase.kind === "playing" && renderer && phase.play.status === "playing" && (
-        <renderer.Play
-          view={phase.play.view}
-          busy={busy}
-          onMove={(m, options) => void move(m, options)}
-          onTimeUp={() => void begin()}
-          gameId={gameId}
-          onPlay={showPlay}
-        />
-      )}
+      {phase.kind === "playing" &&
+        renderer &&
+        (phase.play.status === "playing" || phase.hold === true) && (
+          <renderer.Play
+            view={phase.play.view}
+            busy={busy}
+            onMove={(m, options) => void move(m, options)}
+            onTimeUp={() => void begin()}
+            gameId={gameId}
+            onPlay={showPlay}
+          />
+        )}
     </div>
   );
 }

@@ -20,4 +20,6 @@ export type GameRenderer = {
   summary: (view: unknown) => string | null;
   /** A clock runs on the server mid-run, so leaving costs time: ask first (S08-AC14). */
   warnOnLeave?: boolean;
+  /** Keep the game on screen this long after the move that finishes it, so its last animation plays (spec 19). */
+  holdResultMs?: number;
 };

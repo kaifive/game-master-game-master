@@ -1,8 +1,8 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, test, vi } from "vitest";
-import type { WordView } from "@/lib/games";
-import { WordGame, wordSummary } from "./word";
+import { afterEach, describe, expect, test, vi } from "vitest";
+import type { Mark, WordView } from "@/lib/games";
+import { WORD_HOLD_MS, WordGame, wordSummary } from "./word";
 
 const props = (view: WordView, onMove = vi.fn()) => ({
   view,
@@ -16,6 +16,10 @@ const guessing = (over: Partial<Extract<WordView, { kind: "guessing" }>> = {}): 
   maxGuesses: 6,
   rejected: null,
   ...over,
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("Secret Word screen (spec 19)", () => {
@@ -71,5 +75,48 @@ describe("Secret Word screen (spec 19)", () => {
     expect(wordSummary({ kind: "done", rows, maxGuesses: 6, solved: false, answer: "SPEAR" })).toBe(
       "The word was SPEAR",
     );
+  });
+
+  test("S19-AC3: a new guess flips over tile by tile, and the keyboard waits for the flips", async () => {
+    vi.useFakeTimers();
+    const onMove = vi.fn();
+    const { rerender } = render(<WordGame {...props(guessing(), onMove)} />);
+    const marks = ["absent", "present", "present", "absent", "correct"] as Mark[];
+    rerender(<WordGame {...props(guessing({ rows: [{ word: "CRANE", marks }] }), onMove)} />);
+    const tiles = () =>
+      within(screen.getByRole("group", { name: "Guess 1" }))
+        .getAllByRole("img")
+        .map((t) => t.getAttribute("data-state"));
+    // Nothing shows yet: every tile still reads as typed, and the keyboard is unmarked.
+    expect(tiles()).toEqual(["typed", "typed", "typed", "typed", "typed"]);
+    expect(screen.getByRole("button", { name: /^E($|,)/ })).toHaveAttribute("data-state", "unused");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    expect(tiles()).toEqual(["absent", "typed", "typed", "typed", "typed"]);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(WORD_HOLD_MS);
+    });
+    expect(tiles()).toEqual(marks);
+    expect(screen.getByRole("button", { name: /^E($|,)/ })).toHaveAttribute(
+      "data-state",
+      "correct",
+    );
+  });
+
+  test("S19-AC2: a turned-away word shakes the row, and the message clears itself", async () => {
+    vi.useFakeTimers();
+    const onMove = vi.fn();
+    const { rerender } = render(<WordGame {...props(guessing(), onMove)} />);
+    for (const key of ["x", "q", "z", "v", "b"]) fireEvent.keyDown(window, { key });
+    const row = () => screen.getByRole("group", { name: "Guess 1" });
+    expect(row().className).not.toMatch(/gm-shake/);
+    rerender(<WordGame {...props(guessing({ rejected: "XQZVB" }), onMove)} />);
+    expect(row().className).toMatch(/gm-shake/);
+    expect(screen.getByRole("status")).toHaveTextContent("Not in the word list");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1600);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("");
   });
 });

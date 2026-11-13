@@ -24,7 +24,9 @@ Play `state`: the answer, the guesses, the last rejected guess, the phase and th
 
 ## UI
 
-Phone: six rows of five tiles (the pack's Tile slot), the row being typed shows its letters, and an on-screen keyboard (the pack's Key slot) with **Enter** and **⌫** (labelled "Delete"); a physical keyboard works too. "Not in the word list" shows above the grid without losing the typed letters.
+Phone: six rows of five tiles (the pack's Tile slot), the row being typed shows its letters, and an on-screen keyboard (the pack's Key slot) with **Enter** and **Delete**, its middle row inset by half a key each side; a physical keyboard works too. "Not in the word list" shows above the grid without losing the typed letters.
+
+Motion (Khai, 2026-11-13; all behind reduced-motion): a typed letter pops in; a turned-away word shakes its row; a new guess flips over tile by tile (300 ms apart), each tile showing its mark halfway through its flip, and the keyboard takes the new marks only once the flips finish; a solved row bounces tile by tile. The result waits until the last row has flipped (and bounced). The game keeps its own name and the pack's tile colors: it is a word-guessing mechanic, not a copy of another game's look.
 
 ## Acceptance criteria
 

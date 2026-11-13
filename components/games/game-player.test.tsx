@@ -1,9 +1,10 @@
-import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { PlayResponse } from "@/lib/games";
 import { setReducedMotion } from "@/tests/motion";
 import { GamePlayer, LEAVE_WARNING } from "./game-player";
+import { WORD_HOLD_MS } from "./word/word";
 
 const api = vi.hoisted(() => ({
   plays: vi.fn(),
@@ -304,5 +305,48 @@ describe("GamePlayer", () => {
     page(true);
     expect(await screen.findByRole("region", { name: "Your score" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Play again" })).toBeNull();
+  });
+
+  test("S19-AC3: a word game's last guess flips on the board before the result shows", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    setReducedMotion(true);
+    const board = { kind: "guessing", rows: [], maxGuesses: 6, rejected: null };
+    const marks = ["correct", "correct", "correct", "correct", "correct"];
+    api.plays.mockReturnValue(
+      ok({ plays: { "secret-word": { status: "playing", best: 0, runs: 1 } } }),
+    );
+    api.start.mockReturnValue(ok({ status: "playing", points: 0, best: 0, step: 0, view: board }));
+    api.move.mockReturnValue(
+      ok({
+        status: "finished",
+        points: 100,
+        best: 100,
+        step: 1,
+        view: {
+          kind: "done",
+          rows: [{ word: "SPEAR", marks }],
+          maxGuesses: 6,
+          solved: true,
+          answer: "SPEAR",
+        },
+      }),
+    );
+    render(<GamePlayer gameId="secret-word" type="word" instructions={rules} replayable={false} />);
+    await screen.findByRole("group", { name: "Keyboard" });
+    for (const key of ["S", "P", "E", "A", "R", "Enter"])
+      fireEvent.click(screen.getByRole("button", { name: new RegExp(`^${key}($|,)`) }));
+    await waitFor(() => {
+      expect(api.move).toHaveBeenCalled();
+    });
+    // Still the board, flipping; no result yet.
+    expect(await screen.findByRole("group", { name: "Guess 1" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Your score" })).toBeNull();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(WORD_HOLD_MS + 50);
+    });
+    expect(await screen.findByRole("region", { name: "Your score" })).toHaveTextContent(
+      "Solved in 1 guess",
+    );
+    vi.useRealTimers();
   });
 });
