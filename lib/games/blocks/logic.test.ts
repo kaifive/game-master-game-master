@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { blocks, blocksShare, BlocksContent } from "./logic";
-import { checkPlacements, cutBoard, MAX_PIECE, MIN_PIECE, rotate, solveBlocks } from "./puzzle";
+import {
+  checkPlacements,
+  cutBoard,
+  MAX_PIECE,
+  MIN_PIECE,
+  rotate,
+  solveBlocks,
+  turnCells,
+} from "./puzzle";
 
 describe("Block Fit", () => {
   it("S22-AC1: every seed cuts the board into connected pieces of 3 to 5 that cover it", () => {
@@ -95,5 +103,32 @@ describe("Block Fit", () => {
     expect(blocks.score(done.state, 100)).toBe(100);
     expect(blocksShare(180_000)).toBe(0.5);
     expect(blocks.tick(s, c, { now: 3_600_000 })).toBe(s);
+  });
+
+  it("S22-AC5: a picture puzzle deals a photo and pairs every square with its slice, turned as dealt", () => {
+    const images = ["/a.jpg", "/b.jpg"].map((src) => ({ src, alt: src }));
+    const c = BlocksContent.parse({ images });
+    for (let seed = 1; seed <= 40; seed++) {
+      const s = blocks.create(c, seed, { now: 0 });
+      const view = blocks.view(s, c, { now: 0 });
+      expect(images).toContainEqual(view.kind === "playing" ? view.image : null);
+      const covered = new Set<string>();
+      for (const p of s.pieces) {
+        const spin = p.spin ?? 0;
+        // Turned back home, each square lands on its slice (offset by where the piece sits).
+        const home = turnCells(p.cells, 4 - spin);
+        const slices = p.slices ?? [];
+        const r0 = Math.min(...slices.map((x) => x[0]));
+        const c0 = Math.min(...slices.map((x) => x[1]));
+        expect(home.map(([r, col]) => [r + r0, col + c0])).toEqual(slices);
+        for (const [r, col] of slices) covered.add(`${String(r)},${String(col)}`);
+      }
+      expect(covered.size).toBe(20);
+    }
+    expect(blocks.instructions(c).lines[0]).toMatch(/photo back together/);
+    const plain = BlocksContent.parse({});
+    const s = blocks.create(plain, 3, { now: 0 });
+    expect(s.pieces.every((p) => p.slices === undefined)).toBe(true);
+    expect(blocks.view(s, plain, { now: 0 })).not.toHaveProperty("image");
   });
 });

@@ -83,4 +83,50 @@ describe("Block Fit screen (spec 22)", () => {
     );
     expect(screen.getByText("0 of 2 placed")).toBeInTheDocument();
   });
+
+  test("S22-AC5: picture pieces show their photo slices, turned as dealt, and a full board shows the whole photo", () => {
+    const base = props();
+    render(
+      <BlocksGame
+        {...base}
+        view={{
+          ...base.view,
+          image: { src: "/p.jpg", alt: "A photo" },
+          pieces: [
+            {
+              id: 0,
+              cells: bar,
+              slices: [
+                [0, 0],
+                [0, 1],
+                [0, 2],
+              ],
+              spin: 0,
+            },
+            // Dealt upside down: its first square is the photo's bottom-right slice.
+            {
+              id: 1,
+              cells: bar,
+              slices: [
+                [1, 2],
+                [1, 1],
+                [1, 0],
+              ],
+              spin: 2,
+            },
+          ],
+        }}
+      />,
+    );
+    const tray = () => within(screen.getByRole("group", { name: "Pieces" })).getAllByRole("button");
+    dragTo(tray()[1] as HTMLElement, 24, 72);
+    const board = within(screen.getByRole("group", { name: "Board" })).getAllByRole("button");
+    const slice = board[3]?.querySelector("span");
+    expect(slice?.style.backgroundImage).toContain("/p.jpg");
+    expect(slice?.style.backgroundPosition).toBe("100% 100%");
+    expect(slice?.style.transform).toBe("rotate(180deg)");
+    expect(screen.queryByRole("img", { name: "Solved: A photo" })).not.toBeInTheDocument();
+    dragTo(tray()[0] as HTMLElement, 24, 24);
+    expect(screen.getByRole("img", { name: "Solved: A photo" })).toBeInTheDocument();
+  });
 });

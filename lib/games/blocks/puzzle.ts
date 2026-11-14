@@ -5,7 +5,17 @@ import { seededRandom, shuffled } from "../random";
  * 5 squares. A piece is its squares as [row, col] pairs, top-left at 0, 0.
  */
 export type Cell = [number, number];
-export type Piece = { id: number; cells: Cell[] };
+export type Piece = {
+  id: number;
+  cells: Cell[];
+  /**
+   * Picture puzzles only: where each of `cells` (same order) sits on the
+   * board when the picture is whole, and how many quarter turns the piece was
+   * dealt with, so its photo slices turn with it.
+   */
+  slices?: Cell[];
+  spin?: number;
+};
 export type Placement = { piece: number; turns: number; row: number; col: number };
 
 export const MIN_PIECE = 3;
@@ -18,12 +28,22 @@ export function normalize(cells: Cell[]): Cell[] {
   return cells.map(([r, c]): Cell => [r - r0, c - c0]).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
 }
 
+/** The squares in row-then-column order (where they are is kept). */
+const normalizeOrder = (cells: Cell[]): Cell[] =>
+  cells.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+
+/** A shape turned a quarter turn clockwise, `turns` times, top-left at 0, 0, its squares in the order given. */
+export function turnCells(cells: Cell[], turns: number): Cell[] {
+  let out = cells;
+  for (let t = 0; t < ((turns % 4) + 4) % 4; t++) out = out.map(([r, c]): Cell => [c, -r]);
+  const r0 = Math.min(...out.map((c) => c[0]));
+  const c0 = Math.min(...out.map((c) => c[1]));
+  return out.map(([r, c]): Cell => [r - r0, c - c0]);
+}
+
 /** A shape turned a quarter turn clockwise, `turns` times. */
 export function rotate(cells: Cell[], turns: number): Cell[] {
-  let out = cells;
-  for (let t = 0; t < ((turns % 4) + 4) % 4; t++)
-    out = normalize(out.map(([r, c]): Cell => [c, -r]));
-  return normalize(out);
+  return normalize(turnCells(cells, turns));
 }
 
 /**
@@ -31,7 +51,11 @@ export function rotate(cells: Cell[], turns: number): Cell[] {
  * piece grows from the first free square in random directions, and a cut that
  * leaves a too-small piece is thrown away and tried again (S22-AC1).
  */
-export function cutBoard(width: number, height: number, seed: number): Piece[] {
+export function cutBoard(
+  width: number,
+  height: number,
+  seed: number,
+): (Piece & { slices: Cell[] })[] {
   const random = seededRandom(seed);
   const total = width * height;
   for (let attempt = 0; attempt < 500; attempt++) {
@@ -69,10 +93,10 @@ export function cutBoard(width: number, height: number, seed: number): Piece[] {
       pieces.push(cells);
     }
     if (ok)
-      return pieces.map((cells, id) => ({
-        id,
-        cells: normalize(cells.map((n): Cell => [Math.floor(n / width), n % width])),
-      }));
+      return pieces.map((cells, id) => {
+        const slices = normalizeOrder(cells.map((n): Cell => [Math.floor(n / width), n % width]));
+        return { id, cells: normalize(slices), slices };
+      });
   }
   throw new Error("Couldn't cut the board");
 }

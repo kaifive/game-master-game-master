@@ -2,15 +2,16 @@ import { z } from "zod";
 import type { GameLogic, MoveResult } from "../model";
 import { seededRandom } from "../random";
 import { solveAndSpeedShare } from "../speed";
-import { Media } from "../trivia/content";
+import { pictureFor, pictureOf, Pictures } from "../pictures";
+import type { Media } from "../trivia/content";
 
 /** Number Slide (spec 21): slide the numbered tiles back into order. */
 export const SlideContent = z
   .object({
     size: z.number().int().min(3).max(4).optional(),
     scramble: z.number().int().min(20).max(400).optional(),
-    /** A picture to slice into the tiles instead of numbers (Khai, 2026-11-14). Square works best. */
-    image: Media.optional(),
+    /** Photos to slice into the tiles instead of numbers, one per play (Khai, 2026-11-14). Square works best. */
+    images: Pictures.optional(),
   })
   .strict();
 export type SlideContent = z.infer<typeof SlideContent>;
@@ -79,6 +80,8 @@ export type SlideState = {
   tookMs: number | null;
   moves: number | null;
   step: number;
+  /** Which of the content's photos this play slices, when it has photos. */
+  picture?: number;
 };
 
 export type SlideView =
@@ -98,7 +101,7 @@ export const slideGame: GameLogic<SlideContent, SlideState, SlideView> = {
   instructions: (c) => ({
     title: "How to play",
     lines: [
-      c.image
+      c.images
         ? "Slide the pieces to put the picture back together, with the gap bottom right."
         : `Put the tiles back in order, 1 to ${String(sizeOf(c) * sizeOf(c) - 1)}, with the gap last.`,
       "Tap a tile next to the gap (or in its row or column) to slide it.",
@@ -113,19 +116,22 @@ export const slideGame: GameLogic<SlideContent, SlideState, SlideView> = {
     tookMs: null,
     moves: null,
     step: 0,
+    ...(c.images ? { picture: pictureFor(c.images, seed) } : {}),
   }),
   // No time limit: the clock only counts for the speed points.
   tick: (s) => s,
-  view: (s, c, { now }) =>
-    s.phase === "playing"
-      ? {
-          kind: "playing",
-          size: s.size,
-          board: s.start,
-          elapsedMs: Math.max(0, now - s.startedAt),
-          ...(c.image ? { image: c.image } : {}),
-        }
-      : { kind: "done", size: s.size, tookMs: s.tookMs, moves: s.moves },
+  view(s, c, { now }) {
+    if (s.phase !== "playing")
+      return { kind: "done", size: s.size, tookMs: s.tookMs, moves: s.moves };
+    const image = pictureOf(c.images, s.picture);
+    return {
+      kind: "playing",
+      size: s.size,
+      board: s.start,
+      elapsedMs: Math.max(0, now - s.startedAt),
+      ...(image ? { image } : {}),
+    };
+  },
   move(s, _c, raw, { now }) {
     const parsed = Move.safeParse(raw);
     if (!parsed.success) return fail("That move isn't part of this game.");
