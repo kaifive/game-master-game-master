@@ -37,6 +37,7 @@ Five more solo games for the party, so there's plenty to play and test. Each is 
 
 11. The bar starts as the instructions close. A bar slides side to side across a `width`-square row (7). Tap anywhere on the screen (not just the board) to stop it; the part that overhangs the row below falls away and the next bar is that wide, a row higher, and a little faster. The game ends when a bar misses completely or after `rows` rows (12).
 12. Points scale with rows stacked (all of them for all rows). The phone runs the game; the server accepts a row count up to `rows`.
+    The bars are wrapped presents (Khai, 2026-11-14), drawn in the event's colors with no image files: a full-width bar (3 squares) is a large box (red paper, gold ribbon), a 2-square bar a medium box (green with polka dots, white ribbon), a 1-square bar a small box (a gold cube, red ribbon). Trimming a bar makes it the next box down, so the tower narrows from big presents to small ones. The box on top of the tower (the sliding one, or the last landed when the run ends) wears a bow.
 
 ### Rapid Recall (`recall`)
 
@@ -60,6 +61,7 @@ Phone, in the pack: one big primary action per screen, the game's numbers in the
 - [x] AC-5: Stack Attack trims each stopped bar to the row below, ends on a miss or the top row, and scores by rows stacked.
 - [x] AC-6: Rapid Recall plays three rounds of growing grids from the seed, hides the pattern after 1.2 s, and scores an equal share per square found.
 - [x] AC-7: The party's event file lists the five games, and each plays end to end on a phone.
+- [x] AC-8: Stack Attack draws each bar as a present sized by its width (large, medium, small), with a bow on the top box only.
 
 ## Tests
 

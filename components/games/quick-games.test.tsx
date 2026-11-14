@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { recallSummary, RecallGame, FEEDBACK_MS } from "./recall/recall";
-import { StackerGame, stackerSummary } from "./stacker/stacker";
+import { presentFor, StackerGame, stackerSummary } from "./stacker/stacker";
 import { TapsGame, tapsSummary } from "./taps/taps";
 import { TimerGame, timerSummary } from "./timer/timer";
 import { extendTrail, TrailGame, trailSummary } from "./trail/trail";
@@ -108,6 +108,25 @@ describe("quick game screens (spec 16)", () => {
     expect(finish.type).toBe("finish");
     expect(finish.rows).toBeGreaterThanOrEqual(1);
     expect(stackerSummary({ kind: "done", stacked: 6, rows: 12 })).toBe("6 of 12 rows");
+  });
+
+  test("S16-AC8: Stack Attack stacks presents: wide bars are large boxes, trimmed ones medium and small", () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, toFake: ["performance", "requestAnimationFrame"] });
+    expect([3, 2, 1].map(presentFor)).toEqual(["large", "medium", "small"]);
+    const { container } = render(
+      <StackerGame {...props({ kind: "running", rows: 12, width: 7 }, vi.fn())} />,
+    );
+    const presents = () =>
+      Array.from(container.querySelectorAll("[data-present]")).map((p) =>
+        p.getAttribute("data-present"),
+      );
+    // The sliding bar is a large present with its bow on top.
+    expect(presents()).toEqual(["large"]);
+    expect(container.querySelectorAll("[data-bow]")).toHaveLength(1);
+    fireEvent.pointerDown(document.body); // row 1 always lands whole
+    // Two presents now: the new one sliding above, the landed one under it; only the top one has a bow.
+    expect(presents()).toEqual(["large", "large"]);
+    expect(container.querySelectorAll("[data-bow]")).toHaveLength(1);
   });
 
   test("S16-AC6: Rapid Recall shows the squares, hides them, and sends the picks", async () => {
