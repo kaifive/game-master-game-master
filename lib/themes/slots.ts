@@ -16,6 +16,8 @@ export type BannerProps = {
   aside?: ReactNode;
   /** Shown before the title, such as a back arrow to the games. */
   lead?: ReactNode;
+  /** Shown right after the title, such as a game's How to play button. */
+  trail?: ReactNode;
   /** lg is the TV's band, read from across the room. */
   size?: "md" | "lg";
 };

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { GamePlayer } from "@/components/games/game-player";
+import { HowToPlayButton } from "@/components/games/instructions";
 import { rendererFor } from "@/components/games/renderers";
 import { PhoneLeaderboard } from "@/components/leaderboard/phone-leaderboard";
 import { useOptionalDevice } from "@/components/players/device";
@@ -24,6 +25,7 @@ function EventBanner({
   event,
   title,
   back,
+  trail,
   total = true,
 }: {
   event: PublicEvent;
@@ -32,12 +34,15 @@ function EventBanner({
   back?: boolean;
   /** The games list shows the total large in its player strip instead. */
   total?: boolean;
+  /** Right after the title: a game's How to play button. */
+  trail?: React.ReactNode;
 }) {
   const { Banner } = useSlots();
   return (
     <Banner
       title={title ?? event.name}
       {...(total ? { aside: <TotalScore /> } : {})}
+      {...(trail ? { trail } : {})}
       {...(back
         ? {
             lead: (
@@ -370,16 +375,35 @@ export function GameView({
   /** Set for a playable solo game (spec 08). */
   play?: { instructions: Instructions };
 }) {
+  // Each tap of the ⓘ asks the game to show its instructions again (Khai, 2026-11-14).
+  const [howTo, setHowTo] = useState(0);
+  const playable = gameOpen(status, game) && play;
   return (
     <>
-      <EventBanner event={event} title={game.title} back={event.kind === "event"} />
+      <EventBanner
+        event={event}
+        title={game.title}
+        back={event.kind === "event"}
+        {...(playable
+          ? {
+              trail: (
+                <HowToPlayButton
+                  onClick={() => {
+                    setHowTo((n) => n + 1);
+                  }}
+                />
+              ),
+            }
+          : {})}
+      />
       <Body>
-        {gameOpen(status, game) && play ? (
+        {playable ? (
           <GamePlayer
+            howTo={howTo}
             gameId={game.id}
             title={game.title}
             type={game.type}
-            instructions={play.instructions}
+            instructions={playable.instructions}
             replayable={event.replayable}
           />
         ) : (

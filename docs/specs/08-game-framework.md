@@ -24,6 +24,7 @@ The contract every game type follows (ADR-007): pure logic, a content shape, and
 3. A play is one player's run at one game: `plays/{gameId}_{playerId}` (`reference/data-model.md`). The server owns its state.
 4. **One play per player per game**, unless the event is `replayable` (one setting for all its games, ADR-026): then **Play again** starts a new run, and the player's score for the game is their **best** run; a worse run never lowers it. Opening a finished game shows your result; in a replayable event, opening it from the games list (**Again**) or tapping **Play again** shows the instructions first, and **Start** begins the new run (Khai, 2026-11-10).
 4a. **Instructions first.** Every game opens with an instructions box (the game type's default, or the event file's `instructions` for that game). The play, and any timer, starts only when the player closes it with **Start**, and the game begins at once: no second Start button on the game screen (Khai, 2026-11-10). A replay shows it again; only a resumed run (still in progress) skips it.
+4b. **Closing and reopening it** (Khai, 2026-11-14). A tap on the dimmed space around the box, or Escape, closes it without starting; Start stays on the page. An ⓘ by the game's name in the banner opens it again at any time; mid-game it's a reminder whose button goes back to the game (the game keeps running). The player drawer from the footer closes on a tap outside it too.
 4b. **Same points for every solo game.** The event file sets `soloGamePoints` (the party uses 100); every solo game is worth that, and a solo game may not set its own `scoring.points`. A game's score is its share of those points.
 5. Leaving mid-game and coming back resumes the same play. Anything timed keeps running while you're away.
 6. **Score once:** when a play ends, its points are fixed and `scored: true` is set in the same transaction. Spec 04 turns that into a ledger award; until spec 04 ships, the points show on the result screen only.
@@ -77,6 +78,7 @@ Player phone, in the event's pack: game header (title, "Playing as"), the instru
 - [x] AC-13: An `alwaysOpen` game can be played before the event starts; every game closes when it ends.
 - [x] AC-14: Event pages have a tab bar (Games, Leaderboard, Team for events with teams, You) marking where you are; leaving a run in progress asks first.
 - [x] AC-16: A game page's banner shows the game's title instead of the event name, with a back arrow to the games before it.
+- [x] AC-17: Tapping outside the instructions box or pressing Escape closes it, leaving Start on the page; the ⓘ by the game's name opens it again, and mid-game it's a reminder with a way back instead of Start. The player drawer closes on a tap outside too.
 - [x] AC-15: The header shows the active player's total (sum of best scores) instead of the Live badge; a new best flies from the result to the total, which then counts up (instant under reduced motion).
 
 ## Tests

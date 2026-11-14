@@ -36,7 +36,16 @@ export function Surface({ children, className }: SurfaceProps) {
   );
 }
 
-export function Banner({ title, subtitle, live, level = 1, aside, lead, size }: BannerProps) {
+export function Banner({
+  title,
+  subtitle,
+  live,
+  level = 1,
+  aside,
+  lead,
+  trail,
+  size,
+}: BannerProps) {
   const H = level === 1 ? "h1" : "h2";
   return (
     <header
@@ -50,6 +59,7 @@ export function Banner({ title, subtitle, live, level = 1, aside, lead, size }: 
         </H>
         {subtitle && <p className="m-0 text-sm opacity-90">{subtitle}</p>}
       </div>
+      {trail}
       <div className="ml-auto flex items-center gap-2">
         {live && (
           <span className="rounded-full bg-gm-surface px-3 py-0.5 text-xs font-bold tracking-widest text-gm-accent-ink">

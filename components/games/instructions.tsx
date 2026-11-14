@@ -5,25 +5,36 @@ import { useFocusTrap } from "@/components/dialog/use-focus-trap";
 import { useSlots } from "@/components/slots/registry";
 import type { Instructions } from "@/lib/games";
 
-/** The box every game opens with; the game starts only when it closes (S08-AC9). */
+/**
+ * The box every game opens with; the game starts only from its Start
+ * (S08-AC9). Tapping outside it or pressing Escape closes it, and the ⓘ by
+ * the game's name opens it again (Khai, 2026-11-14). Opened mid-game, it has
+ * no Start: just a way back to the game.
+ */
 export function InstructionsDialog({
   instructions,
   onStart,
   busy,
-  onLeave,
+  onClose,
 }: {
   instructions: Instructions;
-  onStart: () => void;
+  /** Without it, the box is a reminder during a game: its button goes back to the game. */
+  onStart?: () => void;
   busy?: boolean;
-  /** Escape leaves the game, back to the games (the header's back arrow is behind the box). */
-  onLeave?: () => void;
+  onClose: () => void;
 }) {
   const { Button } = useSlots();
   const id = useId();
   const box = useRef<HTMLDivElement>(null);
-  useFocusTrap(box, onLeave);
+  useFocusTrap(box, onClose);
   return (
-    <div className="fixed inset-0 z-40 grid place-items-end bg-black/70 p-3 sm:place-items-center sm:p-4">
+    <div
+      data-testid="sheet-backdrop"
+      className="fixed inset-0 z-40 grid place-items-end bg-black/70 p-3 sm:place-items-center sm:p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div
         ref={box}
         role="dialog"
@@ -50,11 +61,35 @@ export function InstructionsDialog({
           ))}
         </ol>
         <div className="grid px-5 pb-5">
-          <Button size="lg" onClick={onStart} disabled={busy ?? false}>
-            {busy ? "Starting…" : "Start"}
-          </Button>
+          {onStart ? (
+            <Button size="lg" onClick={onStart} disabled={busy ?? false}>
+              {busy ? "Starting…" : "Start"}
+            </Button>
+          ) : (
+            <Button size="lg" onClick={onClose}>
+              Back to the game
+            </Button>
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+/** The ⓘ by a game's name that opens its instructions again. */
+export function HowToPlayButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label="How to play"
+      onClick={onClick}
+      className="-my-2 grid size-11 shrink-0 place-items-center rounded-full text-inherit"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
+        <path d="M12 11v6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+        <circle cx="12" cy="7.4" r="1.4" fill="currentColor" />
+      </svg>
+    </button>
   );
 }

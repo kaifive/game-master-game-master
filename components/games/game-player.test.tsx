@@ -102,6 +102,30 @@ describe("GamePlayer", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
+  test("S08-AC17: closing the box leaves Start on the page; the ⓘ shows the rules again, even mid-game", async () => {
+    api.plays.mockReturnValue(ok({ plays: {} }));
+    api.start.mockReturnValue(ok(question));
+    const props = { gameId: "trivia", type: "trivia", instructions: rules, replayable: false };
+    const { rerender } = render(<GamePlayer {...props} howTo={0} />);
+    const user = userEvent.setup();
+    await screen.findByRole("dialog", { name: "How to play" });
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(api.start).not.toHaveBeenCalled();
+    // The ⓘ (a new howTo count) opens it again.
+    rerender(<GamePlayer {...props} howTo={1} />);
+    expect(screen.getByRole("dialog", { name: "How to play" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: "Start" }));
+    await screen.findByRole("heading", { name: "Which reindeer has a red nose?" });
+    // Mid-game, the ⓘ shows a reminder with a way back, and no Start.
+    rerender(<GamePlayer {...props} howTo={2} />);
+    expect(screen.getByRole("dialog", { name: "How to play" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Back to the game" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(api.start).toHaveBeenCalledTimes(1);
+  });
+
   test("S08-AC9 S08-AC3: a started play resumes with no instructions", async () => {
     api.plays.mockReturnValue(ok({ plays: { trivia: { status: "playing", points: 0 } } }));
     api.start.mockReturnValue(ok(question));

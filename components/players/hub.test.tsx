@@ -164,6 +164,10 @@ describe("PlayerHub", () => {
     const user = await joinAs("Mai");
     const sheet = await screen.findByRole("dialog", { name: "Mai" });
     expect(sheet).toHaveTextContent("0 points");
+    // S08-AC17: a tap on the dimmed space around the drawer closes it.
+    closed.mockClear();
+    await user.click(screen.getByTestId("sheet-backdrop"));
+    expect(closed).toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Not you? Start over" }));
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Mai's 0 points will be lost. This phone can only start over once",
