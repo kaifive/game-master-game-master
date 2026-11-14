@@ -33,6 +33,7 @@ Five more solo games for the party, so there's plenty to play and test. Each is 
 9. Every play makes a new puzzle from the play's seed, built from a real path through the whole grid, so it always has a solution.
 9a. Runner (optional content `runner`: `src`, `alt`, `name`, `intro`): a cutout picture that stands on 1 at the start (in place of its chip) and moves to the trail's end as it's drawn, turning to face the last step (up, right, down, left) the short way round; with reduced motion it jumps. The instructions open with `intro` (or "Help <name> hit every number!") and talk about dragging the runner. At the party it's Danny: "Help Danny hit all his jumps!" (Khai, 2026-11-14).
 9b. Number chips are grey until the trail passes them in order (green). Reaching a later number before an earlier one skips the earlier one (red); after a skip nothing more turns green until the trail is undone back past it, and undoing turns them grey again. The server's check doesn't change.
+9c. Floor option: content `floor: "carpet"` draws the board as a blue competition floor (blue mat squares with dark seams inside a white boundary line); the trail still fills the squares it passes. The party uses it with Danny (Khai, 2026-11-14).
 10. The server checks the path. Solving earns half the points, plus up to half for speed: all of it within 15 s, none at 90 s. There is no time limit: an unsolved run stays open.
 
 ### Stack Attack (`stacker`)
@@ -65,6 +66,7 @@ Phone, in the pack: one big primary action per screen, the game's numbers in the
 - [x] AC-8: With a runner set, the phone gets its picture and the instructions open with its intro and talk about dragging it; without one, they're unchanged.
 - [x] AC-9: Number chips are grey, turn green when passed in order, and turn red when a later number is reached first, going back to grey on undo.
 - [x] AC-10: The runner starts on 1, follows the trail's end, and turns the short way round to face the last step.
+- [x] AC-11: With `floor: "carpet"`, the board draws blue mats inside a white boundary line; without it the board is unchanged.
 
 ## Tests
 
