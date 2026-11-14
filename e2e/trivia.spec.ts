@@ -30,7 +30,7 @@ test("S04-AC7 S08-AC9 S08-AC11 S08-AC13 S08-AC15 S10-AC6: play before the start,
   await trivia.click();
 
   const rules = page.getByRole("dialog", { name: "How to play" });
-  await expect(rules).toContainText("5 quick questions. You have 10 seconds for each.");
+  await expect(rules).toContainText("5 questions, 10 seconds each.");
   await rules.getByRole("button", { name: "Start" }).click();
   await playToEnd(page);
 

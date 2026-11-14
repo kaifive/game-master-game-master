@@ -17,7 +17,7 @@ A multiple-choice quiz on the player's phone: a question, a few answers, a timer
 5. Points: each question is worth an equal share of `soloGamePoints`. A right answer earns half its share for being right and up to half again for speed (all of it when instant, half at the buzzer). A perfect, instant run earns everything, which gives a reason to replay.
 6. Answers show as a **2×2 grid** when there are at most 4 and each is short (16 characters or fewer) or a picture; otherwise as a **list**.
 7. The result screen shows correct out of total and the average seconds taken on right answers, and the points counting up (spec 08).
-8. Instructions (default): "5 quick questions. You have 10 seconds for each." / "Tap an answer to lock it in. You can't change it." / "The next question starts by itself, a second after each answer." / "Right answers score points. Faster answers score more." built from the content's numbers.
+8. Instructions (default), short and plain (Khai, 2026-11-14): "5 questions, 10 seconds each." / "Tap your answer. No take-backs!" / "Right answers score, and faster ones score more." / "Out of time counts as wrong. The next question pops up on its own." built from the content's numbers.
 
 ## Data
 

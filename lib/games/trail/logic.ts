@@ -73,14 +73,14 @@ export const trail: GameLogic<TrailContent, TrailState, TrailView> = {
     lines: c.runner
       ? [
           c.runner.intro ?? `Help ${c.runner.name} hit every number!`,
-          `Drag ${c.runner.name} from 1 around the board, through every square once.`,
-          "Hit the numbers in order and they turn green. Skip one and it turns red. Drag back to undo.",
-          "Solving it scores half the points. Solving it fast scores the rest.",
+          `Drag ${c.runner.name} from 1 through every square, hitting the numbers in order.`,
+          "Numbers turn green when you hit them, red if you skip one. Drag back to undo.",
+          "Finish fast for more points.",
         ]
       : [
-          "Draw one trail from 1 to the last number, through every square.",
-          "Pass the numbers in order. Drag back to undo.",
-          "Solving it scores half the points. Solving it fast scores the rest.",
+          "Draw one path from 1 through every square, hitting the numbers in order.",
+          "Drag back to undo.",
+          "Finish fast for more points.",
         ],
   }),
   create(c, seed, { now }) {

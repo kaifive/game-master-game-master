@@ -84,8 +84,8 @@ export const color: GameLogic<ColorContent, ColorState, ColorView> = {
     title: "How to play",
     lines: [
       `${prompt(c)}.`,
-      "Tap the color wheel for the shade and set the brightness, then lock it in.",
-      "The closer the color, the more points.",
+      "Tap the wheel to pick a shade, set the brightness, then lock it in.",
+      "The closer you get, the more points.",
     ],
   }),
   create: (c) => ({ picked: null, target: c.target.toUpperCase(), step: 0 }),

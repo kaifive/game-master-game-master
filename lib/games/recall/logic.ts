@@ -59,10 +59,9 @@ export const recall: GameLogic<RecallContent, RecallState, RecallView> = {
   instructions: (c) => ({
     title: "How to play",
     lines: [
-      "Some squares light up for a moment, then go dark.",
-      "Tap the squares that were lit.",
-      `${String(roundsOf(c).length)} rounds, and each one is bigger.`,
-      "Every square you remember scores.",
+      "Watch which presents light up.",
+      "When they go dark, tap the ones that lit up.",
+      `${String(roundsOf(c).length)} rounds, each bigger than the last. Every one you remember scores.`,
     ],
   }),
   create(c, seed) {

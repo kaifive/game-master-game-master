@@ -65,7 +65,7 @@ describe("Pathfinder", () => {
     const lines = trail.instructions(rc).lines;
     expect(lines[0]).toBe("Help Danny hit all his jumps!");
     expect(lines[1]).toMatch(/Drag Danny/);
-    expect(trail.instructions(c).lines[0]).toMatch(/^Draw one trail/);
+    expect(trail.instructions(c).lines[0]).toMatch(/^Draw one path/);
     expect(trail.view(trail.create(c, 5, at(0)), c, at(0))).not.toHaveProperty("runner");
   });
 

@@ -60,8 +60,8 @@ export const draw: GameLogic<DrawContent, DrawState, DrawView> = {
     title: "How to play",
     lines: [
       `${prompt(c)}.`,
-      "One pen, no peeking, and no rush. Tap I'm done when it's ready.",
-      "The judge compares the shapes, not the size or where you drew it.",
+      "No peeking and no rush. Tap I'm done when you're happy with it.",
+      "It's judged on shape, not size or where you drew it.",
     ],
   }),
   create: (c) => ({

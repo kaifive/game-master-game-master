@@ -206,3 +206,13 @@ Hand-written on Tailwind; no component libraries.
 
 - Everything tappable is at least 44 px; the main action on a screen uses the `Button` slot's `size="lg"` (at least 56 px, full width).
 - Game answers, which people tap fast and excited, are at least 80 px tall.
+
+## Game instructions
+
+Khai (2026-11-14): instructions should read like a friend explaining the game, not like a manual.
+
+- Three or four short lines. Lead with the goal, then the one or two moves, then how scoring works.
+- Talk to the player ("Tap your answer"), in plain words, with the odd exclamation mark where it's fun.
+- Borrow words from the game it's like (Wordle's tiles, a sliding puzzle's "slide it in", an arcade stacker's "line it up").
+- Don't describe the app ("as soon as you close this box"); the 3-2-1 and the screens speak for themselves.
+- Keep numbers that matter (questions, seconds, rows) and drop the rest.

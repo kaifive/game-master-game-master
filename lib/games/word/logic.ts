@@ -78,10 +78,9 @@ export const word: GameLogic<WordContent, WordState, WordView> = {
   instructions: (c) => ({
     title: "How to play",
     lines: [
-      `Guess the secret ${String(LENGTH)}-letter word in ${String(tries(c))} tries.`,
-      "Each guess must be a real word.",
-      "Gold: right letter, right spot. White with a red corner: in the word, wrong spot. Dark: not in the word.",
-      "The fewer guesses, the more points.",
+      `Guess the ${String(LENGTH)}-letter word in ${String(tries(c))} tries. Every guess has to be a real word.`,
+      "After each guess the tiles show how close you are. Gold: right letter, right spot. Red corner: in the word, wrong spot. Dark: not in it.",
+      "Fewer guesses, more points.",
     ],
   }),
   create: (c, seed) => {

@@ -79,16 +79,14 @@ export const taps: GameLogic<TapsContent, TapsState, TapsView> = {
     lines: c.film
       ? [
           c.film.intro ?? `Help ${c.film.who ?? "Coach"} finish the form!`,
-          "A countdown starts as soon as you close this box.",
-          `Then tap the big button as fast as you can for ${String(seconds(c))} seconds: every tap plays the next move.`,
+          `After the countdown, tap the button as fast as you can for ${String(seconds(c))} seconds.`,
           c.target === undefined
-            ? "Every move earns points. Finish the whole form for all of them."
-            : "The more taps, the more points.",
+            ? "Every tap plays the next move. Finish the whole form for all the points."
+            : "Every tap plays the next move. More taps, more points.",
         ]
       : [
-          "A countdown starts as soon as you close this box.",
-          `Then tap the big button as fast as you can for ${String(seconds(c))} seconds.`,
-          "The more taps, the more points.",
+          `After the countdown, tap the button as fast as you can for ${String(seconds(c))} seconds.`,
+          "More taps, more points.",
         ],
   }),
   // The countdown starts with the game: no second Start button.

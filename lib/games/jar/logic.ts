@@ -49,8 +49,8 @@ export const jar: GameLogic<JarContent, JarState, JarView> = {
     title: "How to play",
     lines: [
       prompt(c),
-      "You get just one guess, so make it count.",
-      "Points come when the host reveals the real count: the closer, the more.",
+      "One guess only, so make it count!",
+      "The closest guesses score the most when the host reveals the answer.",
     ],
   }),
   create: () => ({ guess: null, actual: null, points: null, step: 0 }),
