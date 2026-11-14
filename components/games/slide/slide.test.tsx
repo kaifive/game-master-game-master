@@ -38,4 +38,17 @@ describe("Number Slide screen (spec 21)", () => {
     expect(slice?.style.backgroundPosition).toBe("100% 50%");
     expect(screen.getByRole("img", { name: "Goal: A picture" })).toBeInTheDocument();
   });
+
+  test("S21-AC6: solving a picture drops in the missing piece, then shows the whole photo", () => {
+    const base = props();
+    const { rerender } = render(
+      <SlideGame {...base} view={{ ...base.view, image: { src: "/p.png", alt: "A picture" } }} />,
+    );
+    expect(screen.queryByRole("img", { name: "Solved: A picture" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Tile 6" }));
+    expect(screen.getByRole("img", { name: "Solved: A picture" })).toBeInTheDocument();
+    // The server's result arrives while the finale plays: the board stays up.
+    rerender(<SlideGame {...base} view={{ kind: "done", size: 3, tookMs: 5000, moves: 1 }} />);
+    expect(screen.getByRole("img", { name: "Solved: A picture" })).toBeInTheDocument();
+  });
 });

@@ -2,8 +2,9 @@
 
 import { useRef, useState } from "react";
 import { useSlots } from "@/components/slots/registry";
-import { rotate, type BlocksView, type Cell, type Piece } from "@/lib/games";
+import { rotate, turnCells, type BlocksView, type Cell, type Piece } from "@/lib/games";
 import { formatClock, PuzzleClock } from "../clock";
+import { PictureReveal, REVEAL_MS, sliceStyle } from "../picture";
 import type { GameRendererProps } from "../types";
 
 type Placed = { row: number; col: number };
@@ -25,10 +26,46 @@ const TRAY_CELL = 22;
 /** A press that moves less than this is a tap (turn), not a drag. */
 const DRAG_SLOP = 6;
 
-const colorOf = (id: number) => `var(--gm-team-${String((id % 8) + 1)})`;
+/** Long enough for a picture's ripple before the result shows. */
+export const BLOCKS_HOLD_MS = REVEAL_MS + 600;
 
-/** Draws a shape as a little grid of squares. */
-function Shape({ cells, cell, color }: { cells: Cell[]; cell: number; color: string }) {
+const colorOf = (id: number) => `var(--gm-team-${String((id % 8) + 1)})`;
+const keyOf = ([r, c]: Cell) => `${String(r)}-${String(c)}`;
+
+/** A photo to slice: its source and the board's size in squares. */
+type Art = { src: string; cols: number; rows: number };
+/** One square's slice of the photo and how far it's turned. */
+type Slice = { at: Cell; deg: number };
+
+/**
+ * A picture piece's squares, turned `turns` more times, each with its slice of
+ * the photo (keyed by row-col in the turned shape). Empty for a plain piece.
+ */
+function slicesOf(piece: Piece | undefined, turns: number): Map<string, Slice> {
+  const out = new Map<string, Slice>();
+  if (!piece?.slices) return out;
+  const deg = ((piece.spin ?? 0) + turns) * 90;
+  turnCells(piece.cells, turns).forEach((cell, i) => {
+    const at = piece.slices?.[i];
+    if (at) out.set(keyOf(cell), { at, deg });
+  });
+  return out;
+}
+
+/** Draws a shape as a little grid of squares, or of photo slices. */
+function Shape({
+  cells,
+  cell,
+  color,
+  art,
+  slices,
+}: {
+  cells: Cell[];
+  cell: number;
+  color: string;
+  art?: Art | undefined;
+  slices?: Map<string, Slice>;
+}) {
   const rows = Math.max(...cells.map((c) => c[0])) + 1;
   const cols = Math.max(...cells.map((c) => c[1])) + 1;
   return (
@@ -37,19 +74,24 @@ function Shape({ cells, cell, color }: { cells: Cell[]; cell: number; color: str
       style={{ width: cols * cell, height: rows * cell }}
       aria-hidden="true"
     >
-      {cells.map(([r, c]) => (
-        <span
-          key={`${String(r)}-${String(c)}`}
-          className="absolute rounded-[3px] ring-1 ring-black/25"
-          style={{
-            left: c * cell + 1,
-            top: r * cell + 1,
-            width: cell - 2,
-            height: cell - 2,
-            background: color,
-          }}
-        />
-      ))}
+      {cells.map(([r, c]) => {
+        const slice = art ? slices?.get(keyOf([r, c])) : undefined;
+        return (
+          <span
+            key={keyOf([r, c])}
+            className="absolute rounded-[3px] bg-white ring-1 ring-black/25"
+            style={{
+              left: c * cell + 1,
+              top: r * cell + 1,
+              width: cell - 2,
+              height: cell - 2,
+              ...(art && slice
+                ? sliceStyle(art.src, art.cols, art.rows, slice.at, slice.deg)
+                : { background: color }),
+            }}
+          />
+        );
+      })}
     </span>
   );
 }
@@ -60,30 +102,48 @@ function Shape({ cells, cell, color }: { cells: Cell[]; cell: number; color: str
  */
 export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
   const { Button } = useSlots();
-  const view = raw as BlocksView;
-  const pieces: Piece[] = view.kind === "playing" ? view.pieces : [];
+  const served = raw as BlocksView;
+  // The run's last board stays up (with its finale) while the result holds.
+  const [lastView, setLastView] = useState(served.kind === "playing" ? served : null);
+  if (served.kind === "playing" && served !== lastView) setLastView(served);
+  const view = served.kind === "playing" ? served : lastView;
+  const pieces: Piece[] = view ? view.pieces : [];
   const [turns, setTurns] = useState<Record<number, number>>({});
   const [placed, setPlaced] = useState<Record<number, Placed>>({});
   const [drag, setDrag] = useState<Drag | null>(null);
   const [sent, setSent] = useState(false);
+  // Where the last piece went: the ripple starts there.
+  const [last, setLast] = useState<Cell>([0, 0]);
   const board = useRef<HTMLDivElement>(null);
   // A new puzzle (a new run) starts afresh.
   const [dealt, setDealt] = useState(pieces);
-  if (view.kind === "playing" && view.pieces !== dealt) {
+  if (view && view.pieces !== dealt) {
     setDealt(view.pieces);
     setTurns({});
     setPlaced({});
     setSent(false);
   }
-  if (view.kind !== "playing") return null;
+  if (!view) return null;
   const { width, height } = view;
+  const art: Art | undefined = view.image
+    ? { src: view.image.src, cols: width, rows: height }
+    : undefined;
 
-  const shapeOf = (id: number) =>
-    rotate(pieces.find((p) => p.id === id)?.cells ?? [], turns[id] ?? 0);
+  const pieceOf = (id: number) => pieces.find((p) => p.id === id);
+  const shapeOf = (id: number) => rotate(pieceOf(id)?.cells ?? [], turns[id] ?? 0);
+  const slicesFor = (id: number) => slicesOf(pieceOf(id), turns[id] ?? 0);
   const owner = new Map<number, number>();
-  for (const [id, at] of Object.entries(placed))
-    for (const [r, c] of shapeOf(Number(id)))
-      owner.set((r + at.row) * width + (c + at.col), Number(id));
+  // Picture puzzles: which slice of the photo each covered square shows.
+  const shown = new Map<number, Slice>();
+  for (const [id, at] of Object.entries(placed)) {
+    const slices = slicesFor(Number(id));
+    for (const [r, c] of shapeOf(Number(id))) {
+      const square = (r + at.row) * width + (c + at.col);
+      owner.set(square, Number(id));
+      const slice = slices.get(keyOf([r, c]));
+      if (slice) shown.set(square, slice);
+    }
+  }
 
   const fits = (id: number, row: number, col: number) =>
     shapeOf(id).every(([r, c]) => {
@@ -96,6 +156,8 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
   const place = (id: number, row: number, col: number) => {
     const next = { ...placed, [id]: { row, col } };
     setPlaced(next);
+    const [fr, fc] = shapeOf(id)[0] ?? [0, 0];
+    setLast([row + fr, col + fc]);
     if (Object.keys(next).length === pieces.length && !sent) {
       setSent(true);
       onMove({
@@ -141,7 +203,7 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
         ref={board}
         role="group"
         aria-label="Board"
-        className="mx-auto grid w-full max-w-sm touch-none gap-0 rounded-gm bg-gm-surface ring-1 ring-gm-border"
+        className="relative mx-auto grid w-full max-w-sm touch-none gap-0 overflow-hidden rounded-gm bg-gm-surface ring-1 ring-gm-border"
         style={{
           gridTemplateColumns: `repeat(${String(width)}, minmax(0, 1fr))`,
           aspectRatio: `${String(width)} / ${String(height)}`,
@@ -161,15 +223,38 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
                   Object.fromEntries(Object.entries(placed).filter(([k]) => Number(k) !== who)),
                 );
               }}
-              className="m-[1px] rounded-[3px] border border-gm-border/60 disabled:cursor-default"
+              className="m-[1px] overflow-hidden rounded-[3px] border border-gm-border/60 disabled:cursor-default"
               style={
                 who === undefined
                   ? undefined
-                  : { background: colorOf(who), borderColor: "transparent" }
+                  : art
+                    ? { background: "white", borderColor: "transparent" }
+                    : { background: colorOf(who), borderColor: "transparent" }
               }
-            />
+            >
+              {art && shown.get(i) && (
+                <span
+                  aria-hidden="true"
+                  className="block size-full"
+                  style={sliceStyle(
+                    art.src,
+                    art.cols,
+                    art.rows,
+                    (shown.get(i) as Slice).at,
+                    (shown.get(i) as Slice).deg,
+                  )}
+                />
+              )}
+            </button>
           );
         })}
+        {view.image && sent && (
+          <PictureReveal
+            image={view.image}
+            x={((last[1] + 0.5) / width) * 100}
+            y={((last[0] + 0.5) / height) * 100}
+          />
+        )}
       </div>
       <div
         role="group"
@@ -234,7 +319,13 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
             className="touch-none rounded-gm p-1 transition-transform motion-safe:active:scale-95"
             style={{ opacity: drag?.id === p.id && drag.moved ? 0.25 : 1 }}
           >
-            <Shape cells={shapeOf(p.id)} cell={TRAY_CELL} color={colorOf(p.id)} />
+            <Shape
+              cells={shapeOf(p.id)}
+              cell={TRAY_CELL}
+              color={colorOf(p.id)}
+              art={art}
+              slices={slicesFor(p.id)}
+            />
           </button>
         ))}
         {tray.length === 0 && !sent && <p className="m-0 text-gm-text-muted">All placed.</p>}
@@ -259,7 +350,13 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
               className="pointer-events-none fixed z-50 opacity-90 drop-shadow-xl"
               style={{ left: g.left, top: g.top }}
             >
-              <Shape cells={shapeOf(drag.id)} cell={g.cell} color={colorOf(drag.id)} />
+              <Shape
+                cells={shapeOf(drag.id)}
+                cell={g.cell}
+                color={colorOf(drag.id)}
+                art={art}
+                slices={slicesFor(drag.id)}
+              />
             </div>
           );
         })()}

@@ -2,11 +2,34 @@
 
 import { useRef, useState } from "react";
 import { useSlots } from "@/components/slots/registry";
-import { adjacent, checkPath, type TrailView } from "@/lib/games";
+import {
+  adjacent,
+  checkPath,
+  dotMarks,
+  facing,
+  turnToward,
+  type DotMark,
+  type TrailView,
+} from "@/lib/games";
 import { cx } from "@/lib/ui";
 import type { GameRendererProps } from "../types";
 
 type Playing = Extract<TrailView, { kind: "playing" }>;
+
+/** Number chips: grey until passed in order (green), red when skipped (S16-AC9). */
+const CHIP: Record<DotMark, string> = {
+  idle: "bg-[color-mix(in_srgb,var(--gm-text)_68%,var(--gm-surface))] text-gm-surface",
+  passed: "bg-gm-success text-white",
+  skipped: "bg-gm-danger text-white",
+};
+/**
+ * The blue competition floor (content `floor: "carpet"`): mat squares with
+ * darker seams inside a white boundary line. Real-world colors, so not theme
+ * tokens, like a photo.
+ */
+const CARPET = { floor: "#1b4a9c", mat: "#2a5fbd", seam: "#16397a", line: "#f4f6fb" };
+
+const SAID: Record<DotMark, string> = { idle: "", passed: ", passed", skipped: ", skipped" };
 
 /** The square under a point on the grid, from its data-cell attribute. */
 function cellAt(x: number, y: number): number | null {
@@ -32,6 +55,10 @@ export function TrailGame({ view: raw, onMove, busy }: GameRendererProps) {
   const [path, setPath] = useState<number[]>([]);
   const dragging = useRef(false);
   const sent = useRef(false);
+  // The runner turns the short way round to face each step (S16-AC10).
+  const [turn, setTurn] = useState({ dir: 0, angle: 0 });
+  const dir = view.kind === "playing" ? facing(path, view.size) : turn.dir;
+  if (dir !== turn.dir) setTurn({ dir, angle: turnToward(turn.angle, dir) });
   if (view.kind === "done") return null;
 
   const total = view.size * view.size;
@@ -47,10 +74,24 @@ export function TrailGame({ view: raw, onMove, busy }: GameRendererProps) {
       return next;
     });
   };
+  const marks = dotMarks(path, view.dots);
+  const runner = view.runner;
+  const runnerAt = path[path.length - 1] ?? view.dots[0] ?? 0;
   const centre = (cell: number) => ({
     x: ((cell % view.size) + 0.5) * (100 / view.size),
     y: (Math.floor(cell / view.size) + 0.5) * (100 / view.size),
   });
+
+  const carpet = view.floor === "carpet";
+  const squareStyle = (on: boolean, head: boolean) =>
+    carpet
+      ? on
+        ? {
+            background: `color-mix(in srgb, var(--gm-accent-ink) 62%, ${CARPET.mat})`,
+            boxShadow: head ? "0 0 0 4px var(--gm-text)" : "0 0 0 2px var(--gm-accent-ink)",
+          }
+        : { background: CARPET.mat, boxShadow: `0 0 0 2px ${CARPET.seam}` }
+      : undefined;
 
   return (
     <section aria-label="Pathfinder" className="grid gap-3">
@@ -59,63 +100,110 @@ export function TrailGame({ view: raw, onMove, busy }: GameRendererProps) {
           (path.length === 0 ? "Start on 1" : `${String(path.length)} of ${String(total)} squares`)}
       </p>
       <div
-        className="relative mx-auto grid w-full max-w-sm touch-none gap-1 select-none"
-        style={{ gridTemplateColumns: `repeat(${String(view.size)}, minmax(0, 1fr))` }}
-        onPointerDown={(e) => {
-          dragging.current = true;
-          e.currentTarget.setPointerCapture(e.pointerId);
-          touch(cellAt(e.clientX, e.clientY));
-        }}
-        onPointerMove={(e) => {
-          if (dragging.current) touch(cellAt(e.clientX, e.clientY));
-        }}
-        onPointerUp={() => {
-          dragging.current = false;
-        }}
+        data-floor={view.floor ?? "plain"}
+        className={cx("mx-auto w-full max-w-sm", carpet && "rounded-gm p-2.5")}
+        style={
+          carpet
+            ? {
+                background: CARPET.floor,
+                // The white boundary line, just inside the carpet's edge.
+                boxShadow: `inset 0 0 0 3px ${CARPET.floor}, inset 0 0 0 6px ${CARPET.line}`,
+              }
+            : undefined
+        }
       >
-        {Array.from({ length: total }, (_, cell) => {
-          const dot = view.dots.indexOf(cell);
-          const on = path.includes(cell);
-          const head = path[path.length - 1] === cell;
-          return (
-            <span
-              key={cell}
-              data-cell={cell}
-              role="img"
-              aria-label={`${dot >= 0 ? `Number ${String(dot + 1)}` : "Square"}${on ? ", on the trail" : ""}`}
-              className={cx(
-                "grid aspect-square min-h-11 place-items-center rounded-gm ring-2",
-                // High contrast in a dim room: empty squares are clearly squares; the trail fills them.
-                on
-                  ? "bg-[color-mix(in_srgb,var(--gm-accent-ink)_60%,var(--gm-surface))] ring-[var(--gm-accent-ink)]"
-                  : "bg-[color-mix(in_srgb,var(--gm-text)_14%,var(--gm-surface))] ring-[color-mix(in_srgb,var(--gm-text)_22%,transparent)]",
-                head && "ring-4 ring-[var(--gm-text)]",
-              )}
-            >
-              {dot >= 0 && (
-                <span className="jt-card-shadow z-10 grid size-10 place-items-center rounded-[5px] bg-[var(--gm-card,white)] font-gm-display text-2xl font-bold text-[var(--gm-card-ink,black)]">
-                  {dot + 1}
-                </span>
-              )}
-            </span>
-          );
-        })}
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 100 100"
-          className="pointer-events-none absolute inset-0 size-full"
-          preserveAspectRatio="none"
+        <div
+          className="relative grid w-full touch-none gap-1 select-none"
+          style={{ gridTemplateColumns: `repeat(${String(view.size)}, minmax(0, 1fr))` }}
+          onPointerDown={(e) => {
+            dragging.current = true;
+            e.currentTarget.setPointerCapture(e.pointerId);
+            touch(cellAt(e.clientX, e.clientY));
+          }}
+          onPointerMove={(e) => {
+            if (dragging.current) touch(cellAt(e.clientX, e.clientY));
+          }}
+          onPointerUp={() => {
+            dragging.current = false;
+          }}
         >
-          <polyline
-            points={path.map((c) => `${String(centre(c).x)},${String(centre(c).y)}`).join(" ")}
-            fill="none"
-            stroke="var(--gm-text)"
-            strokeWidth={7}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            vectorEffect="non-scaling-stroke"
-          />
-        </svg>
+          {Array.from({ length: total }, (_, cell) => {
+            const dot = view.dots.indexOf(cell);
+            const on = path.includes(cell);
+            const head = path[path.length - 1] === cell;
+            return (
+              <span
+                key={cell}
+                data-cell={cell}
+                role="img"
+                aria-label={`${dot >= 0 ? `Number ${String(dot + 1)}${SAID[marks[dot] ?? "idle"]}` : "Square"}${on ? ", on the trail" : ""}`}
+                {...(dot >= 0 ? { "data-mark": marks[dot] ?? "idle" } : {})}
+                style={squareStyle(on, head)}
+                className={cx(
+                  "grid aspect-square min-h-11 place-items-center rounded-gm",
+                  // High contrast in a dim room: empty squares are clearly squares; the trail fills them.
+                  !carpet &&
+                    (on
+                      ? "bg-[color-mix(in_srgb,var(--gm-accent-ink)_60%,var(--gm-surface))] ring-2 ring-[var(--gm-accent-ink)]"
+                      : "bg-[color-mix(in_srgb,var(--gm-text)_14%,var(--gm-surface))] ring-2 ring-[color-mix(in_srgb,var(--gm-text)_22%,transparent)]"),
+                  head && "ring-4 ring-[var(--gm-text)]",
+                )}
+              >
+                {dot >= 0 && !(runner && cell === runnerAt) && (
+                  <span
+                    className={cx(
+                      "jt-card-shadow z-10 grid size-10 place-items-center rounded-[5px] font-gm-display text-2xl font-bold transition-colors duration-150",
+                      CHIP[marks[dot] ?? "idle"],
+                    )}
+                  >
+                    {dot + 1}
+                  </span>
+                )}
+              </span>
+            );
+          })}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 100 100"
+            className="pointer-events-none absolute inset-0 size-full"
+            preserveAspectRatio="none"
+          >
+            <polyline
+              points={path.map((c) => `${String(centre(c).x)},${String(centre(c).y)}`).join(" ")}
+              fill="none"
+              stroke="var(--gm-text)"
+              strokeWidth={7}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+          {runner && (
+            // The runner stands on 1, then on the trail's end, facing the last step.
+            <div
+              data-runner-at={runnerAt}
+              className="pointer-events-none absolute z-20 aspect-square -translate-x-1/2 -translate-y-1/2 transition-[left,top] duration-100 ease-out motion-reduce:transition-none"
+              style={{
+                left: `${String(centre(runnerAt).x)}%`,
+                top: `${String(centre(runnerAt).y)}%`,
+                width: `${String((100 / view.size) * 1.25)}%`,
+              }}
+            >
+              <div
+                className="size-full transition-transform duration-200 ease-out motion-reduce:transition-none"
+                style={{ transform: `rotate(${String(turn.angle)}deg)` }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element -- a small cutout, already sized */}
+                <img
+                  src={runner.src}
+                  alt={runner.alt}
+                  className="size-full object-contain drop-shadow-[0_2px_3px_rgb(0_0_0/0.6)]"
+                  draggable={false}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       <div className="flex justify-center">
         <Button
