@@ -18,6 +18,8 @@ export const GAME_TYPES = [
   "color",
   "draw",
   "word",
+  "slide",
+  "blocks",
   "photo-challenge",
   "jeopardy",
 ] as const;

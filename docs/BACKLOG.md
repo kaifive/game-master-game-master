@@ -44,6 +44,8 @@ A feature item needs its spec at `Ready` before it starts.
 - [x] Spec 18, Color Matcher and Quick Draw (auto-judged against the logo)
 - [x] Spec 19, Secret Word: a five-letter word puzzle; wushu answers at the party
 - [x] Spec 20, photo challenge (Spot and Snipe): photos rated by the host with a slider
+- [x] Spec 21, Number Slide: the 3×3 sliding tile puzzle
+- [x] Spec 22, Block Fit: fit grid pieces into a rectangle
 - [ ] Spec 13, photos: swipe triage, photo vote, slideshow (the photo challenge is spec 20)
 - [ ] Photo export and prune scripts (ADR-012)
 

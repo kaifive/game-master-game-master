@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { GameLogic, MoveResult } from "../model";
+import { solveAndSpeedShare } from "../speed";
 import { checkPath, makePuzzle } from "./puzzle";
 
 /** Pathfinder (spec 16): our own path puzzle, for any event; a new one every play. */
@@ -42,13 +43,7 @@ const Move = z.object({
 const fail = (message: string): MoveResult<TrailState> => ({ ok: false, message });
 
 /** Half the points for solving, and up to half more for speed. */
-export function trailShare(tookMs: number): number {
-  const speed = Math.min(
-    1,
-    Math.max(0, (SLOW_MS - Math.max(tookMs, FAST_MS)) / (SLOW_MS - FAST_MS)),
-  );
-  return 0.5 + 0.5 * speed;
-}
+export const trailShare = (tookMs: number): number => solveAndSpeedShare(tookMs, FAST_MS, SLOW_MS);
 
 export const trail: GameLogic<TrailContent, TrailState, TrailView> = {
   content: TrailContent,

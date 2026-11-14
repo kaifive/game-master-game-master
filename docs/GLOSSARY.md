@@ -49,6 +49,8 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Recap** | Final standings and approved photos of an event. Admin only. | `/admin/[event]/recap` |
 | **Kept drawing** | A finished run's drawing from a game with `keepDrawings`, saved as an SVG in Vercel Blob with a Firestore record (ADR-032). | `DrawingRecord` |
 | **Secret Word** | A five-letter word puzzle game (`type: "word"`): guess the event's secret word in a few tries (spec 19). | `word` |
+| **Number Slide** | The sliding tile puzzle game (`type: "slide"`): put numbered tiles back in order (spec 21). | `slide` |
+| **Block Fit** | The shape-fitting game (`type: "blocks"`): fit grid pieces into a rectangle (spec 22). | `blocks` |
 | **Moment** | Something worth celebrating on the display (a lead change, a game finished). Written by the server. | `moments/{slug}` |
 | **Toast chain** | The stack of small, auto-expiring toasts on the display for frequent moments. | `<ToastChain>` |
 | **Stage** | The lane for big, rare moments: one at a time, full celebration. Small moments go to the toast chain. | `laneFor()` |
