@@ -10,6 +10,7 @@ describe("InstructionsDialog", () => {
       <InstructionsDialog
         instructions={{ title: "How to play", lines: ["5 quick questions.", "Tap to answer."] }}
         onStart={onStart}
+        onClose={vi.fn()}
       />,
     );
     const dialog = screen.getByRole("dialog", { name: "How to play" });
@@ -26,7 +27,11 @@ describe("InstructionsDialog", () => {
     render(
       <>
         <button type="button">Behind</button>
-        <InstructionsDialog instructions={{ title: "Rules", lines: ["Go."] }} onStart={vi.fn()} />
+        <InstructionsDialog
+          instructions={{ title: "Rules", lines: ["Go."] }}
+          onStart={vi.fn()}
+          onClose={vi.fn()}
+        />
       </>,
     );
     const user = userEvent.setup();
@@ -36,8 +41,8 @@ describe("InstructionsDialog", () => {
     expect(screen.getByRole("button", { name: "Start" })).toHaveFocus();
   });
 
-  test("Escape leaves for the games, and focus returns to what opened it", async () => {
-    const onLeave = vi.fn();
+  test("S08-AC17: Escape or a tap outside closes it, and focus returns to what opened it", async () => {
+    const onClose = vi.fn();
     const opener = document.createElement("button");
     document.body.append(opener);
     opener.focus();
@@ -45,14 +50,30 @@ describe("InstructionsDialog", () => {
       <InstructionsDialog
         instructions={{ title: "Rules", lines: ["Go."] }}
         onStart={vi.fn()}
-        onLeave={onLeave}
+        onClose={onClose}
       />,
     );
-    await userEvent.setup().keyboard("{Escape}");
-    expect(onLeave).toHaveBeenCalledOnce();
+    const user = userEvent.setup();
+    await user.keyboard("{Escape}");
+    expect(onClose).toHaveBeenCalledTimes(1);
+    // A tap inside the box doesn't close it; a tap on the dimmed space around it does.
+    await user.click(screen.getByText("Go."));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByTestId("sheet-backdrop"));
+    expect(onClose).toHaveBeenCalledTimes(2);
     unmount();
     expect(opener).toHaveFocus();
     opener.remove();
+  });
+
+  test("S08-AC17: opened mid-game, it has no Start, just a way back to the game", async () => {
+    const onClose = vi.fn();
+    render(
+      <InstructionsDialog instructions={{ title: "Rules", lines: ["Go."] }} onClose={onClose} />,
+    );
+    expect(screen.queryByRole("button", { name: "Start" })).toBeNull();
+    await userEvent.setup().click(screen.getByRole("button", { name: "Back to the game" }));
+    expect(onClose).toHaveBeenCalledOnce();
   });
 
   test("disables Start while the game is starting", () => {
@@ -61,6 +82,7 @@ describe("InstructionsDialog", () => {
         instructions={{ title: "Rules", lines: ["Go."] }}
         onStart={vi.fn()}
         busy
+        onClose={vi.fn()}
       />,
     );
     expect(screen.getByRole("button", { name: "Starting…" })).toBeDisabled();

@@ -19,6 +19,8 @@ type Props = {
   replayable: boolean;
   /** The game's name, for the result card. */
   title?: string;
+  /** Goes up each time the ⓘ by the game's name is tapped: show the instructions again. */
+  howTo?: number;
 };
 
 type Phase =
@@ -121,13 +123,27 @@ function Result({
 }
 
 /** A solo game on the phone: instructions, play, result (spec 08). */
-export function GamePlayer({ gameId, type, instructions, replayable, title = "This game" }: Props) {
-  const { Panel } = useSlots();
+export function GamePlayer({
+  gameId,
+  type,
+  instructions,
+  replayable,
+  title = "This game",
+  howTo = 0,
+}: Props) {
+  const { Panel, Button } = useSlots();
   const { slug, load, active, token, plays, setLeaveWarning, refreshPlays } = useDevice();
   const router = useRouter();
   const renderer = rendererFor(type);
   const [phase, setPhase] = useState<Phase>({ kind: "checking" });
   const [busy, setBusy] = useState(false);
+  // The instructions box: open on arrival, closed by tapping outside it, opened again by the ⓘ.
+  const [sheet, setSheet] = useState(true);
+  const [askedHowTo, setAskedHowTo] = useState(howTo);
+  if (howTo !== askedHowTo) {
+    setAskedHowTo(howTo);
+    setSheet(true);
+  }
   const playerId = active?.id ?? null;
   const bestNow = plays[gameId]?.best ?? 0;
 
@@ -137,6 +153,7 @@ export function GamePlayer({ gameId, type, instructions, replayable, title = "Th
       setBusy(true);
       const res = await gamesApi.start(slug, gameId, await token(), playerId, again);
       setBusy(false);
+      setSheet(false);
       setPhase(
         res.ok
           ? {
@@ -252,13 +269,31 @@ export function GamePlayer({ gameId, type, instructions, replayable, title = "Th
           {phase.message}
         </p>
       )}
-      {phase.kind === "instructions" && (
+      {phase.kind === "instructions" && sheet && (
         <InstructionsDialog
           instructions={instructions}
           busy={busy}
           onStart={() => void begin(phase.again)}
-          onLeave={() => {
-            router.push(`/${slug}`);
+          onClose={() => {
+            setSheet(false);
+          }}
+        />
+      )}
+      {/* Closed without starting: Start is still here, and the ⓘ shows the rules again. */}
+      {phase.kind === "instructions" && !sheet && (
+        <div className="grid justify-items-center gap-4 py-10 text-center">
+          <p className="m-0 text-lg text-gm-text-muted">Tap ⓘ by the name to see how to play.</p>
+          <Button size="lg" onClick={() => void begin(phase.again)} disabled={busy}>
+            {busy ? "Starting…" : "Start"}
+          </Button>
+        </div>
+      )}
+      {/* Opened again mid-game: a reminder, with a way back. */}
+      {phase.kind === "playing" && sheet && phase.play.status === "playing" && (
+        <InstructionsDialog
+          instructions={instructions}
+          onClose={() => {
+            setSheet(false);
           }}
         />
       )}
@@ -275,6 +310,7 @@ export function GamePlayer({ gameId, type, instructions, replayable, title = "Th
           onAgain={
             replayable && !phase.play.once
               ? () => {
+                  setSheet(true);
                   setPhase({ kind: "instructions", again: true });
                 }
               : undefined

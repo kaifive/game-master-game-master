@@ -47,7 +47,16 @@ function Holly() {
   );
 }
 
-function Banner({ title, subtitle, live, level = 1, aside, lead, size = "md" }: BannerProps) {
+function Banner({
+  title,
+  subtitle,
+  live,
+  level = 1,
+  aside,
+  lead,
+  trail,
+  size = "md",
+}: BannerProps) {
   const H = level === 1 ? "h1" : "h2";
   const holly = useDecoration("holly");
   return (
@@ -67,6 +76,7 @@ function Banner({ title, subtitle, live, level = 1, aside, lead, size = "md" }: 
         </H>
         {subtitle && <p className="m-0 text-xs font-bold opacity-90">{subtitle}</p>}
       </div>
+      {trail}
       <div className="ml-auto flex items-center gap-2">
         {holly && <Holly />}
         {live && (

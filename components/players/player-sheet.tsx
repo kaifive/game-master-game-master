@@ -22,7 +22,14 @@ export function PlayerSheet({ hasTeams, onClose }: { hasTeams: boolean; onClose:
   const { restartsLeft } = load.device;
 
   return (
-    <div className="fixed inset-0 z-40 grid place-items-end bg-black/70 p-3 sm:place-items-center">
+    <div
+      data-testid="sheet-backdrop"
+      className="fixed inset-0 z-40 grid place-items-end bg-black/70 p-3 sm:place-items-center"
+      // A tap on the dimmed space around the drawer closes it (Khai, 2026-11-14).
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div
         ref={box}
         role="dialog"
