@@ -36,9 +36,14 @@ test("S16-AC7: Tap Masher", async ({ page }) => {
   await joinAndOpen(page, "Tap Masher");
   const pad = page.getByRole("button", { name: /Tap!/ });
   await expect(pad).toBeEnabled({ timeout: 6000 });
+  // The party's Tap Masher plays Coach's form: each tap shows the next frame.
+  const frame = page.getByRole("img", { name: /Coach's spear form/ });
+  await expect(frame).toHaveAttribute("data-frame", "0");
   for (let i = 0; i < 12; i++) await pad.dispatchEvent("pointerdown");
-  await scored(page);
-  await expect(page.getByRole("region", { name: "Your score" })).toContainText("12 taps");
+  await expect(frame).toHaveAttribute("data-frame", "12");
+  // The rest of the 5 s, then the last frame holds a moment before the score.
+  await expect(page.getByRole("region", { name: "Your score" })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("region", { name: "Your score" })).toContainText("12 of 50 moves");
 });
 
 test("S16-AC7: Stack Attack", async ({ page }) => {

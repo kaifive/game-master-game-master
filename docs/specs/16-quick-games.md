@@ -26,6 +26,7 @@ Five more solo games for the party, so there's plenty to play and test. Each is 
 
 6. A 3-2-1 countdown starts as the instructions close (no instruction line on the screen; How to play has it), then `seconds` (5) of tapping a big target anywhere in the play area. The count shows live.
 7. Points scale with taps up to `target` taps (50) for all of them; the target is never shown. More than 20 taps a second isn't accepted.
+7a. Film option (Khai, 2026-11-14): content `film` is a video cut into frames on one sprite sheet (`sheet`, `frames`, `columns`, one frame's `width` and `height`, `alt`, and optional `who`, default "Coach"). The frames are the target, and every tap plays the next frame above a shorter tap button, with a progress bar and a count of moves done out of all of them (the answer is all the frames, so it shows). The instructions open with "Help Coach finish the form!". The countdown waits until the sheet has loaded. The last frame ends the run at once with "Form complete!", and the server accepts that early finish only once the frames could have been tapped at 20 a second. A film can't have more frames than `seconds` × 20, so every frame is reachable. A video has far more frames than anyone can tap, so `scripts/film-sheet.sh` samples it evenly. At the party: Coach's spear form from the 2009 Team Trials, 50 frames in 5 s (Khai's existing 50-tap pace), 320 × 240 each, one 0.5 MB sheet.
 
 ### Pathfinder (`trail`)
 
@@ -60,6 +61,8 @@ Phone, in the pack: one big primary action per screen, the game's numbers in the
 - [x] AC-5: Stack Attack trims each stopped bar to the row below, ends on a miss or the top row, and scores by rows stacked.
 - [x] AC-6: Rapid Recall plays three rounds of growing grids from the seed, hides the pattern after 1.2 s, and scores an equal share per square found.
 - [x] AC-7: The party's event file lists the five games, and each plays end to end on a phone.
+- [x] AC-8: With a film, the frames are the target, the phone gets the film, the instructions open with "Help Coach finish the form!", and tapping every frame ends the run early when a person could have tapped that fast; a film with more frames than the seconds allow is refused.
+- [x] AC-9: The phone waits for the film's frames before the countdown, shows the frame for each tap with progress, ends on the last frame, and keeps it up while the result holds.
 
 ## Tests
 

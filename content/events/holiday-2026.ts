@@ -84,7 +84,24 @@ export const holiday2026: EventConfig = {
     ...(
       [
         ["t-timer", "timer", "T-Timer", { targetSeconds: 7, visibleSeconds: 3 }],
-        ["tap-masher", "taps", "Tap Masher", { seconds: 5, target: 50 }],
+        // Every tap plays the next frame of Coach's spear form (Khai, 2026-11-14): 50 frames
+        // sampled evenly from the 2009 Team Trials video, one sprite sheet (scripts/film-sheet.sh).
+        [
+          "tap-masher",
+          "taps",
+          "Tap Masher",
+          {
+            seconds: 5,
+            film: {
+              sheet: "/events/holiday-2026/tap-form/coach-form.jpg",
+              frames: 50,
+              columns: 10,
+              width: 320,
+              height: 240,
+              alt: "Coach's spear form at the 2009 US Wushu Team Trials",
+            },
+          },
+        ],
         ["pathfinder", "trail", "Pathfinder", { size: 7, checkpoints: 8 }],
         ["stack-attack", "stacker", "Stack Attack", { rows: 12, width: 7 }],
         ["rapid-recall", "recall", "Rapid Recall", {}],

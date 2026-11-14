@@ -84,6 +84,68 @@ describe("quick game screens (spec 16)", () => {
     expect(tapsSummary({ kind: "done", taps: 33, target: 45 })).toBe("33 taps");
   });
 
+  test("S16-AC9: a Tap Masher film waits for its frames, plays one per tap, and ends on the last", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, toFake: ["performance", "requestAnimationFrame"] });
+    // jsdom loads no images: this one "loads" when asked, so the test controls when.
+    const loads: (() => void)[] = [];
+    vi.stubGlobal(
+      "Image",
+      class {
+        onload: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+        set src(_: string) {
+          loads.push(() => this.onload?.());
+        }
+      },
+    );
+    const film = {
+      sheet: "/form.jpg",
+      frames: 6,
+      columns: 3,
+      width: 320,
+      height: 240,
+      alt: "Coach's form",
+    };
+    const onMove = vi.fn();
+    const { rerender } = render(
+      <TapsGame {...props({ kind: "running", seconds: 5, goInMs: 0, film }, onMove)} />,
+    );
+    // The countdown waits for the frames.
+    expect(screen.getByText("Loading the video…")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Tap!/ })).toBeDisabled();
+    act(() => {
+      loads.forEach((load) => {
+        load();
+      });
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(50);
+    });
+    const pad = screen.getByRole("button", { name: /Tap!/ });
+    const frame = () => screen.getByRole("img", { name: /Coach's form/ });
+    expect(frame()).toHaveAttribute("data-frame", "0");
+    for (let i = 0; i < 4; i++) fireEvent.pointerDown(pad);
+    // Frame 4: second row, middle column of a 3 × 2 sheet.
+    expect(frame()).toHaveAttribute("data-frame", "4");
+    expect(frame().style.backgroundPosition).toBe("50% 100%");
+    expect(screen.getByRole("progressbar", { name: "Form" })).toHaveAttribute("aria-valuenow", "4");
+    fireEvent.pointerDown(pad);
+    fireEvent.pointerDown(pad);
+    // The last frame ends the run at once, without waiting for the clock.
+    expect(onMove).toHaveBeenLastCalledWith({ type: "finish", taps: 6 });
+    expect(screen.getByText("Form complete!")).toBeInTheDocument();
+    fireEvent.pointerDown(pad);
+    expect(onMove).toHaveBeenCalledTimes(1);
+    // The result arrives while the last frame holds: it stays up.
+    rerender(<TapsGame {...props({ kind: "done", taps: 6, target: 6, film }, onMove)} />);
+    expect(frame()).toHaveAttribute("data-frame", "5");
+    expect(tapsSummary({ kind: "done", taps: 6, target: 6, film })).toBe(
+      "Finished the whole form!",
+    );
+    expect(tapsSummary({ kind: "done", taps: 4, target: 6, film })).toBe("4 of 6 moves");
+    vi.unstubAllGlobals();
+  });
+
   test("S16-AC5: Stack Attack stops the bar on a tap anywhere and sends the rows when it misses", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true, toFake: ["performance", "requestAnimationFrame"] });
     const onMove = vi.fn();

@@ -7,7 +7,7 @@ export type { PlayStatus } from "./repo";
 export type { PlayChange, PlayRecord, PlayRepo } from "./repo";
 export { MemoryPlayRepo } from "./repo.memory";
 export type { TimerView } from "./timer/logic";
-export type { TapsView } from "./taps/logic";
+export type { Film as TapsFilm, TapsView } from "./taps/logic";
 export type { StackerView } from "./stacker/logic";
 export { barStart, START_LENGTH, trim, type Bar } from "./stacker/engine";
 export type { RecallView } from "./recall/logic";

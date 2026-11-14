@@ -14,6 +14,7 @@ Move answered ones to the bottom with the answer.
 | Q20 | Can a player use the same unlock code twice, or share it with friends? | Spec 08 | Each player's unlock counts once; sharing a code is allowed (it's a party) |
 | Q21 | Should codes expire after the event ends? | Spec 08 | Yes, codes stop working once the event is `ended` |
 | Q19 | Where should photo backups go? | Runbook | Google Drive folder `Game Master/<slug>` |
+| Q27 | Tap Masher film: how many frames, and how is the video framed? | Spec 16 | 50 frames sampled evenly across the whole 85 s form, kept at 5 s (Khai's 50-tap pace: 10 taps a second for all the points). Frames stay at the video's own 320 × 240 with no crop: the camera already follows Coach, and the source is too small to crop further. More frames make the motion smoother but need faster tapping; `scripts/film-sheet.sh` remakes the sheet with any count. |
 
 ## Answered
 
