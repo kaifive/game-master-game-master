@@ -179,4 +179,60 @@ describe("quick game screens (spec 16)", () => {
       "Time ran out",
     );
   });
+
+  test("S16-AC9 S16-AC10: the runner starts on 1, follows and faces the trail, and numbers turn green or red", () => {
+    // A 3×3 grid, dots 1, 2, 3 on squares 0, 2, 8.
+    const view = {
+      kind: "playing" as const,
+      size: 3,
+      dots: [0, 2, 8],
+      elapsedMs: 0,
+      runner: { src: "/danny.png", alt: "Danny" },
+    };
+    render(<TrailGame {...props(view)} />);
+    const runner = () => screen.getByRole("img", { name: "Danny" });
+    // Which way Danny faces, 0 to 359 (he may have turned past a full circle).
+    const facingDeg = () => {
+      const deg = Number(
+        /rotate\((-?\d+)deg\)/.exec(runner().parentElement?.style.transform ?? "")?.[1],
+      );
+      return ((deg % 360) + 360) % 360;
+    };
+    const at = (cell: number) => {
+      const el = document.querySelector(`[data-cell="${String(cell)}"]`);
+      if (!el) throw new Error("no cell");
+      return el;
+    };
+    const mark = (n: number) =>
+      screen
+        .getByRole("img", { name: new RegExp(`^Number ${String(n)}`) })
+        .getAttribute("data-mark");
+    // Danny stands on 1, upright; the 1 chip hides under him.
+    expect(runner().closest("[data-runner-at]")?.getAttribute("data-runner-at")).toBe("0");
+    expect(facingDeg()).toBe(0);
+    expect(mark(1)).toBe("idle");
+    HTMLElement.prototype.setPointerCapture = () => undefined;
+    const grid = at(0).parentElement as HTMLElement;
+    const drag = (cells: number[]) => {
+      document.elementFromPoint = () => at(cells[0] as number);
+      fireEvent.pointerDown(grid, { clientX: 1, clientY: 1 });
+      for (const cell of cells.slice(1)) {
+        document.elementFromPoint = () => at(cell);
+        fireEvent.pointerMove(grid, { clientX: 1, clientY: 1 });
+      }
+      fireEvent.pointerUp(grid);
+    };
+    // Right, right: passes 2 (green); Danny faces right.
+    drag([0, 1, 2]);
+    expect(mark(1)).toBe("passed");
+    expect(mark(2)).toBe("passed");
+    expect(runner().closest("[data-runner-at]")?.getAttribute("data-runner-at")).toBe("2");
+    expect(facingDeg()).toBe(90);
+    // Back to 1 and down the left side to 3's row, then along to 3, skipping 2.
+    fireEvent.click(screen.getByRole("button", { name: "Clear" }));
+    drag([0, 3, 6, 7, 8]);
+    expect(mark(2)).toBe("skipped");
+    expect(mark(3)).toBe("idle");
+    expect(facingDeg()).toBe(90);
+  });
 });

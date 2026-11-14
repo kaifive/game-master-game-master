@@ -2,11 +2,27 @@
 
 import { useRef, useState } from "react";
 import { useSlots } from "@/components/slots/registry";
-import { adjacent, checkPath, type TrailView } from "@/lib/games";
+import {
+  adjacent,
+  checkPath,
+  dotMarks,
+  facing,
+  turnToward,
+  type DotMark,
+  type TrailView,
+} from "@/lib/games";
 import { cx } from "@/lib/ui";
 import type { GameRendererProps } from "../types";
 
 type Playing = Extract<TrailView, { kind: "playing" }>;
+
+/** Number chips: grey until passed in order (green), red when skipped (S16-AC9). */
+const CHIP: Record<DotMark, string> = {
+  idle: "bg-[color-mix(in_srgb,var(--gm-text)_68%,var(--gm-surface))] text-gm-surface",
+  passed: "bg-gm-success text-white",
+  skipped: "bg-gm-danger text-white",
+};
+const SAID: Record<DotMark, string> = { idle: "", passed: ", passed", skipped: ", skipped" };
 
 /** The square under a point on the grid, from its data-cell attribute. */
 function cellAt(x: number, y: number): number | null {
@@ -32,6 +48,10 @@ export function TrailGame({ view: raw, onMove, busy }: GameRendererProps) {
   const [path, setPath] = useState<number[]>([]);
   const dragging = useRef(false);
   const sent = useRef(false);
+  // The runner turns the short way round to face each step (S16-AC10).
+  const [turn, setTurn] = useState({ dir: 0, angle: 0 });
+  const dir = view.kind === "playing" ? facing(path, view.size) : turn.dir;
+  if (dir !== turn.dir) setTurn({ dir, angle: turnToward(turn.angle, dir) });
   if (view.kind === "done") return null;
 
   const total = view.size * view.size;
@@ -47,6 +67,9 @@ export function TrailGame({ view: raw, onMove, busy }: GameRendererProps) {
       return next;
     });
   };
+  const marks = dotMarks(path, view.dots);
+  const runner = view.runner;
+  const runnerAt = path[path.length - 1] ?? view.dots[0] ?? 0;
   const centre = (cell: number) => ({
     x: ((cell % view.size) + 0.5) * (100 / view.size),
     y: (Math.floor(cell / view.size) + 0.5) * (100 / view.size),
@@ -82,7 +105,8 @@ export function TrailGame({ view: raw, onMove, busy }: GameRendererProps) {
               key={cell}
               data-cell={cell}
               role="img"
-              aria-label={`${dot >= 0 ? `Number ${String(dot + 1)}` : "Square"}${on ? ", on the trail" : ""}`}
+              aria-label={`${dot >= 0 ? `Number ${String(dot + 1)}${SAID[marks[dot] ?? "idle"]}` : "Square"}${on ? ", on the trail" : ""}`}
+              {...(dot >= 0 ? { "data-mark": marks[dot] ?? "idle" } : {})}
               className={cx(
                 "grid aspect-square min-h-11 place-items-center rounded-gm ring-2",
                 // High contrast in a dim room: empty squares are clearly squares; the trail fills them.
@@ -92,8 +116,13 @@ export function TrailGame({ view: raw, onMove, busy }: GameRendererProps) {
                 head && "ring-4 ring-[var(--gm-text)]",
               )}
             >
-              {dot >= 0 && (
-                <span className="jt-card-shadow z-10 grid size-10 place-items-center rounded-[5px] bg-[var(--gm-card,white)] font-gm-display text-2xl font-bold text-[var(--gm-card-ink,black)]">
+              {dot >= 0 && !(runner && cell === runnerAt) && (
+                <span
+                  className={cx(
+                    "jt-card-shadow z-10 grid size-10 place-items-center rounded-[5px] font-gm-display text-2xl font-bold transition-colors duration-150",
+                    CHIP[marks[dot] ?? "idle"],
+                  )}
+                >
                   {dot + 1}
                 </span>
               )}
@@ -116,6 +145,31 @@ export function TrailGame({ view: raw, onMove, busy }: GameRendererProps) {
             vectorEffect="non-scaling-stroke"
           />
         </svg>
+        {runner && (
+          // The runner stands on 1, then on the trail's end, facing the last step.
+          <div
+            data-runner-at={runnerAt}
+            className="pointer-events-none absolute z-20 aspect-square -translate-x-1/2 -translate-y-1/2 transition-[left,top] duration-100 ease-out motion-reduce:transition-none"
+            style={{
+              left: `${String(centre(runnerAt).x)}%`,
+              top: `${String(centre(runnerAt).y)}%`,
+              width: `${String((100 / view.size) * 1.25)}%`,
+            }}
+          >
+            <div
+              className="size-full transition-transform duration-200 ease-out motion-reduce:transition-none"
+              style={{ transform: `rotate(${String(turn.angle)}deg)` }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- a small cutout, already sized */}
+              <img
+                src={runner.src}
+                alt={runner.alt}
+                className="size-full object-contain drop-shadow-[0_2px_3px_rgb(0_0_0/0.6)]"
+                draggable={false}
+              />
+            </div>
+          </div>
+        )}
       </div>
       <div className="flex justify-center">
         <Button

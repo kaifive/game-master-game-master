@@ -85,7 +85,22 @@ export const holiday2026: EventConfig = {
       [
         ["t-timer", "timer", "T-Timer", { targetSeconds: 7, visibleSeconds: 3 }],
         ["tap-masher", "taps", "Tap Masher", { seconds: 5, target: 50 }],
-        ["pathfinder", "trail", "Pathfinder", { size: 7, checkpoints: 8 }],
+        [
+          "pathfinder",
+          "trail",
+          "Pathfinder",
+          {
+            size: 7,
+            checkpoints: 8,
+            // Danny stands on 1 and walks the trail (Khai, 2026-11-14).
+            runner: {
+              src: "/events/holiday-2026/danny.png",
+              alt: "Danny",
+              name: "Danny",
+              intro: "Help Danny hit all his jumps!",
+            },
+          },
+        ],
         ["stack-attack", "stacker", "Stack Attack", { rows: 12, width: 7 }],
         ["rapid-recall", "recall", "Rapid Recall", {}],
       ] as const
