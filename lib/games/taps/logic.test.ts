@@ -58,4 +58,19 @@ describe("Tap Masher with a film", () => {
     // A film can't need more taps than the seconds allow.
     expect(TapsContent.safeParse({ seconds: 2, film }).success).toBe(false);
   });
+
+  it("S16-AC13: with a target, the film is just for show: the target scores, and it may run past reach", () => {
+    const clip = { ...film, frames: 172, intro: "Help Coach with the opening moves!" };
+    const t = TapsContent.parse({ seconds: 5, target: 50, film: clip });
+    const lines = taps.instructions(t).lines;
+    expect(lines[0]).toBe("Help Coach with the opening moves!");
+    expect(lines.join(" ")).not.toMatch(/50|whole form/);
+    const s = taps.create(t, 1, at(0));
+    expect(s.target).toBe(50);
+    // 50 taps doesn't end the run early: only the film's last frame would.
+    expect(taps.move(s, t, { type: "finish", taps: 50 }, at(COUNTDOWN_MS + 2600)).ok).toBe(false);
+    const done = taps.move(s, t, { type: "finish", taps: 50 }, at(COUNTDOWN_MS + 5000));
+    if (!done.ok) throw new Error(done.message);
+    expect(taps.score(done.state, 100)).toBe(100);
+  });
 });
