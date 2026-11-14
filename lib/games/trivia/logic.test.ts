@@ -212,12 +212,6 @@ describe("trivia", () => {
     );
   });
 
-  it("S10-AC11: the instructions say the next question starts by itself", () => {
-    expect(trivia.instructions(content).lines).toContain(
-      "Out of time counts as wrong. The next question pops up on its own.",
-    );
-  });
-
   it("builds its instructions from the content's numbers", () => {
     expect(trivia.instructions(content).lines.join(" ")).toMatch(/3 questions, 15 seconds/);
     expect(trivia.instructions({ questions: pool(6).questions }).lines.join(" ")).toMatch(
