@@ -101,10 +101,13 @@ export const holiday2026: EventConfig = {
           "taps",
           "Tap Masher",
           {
-            seconds: 5,
+            // Plays like video (Khai, 2026-11-14): 120 frames in a row, every other frame of
+            // 8 s around the jump at 0:18. Finishing takes 12 taps a second; points scale with
+            // how far you get.
+            seconds: 10,
             film: {
               sheet: "/events/holiday-2026/tap-form/coach-form.jpg",
-              frames: 50,
+              frames: 120,
               columns: 10,
               width: 320,
               height: 240,

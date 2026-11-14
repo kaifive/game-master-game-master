@@ -76,7 +76,7 @@ export const taps: GameLogic<TapsContent, TapsState, TapsView> = {
           `Help ${c.film.who ?? "Coach"} finish the form!`,
           "A countdown starts as soon as you close this box.",
           `Then tap the big button as fast as you can for ${String(seconds(c))} seconds: every tap plays the next move.`,
-          "Finish the whole form for all the points.",
+          "Every move earns points. Finish the whole form for all of them.",
         ]
       : [
           "A countdown starts as soon as you close this box.",
