@@ -1,5 +1,6 @@
 "use client";
 
+import { SkeletonList } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { ArrowIcon } from "@/components/icons/nav";
 import { useCallback, useId, useState, type ReactNode } from "react";
@@ -265,7 +266,8 @@ export function TeamPanel({ slug, fallback = null }: { slug: string; fallback?: 
   const [given, setGiven] = useState<{ teamId: string; team: number } | null>(null);
   const [confirm, setConfirm] = useState<TeamView | null>(null);
   const [error, setError] = useState<string | null>(null);
-  if (!data || !device || !playerId) return null;
+  if (!device || !playerId) return null;
+  if (!data) return <SkeletonList label="Loading teams" rows={3} />;
 
   const mineTeam = data.mine ? data.teams.find((t) => t.id === data.mine?.teamId) : undefined;
   const teamScore = (teamId: string): number | null =>

@@ -101,10 +101,11 @@ describe("TotalScore", () => {
     expect(screen.getByLabelText("Mai: 180 points")).toHaveAttribute("data-total-score");
   });
 
-  test("S08-AC15: shows nothing until the real total has loaded, so it never counts up from 0", () => {
+  test("S08-AC15 S08-AC19: shows a loading placeholder until the real total has loaded, never 0", () => {
     if (device.state) device.state.totalKnown = false;
-    const { container } = render(<TotalScore />);
-    expect(container).toBeEmptyDOMElement();
+    render(<TotalScore />);
+    expect(screen.getByRole("status", { name: "Loading your points" })).toBeInTheDocument();
+    expect(screen.queryByText("0")).toBeNull();
   });
 
   test("shows nothing without a player", () => {

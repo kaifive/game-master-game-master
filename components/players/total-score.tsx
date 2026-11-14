@@ -2,13 +2,16 @@
 
 import { PointsIcon } from "@/components/icons/points";
 import { CountUp } from "@/components/motion";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useOptionalDevice } from "./device";
 
 /** The active player's total in the event header; points from games fly here (S08-AC15). */
 export function TotalScore() {
   const device = useOptionalDevice();
-  // Nothing until the real total arrives, so it never counts up from 0 on a reload.
-  if (!device?.active || !device.totalKnown) return null;
+  if (!device?.active) return null;
+  // A placeholder until the real total arrives, so it never shows 0 or counts up from it on a reload.
+  if (!device.totalKnown)
+    return <Skeleton label="Loading your points" className="h-9 w-16 rounded-full bg-black/25" />;
   return (
     <span
       data-total-score

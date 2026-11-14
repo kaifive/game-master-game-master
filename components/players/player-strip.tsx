@@ -2,6 +2,7 @@
 
 import { PointsIcon } from "@/components/icons/points";
 import { CountUp } from "@/components/motion";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useOptionalDevice } from "./device";
 
 /**
@@ -30,7 +31,10 @@ export function PlayerStrip() {
           </p>
         )}
       </div>
-      {/* Nothing until the real total arrives, so it never counts up from 0 on a reload. */}
+      {/* A placeholder until the real total arrives, so it never shows 0 or counts up from it on a reload. */}
+      {!device.totalKnown && (
+        <Skeleton label="Loading your points" className="h-12 w-28 shrink-0" />
+      )}
       {device.totalKnown && (
         <span
           data-total-score

@@ -45,7 +45,7 @@ describe("Pathfinder", () => {
     // No limit: an hour later it's still waiting to be solved.
     expect(trail.tick(s, c, at(3_600_000))).toBe(s);
     const lines = trail.instructions(c).lines.join(" ");
-    expect(lines).toMatch(/every square/);
+    expect(lines).toMatch(/touch every single square/);
     expect(lines).not.toMatch(/minutes/);
   });
 
@@ -65,7 +65,7 @@ describe("Pathfinder", () => {
     const lines = trail.instructions(rc).lines;
     expect(lines[0]).toBe("Help Danny hit all his jumps!");
     expect(lines[1]).toMatch(/Drag Danny/);
-    expect(trail.instructions(c).lines[0]).toMatch(/^Start at 1 and fill EVERY square/);
+    expect(trail.instructions(c).lines[0]).toMatch(/touch every single square/);
     expect(trail.view(trail.create(c, 5, at(0)), c, at(0))).not.toHaveProperty("runner");
   });
 

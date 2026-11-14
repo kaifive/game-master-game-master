@@ -222,6 +222,38 @@ describe("S08-AC7: the hub lists each game for the active player", () => {
   });
 });
 
+describe("S08-AC19: loading shows placeholders, never 0", () => {
+  test("until this phone's scores arrive, the menu shows placeholders instead of 0 of N and blank cards", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) =>
+        url.includes("/plays")
+          ? new Promise(() => undefined) // still loading
+          : Promise.resolve(
+              Response.json(
+                url.includes("/leaderboard")
+                  ? { top: [], me: null, phase: "individual", teams: [], myTeam: null }
+                  : url.includes("/teams")
+                    ? { phase: "individual", maxTeamSize: 1, teams: [], mine: null }
+                    : { banned: false, player: { id: "p1", nickname: "Mai" }, restartsLeft: 1 },
+              ),
+            ),
+      ),
+    );
+    inPack(
+      <DeviceProvider slug={event.slug} identity="dev">
+        <LiveView event={event} />
+      </DeviceProvider>,
+    );
+    const list = await screen.findByRole("region", { name: "Tonight's games" });
+    expect(within(list).getByRole("status", { name: "Loading your scores" })).toBeInTheDocument();
+    expect(within(list).queryByRole("progressbar")).toBeNull();
+    expect(screen.getByRole("status", { name: "Loading your points" })).toBeInTheDocument();
+    expect(within(list).queryByRole("img", { name: /points|not played/ })).toBeNull();
+    vi.unstubAllGlobals();
+  });
+});
+
 describe("S08-AC16: a game page names the game in the banner", () => {
   test("the banner shows the game's title, not the event's name", () => {
     inPack(<GameView event={event} game={event.games[0]!} status="upcoming" />);
