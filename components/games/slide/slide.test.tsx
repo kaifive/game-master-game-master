@@ -24,4 +24,18 @@ describe("Number Slide screen (spec 21)", () => {
       "Solved in 1:15 · 31 moves",
     );
   });
+
+  test("S21-AC5: a picture puzzle shows each tile's slice of the picture, not its number, and the goal", () => {
+    const base = props();
+    render(
+      <SlideGame {...base} view={{ ...base.view, image: { src: "/p.png", alt: "A picture" } }} />,
+    );
+    const tile = screen.getByRole("button", { name: "Tile 6" });
+    expect(tile).not.toHaveTextContent("6");
+    // Tile 6 belongs in the middle row, right column.
+    const slice = tile.querySelector("span");
+    expect(slice?.style.backgroundImage).toContain("/p.png");
+    expect(slice?.style.backgroundPosition).toBe("100% 50%");
+    expect(screen.getByRole("img", { name: "Goal: A picture" })).toBeInTheDocument();
+  });
 });

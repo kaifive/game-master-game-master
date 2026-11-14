@@ -133,7 +133,11 @@ export const holiday2026: EventConfig = {
       title: "Number Slide",
       mode: "solo",
       visibility: "listed",
-      content: { size: 3 },
+      // A picture instead of numbers (Khai, 2026-11-14): swap in any square photo.
+      content: {
+        size: 3,
+        image: { src: "/events/nova-wushu-logo.png", alt: "The Nova Wushu logo" },
+      },
       scoring: { awardTo: "player" },
       alwaysOpen: true,
     },
