@@ -104,7 +104,7 @@ describe("Number Slide", () => {
       if (v.kind === "playing" && v.image) seen.add(v.image.src);
     }
     expect(seen.size).toBe(3);
-    expect(slideGame.instructions(c).lines[0]).toMatch(/picture back together/);
+    expect(slideGame.instructions(c).lines[0]).toMatch(/rebuild the picture/);
     const plain = SlideContent.parse({});
     expect(
       slideGame.view(slideGame.create(plain, 7, { now: 0 }), plain, { now: 0 }),

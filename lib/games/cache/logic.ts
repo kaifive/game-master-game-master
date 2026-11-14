@@ -55,9 +55,9 @@ export const cache: GameLogic<CacheContent, CacheState, CacheView> = {
   instructions: (c) => ({
     title: "How to play",
     lines: [
-      `${String(c.caches.length)} codes are hidden around the party.`,
-      "Find one, type it in, and score right away.",
-      "Each code counts once for you. Keep hunting until you've found them all.",
+      `${String(c.caches.length)} secret codes are hidden around the party.`,
+      "Find one, type it in, and score!",
+      "Find them all for the most points.",
     ],
   }),
   create: (c) => ({

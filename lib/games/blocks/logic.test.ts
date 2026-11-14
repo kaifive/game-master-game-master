@@ -126,7 +126,7 @@ describe("Block Fit", () => {
       }
       expect(covered.size).toBe(20);
     }
-    expect(blocks.instructions(c).lines[0]).toMatch(/photo back together/);
+    expect(blocks.instructions(c).lines[0]).toMatch(/rebuild the photo/);
     const plain = BlocksContent.parse({});
     const s = blocks.create(plain, 3, { now: 0 });
     expect(s.pieces.every((p) => p.slices === undefined)).toBe(true);

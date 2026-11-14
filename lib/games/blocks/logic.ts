@@ -73,11 +73,11 @@ export const blocks: GameLogic<BlocksContent, BlocksState, BlocksView> = {
     title: "How to play",
     lines: [
       c.images
-        ? "Fill the board with every piece to put the photo back together."
-        : "Fill the board with every piece.",
-      "Drag a piece onto the board. Tap a piece in the tray to turn it.",
-      "Tap a placed piece to take it back off.",
-      "Solving it earns a few points. Only the fastest score them all.",
+        ? "Fit every piece into the board to rebuild the photo."
+        : "Fit every piece into the board.",
+      "Drag pieces onto the board. Tap one below to turn it.",
+      "Drag a placed piece to move it, or off the board to put it back.",
+      "Finish fast for the most points.",
     ],
   }),
   create(c, seed, { now }) {

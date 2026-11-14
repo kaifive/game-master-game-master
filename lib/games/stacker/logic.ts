@@ -44,9 +44,9 @@ export const stacker: GameLogic<StackerContent, StackerState, StackerView> = {
   instructions: (c) => ({
     title: "How to play",
     lines: [
-      "A bar slides side to side. Tap to stop it.",
-      "Whatever hangs over the row below falls off, so the next bar is smaller.",
-      `Stack as many rows as you can, up to ${String(rows(c))}. Each row climbs faster.`,
+      "Tap anywhere to drop the sliding present.",
+      "Anything hanging over the edge gets chopped off, so line it up!",
+      `Stack as high as you can, up to ${String(rows(c))}. It speeds up as you go.`,
     ],
   }),
   // The bars start with the game: no second Start button.

@@ -8,7 +8,7 @@ const started = (now = 0) => timer.create(c, 1, at(now));
 describe("T-Timer", () => {
   it("S16-AC1: content defaults to a 1.20–1.25 s window, and the instructions say so", () => {
     const lines = timer.instructions(c).lines.join(" ");
-    expect(lines).toMatch(/between 1\.20 and 1\.25 seconds/);
+    expect(lines).toMatch(/reads 1\.20 to 1\.25/);
     expect(lines).not.toMatch(/hides/);
     expect(TimerContent.safeParse({ fromSeconds: 2, toSeconds: 1.5 }).success).toBe(false);
     expect(TimerContent.safeParse({ targetSeconds: 7 }).success).toBe(false);

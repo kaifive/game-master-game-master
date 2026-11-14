@@ -56,13 +56,13 @@ export const photo: GameLogic<PhotoContent, PhotoState, PhotoView> = {
       maxPhotos(c) === 1
         ? [
             c.prompt,
-            "You get just one photo, so make it count!",
-            "Your score shows as soon as the host rates it.",
+            "One photo only, so make it count!",
+            "Your score shows up once the host rates it.",
           ]
         : [
             c.prompt,
             `Send up to ${String(maxPhotos(c))} photos. The host rates each one, and your best counts.`,
-            "Your score shows as soon as the host rates them.",
+            "Your score shows up once the host rates them.",
           ],
   }),
   create: (c) => ({ photos: [], max: maxPhotos(c), step: 0 }),

@@ -331,9 +331,7 @@ describe("game service", () => {
       title: "Our rules",
       lines: ["Be quick."],
     });
-    expect(instructionsFor(event, "trivia")?.lines[0]).toBe(
-      "5 quick questions. You have 10 seconds for each.",
-    );
+    expect(instructionsFor(event, "trivia")?.lines[0]).toBe("5 questions, 10 seconds each.");
     expect(instructionsFor(event, "jeopardy")).toBeNull();
   });
 

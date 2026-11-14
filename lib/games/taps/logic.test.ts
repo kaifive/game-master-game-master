@@ -43,7 +43,7 @@ describe("Tap Masher with a film", () => {
   it("S16-AC13: the frames are the target; the phone gets the film; finishing every frame ends the run early", () => {
     const lines = taps.instructions(f).lines;
     expect(lines[0]).toBe("Help Coach finish the form!");
-    expect(lines.join(" ")).toMatch(/every tap plays the next move/);
+    expect(lines.join(" ")).toMatch(/Every tap plays the next move/);
     const s = taps.create(f, 1, at(0));
     expect(s.target).toBe(50);
     expect(taps.view(s, f, at(0))).toMatchObject({ kind: "running", film });

@@ -72,9 +72,9 @@ export const timer: GameLogic<TimerContent, TimerState, TimerView> = {
   instructions: (c) => ({
     title: "How to play",
     lines: [
-      "The clock starts as soon as you close this box, and you can watch it the whole time.",
-      `Tap Stop between ${seconds(fromMs(c))} and ${seconds(toMs(c))} seconds.`,
-      "Anywhere in there scores all the points. Just outside still scores some.",
+      "After 3-2-1, the clock starts counting up.",
+      `Tap Stop when it reads ${seconds(fromMs(c))} to ${seconds(toMs(c))}.`,
+      "Nail it for all the points. Close still counts.",
     ],
   }),
   // The clock starts with the game: no second Start button (Khai, 2026-11-10).

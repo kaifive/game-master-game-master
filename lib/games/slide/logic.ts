@@ -107,10 +107,10 @@ export const slideGame: GameLogic<SlideContent, SlideState, SlideView> = {
     title: "How to play",
     lines: [
       c.images
-        ? "Slide the pieces to put the picture back together, with the gap bottom right."
-        : `Put the tiles back in order, 1 to ${String(sizeOf(c) * sizeOf(c) - 1)}, with the gap last.`,
-      "Tap a tile next to the gap (or in its row or column) to slide it.",
-      "Solving it earns a few points. Only the fastest score them all.",
+        ? "Slide the pieces to rebuild the picture, with the gap in the bottom right."
+        : `Slide the tiles back in order, 1 to ${String(sizeOf(c) * sizeOf(c) - 1)}, with the gap last.`,
+      "Tap or swipe a piece next to the gap to slide it in.",
+      "Finish fast for the most points.",
     ],
   }),
   create: (c, seed, { now }) => ({

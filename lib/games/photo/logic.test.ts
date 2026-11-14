@@ -11,7 +11,7 @@ describe("Photo challenge", () => {
     // One photo by default: one chance, so make it count.
     const one = PhotoContent.parse({ prompt: "x" });
     expect(photo.create(one, 1, at).max).toBe(1);
-    expect(photo.instructions(one).lines.join(" ")).toMatch(/just one photo, so make it count/);
+    expect(photo.instructions(one).lines.join(" ")).toMatch(/One photo only, so make it count/);
     const lines = photo.instructions(c).lines.join(" ");
     expect(lines).toMatch(/Snipe a photo of Coach/);
     expect(lines).toMatch(/up to 2 photos/);
