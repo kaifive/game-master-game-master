@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { offWindow, type TimerView } from "@/lib/games";
-import { cx } from "@/lib/ui";
+import type { TimerView } from "@/lib/games";
 import type { GameRendererProps } from "../types";
 
 /** A time cut to the hundredth, as a stopwatch shows it. */
@@ -46,8 +45,6 @@ export function TimerGame({ view: raw, onMove }: GameRendererProps) {
   const elapsed = start.current === null ? 0 : Math.max(0, end - start.current);
   // Judged on what the clock shows (hundredths), as the server judges the phone's time.
   const shown = toHundredths(elapsed);
-  const inWindow =
-    stoppedAt !== null && offWindow(shown, view.fromSeconds * 1000, view.toSeconds * 1000) === 0;
 
   // Stop on the press itself, not the release, and freeze at once: no wait for the server.
   const stop = () => {
@@ -63,10 +60,7 @@ export function TimerGame({ view: raw, onMove }: GameRendererProps) {
       <div className="grid justify-items-center gap-3">
         <p
           aria-live="off"
-          className={cx(
-            "m-0 font-gm-display text-8xl font-bold tabular-nums transition-colors motion-reduce:transition-none",
-            inWindow && "text-gm-success",
-          )}
+          className="m-0 font-gm-display text-8xl font-bold tabular-nums"
           data-testid="timer-clock"
         >
           {fmt(shown)}

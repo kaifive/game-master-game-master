@@ -134,7 +134,7 @@ export function TapsGame({ view: served, onMove }: GameRendererProps) {
           <div className="relative">
             <div
               role="img"
-              aria-label={`${film.alt}: move ${String(Math.min(taps, frames - 1) + 1)} of ${String(frames)}`}
+              aria-label={`${film.alt}: move ${String(Math.min(taps, frames - 1) + 1)}`}
               data-frame={Math.min(taps, frames - 1)}
               className={cx(
                 "w-full rounded-gm bg-black bg-no-repeat shadow-lg ring-1 ring-gm-border",
@@ -176,7 +176,8 @@ export function TapsGame({ view: served, onMove }: GameRendererProps) {
         )}
         aria-label={`Tap! ${String(taps)} taps`}
       >
-        {film ? `${String(Math.min(taps, frames))}/${String(frames)}` : taps}
+        {/* Just the taps, never "of 50" (Khai, 2026-11-14). */}
+        {film ? Math.min(taps, frames) : taps}
       </button>
     </section>
   );
@@ -188,6 +189,6 @@ export function tapsSummary(raw: unknown): string | null {
   if (view.film)
     return view.taps >= view.target
       ? "Finished the whole form!"
-      : `${String(view.taps)} of ${String(view.target)} moves`;
+      : `${String(view.taps)} ${view.taps === 1 ? "move" : "moves"}`;
   return `${String(view.taps)} taps`;
 }
