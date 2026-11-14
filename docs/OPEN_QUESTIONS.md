@@ -16,6 +16,7 @@ Move answered ones to the bottom with the answer.
 | Q19 | Where should photo backups go? | Runbook | Google Drive folder `Game Master/<slug>` |
 | Q23 | Pathfinder: what counts as skipping a number (red)? | Spec 16 | Reaching a later number before an earlier one turns the missed ones red; after that nothing turns green until the trail is undone past the skip. The number reached early stays grey. |
 | Q24 | T-Timer: "stop in the range of 1 sec 20ms or 1 sec 25ms": is the window 1.20 to 1.25 s? (A literal 1.020 to 1.025 s is 5 ms, shorter than one screen frame.) And how fast should points fall off outside it? | Spec 16 | 1.20 to 1.25 s; full points inside, falling to 0 at 0.5 s outside |
+| Q27 | Tap Masher film: how many frames, and how is the video framed? | Spec 16 | 50 frames sampled evenly across the whole 85 s form, kept at 5 s (Khai's 50-tap pace: 10 taps a second for all the points). Frames stay at the video's own 320 × 240 with no crop: the camera already follows Coach, and the source is too small to crop further. More frames make the motion smoother but need faster tapping; `scripts/film-sheet.sh` remakes the sheet with any count. |
 
 ## Answered
 
