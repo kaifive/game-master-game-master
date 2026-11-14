@@ -144,7 +144,6 @@ export const trivia: GameLogic<TriviaContent, TriviaState, TriviaView> = {
       `${String(perPlay(c))} questions, ${String(seconds(c))} seconds each.`,
       "Tap your answer. No take-backs!",
       "Right answers score, and faster ones score more.",
-      "Out of time counts as wrong. The next question pops up on its own.",
     ],
   }),
 

@@ -83,6 +83,36 @@ describe("quick game screens (spec 16)", () => {
     expect(tapsSummary({ kind: "done", taps: 33, target: 45 })).toBe("33 taps");
   });
 
+  test("S16-AC14: a Tap Masher film counts 3-2-1 where the video goes, with the button there but off", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, toFake: ["performance", "requestAnimationFrame"] });
+    vi.stubGlobal(
+      "Image",
+      class {
+        onload: (() => void) | null = null;
+        set src(_: string) {
+          queueMicrotask(() => this.onload?.());
+        }
+      },
+    );
+    const film = { sheet: "/f.jpg", frames: 6, columns: 3, width: 320, height: 240, alt: "Form" };
+    render(<TapsGame {...props({ kind: "running", seconds: 5, goInMs: 3000, film })} />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
+    expect(screen.getByRole("timer", { name: "Countdown" })).toHaveTextContent("3");
+    expect(screen.queryByRole("img", { name: /Form/ })).toBeNull();
+    const pad = screen.getByRole("button", { name: /Tap!/ });
+    expect(pad).toBeDisabled();
+    expect(pad).toHaveTextContent("Tap!");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3100);
+    });
+    expect(screen.queryByRole("timer", { name: "Countdown" })).toBeNull();
+    expect(screen.getByRole("img", { name: /Form/ })).toHaveAttribute("data-frame", "0");
+    expect(pad).toBeEnabled();
+    vi.unstubAllGlobals();
+  });
+
   test("S16-AC14: a Tap Masher film waits for its frames, plays one per tap, and ends on the last", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true, toFake: ["performance", "requestAnimationFrame"] });
     // jsdom loads no images: this one "loads" when asked, so the test controls when.

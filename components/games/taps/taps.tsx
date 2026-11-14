@@ -122,7 +122,9 @@ export function TapsGame({ view: served, onMove }: GameRendererProps) {
         {!ready
           ? "Loading the video…"
           : toGo > 0
-            ? `Get ready… ${String(Math.ceil(toGo / 1000))}`
+            ? film
+              ? "Get ready…"
+              : `Get ready… ${String(Math.ceil(toGo / 1000))}`
             : finished
               ? "Form complete!"
               : sent.current
@@ -132,16 +134,35 @@ export function TapsGame({ view: served, onMove }: GameRendererProps) {
       {film && (
         <figure className="m-0 grid gap-2">
           <div className="relative">
-            <div
-              role="img"
-              aria-label={`${film.alt}: move ${String(Math.min(taps, frames - 1) + 1)}`}
-              data-frame={Math.min(taps, frames - 1)}
-              className={cx(
-                "w-full rounded-gm bg-black bg-no-repeat shadow-lg ring-1 ring-gm-border",
-                finished && "ring-4 ring-gm-tile-correct",
-              )}
-              style={frameStyle(film, Math.min(taps, frames - 1))}
-            />
+            {/* The 3-2-1 sits where the video will play, then the video takes its place (Khai, 2026-11-14). */}
+            {toGo > 0 || !ready ? (
+              <div
+                role="timer"
+                aria-label="Countdown"
+                className="grid w-full place-items-center rounded-gm bg-gm-surface-raised shadow-lg ring-1 ring-gm-border"
+                style={{ aspectRatio: `${String(film.width)} / ${String(film.height)}` }}
+              >
+                {ready && (
+                  <span
+                    key={Math.ceil(toGo / 1000)}
+                    className="font-gm-display text-9xl font-bold text-gm-accent-ink tabular-nums motion-safe:animate-[gm-pop_300ms_ease-out_both]"
+                  >
+                    {Math.max(1, Math.ceil(toGo / 1000))}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <div
+                role="img"
+                aria-label={`${film.alt}: move ${String(Math.min(taps, frames - 1) + 1)}`}
+                data-frame={Math.min(taps, frames - 1)}
+                className={cx(
+                  "w-full rounded-gm bg-black bg-no-repeat shadow-lg ring-1 ring-gm-border",
+                  finished && "ring-4 ring-gm-tile-correct",
+                )}
+                style={frameStyle(film, Math.min(taps, frames - 1))}
+              />
+            )}
             {finished && (
               <span className="absolute inset-x-0 bottom-3 mx-auto w-max rounded-full bg-gm-tile-correct px-4 py-1 font-gm-display text-xl font-bold text-gm-tile-correct-ink shadow-lg motion-safe:animate-[gm-pop_300ms_ease-out_both]">
                 Nailed it!
@@ -163,8 +184,8 @@ export function TapsGame({ view: served, onMove }: GameRendererProps) {
         )}
         aria-label={`Tap! ${String(taps)} taps`}
       >
-        {/* Just the taps, never "of 50" (Khai, 2026-11-14). */}
-        {film ? Math.min(taps, frames) : taps}
+        {/* Just the taps, never "of 50" (Khai, 2026-11-14). Before the start it says what it's for. */}
+        {!tapping && taps === 0 && !sent.current ? "Tap!" : film ? Math.min(taps, frames) : taps}
       </button>
     </section>
   );

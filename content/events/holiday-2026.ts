@@ -111,7 +111,7 @@ export const holiday2026: EventConfig = {
               columns: 10,
               width: 256,
               height: 192,
-              intro: "Help Coach with the opening moves!",
+              intro: "Help Coach with the beginning movement!",
               alt: "Coach's spear form at the 2009 US Wushu Team Trials",
             },
           },
