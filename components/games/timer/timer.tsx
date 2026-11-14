@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { TimerView } from "@/lib/games";
+import { offWindow, type TimerView } from "@/lib/games";
+import { cx } from "@/lib/ui";
 import type { GameRendererProps } from "../types";
 
-const fmt = (ms: number) => (ms / 1000).toFixed(2);
+/** A time cut to the hundredth, as a stopwatch shows it. */
+const toHundredths = (ms: number) => Math.floor(ms / 10) * 10;
+const fmt = (ms: number) => (toHundredths(ms) / 1000).toFixed(2);
 
 /** T-Timer (spec 16): the clock starts with the game; the phone times the run. */
 export function TimerGame({ view: raw, onMove }: GameRendererProps) {
@@ -41,25 +44,43 @@ export function TimerGame({ view: raw, onMove }: GameRendererProps) {
   if (view.kind === "done") return null;
   const end = stoppedAt ?? now;
   const elapsed = start.current === null ? 0 : Math.max(0, end - start.current);
-  const visible = view.kind === "running" && elapsed < view.visibleSeconds * 1000;
+  // Judged on what the clock shows (hundredths), as the server judges the phone's time.
+  const shown = toHundredths(elapsed);
+  const inWindow =
+    stoppedAt !== null && offWindow(shown, view.fromSeconds * 1000, view.toSeconds * 1000) === 0;
 
   // Stop on the press itself, not the release, and freeze at once: no wait for the server.
   const stop = () => {
     if (stoppedAt !== null || start.current === null) return;
     const t = performance.now();
     setStoppedAt(t);
-    move.current({ type: "stop", elapsedMs: Math.round(t - start.current) });
+    // Send the time the clock shows, so what the player sees is what's judged.
+    move.current({ type: "stop", elapsedMs: toHundredths(t - start.current) });
   };
 
   return (
     <section aria-label="T-Timer" className="grid justify-items-center gap-8 py-6 text-center">
-      <p
-        aria-live="off"
-        className="m-0 font-gm-display text-8xl font-bold tabular-nums"
-        data-testid="timer-clock"
-      >
-        {stoppedAt !== null ? fmt(elapsed) : visible ? fmt(elapsed) : "?.??"}
-      </p>
+      <div className="grid justify-items-center gap-3">
+        <p
+          aria-live="off"
+          className={cx(
+            "m-0 font-gm-display text-8xl font-bold tabular-nums transition-colors motion-reduce:transition-none",
+            inWindow && "text-gm-success",
+          )}
+          data-testid="timer-clock"
+        >
+          {fmt(shown)}
+        </p>
+        {/* The window to stop in, always in view next to the clock. */}
+        <p className="m-0 flex items-baseline gap-2 rounded-full bg-gm-surface-raised px-4 py-1.5 ring-1 ring-gm-border">
+          <span className="text-sm font-bold tracking-wide text-gm-text-muted uppercase">
+            Target
+          </span>
+          <span className="font-gm-display text-2xl font-bold text-gm-tile-correct tabular-nums">
+            {fmt(view.fromSeconds * 1000)} – {fmt(view.toSeconds * 1000)}
+          </span>
+        </p>
+      </div>
       {/* A stopwatch button: one big round target. */}
       <button
         type="button"
@@ -84,5 +105,8 @@ export function timerSummary(raw: unknown): string | null {
   const view = raw as TimerView;
   if (view.kind !== "done") return null;
   if (view.elapsedMs === null || view.offMs === null) return "The clock ran out";
-  return `${fmt(view.elapsedMs)} s · ${fmt(view.offMs)} s off`;
+  const at = `Stopped at ${fmt(view.elapsedMs)}`;
+  if (view.offMs === 0) return `${at} · in the window!`;
+  const early = view.elapsedMs < view.fromSeconds * 1000;
+  return `${at} · ${fmt(view.offMs)} s ${early ? "early" : "late"}`;
 }
