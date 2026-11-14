@@ -15,7 +15,7 @@ The classic sliding tile puzzle: numbered tiles in a frame with one gap; slide t
 3. The phone sends the taps when the board is in order. The server replays them from the same start, checks every tap was a legal slide and that the board ends in order, and times the run from when the play started.
 4. Points: solving earns half, plus up to half for speed: all of it within 30 s, none at 3 minutes. No time limit.
 5. Each play is a new board; replays count their best.
-6. Picture option: content `images`, a list of photos (`src`, `alt`); each play takes one by its seed, so replays see different photos. Each tile shows its slice of the photo on white (so a see-through logo reads) instead of a number, a tile in its right place gets a gold outline, and a small copy of the whole photo shows as the goal. The rules and scoring don't change. At the party: five club photos cropped square, plus the Nova Wushu logo (Khai, 2026-11-14).
+6. Picture option: content `images`, a list of photos (`src`, `alt`); each play takes one by its seed, so replays see different photos. Each tile shows its slice of the photo on white (so a see-through logo reads) instead of a number, a tile in its right place gets a gold outline, and a small copy of the whole photo shows as the goal. The rules and scoring don't change. At the party: the Nova Wushu logo on white (Khai, 2026-11-14).
 7. Finale, with a picture: when the last tile slides home, the missing bottom-right piece drops into the gap, then a ripple spreads from it and shows the whole photo before the result. With reduced motion the photo just shows.
 
 ## Acceptance criteria

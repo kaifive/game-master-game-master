@@ -4,7 +4,7 @@ import { wushuTrivia } from "./holiday-2026-wushu-trivia";
 
 /** The Nova Wushu Holiday Party. Started and ended by hand from Controls (ADR-024). */
 
-/** Club photos for the picture puzzles (Khai, 2026-11-14), cropped square and 5:4 in public/events/holiday-2026/puzzles. */
+/** Club photos for Block Fit (Khai, 2026-11-14), cropped 5:4 by Khai, in public/events/holiday-2026/puzzles. */
 const PUZZLE_PHOTOS = [
   ["pan-am", "The team with the flag at the Pan American Championships"],
   ["pisco", "The club in uniform outside Pisco y Nazca"],
@@ -143,16 +143,10 @@ export const holiday2026: EventConfig = {
       title: "Number Slide",
       mode: "solo",
       visibility: "listed",
-      // Pictures instead of numbers, one per play (Khai, 2026-11-14): club photos and the logo.
+      // The logo instead of numbers, on white (Khai, 2026-11-14).
       content: {
         size: 3,
-        images: [
-          ...PUZZLE_PHOTOS.map(([name, alt]) => ({
-            src: `/events/holiday-2026/puzzles/${name}-square.jpg`,
-            alt,
-          })),
-          { src: "/events/nova-wushu-logo.png", alt: "The Nova Wushu logo" },
-        ],
+        images: [{ src: "/events/nova-wushu-logo.png", alt: "The Nova Wushu logo" }],
       },
       scoring: { awardTo: "player" },
       alwaysOpen: true,
@@ -164,7 +158,7 @@ export const holiday2026: EventConfig = {
       title: "Block Fit",
       mode: "solo",
       visibility: "listed",
-      // The same club photos, cut 5:4 to fit the board (Khai, 2026-11-14).
+      // Club photos, 5:4 to fit the board (Khai, 2026-11-14).
       content: {
         width: 5,
         height: 4,
