@@ -16,6 +16,11 @@ type Drag = {
   sx: number;
   sy: number;
   moved: boolean;
+  /**
+   * A tray press that started mostly sideways scrolls the drawer instead of
+   * picking the piece up (decided once, when it first moves).
+   */
+  scroll?: boolean;
   /** The board's square size in px, measured when the drag starts. */
   cell: number;
   /** A piece from the tray, or one already on the board being moved. */
@@ -29,6 +34,8 @@ type Drag = {
 const TRAY_CELL = 28;
 /** A press that moves less than this is a tap (turn), not a drag. */
 const DRAG_SLOP = 6;
+/** A sideways scroll of the drawer that rises this far toward the board becomes a drag. */
+const LIFT_PX = 36;
 
 /** Long enough for a picture's ripple before the result shows. */
 export const BLOCKS_HOLD_MS = REVEAL_MS + 600;
@@ -118,6 +125,7 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
   // Where the last piece went: the ripple starts there.
   const [last, setLast] = useState<Cell>([0, 0]);
   const board = useRef<HTMLDivElement>(null);
+  const drawer = useRef<HTMLDivElement>(null);
   // A new puzzle (a new run) starts afresh.
   const [dealt, setDealt] = useState(pieces);
   if (view && view.pieces !== dealt) {
@@ -199,18 +207,22 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
     else if (fits(d.id, row, col)) place(d.id, row, col);
   };
 
+  // We decide scroll or drag ourselves, so a diagonal drag up to the board is
+  // never taken by the browser as a scroll (Khai, 2026-11-14).
   const follow = (e: React.PointerEvent, id: number) => {
-    setDrag((d) =>
-      d && d.id === id
-        ? {
-            ...d,
-            x: e.clientX,
-            y: e.clientY,
-            moved: d.moved || Math.hypot(e.clientX - d.sx, e.clientY - d.sy) > DRAG_SLOP,
-          }
-        : d,
-    );
+    const d = drag;
+    if (!d || d.id !== id) return;
+    let { moved, scroll } = d;
+    if (!moved && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) > DRAG_SLOP) {
+      moved = true;
+      scroll = d.from === "tray" && Math.abs(e.clientX - d.sx) > Math.abs(e.clientY - d.sy);
+    }
+    // A sideways start that then heads up toward the board picks the piece up after all.
+    if (scroll && d.sy - e.clientY > LIFT_PX) scroll = false;
+    if (scroll && drawer.current) drawer.current.scrollLeft -= e.clientX - d.x;
+    setDrag({ ...d, x: e.clientX, y: e.clientY, moved, scroll: scroll === true });
   };
+  const lifted = (d: Drag | null) => d !== null && d.moved && d.scroll !== true;
 
   const tray = pieces.filter((p) => !placed[p.id]);
   const locked = sent || busy;
@@ -340,9 +352,10 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
       <div
         role="group"
         aria-label="Pieces"
+        ref={drawer}
         // One row that scrolls sideways (Khai, 2026-11-14): swipe left or right to see every
         // piece; drag one up onto the board.
-        className="-mx-4 flex min-h-24 snap-x [scrollbar-width:none] items-center gap-5 overflow-x-auto overscroll-x-contain px-4 py-1"
+        className="-mx-4 flex min-h-24 [scrollbar-width:none] items-center gap-5 overflow-x-auto overscroll-x-contain px-4 py-1"
       >
         {tray.map((p) => (
           <button
@@ -379,8 +392,8 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
             }}
             onPointerUp={() => {
               if (drag?.id === p.id) {
-                if (drag.moved) drop(drag);
-                else setTurns((t) => ({ ...t, [p.id]: ((t[p.id] ?? 0) + 1) % 4 }));
+                if (lifted(drag)) drop(drag);
+                else if (!drag.moved) setTurns((t) => ({ ...t, [p.id]: ((t[p.id] ?? 0) + 1) % 4 }));
               }
               setDrag(null);
             }}
@@ -395,8 +408,8 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
               }
             }}
             // A sideways swipe scrolls the tray; any other drag picks the piece up.
-            className="shrink-0 touch-pan-x snap-start rounded-gm p-1 transition-transform motion-safe:active:scale-95"
-            style={{ opacity: drag?.id === p.id && drag.moved ? 0.25 : 1 }}
+            className="shrink-0 touch-none rounded-gm p-1 transition-transform motion-safe:active:scale-95"
+            style={{ opacity: lifted(drag) && drag?.id === p.id ? 0.25 : 1 }}
           >
             <Shape
               cells={shapeOf(p.id)}
@@ -409,7 +422,8 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
         ))}
         {tray.length === 0 && !sent && <p className="m-0 text-gm-text-muted">All placed.</p>}
       </div>
-      {drag?.moved &&
+      {drag &&
+        lifted(drag) &&
         (() => {
           const g = ghostAt(drag);
           return (

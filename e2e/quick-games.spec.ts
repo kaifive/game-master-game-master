@@ -411,6 +411,7 @@ test("S22-AC4: Block Fit", async ({ page }) => {
     view: { width: number; height: number; pieces: { id: number; cells: Cell[] }[] };
   };
   const board = page.getByRole("group", { name: "Board" });
+  const touch = await page.context().newCDPSession(page);
   for (const p of solveBlocks(view.width, view.height, view.pieces)) {
     const piece = page.getByRole("button", { name: new RegExp(`^Piece ${String(p.piece + 1)}:`) });
     // The tray scrolls sideways: bring the piece into view first.
@@ -420,11 +421,20 @@ test("S22-AC4: Block Fit", async ({ page }) => {
     const to = await board.boundingBox();
     if (!from || !to) throw new Error("no layout");
     const cell = to.width / view.width;
-    // Grab the piece's top-left square and drop it on its square of the board.
-    await page.mouse.move(from.x + 6, from.y + 6);
-    await page.mouse.down();
-    await page.mouse.move(to.x + (p.col + 0.5) * cell, to.y + (p.row + 0.5) * cell, { steps: 5 });
-    await page.mouse.up();
+    // A real finger, straight from the piece's top-left square to its spot on the board,
+    // often more sideways than up: it must still pick the piece up, not scroll the drawer.
+    const [sx, sy] = [from.x + 6, from.y + 6];
+    const [ex, ey] = [to.x + (p.col + 0.5) * cell, to.y + (p.row + 0.5) * cell];
+    await touch.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ x: sx, y: sy }],
+    });
+    for (let k = 1; k <= 8; k++)
+      await touch.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ x: sx + ((ex - sx) * k) / 8, y: sy + ((ey - sy) * k) / 8 }],
+      });
+    await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   }
   await scored(page);
   await expect(page.getByRole("region", { name: "Your score" })).toContainText(
