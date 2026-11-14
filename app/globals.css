@@ -118,6 +118,38 @@ body {
   }
 }
 
+/* Picture puzzles (specs 21, 22): the last piece drops in, then a ripple shows the whole photo. */
+@keyframes gm-piece-in {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes gm-ripple-reveal {
+  from {
+    clip-path: circle(0% at var(--gm-reveal-x) var(--gm-reveal-y));
+  }
+  to {
+    clip-path: circle(150% at var(--gm-reveal-x) var(--gm-reveal-y));
+  }
+}
+
+@keyframes gm-ripple-ring {
+  from {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.9;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
 @keyframes gm-shake {
   0%,
   100% {

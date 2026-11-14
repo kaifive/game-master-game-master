@@ -90,14 +90,24 @@ describe("Number Slide", () => {
     expect(slideGame.instructions(c).lines[0]).toMatch(/1 to 8/);
   });
 
-  it("S21-AC5: a picture puzzle sends its picture to the phone and says so in the instructions", () => {
-    const c = SlideContent.parse({ image: { src: "/p.png", alt: "A picture" } });
+  it("S21-AC5: a picture puzzle deals one of its photos per play and says so in the instructions", () => {
+    const images = ["/a.jpg", "/b.jpg", "/c.jpg"].map((src) => ({ src, alt: src }));
+    const c = SlideContent.parse({ images });
     const s = slideGame.create(c, 7, { now: 0 });
-    expect(slideGame.view(s, c, { now: 0 })).toMatchObject({
-      kind: "playing",
-      image: { src: "/p.png", alt: "A picture" },
-    });
+    const view = slideGame.view(s, c, { now: 0 });
+    expect(view).toMatchObject({ kind: "playing" });
+    expect(images).toContainEqual(view.kind === "playing" ? view.image : null);
+    // Replays see different photos.
+    const seen = new Set<string>();
+    for (let seed = 1; seed <= 30; seed++) {
+      const v = slideGame.view(slideGame.create(c, seed, { now: 0 }), c, { now: 0 });
+      if (v.kind === "playing" && v.image) seen.add(v.image.src);
+    }
+    expect(seen.size).toBe(3);
     expect(slideGame.instructions(c).lines[0]).toMatch(/picture back together/);
-    expect(slideGame.view(s, SlideContent.parse({}), { now: 0 })).not.toHaveProperty("image");
+    const plain = SlideContent.parse({});
+    expect(
+      slideGame.view(slideGame.create(plain, 7, { now: 0 }), plain, { now: 0 }),
+    ).not.toHaveProperty("image");
   });
 });
