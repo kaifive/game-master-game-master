@@ -89,4 +89,15 @@ describe("Number Slide", () => {
     expect(slideGame.tick(s, c, { now: 3_600_000 })).toBe(s);
     expect(slideGame.instructions(c).lines[0]).toMatch(/1 to 8/);
   });
+
+  it("S21-AC5: a picture puzzle sends its picture to the phone and says so in the instructions", () => {
+    const c = SlideContent.parse({ image: { src: "/p.png", alt: "A picture" } });
+    const s = slideGame.create(c, 7, { now: 0 });
+    expect(slideGame.view(s, c, { now: 0 })).toMatchObject({
+      kind: "playing",
+      image: { src: "/p.png", alt: "A picture" },
+    });
+    expect(slideGame.instructions(c).lines[0]).toMatch(/picture back together/);
+    expect(slideGame.view(s, SlideContent.parse({}), { now: 0 })).not.toHaveProperty("image");
+  });
 });

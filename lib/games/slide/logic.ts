@@ -2,12 +2,15 @@ import { z } from "zod";
 import type { GameLogic, MoveResult } from "../model";
 import { seededRandom } from "../random";
 import { solveAndSpeedShare } from "../speed";
+import { Media } from "../trivia/content";
 
 /** Number Slide (spec 21): slide the numbered tiles back into order. */
 export const SlideContent = z
   .object({
     size: z.number().int().min(3).max(4).optional(),
     scramble: z.number().int().min(20).max(400).optional(),
+    /** A picture to slice into the tiles instead of numbers (Khai, 2026-11-14). Square works best. */
+    image: Media.optional(),
   })
   .strict();
 export type SlideContent = z.infer<typeof SlideContent>;
@@ -79,7 +82,7 @@ export type SlideState = {
 };
 
 export type SlideView =
-  | { kind: "playing"; size: number; board: Board; elapsedMs: number }
+  | { kind: "playing"; size: number; board: Board; elapsedMs: number; image?: Media }
   | { kind: "done"; size: number; tookMs: number | null; moves: number | null };
 
 const Move = z.object({
@@ -95,7 +98,9 @@ export const slideGame: GameLogic<SlideContent, SlideState, SlideView> = {
   instructions: (c) => ({
     title: "How to play",
     lines: [
-      `Put the tiles back in order, 1 to ${String(sizeOf(c) * sizeOf(c) - 1)}, with the gap last.`,
+      c.image
+        ? "Slide the pieces to put the picture back together, with the gap bottom right."
+        : `Put the tiles back in order, 1 to ${String(sizeOf(c) * sizeOf(c) - 1)}, with the gap last.`,
       "Tap a tile next to the gap (or in its row or column) to slide it.",
       "Solving it scores half the points. Solving it fast scores the rest.",
     ],
@@ -111,9 +116,15 @@ export const slideGame: GameLogic<SlideContent, SlideState, SlideView> = {
   }),
   // No time limit: the clock only counts for the speed points.
   tick: (s) => s,
-  view: (s, _c, { now }) =>
+  view: (s, c, { now }) =>
     s.phase === "playing"
-      ? { kind: "playing", size: s.size, board: s.start, elapsedMs: Math.max(0, now - s.startedAt) }
+      ? {
+          kind: "playing",
+          size: s.size,
+          board: s.start,
+          elapsedMs: Math.max(0, now - s.startedAt),
+          ...(c.image ? { image: c.image } : {}),
+        }
       : { kind: "done", size: s.size, tookMs: s.tookMs, moves: s.moves },
   move(s, _c, raw, { now }) {
     const parsed = Move.safeParse(raw);
