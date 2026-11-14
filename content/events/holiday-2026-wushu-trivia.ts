@@ -74,7 +74,8 @@ export const wushuTrivia: TriviaContent = {
     {
       id: "front-kick-shape",
       prompt: "Which kick swings your straight leg up in front of you?",
-      choices: ["Front kick", "Side kick", "Outside kick", "Snap kick"],
+      // Straight kick (Khai, 2026-11-14).
+      choices: ["Straight kick", "Slap kick", "Inside kick", "Side kick"],
       answer: 0,
     },
     {
