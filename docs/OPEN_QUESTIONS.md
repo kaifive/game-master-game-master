@@ -14,6 +14,7 @@ Move answered ones to the bottom with the answer.
 | Q20 | Can a player use the same unlock code twice, or share it with friends? | Spec 08 | Each player's unlock counts once; sharing a code is allowed (it's a party) |
 | Q21 | Should codes expire after the event ends? | Spec 08 | Yes, codes stop working once the event is `ended` |
 | Q19 | Where should photo backups go? | Runbook | Google Drive folder `Game Master/<slug>` |
+| Q23 | Pathfinder: what counts as skipping a number (red)? | Spec 16 | Reaching a later number before an earlier one turns the missed ones red; after that nothing turns green until the trail is undone past the skip. The number reached early stays grey. |
 
 ## Answered
 

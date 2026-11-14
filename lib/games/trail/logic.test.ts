@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { trail, trailShare, TrailContent } from "./logic";
-import { checkPath, makePuzzle } from "./puzzle";
+import { checkPath, dotMarks, facing, makePuzzle, turnToward } from "./puzzle";
 
 const c = TrailContent.parse({});
 const at = (now: number) => ({ now });
@@ -47,5 +47,51 @@ describe("Pathfinder", () => {
     const lines = trail.instructions(c).lines.join(" ");
     expect(lines).toMatch(/every square/);
     expect(lines).not.toMatch(/minutes/);
+  });
+
+  it("S16-AC8: a runner shows on the phone and leads the instructions", () => {
+    const runner = {
+      src: "/danny.png",
+      alt: "Danny",
+      name: "Danny",
+      intro: "Help Danny hit all his jumps!",
+    };
+    const rc = TrailContent.parse({ runner });
+    const s = trail.create(rc, 5, at(0));
+    expect(trail.view(s, rc, at(0))).toMatchObject({
+      kind: "playing",
+      runner: { src: "/danny.png", alt: "Danny" },
+    });
+    const lines = trail.instructions(rc).lines;
+    expect(lines[0]).toBe("Help Danny hit all his jumps!");
+    expect(lines[1]).toMatch(/Drag Danny/);
+    expect(trail.instructions(c).lines[0]).toMatch(/^Draw one trail/);
+    expect(trail.view(trail.create(c, 5, at(0)), c, at(0))).not.toHaveProperty("runner");
+  });
+
+  it("S16-AC9: numbers are passed in order, skipped when a later one comes first, idle otherwise", () => {
+    // Dots 1, 2, 3 on squares 0, 2, 4.
+    const dots = [0, 2, 4];
+    expect(dotMarks([], dots)).toEqual(["idle", "idle", "idle"]);
+    expect(dotMarks([0, 1, 2], dots)).toEqual(["passed", "passed", "idle"]);
+    // Reaching 3 before 2 skips 2; 3 itself doesn't count until the trail is fixed.
+    expect(dotMarks([0, 1, 4], dots)).toEqual(["passed", "skipped", "idle"]);
+    expect(dotMarks([0, 1, 4, 3, 2], dots)).toEqual(["passed", "skipped", "idle"]);
+    // Undo back past the skip and it's grey again.
+    expect(dotMarks([0, 1], dots)).toEqual(["passed", "idle", "idle"]);
+  });
+
+  it("S16-AC10: the runner faces the last move and turns the short way round", () => {
+    expect(facing([], 7)).toBe(0);
+    expect(facing([10], 7)).toBe(0);
+    expect(facing([10, 11], 7)).toBe(90); // right
+    expect(facing([10, 17], 7)).toBe(180); // down
+    expect(facing([10, 9], 7)).toBe(270); // left
+    expect(facing([10, 3], 7)).toBe(0); // up
+    expect(turnToward(90, 0)).toBe(0);
+    expect(turnToward(0, 270)).toBe(-90);
+    expect(turnToward(-90, 180)).toBe(-180);
+    expect(turnToward(270, 0)).toBe(360);
+    expect(turnToward(360, 90)).toBe(450);
   });
 });

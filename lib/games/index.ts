@@ -27,4 +27,4 @@ export {
   type PhotoState,
   type PhotoView,
 } from "./photo/logic";
-export { adjacent, checkPath } from "./trail/puzzle";
+export { adjacent, checkPath, dotMarks, facing, turnToward, type DotMark } from "./trail/puzzle";
