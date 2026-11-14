@@ -117,7 +117,7 @@ export const wushuTrivia: TriviaContent = {
       id: "coach-weapon",
       prompt: "What was Coach's best weapon?",
       choices: ["Broadsword", "Straight sword", "Staff", "Spear"],
-      answer: 3,
+      answer: 1, // Straight sword (Khai, 2026-11-14)
     },
     {
       id: "form-sections",
