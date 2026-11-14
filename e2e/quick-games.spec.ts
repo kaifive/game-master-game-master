@@ -346,9 +346,9 @@ function solveSlide(board: number[], size: number): number[] {
   throw new Error("unsolvable");
 }
 
-test("S21-AC4: Number Slide", async ({ page }) => {
+test("S21-AC4: Picture Slide", async ({ page }) => {
   const started = page.waitForResponse((r) => r.url().includes("/games/number-slide/play"));
-  await joinAndOpen(page, "Number Slide");
+  await joinAndOpen(page, "Picture Slide");
   const { view } = (await (await started).json()) as { view: { board: number[]; size: number } };
   for (const tile of solveSlide(view.board, view.size))
     await page.getByRole("button", { name: new RegExp(`^Tile ${String(tile)}(,|$)`) }).click();

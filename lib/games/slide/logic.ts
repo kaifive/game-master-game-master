@@ -18,9 +18,13 @@ export type SlideContent = z.infer<typeof SlideContent>;
 
 const sizeOf = (c: SlideContent) => c.size ?? 3;
 
-/** All the speed points within this; none at SLOW_MS (S21-AC3). */
-export const FAST_MS = 30_000;
-export const SLOW_MS = 180_000;
+/**
+ * Hard to score big (Khai, 2026-11-14): solving earns a fifth, and the rest
+ * is speed, all of it only within FAST_MS, none from SLOW_MS (S21-AC3).
+ */
+export const FAST_MS = 10_000;
+export const SLOW_MS = 90_000;
+export const SOLVE_SHARE = 0.2;
 
 /** A board, row by row; 0 is the gap. */
 export type Board = number[];
@@ -94,7 +98,8 @@ const Move = z.object({
 });
 const fail = (message: string): MoveResult<SlideState> => ({ ok: false, message });
 
-export const slideShare = (tookMs: number) => solveAndSpeedShare(tookMs, FAST_MS, SLOW_MS);
+export const slideShare = (tookMs: number) =>
+  solveAndSpeedShare(tookMs, FAST_MS, SLOW_MS, SOLVE_SHARE);
 
 export const slideGame: GameLogic<SlideContent, SlideState, SlideView> = {
   content: SlideContent,
@@ -105,7 +110,7 @@ export const slideGame: GameLogic<SlideContent, SlideState, SlideView> = {
         ? "Slide the pieces to put the picture back together, with the gap bottom right."
         : `Put the tiles back in order, 1 to ${String(sizeOf(c) * sizeOf(c) - 1)}, with the gap last.`,
       "Tap a tile next to the gap (or in its row or column) to slide it.",
-      "Solving it scores half the points. Solving it fast scores the rest.",
+      "Solving it earns a few points. Only the fastest score them all.",
     ],
   }),
   create: (c, seed, { now }) => ({

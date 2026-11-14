@@ -77,15 +77,15 @@ describe("Number Slide", () => {
       false,
     );
     expect(slideGame.move(s, c, { type: "solve", taps: [...taps, 99] }, { now: 1 }).ok).toBe(false);
-    const fast = slideGame.move(s, c, { type: "solve", taps }, { now: 20_000 });
+    const fast = slideGame.move(s, c, { type: "solve", taps }, { now: 8_000 });
     if (!fast.ok) throw new Error(fast.message);
     expect(slideGame.score(fast.state, 100)).toBe(100);
     expect(slideGame.view(fast.state, c, { now: 0 })).toMatchObject({
       kind: "done",
       moves: taps.length,
     });
-    expect(slideShare(105_000)).toBeCloseTo(0.75);
-    expect(slideShare(600_000)).toBe(0.5);
+    expect(slideShare(50_000)).toBeCloseTo(0.6);
+    expect(slideShare(600_000)).toBeCloseTo(0.2);
     expect(slideGame.tick(s, c, { now: 3_600_000 })).toBe(s);
     expect(slideGame.instructions(c).lines[0]).toMatch(/1 to 8/);
   });
