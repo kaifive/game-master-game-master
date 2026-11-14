@@ -90,3 +90,43 @@ export function checkPath(p: Puzzle, path: number[]): string | null {
     return "Pass the numbers in order.";
   return null;
 }
+
+/** How each numbered dot stands on a trail being drawn (S16-AC9). */
+export type DotMark = "idle" | "passed" | "skipped";
+
+/**
+ * Walks the trail: a dot reached in order is passed; reaching a later dot
+ * first skips the ones it jumped. After a skip nothing more counts as passed
+ * until the trail is undone back past it.
+ */
+export function dotMarks(path: number[], dots: number[]): DotMark[] {
+  const marks: DotMark[] = dots.map(() => "idle");
+  let next = 0;
+  let broken = false;
+  for (const cell of path) {
+    const k = dots.indexOf(cell);
+    if (k < 0) continue;
+    if (!broken && k === next) {
+      marks[k] = "passed";
+      next++;
+    } else if (k > next) {
+      for (let j = next; j < k; j++) if (marks[j] === "idle") marks[j] = "skipped";
+      broken = true;
+    }
+  }
+  return marks;
+}
+
+/** Which way the trail's last step points, in degrees: up 0, right 90, down 180, left 270 (S16-AC10). */
+export function facing(path: number[], size: number): number {
+  if (path.length < 2) return 0;
+  const step = (path[path.length - 1] as number) - (path[path.length - 2] as number);
+  return step === 1 ? 90 : step === size ? 180 : step === -1 ? 270 : 0;
+}
+
+/** The angle to turn to, from `angle`, to face `direction` the short way round. */
+export function turnToward(angle: number, direction: number): number {
+  const now = ((angle % 360) + 360) % 360;
+  const delta = ((((direction - now) % 360) + 540) % 360) - 180;
+  return angle + delta;
+}

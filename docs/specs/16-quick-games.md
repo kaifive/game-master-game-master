@@ -31,12 +31,16 @@ Five more solo games for the party, so there's plenty to play and test. Each is 
 
 8. Our own path puzzle, not a copy of any app's, with a name that suits any event: a `size`×`size` grid (7) with `checkpoints` numbered dots (8). Draw one path by dragging (or tapping square by square) from 1, through every square exactly once, passing the dots in order and ending on the last. Drag back to undo; **Clear** starts over.
 9. Every play makes a new puzzle from the play's seed, built from a real path through the whole grid, so it always has a solution.
+9a. Runner (optional content `runner`: `src`, `alt`, `name`, `intro`): a cutout picture that stands on 1 at the start (in place of its chip) and moves to the trail's end as it's drawn, turning to face the last step (up, right, down, left) the short way round; with reduced motion it jumps. The instructions open with `intro` (or "Help <name> hit every number!") and talk about dragging the runner. At the party it's Danny: "Help Danny hit all his jumps!" (Khai, 2026-11-14).
+9b. Number chips are grey until the trail passes them in order (green). Reaching a later number before an earlier one skips the earlier one (red); after a skip nothing more turns green until the trail is undone back past it, and undoing turns them grey again. The server's check doesn't change.
+9c. Floor option: content `floor: "carpet"` draws the board as a blue competition floor (blue mat squares with dark seams inside a white boundary line); the trail still fills the squares it passes. The party uses it with Danny (Khai, 2026-11-14).
 10. The server checks the path. Solving earns half the points, plus up to half for speed: all of it within 15 s, none at 90 s. There is no time limit: an unsolved run stays open.
 
 ### Stack Attack (`stacker`)
 
 11. The bar starts as the instructions close. A bar slides side to side across a `width`-square row (7). Tap anywhere on the screen (not just the board) to stop it; the part that overhangs the row below falls away and the next bar is that wide, a row higher, and a little faster. The game ends when a bar misses completely or after `rows` rows (12).
 12. Points scale with rows stacked (all of them for all rows). The phone runs the game; the server accepts a row count up to `rows`.
+    The bars are wrapped presents (Khai, 2026-11-14), drawn in the event's colors with no image files: a full-width bar (3 squares) is a large box (red paper, gold ribbon), a 2-square bar a medium box (green with polka dots, white ribbon), a 1-square bar a small box (a gold cube, red ribbon). Trimming a bar makes it the next box down, so the tower narrows from big presents to small ones. The box on top of the tower (the sliding one, or the last landed when the run ends) wears a bow.
 
 ### Rapid Recall (`recall`)
 
@@ -49,7 +53,7 @@ Each play's `state` holds that game's run (start time, taps, path, picks, rows),
 
 ## UI
 
-Phone, in the pack: one big primary action per screen, the game's numbers in the display font, results held up on the pack's score card (spec 08). Pathfinder is built to read in a dim room: light empty squares, squares on the trail filled with the accent, a thick light trail line, large white numbered chips, and the trail's end ringed.
+Phone, in the pack: one big primary action per screen, the game's numbers in the display font, results held up on the pack's score card (spec 08). Pathfinder is built to read in a dim room: light empty squares, squares on the trail filled with the accent, a thick light trail line, large numbered chips (grey, green when passed, red when skipped), and the trail's end ringed.
 
 ## Acceptance criteria
 
@@ -60,6 +64,11 @@ Phone, in the pack: one big primary action per screen, the game's numbers in the
 - [x] AC-5: Stack Attack trims each stopped bar to the row below, ends on a miss or the top row, and scores by rows stacked.
 - [x] AC-6: Rapid Recall plays three rounds of growing grids from the seed, hides the pattern after 1.2 s, and scores an equal share per square found.
 - [x] AC-7: The party's event file lists the five games, and each plays end to end on a phone.
+- [x] AC-8: With a runner set, the phone gets its picture and the instructions open with its intro and talk about dragging it; without one, they're unchanged.
+- [x] AC-9: Number chips are grey, turn green when passed in order, and turn red when a later number is reached first, going back to grey on undo.
+- [x] AC-10: The runner starts on 1, follows the trail's end, and turns the short way round to face the last step.
+- [x] AC-11: With `floor: "carpet"`, the board draws blue mats inside a white boundary line; without it the board is unchanged.
+- [x] AC-12: Stack Attack draws each bar as a present sized by its width (large, medium, small), with a bow on the top box only.
 
 ## Tests
 

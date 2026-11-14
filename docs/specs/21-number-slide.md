@@ -15,7 +15,8 @@ The classic sliding tile puzzle: numbered tiles in a frame with one gap; slide t
 3. The phone sends the taps when the board is in order. The server replays them from the same start, checks every tap was a legal slide and that the board ends in order, and times the run from when the play started.
 4. Points: solving earns half, plus up to half for speed: all of it within 30 s, none at 3 minutes. No time limit.
 5. Each play is a new board; replays count their best.
-6. Picture option: content `image` (`src`, `alt`). Each tile shows its slice of the picture instead of a number, a tile in its right place gets a gold outline, and a small copy of the whole picture shows as the goal. The rules and scoring don't change. At the party it's the Nova Wushu logo (Khai, 2026-11-14); any square photo works.
+6. Picture option: content `images`, a list of photos (`src`, `alt`); each play takes one by its seed, so replays see different photos. Each tile shows its slice of the photo on white (so a see-through logo reads) instead of a number, a tile in its right place gets a gold outline, and a small copy of the whole photo shows as the goal. The rules and scoring don't change. At the party: the Nova Wushu logo on white (Khai, 2026-11-14).
+7. Finale, with a picture: when the last tile slides home, the missing bottom-right piece drops into the gap, then a ripple spreads from it and shows the whole photo before the result. With reduced motion the photo just shows.
 
 ## Acceptance criteria
 
@@ -23,4 +24,5 @@ The classic sliding tile puzzle: numbered tiles in a frame with one gap; slide t
 - [x] AC-2: The server accepts only taps that slide tiles into the gap and end with the board in order.
 - [x] AC-3: Solving earns half the points plus up to half for speed (full within 30 s, none at 3 minutes), with no time limit.
 - [x] AC-4: The phone slides tiles on tap, counts moves, and sends the taps when the board is in order; the party has Number Slide, which plays end to end.
-- [x] AC-5: With a picture set, each tile shows its slice of the picture (not a number), the goal picture shows, and the instructions say to put the picture back together.
+- [x] AC-5: With photos set, each play takes one; each tile shows its slice of it (not a number), the goal photo shows, and the instructions say to put the picture back together.
+- [x] AC-6: Solving a picture drops in the missing piece, then shows the whole photo.
