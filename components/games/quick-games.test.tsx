@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { recallSummary, RecallGame, FEEDBACK_MS } from "./recall/recall";
-import { StackerGame, stackerSummary } from "./stacker/stacker";
+import { presentFor, StackerGame, stackerSummary } from "./stacker/stacker";
 import { TapsGame, tapsSummary } from "./taps/taps";
 import { TimerGame, timerSummary } from "./timer/timer";
 import { extendTrail, TrailGame, trailSummary } from "./trail/trail";
@@ -18,44 +18,43 @@ afterEach(() => {
 });
 
 describe("quick game screens (spec 16)", () => {
-  test("S16-AC2: T-Timer shows the clock, then hides it, and sends the phone's time on Stop", async () => {
+  test("S16-AC2: T-Timer always shows the clock and the window, and sends the phone's time on Stop", async () => {
     vi.useFakeTimers({
       shouldAdvanceTime: true,
       toFake: ["performance", "requestAnimationFrame", "setTimeout"],
     });
     const onMove = vi.fn();
-    const { rerender } = render(
-      <TimerGame {...props({ kind: "ready", targetSeconds: 7, visibleSeconds: 3 }, onMove)} />,
-    );
+    const win = { fromSeconds: 1.2, toSeconds: 1.25 };
+    const { rerender } = render(<TimerGame {...props({ kind: "ready", ...win }, onMove)} />);
     // An old play still waiting on Start is started for the player: no second button.
     expect(onMove).toHaveBeenLastCalledWith({ type: "start" });
     expect(screen.queryByRole("button", { name: "Start" })).toBeNull();
-    rerender(
-      <TimerGame
-        {...props({ kind: "running", targetSeconds: 7, visibleSeconds: 3, elapsedMs: 0 }, onMove)}
-      />,
-    );
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1000);
-    });
-    expect(screen.getByTestId("timer-clock").textContent).toMatch(/^[01]\.\d\d$/);
+    rerender(<TimerGame {...props({ kind: "running", ...win, elapsedMs: 0 }, onMove)} />);
+    expect(screen.getByText("1.20 – 1.25")).toBeInTheDocument();
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3000);
     });
-    expect(screen.getByTestId("timer-clock")).toHaveTextContent("?.??");
+    // It never hides.
+    expect(screen.getByTestId("timer-clock").textContent).toMatch(/^[23]\.\d\d$/);
     fireEvent.pointerDown(screen.getByRole("button", { name: "Stop" }));
     const sent = onMove.mock.calls.at(-1)?.[0] as { type: string; elapsedMs: number };
     expect(sent.type).toBe("stop");
-    expect(sent.elapsedMs).toBeGreaterThanOrEqual(3900);
+    expect(sent.elapsedMs).toBeGreaterThanOrEqual(2900);
     // Stop freezes at once, before the server answers: the time shows and the button rests.
     expect(screen.getByTestId("timer-clock").textContent).toMatch(/^\d\.\d\d$/);
     expect(screen.getByRole("button", { name: "Stop" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Stop" }));
     expect(onMove).toHaveBeenCalledTimes(2);
-    expect(timerSummary({ kind: "done", targetSeconds: 10, elapsedMs: 10_120, offMs: 120 })).toBe(
-      "10.12 s · 0.12 s off",
+    expect(timerSummary({ kind: "done", ...win, elapsedMs: 1230, offMs: 0 })).toBe(
+      "Stopped at 1.23 · in the window!",
     );
-    expect(timerSummary({ kind: "done", targetSeconds: 10, elapsedMs: null, offMs: null })).toBe(
+    expect(timerSummary({ kind: "done", ...win, elapsedMs: 1310, offMs: 60 })).toBe(
+      "Stopped at 1.31 · 0.06 s late",
+    );
+    expect(timerSummary({ kind: "done", ...win, elapsedMs: 1150, offMs: 50 })).toBe(
+      "Stopped at 1.15 · 0.05 s early",
+    );
+    expect(timerSummary({ kind: "done", ...win, elapsedMs: null, offMs: null })).toBe(
       "The clock ran out",
     );
   });
@@ -84,7 +83,7 @@ describe("quick game screens (spec 16)", () => {
     expect(tapsSummary({ kind: "done", taps: 33, target: 45 })).toBe("33 taps");
   });
 
-  test("S16-AC9: a Tap Masher film waits for its frames, plays one per tap, and ends on the last", async () => {
+  test("S16-AC14: a Tap Masher film waits for its frames, plays one per tap, and ends on the last", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true, toFake: ["performance", "requestAnimationFrame"] });
     // jsdom loads no images: this one "loads" when asked, so the test controls when.
     const loads: (() => void)[] = [];
@@ -172,6 +171,25 @@ describe("quick game screens (spec 16)", () => {
     expect(stackerSummary({ kind: "done", stacked: 6, rows: 12 })).toBe("6 of 12 rows");
   });
 
+  test("S16-AC12: Stack Attack stacks presents: wide bars are large boxes, trimmed ones medium and small", () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, toFake: ["performance", "requestAnimationFrame"] });
+    expect([3, 2, 1].map(presentFor)).toEqual(["large", "medium", "small"]);
+    const { container } = render(
+      <StackerGame {...props({ kind: "running", rows: 12, width: 7 }, vi.fn())} />,
+    );
+    const presents = () =>
+      Array.from(container.querySelectorAll("[data-present]")).map((p) =>
+        p.getAttribute("data-present"),
+      );
+    // The sliding bar is a large present with its bow on top.
+    expect(presents()).toEqual(["large"]);
+    expect(container.querySelectorAll("[data-bow]")).toHaveLength(1);
+    fireEvent.pointerDown(document.body); // row 1 always lands whole
+    // Two presents now: the new one sliding above, the landed one under it; only the top one has a bow.
+    expect(presents()).toEqual(["large", "large"]);
+    expect(container.querySelectorAll("[data-bow]")).toHaveLength(1);
+  });
+
   test("S16-AC6: Rapid Recall shows the squares, hides them, and sends the picks", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const onMove = vi.fn();
@@ -240,5 +258,74 @@ describe("quick game screens (spec 16)", () => {
     expect(trailSummary({ kind: "done", solved: false, tookMs: null, size: 6, dots: [] })).toBe(
       "Time ran out",
     );
+  });
+
+  test("S16-AC11: a carpet floor draws blue mats inside a white boundary line", () => {
+    const view = { kind: "playing" as const, size: 3, dots: [0, 2, 8], elapsedMs: 0 };
+    const { rerender } = render(<TrailGame {...props({ ...view, floor: "carpet" })} />);
+    const floor = () => document.querySelector("[data-floor]") as HTMLElement;
+    expect(floor().getAttribute("data-floor")).toBe("carpet");
+    expect(floor().style.boxShadow).toContain("inset");
+    const square = document.querySelector('[data-cell="4"]') as HTMLElement;
+    expect(square.style.background).not.toBe("");
+    rerender(<TrailGame {...props(view)} />);
+    expect(floor().getAttribute("data-floor")).toBe("plain");
+    expect((document.querySelector('[data-cell="4"]') as HTMLElement).style.background).toBe("");
+  });
+
+  test("S16-AC9 S16-AC10: the runner starts on 1, follows and faces the trail, and numbers turn green or red", () => {
+    // A 3×3 grid, dots 1, 2, 3 on squares 0, 2, 8.
+    const view = {
+      kind: "playing" as const,
+      size: 3,
+      dots: [0, 2, 8],
+      elapsedMs: 0,
+      runner: { src: "/danny.png", alt: "Danny" },
+    };
+    render(<TrailGame {...props(view)} />);
+    const runner = () => screen.getByRole("img", { name: "Danny" });
+    // Which way Danny faces, 0 to 359 (he may have turned past a full circle).
+    const facingDeg = () => {
+      const deg = Number(
+        /rotate\((-?\d+)deg\)/.exec(runner().parentElement?.style.transform ?? "")?.[1],
+      );
+      return ((deg % 360) + 360) % 360;
+    };
+    const at = (cell: number) => {
+      const el = document.querySelector(`[data-cell="${String(cell)}"]`);
+      if (!el) throw new Error("no cell");
+      return el;
+    };
+    const mark = (n: number) =>
+      screen
+        .getByRole("img", { name: new RegExp(`^Number ${String(n)}`) })
+        .getAttribute("data-mark");
+    // Danny stands on 1, upright; the 1 chip hides under him.
+    expect(runner().closest("[data-runner-at]")?.getAttribute("data-runner-at")).toBe("0");
+    expect(facingDeg()).toBe(0);
+    expect(mark(1)).toBe("idle");
+    HTMLElement.prototype.setPointerCapture = () => undefined;
+    const grid = at(0).parentElement as HTMLElement;
+    const drag = (cells: number[]) => {
+      document.elementFromPoint = () => at(cells[0] as number);
+      fireEvent.pointerDown(grid, { clientX: 1, clientY: 1 });
+      for (const cell of cells.slice(1)) {
+        document.elementFromPoint = () => at(cell);
+        fireEvent.pointerMove(grid, { clientX: 1, clientY: 1 });
+      }
+      fireEvent.pointerUp(grid);
+    };
+    // Right, right: passes 2 (green); Danny faces right.
+    drag([0, 1, 2]);
+    expect(mark(1)).toBe("passed");
+    expect(mark(2)).toBe("passed");
+    expect(runner().closest("[data-runner-at]")?.getAttribute("data-runner-at")).toBe("2");
+    expect(facingDeg()).toBe(90);
+    // Back to 1 and down the left side to 3's row, then along to 3, skipping 2.
+    fireEvent.click(screen.getByRole("button", { name: "Clear" }));
+    drag([0, 3, 6, 7, 8]);
+    expect(mark(2)).toBe("skipped");
+    expect(mark(3)).toBe("idle");
+    expect(facingDeg()).toBe(90);
   });
 });

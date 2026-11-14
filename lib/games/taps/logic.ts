@@ -7,7 +7,7 @@ export const MAX_TAPS_PER_SECOND = 20;
 /**
  * A video cut into frames on one sprite sheet (frames left to right, then row
  * by row): each tap plays the next frame, and playing them all is the target
- * (S16-AC8). `width` and `height` are one frame's size, for its shape.
+ * (S16-AC13). `width` and `height` are one frame's size, for its shape.
  */
 export const Film = z.object({
   sheet: z.string().min(1),
@@ -118,7 +118,7 @@ export const taps: GameLogic<TapsContent, TapsState, TapsView> = {
     }
     if (s.phase !== "running" || s.goAt === null) return fail("Tap Start first.");
     const count = parsed.data.taps;
-    // A film ends as soon as its last frame plays, if a person could have tapped that fast (S16-AC8).
+    // A film ends as soon as its last frame plays, if a person could have tapped that fast (S16-AC13).
     const finishedFilm = c.film !== undefined && count >= s.target;
     const earliest = finishedFilm
       ? s.goAt + (s.target / MAX_TAPS_PER_SECOND) * 1000

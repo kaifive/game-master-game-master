@@ -4,30 +4,37 @@ import { useState } from "react";
 import { slide, isSolved, type SlideView } from "@/lib/games";
 import { cx } from "@/lib/ui";
 import { formatClock, PuzzleClock } from "../clock";
+import { PictureReveal, REVEAL_MS, sliceStyle } from "../picture";
 import type { GameRendererProps } from "../types";
 
-/** Long enough for the last tile to glide home before the result shows. */
-export const SLIDE_HOLD_MS = 450;
+/** The missing piece drops in this long after the last slide; then the ripple shows the photo. */
+const PIECE_IN_MS = 300;
+/** Long enough for the last tile to glide home, and for a picture, the ripple, before the result shows. */
+export const SLIDE_HOLD_MS = PIECE_IN_MS + REVEAL_MS + 600;
 
 /**
  * Number Slide (spec 21): tap a tile in the gap's row or column to slide it.
  * The phone plays; the server replays the taps to check them.
  */
 export function SlideGame({ view: raw, onMove, busy }: GameRendererProps) {
-  const view = raw as SlideView;
-  const start = view.kind === "playing" ? view.board : [];
+  const served = raw as SlideView;
+  // The run's last board stays up (with its finale) while the result holds.
+  const [last, setLast] = useState(served.kind === "playing" ? served : null);
+  if (served.kind === "playing" && served !== last) setLast(served);
+  const view = served.kind === "playing" ? served : last;
+  const start = view ? view.board : [];
   const [board, setBoard] = useState(start);
   const [taps, setTaps] = useState<number[]>([]);
   const [sent, setSent] = useState(false);
   // A new board from the server (a new run) starts afresh.
   const [dealt, setDealt] = useState(start);
-  if (view.kind === "playing" && view.board !== dealt) {
+  if (view && view.board !== dealt) {
     setDealt(view.board);
     setBoard(view.board);
     setTaps([]);
     setSent(false);
   }
-  if (view.kind !== "playing") return null;
+  if (!view) return null;
   const size = view.size;
   const image = view.image;
 
@@ -54,7 +61,7 @@ export function SlideGame({ view: raw, onMove, busy }: GameRendererProps) {
           <img
             src={image.src}
             alt={`Goal: ${image.alt}`}
-            className="size-14 self-center rounded-[5px] object-cover ring-1 ring-gm-border"
+            className="size-14 self-center rounded-[5px] bg-white object-cover ring-1 ring-gm-border"
           />
         )}
         <span className="text-lg font-bold text-gm-text-muted tabular-nums">
@@ -66,7 +73,7 @@ export function SlideGame({ view: raw, onMove, busy }: GameRendererProps) {
         aria-label="Tiles"
         className="relative mx-auto aspect-square w-full max-w-sm touch-manipulation rounded-gm bg-gm-surface p-1.5 ring-1 ring-gm-border select-none"
       >
-        <div className="relative size-full">
+        <div className="relative size-full overflow-hidden rounded-[6px]">
           {board.map((tile, i) => {
             if (tile === 0) return null;
             const home = tile - 1 === i;
@@ -92,14 +99,13 @@ export function SlideGame({ view: raw, onMove, busy }: GameRendererProps) {
                   // Its slice of the picture: where this tile sits when the picture is whole.
                   <span
                     className={cx(
-                      "block size-full rounded-[4px] bg-gm-surface-raised shadow-md",
-                      home && "ring-3 ring-gm-tile-correct",
+                      "block size-full rounded-[4px] bg-white shadow-md",
+                      home && "ring-3 ring-gm-tile-correct ring-inset",
                     )}
-                    style={{
-                      backgroundImage: `url("${image.src}")`,
-                      backgroundSize: `${String(size * 100)}% ${String(size * 100)}%`,
-                      backgroundPosition: `${String((((tile - 1) % size) * 100) / (size - 1))}% ${String((Math.floor((tile - 1) / size) * 100) / (size - 1))}%`,
-                    }}
+                    style={sliceStyle(image.src, size, size, [
+                      Math.floor((tile - 1) / size),
+                      (tile - 1) % size,
+                    ])}
                   />
                 ) : (
                   <span
@@ -116,6 +122,31 @@ export function SlideGame({ view: raw, onMove, busy }: GameRendererProps) {
               </button>
             );
           })}
+          {image && sent && (
+            <>
+              {/* The missing piece drops into the gap, then a ripple from there shows the whole photo. */}
+              <span
+                aria-hidden="true"
+                className="absolute p-[2px]"
+                style={{
+                  width: `${String(100 / size)}%`,
+                  height: `${String(100 / size)}%`,
+                  transform: `translate(${String((size - 1) * 100)}%, ${String((size - 1) * 100)}%)`,
+                }}
+              >
+                <span
+                  className="block size-full rounded-[4px] bg-white shadow-md motion-safe:animate-[gm-piece-in_300ms_ease-out_both]"
+                  style={sliceStyle(image.src, size, size, [size - 1, size - 1])}
+                />
+              </span>
+              <PictureReveal
+                image={image}
+                x={((size - 0.5) / size) * 100}
+                y={((size - 0.5) / size) * 100}
+                delayMs={PIECE_IN_MS}
+              />
+            </>
+          )}
         </div>
       </div>
     </section>

@@ -1,4 +1,4 @@
-import { BlocksGame, blocksSummary } from "./blocks/blocks";
+import { BlocksGame, blocksSummary, BLOCKS_HOLD_MS } from "./blocks/blocks";
 import { CacheGame, cacheSummary } from "./cache/cache";
 import { ColorGame, colorSummary } from "./color/color";
 import { DrawGame, drawSummary } from "./draw/draw";
@@ -29,7 +29,7 @@ const RENDERERS: Readonly<Record<string, GameRenderer>> = {
   word: { Play: WordGame, summary: wordSummary, holdResultMs: WORD_HOLD_MS },
   "photo-challenge": { Play: PhotoGame, summary: photoSummary },
   slide: { Play: SlideGame, summary: slideSummary, holdResultMs: SLIDE_HOLD_MS },
-  blocks: { Play: BlocksGame, summary: blocksSummary, holdResultMs: 300 },
+  blocks: { Play: BlocksGame, summary: blocksSummary, holdResultMs: BLOCKS_HOLD_MS },
 };
 
 export const rendererFor = (type: string): GameRenderer | undefined => RENDERERS[type];

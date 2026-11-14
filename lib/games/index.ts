@@ -6,7 +6,7 @@ export { gamesApi } from "./client";
 export type { PlayStatus } from "./repo";
 export type { PlayChange, PlayRecord, PlayRepo } from "./repo";
 export { MemoryPlayRepo } from "./repo.memory";
-export type { TimerView } from "./timer/logic";
+export { offWindow, type TimerView } from "./timer/logic";
 export type { Film as TapsFilm, TapsView } from "./taps/logic";
 export type { StackerView } from "./stacker/logic";
 export { barStart, START_LENGTH, trim, type Bar } from "./stacker/engine";
@@ -19,7 +19,7 @@ export type { DrawView } from "./draw/logic";
 export type { Mark, WordView } from "./word/logic";
 export { isSolved, slide, type SlideView } from "./slide/logic";
 export type { BlocksView } from "./blocks/logic";
-export { rotate, type Cell, type Piece, type Placement } from "./blocks/puzzle";
+export { rotate, turnCells, type Cell, type Piece, type Placement } from "./blocks/puzzle";
 export {
   photoShare,
   withRating,
@@ -27,4 +27,4 @@ export {
   type PhotoState,
   type PhotoView,
 } from "./photo/logic";
-export { adjacent, checkPath } from "./trail/puzzle";
+export { adjacent, checkPath, dotMarks, facing, turnToward, type DotMark } from "./trail/puzzle";
