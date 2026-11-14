@@ -18,44 +18,43 @@ afterEach(() => {
 });
 
 describe("quick game screens (spec 16)", () => {
-  test("S16-AC2: T-Timer shows the clock, then hides it, and sends the phone's time on Stop", async () => {
+  test("S16-AC2: T-Timer always shows the clock and the window, and sends the phone's time on Stop", async () => {
     vi.useFakeTimers({
       shouldAdvanceTime: true,
       toFake: ["performance", "requestAnimationFrame", "setTimeout"],
     });
     const onMove = vi.fn();
-    const { rerender } = render(
-      <TimerGame {...props({ kind: "ready", targetSeconds: 7, visibleSeconds: 3 }, onMove)} />,
-    );
+    const win = { fromSeconds: 1.2, toSeconds: 1.25 };
+    const { rerender } = render(<TimerGame {...props({ kind: "ready", ...win }, onMove)} />);
     // An old play still waiting on Start is started for the player: no second button.
     expect(onMove).toHaveBeenLastCalledWith({ type: "start" });
     expect(screen.queryByRole("button", { name: "Start" })).toBeNull();
-    rerender(
-      <TimerGame
-        {...props({ kind: "running", targetSeconds: 7, visibleSeconds: 3, elapsedMs: 0 }, onMove)}
-      />,
-    );
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1000);
-    });
-    expect(screen.getByTestId("timer-clock").textContent).toMatch(/^[01]\.\d\d$/);
+    rerender(<TimerGame {...props({ kind: "running", ...win, elapsedMs: 0 }, onMove)} />);
+    expect(screen.getByText("1.20 – 1.25")).toBeInTheDocument();
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3000);
     });
-    expect(screen.getByTestId("timer-clock")).toHaveTextContent("?.??");
+    // It never hides.
+    expect(screen.getByTestId("timer-clock").textContent).toMatch(/^[23]\.\d\d$/);
     fireEvent.pointerDown(screen.getByRole("button", { name: "Stop" }));
     const sent = onMove.mock.calls.at(-1)?.[0] as { type: string; elapsedMs: number };
     expect(sent.type).toBe("stop");
-    expect(sent.elapsedMs).toBeGreaterThanOrEqual(3900);
+    expect(sent.elapsedMs).toBeGreaterThanOrEqual(2900);
     // Stop freezes at once, before the server answers: the time shows and the button rests.
     expect(screen.getByTestId("timer-clock").textContent).toMatch(/^\d\.\d\d$/);
     expect(screen.getByRole("button", { name: "Stop" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Stop" }));
     expect(onMove).toHaveBeenCalledTimes(2);
-    expect(timerSummary({ kind: "done", targetSeconds: 10, elapsedMs: 10_120, offMs: 120 })).toBe(
-      "10.12 s · 0.12 s off",
+    expect(timerSummary({ kind: "done", ...win, elapsedMs: 1230, offMs: 0 })).toBe(
+      "Stopped at 1.23 · in the window!",
     );
-    expect(timerSummary({ kind: "done", targetSeconds: 10, elapsedMs: null, offMs: null })).toBe(
+    expect(timerSummary({ kind: "done", ...win, elapsedMs: 1310, offMs: 60 })).toBe(
+      "Stopped at 1.31 · 0.06 s late",
+    );
+    expect(timerSummary({ kind: "done", ...win, elapsedMs: 1150, offMs: 50 })).toBe(
+      "Stopped at 1.15 · 0.05 s early",
+    );
+    expect(timerSummary({ kind: "done", ...win, elapsedMs: null, offMs: null })).toBe(
       "The clock ran out",
     );
   });
