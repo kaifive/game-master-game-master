@@ -6,18 +6,21 @@ export const MAX_TAPS_PER_SECOND = 20;
 
 /**
  * A video cut into frames on one sprite sheet (frames left to right, then row
- * by row): each tap plays the next frame, and playing them all is the target
- * (S16-AC13). `width` and `height` are one frame's size, for its shape.
+ * by row): each tap plays the next frame (S16-AC13). Without a `target`,
+ * playing them all is the target; with one, the film is just for show and may
+ * run longer than anyone can tap. `width` and `height` are one frame's size.
  */
 export const Film = z.object({
   sheet: z.string().min(1),
-  frames: z.number().int().min(2).max(200),
+  frames: z.number().int().min(2).max(400),
   columns: z.number().int().min(1).max(50),
   width: z.number().int().positive(),
   height: z.number().int().positive(),
   alt: z.string().min(1),
   /** Who the film shows, for the instructions ("Help Coach finish the form!"). */
   who: z.string().min(1).optional(),
+  /** The instructions' first line instead, e.g. for a clip of the opening moves. */
+  intro: z.string().min(1).max(80).optional(),
 });
 export type Film = z.infer<typeof Film>;
 
@@ -29,14 +32,16 @@ export const TapsContent = z
     film: Film.optional(),
   })
   .strict()
-  // Every frame must be reachable within the seconds by a person tapping flat out.
-  .refine((c) => !c.film || c.film.frames <= (c.seconds ?? 5) * MAX_TAPS_PER_SECOND, {
-    message: "The film has more frames than anyone can tap in the time.",
-  });
+  // With no target, the frames are the target, so every frame must be reachable in the time.
+  .refine(
+    (c) =>
+      !c.film || c.target !== undefined || c.film.frames <= (c.seconds ?? 5) * MAX_TAPS_PER_SECOND,
+    { message: "The film has more frames than anyone can tap in the time." },
+  );
 export type TapsContent = z.infer<typeof TapsContent>;
 
 const seconds = (c: TapsContent) => c.seconds ?? 5;
-const goal = (c: TapsContent) => c.film?.frames ?? c.target ?? 50;
+const goal = (c: TapsContent) => c.target ?? c.film?.frames ?? 50;
 
 /** The countdown before tapping starts. */
 export const COUNTDOWN_MS = 3000;
@@ -73,10 +78,12 @@ export const taps: GameLogic<TapsContent, TapsState, TapsView> = {
     title: "How to play",
     lines: c.film
       ? [
-          `Help ${c.film.who ?? "Coach"} finish the form!`,
+          c.film.intro ?? `Help ${c.film.who ?? "Coach"} finish the form!`,
           "A countdown starts as soon as you close this box.",
           `Then tap the big button as fast as you can for ${String(seconds(c))} seconds: every tap plays the next move.`,
-          "Every move earns points. Finish the whole form for all of them.",
+          c.target === undefined
+            ? "Every move earns points. Finish the whole form for all of them."
+            : "The more taps, the more points.",
         ]
       : [
           "A countdown starts as soon as you close this box.",
@@ -119,9 +126,10 @@ export const taps: GameLogic<TapsContent, TapsState, TapsView> = {
     if (s.phase !== "running" || s.goAt === null) return fail("Tap Start first.");
     const count = parsed.data.taps;
     // A film ends as soon as its last frame plays, if a person could have tapped that fast (S16-AC13).
-    const finishedFilm = c.film !== undefined && count >= s.target;
+    const filmFrames = c.film?.frames;
+    const finishedFilm = filmFrames !== undefined && count >= filmFrames;
     const earliest = finishedFilm
-      ? s.goAt + (s.target / MAX_TAPS_PER_SECOND) * 1000
+      ? s.goAt + (filmFrames / MAX_TAPS_PER_SECOND) * 1000
       : s.goAt + s.seconds * 1000;
     if (now < earliest - EARLY_SLACK_MS) return fail("Time isn't up yet.");
     if (count > s.seconds * MAX_TAPS_PER_SECOND)

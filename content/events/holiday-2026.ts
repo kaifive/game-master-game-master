@@ -101,16 +101,17 @@ export const holiday2026: EventConfig = {
           "taps",
           "Tap Masher",
           {
-            // Plays like video (Khai, 2026-11-14): 120 frames in a row, every other frame of
-            // 8 s around the jump at 0:18. Finishing takes 12 taps a second; points scale with
-            // how far you get.
-            seconds: 10,
+            // Plays like video (Khai, 2026-11-14): every other frame of the form's first
+            // 11.5 s, 172 in all. 50 taps earns all the points; the film is just for show.
+            seconds: 5,
+            target: 50,
             film: {
               sheet: "/events/holiday-2026/tap-form/coach-form.jpg",
-              frames: 120,
+              frames: 172,
               columns: 10,
-              width: 320,
-              height: 240,
+              width: 256,
+              height: 192,
+              intro: "Help Coach with the opening moves!",
               alt: "Coach's spear form at the 2009 US Wushu Team Trials",
             },
           },

@@ -174,7 +174,7 @@ export function tapsSummary(raw: unknown): string | null {
   const view = raw as TapsView;
   if (view.kind !== "done") return null;
   if (view.film)
-    return view.taps >= view.target
+    return view.taps >= view.film.frames
       ? "Finished the whole form!"
       : `${String(view.taps)} ${view.taps === 1 ? "move" : "moves"}`;
   return `${String(view.taps)} taps`;
