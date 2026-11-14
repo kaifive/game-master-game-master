@@ -238,11 +238,10 @@ export function UpcomingView({ event }: { event: PublicEvent }) {
         <JoinGate>
           <PlayerStrip />
           {event.scoring !== "individual" && <TeamNudge slug={event.slug} />}
-          <p className="m-0 text-lg">
-            {listed(event).some((g) => g.alwaysOpen)
-              ? "Some games are open now. The rest open when the host starts them."
-              : "Waiting for the host to start the games."}
-          </p>
+          {/* The list says which games are open; only say more when none are (Khai, 2026-11-14). */}
+          {!listed(event).some((g) => g.alwaysOpen) && (
+            <p className="m-0 text-lg">Waiting for the host to start the games.</p>
+          )}
           <GameList event={event} status="upcoming" />
         </JoinGate>
       </Body>

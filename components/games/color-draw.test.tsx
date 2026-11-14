@@ -80,4 +80,16 @@ describe("Color Matcher and Quick Draw screens (spec 18)", () => {
     expect(drawSummary({ kind: "done", match: 0.724 })).toBe("72% match");
     expect(drawSummary({ kind: "done", match: null })).toBe("No drawing was sent");
   });
+
+  test("S18-AC9: an ink color draws on white paper in that color; without one, the theme's", () => {
+    const { rerender } = render(
+      <DrawGame {...props({ kind: "drawing", prompt: "Draw the logo", ink: "#882E7E" })} />,
+    );
+    const pad = () => screen.getByLabelText("Drawing area");
+    expect(pad()).toHaveAttribute("data-ink", "#882E7E");
+    expect(pad().className).toMatch(/bg-white/);
+    rerender(<DrawGame {...props({ kind: "drawing", prompt: "Draw the logo" })} />);
+    expect(pad()).not.toHaveAttribute("data-ink");
+    expect(pad().className).not.toMatch(/bg-white/);
+  });
 });

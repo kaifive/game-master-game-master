@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { slide, isSolved, type SlideView } from "@/lib/games";
 import { cx } from "@/lib/ui";
 import { formatClock, PuzzleClock } from "../clock";
 import { PictureReveal, REVEAL_MS, sliceStyle } from "../picture";
 import type { GameRendererProps } from "../types";
 
+/** A press that moves at least this far is a swipe, not a tap. */
+const SWIPE_PX = 24;
 /** The missing piece drops in this long after the last slide; then the ripple shows the photo. */
 const PIECE_IN_MS = 300;
 /** Long enough for the last tile to glide home, and for a picture, the ripple, before the result shows. */
@@ -26,6 +28,9 @@ export function SlideGame({ view: raw, onMove, busy }: GameRendererProps) {
   const [board, setBoard] = useState(start);
   const [taps, setTaps] = useState<number[]>([]);
   const [sent, setSent] = useState(false);
+  // Where a swipe began, and whether the last press was a swipe (so its click doesn't tap too).
+  const swipeFrom = useRef<{ x: number; y: number } | null>(null);
+  const swiped = useRef(false);
   // A new board from the server (a new run) starts afresh.
   const [dealt, setDealt] = useState(start);
   if (view && view.board !== dealt) {
@@ -51,6 +56,31 @@ export function SlideGame({ view: raw, onMove, busy }: GameRendererProps) {
     }
   };
 
+  // A swipe slides the piece next to the gap that way, as on a phone sliding puzzle (Khai, 2026-11-14).
+  const swipe = (dx: number, dy: number) => {
+    const gap = board.indexOf(0);
+    const [r, c] = [Math.floor(gap / size), gap % size];
+    // Swiping left pulls in the piece to the gap's right, and so on.
+    const from =
+      Math.abs(dx) > Math.abs(dy)
+        ? dx < 0
+          ? c < size - 1
+            ? gap + 1
+            : -1
+          : c > 0
+            ? gap - 1
+            : -1
+        : dy < 0
+          ? r < size - 1
+            ? gap + size
+            : -1
+          : r > 0
+            ? gap - size
+            : -1;
+    const tile = from >= 0 ? board[from] : undefined;
+    if (tile) tap(tile);
+  };
+
   return (
     <section aria-label={image ? "Picture Slide" : "Number Slide"} className="grid gap-4">
       <div className="flex items-baseline justify-between">
@@ -71,7 +101,20 @@ export function SlideGame({ view: raw, onMove, busy }: GameRendererProps) {
       <div
         role="group"
         aria-label="Tiles"
-        className="relative mx-auto aspect-square w-full max-w-sm touch-manipulation rounded-gm bg-gm-surface p-1.5 ring-1 ring-gm-border select-none"
+        className="relative mx-auto aspect-square w-full max-w-sm touch-none rounded-gm bg-gm-surface p-1.5 ring-1 ring-gm-border select-none"
+        onPointerDown={(e) => {
+          swipeFrom.current = { x: e.clientX, y: e.clientY };
+          swiped.current = false;
+        }}
+        onPointerUp={(e) => {
+          const from = swipeFrom.current;
+          swipeFrom.current = null;
+          if (!from) return;
+          const [dx, dy] = [e.clientX - from.x, e.clientY - from.y];
+          if (Math.hypot(dx, dy) < SWIPE_PX) return;
+          swiped.current = true;
+          swipe(dx, dy);
+        }}
       >
         <div className="relative size-full overflow-hidden rounded-[6px]">
           {board.map((tile, i) => {
@@ -83,6 +126,10 @@ export function SlideGame({ view: raw, onMove, busy }: GameRendererProps) {
                 type="button"
                 aria-label={`Tile ${String(tile)}${home ? ", in place" : ""}`}
                 onClick={() => {
+                  if (swiped.current) {
+                    swiped.current = false;
+                    return;
+                  }
                   tap(tile);
                 }}
                 className={cx(

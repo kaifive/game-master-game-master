@@ -46,6 +46,7 @@ Five more solo games for the party, so there's plenty to play and test. Each is 
 ### Rapid Recall (`recall`)
 
 13. Three rounds, each harder: a 4×4 grid with 5 squares lit, 5×5 with 8, 6×6 with 11 (from `rounds`). The squares light for 1.2 s (`showMs`), then go dark; tap the squares you remember. A round ends when you've tapped as many squares as were lit.
+13a. Every square is a wrapped present (Khai, 2026-11-14): plain while hidden, bright red with a gold bow when lit or picked, then gold for right and red for wrong when the round ends.
 14. The pattern comes from the play's seed; the server checks every pick. Points: an equal share for each lit square found.
 
 ## Data
@@ -72,6 +73,7 @@ Phone, in the pack: one big primary action per screen, the game's numbers in the
 - [x] AC-12: Stack Attack draws each bar as a present sized by its width (large, medium, small), with a bow on the top box only.
 - [x] AC-13: With a film, the frames are the target, the phone gets the film, the instructions open with "Help Coach finish the form!", and tapping every frame ends the run early when a person could have tapped that fast; a film with more frames than the seconds allow is refused.
 - [x] AC-14: The phone waits for the film's frames before the countdown, shows the frame for each tap with no progress bar or total, ends on the last frame, and keeps it up while the result holds.
+- [x] AC-15: Rapid Recall's squares are presents: plain while hidden, lit ones red with a bow, then gold when right and red when wrong.
 
 ## Tests
 

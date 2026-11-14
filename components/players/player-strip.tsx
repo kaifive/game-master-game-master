@@ -14,10 +14,7 @@ export function PlayerStrip() {
   if (!device?.active) return null;
   const team = device.seat?.team;
   return (
-    <section
-      aria-label="You"
-      className="flex items-end justify-between gap-4 border-b border-gm-border pb-3"
-    >
+    <section aria-label="You" className="flex items-end justify-between gap-4">
       <div className="grid min-w-0 gap-0.5">
         <p className="m-0 font-gm-display text-3xl font-bold break-words">
           {device.active.nickname}

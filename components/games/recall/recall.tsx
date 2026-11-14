@@ -3,9 +3,29 @@
 import { useEffect, useRef, useState } from "react";
 import type { RecallView } from "@/lib/games";
 import { cx } from "@/lib/ui";
+import { GiftWrap, type Wrap } from "../gift";
 import type { GameRendererProps } from "../types";
 
 type Round = Extract<RecallView, { kind: "round" }>;
+
+/**
+ * Every square is a wrapped present (Khai, 2026-11-14): plain while hidden,
+ * bright red with a gold bow when lit or picked, then gold for right and red
+ * for wrong once the round is done.
+ */
+const WRAP: Record<"hidden" | "lit" | "right" | "wrong", Wrap> = {
+  hidden: {
+    paper: "var(--gm-surface-raised)",
+    ribbon: "color-mix(in srgb, var(--gm-text) 18%, transparent)",
+  },
+  lit: {
+    paper: "var(--gm-accent)",
+    ribbon: "var(--gm-tile-correct)",
+    bow: "var(--gm-tile-correct)",
+  },
+  right: { paper: "var(--gm-tile-correct)", ribbon: "var(--gm-accent)" },
+  wrong: { paper: "var(--gm-danger)", ribbon: "rgb(0 0 0 / 0.25)" },
+};
 
 /** How long a finished round shows what you got right before the next. */
 export const FEEDBACK_MS = 900;
@@ -57,6 +77,16 @@ function RoundGrid({ round, onDone }: { round: Round; onDone: (cells: number[]) 
         {Array.from({ length: round.size * round.size }, (_, cell) => {
           const lit = round.lit.includes(cell);
           const picked = picks.includes(cell);
+          const wrap =
+            showing && lit
+              ? WRAP.lit
+              : picked
+                ? full
+                  ? lit
+                    ? WRAP.right
+                    : WRAP.wrong
+                  : WRAP.lit
+                : WRAP.hidden;
           return (
             <button
               key={cell}
@@ -69,18 +99,19 @@ function RoundGrid({ round, onDone }: { round: Round; onDone: (cells: number[]) 
                   p.includes(cell) || p.length >= round.lit.length ? p : [...p, cell],
                 );
               }}
+              data-wrap={Object.keys(WRAP).find((k) => WRAP[k as keyof typeof WRAP] === wrap)}
+              style={{ background: wrap.paper }}
               className={cx(
-                "aspect-square min-h-11 rounded-gm ring-1 ring-gm-border",
-                showing && lit && "bg-[var(--gm-card)]",
-                !showing &&
-                  picked &&
-                  (full ? (lit ? "bg-gm-tile-correct" : "bg-gm-danger") : "bg-[var(--gm-card)]"),
+                "relative grid aspect-square min-h-11 place-items-center overflow-hidden rounded-gm shadow-[inset_0_-3px_0_rgb(0_0_0/0.22)] ring-1 ring-gm-border transition-colors duration-150 motion-reduce:transition-none",
                 !showing && full && lit && !picked && "ring-4 ring-gm-tile-correct",
-                !(showing && lit) && !picked && "bg-gm-surface-raised",
               )}
             >
+              <GiftWrap wrap={wrap} />
               {!showing && full && picked && (
-                <span aria-hidden="true" className="font-gm-display text-xl font-bold text-gm-bg">
+                <span
+                  aria-hidden="true"
+                  className="relative font-gm-display text-2xl font-bold text-gm-bg drop-shadow-[0_1px_0_rgb(255_255_255/0.4)]"
+                >
                   {lit ? "✓" : "✗"}
                 </span>
               )}

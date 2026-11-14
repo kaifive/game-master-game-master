@@ -31,4 +31,10 @@ describe("Quick Draw", () => {
       false,
     );
   });
+
+  it("S18-AC9: an ink color reaches the phone; a bad one is refused", () => {
+    const inked = DrawContent.parse({ ink: "#882E7E" });
+    expect(draw.view(draw.create(inked, 1, at(0)), inked, at(0))).toMatchObject({ ink: "#882E7E" });
+    expect(DrawContent.safeParse({ ink: "purple" }).success).toBe(false);
+  });
 });

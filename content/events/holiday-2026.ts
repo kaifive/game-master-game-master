@@ -167,6 +167,8 @@ export const holiday2026: EventConfig = {
       content: {
         prompt: "Draw the Nova Wushu logo from memory",
         reference: "nova-logo",
+        // The logo's purple, on white (Khai, 2026-11-14).
+        ink: "#882E7E",
       },
       scoring: { awardTo: "player" },
       alwaysOpen: true,
