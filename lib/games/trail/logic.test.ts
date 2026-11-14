@@ -69,6 +69,13 @@ describe("Pathfinder", () => {
     expect(trail.view(trail.create(c, 5, at(0)), c, at(0))).not.toHaveProperty("runner");
   });
 
+  it("S16-AC11: a carpet floor reaches the phone; without one there's none", () => {
+    const fc = TrailContent.parse({ floor: "carpet" });
+    expect(trail.view(trail.create(fc, 5, at(0)), fc, at(0))).toMatchObject({ floor: "carpet" });
+    expect(trail.view(trail.create(c, 5, at(0)), c, at(0))).not.toHaveProperty("floor");
+    expect(TrailContent.safeParse({ floor: "grass" }).success).toBe(false);
+  });
+
   it("S16-AC9: numbers are passed in order, skipped when a later one comes first, idle otherwise", () => {
     // Dots 1, 2, 3 on squares 0, 2, 4.
     const dots = [0, 2, 4];

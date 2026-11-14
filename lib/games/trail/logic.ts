@@ -14,6 +14,8 @@ export const TrailContent = z
      * step (Khai, 2026-11-14: Danny at the holiday party). `intro` opens the
      * instructions.
      */
+    /** "carpet": the board is a blue competition floor with a white boundary line (Khai, 2026-11-14). */
+    floor: z.enum(["carpet"]).optional(),
     runner: Media.extend({
       name: z.string().min(1).max(30),
       intro: z.string().min(1).max(80).optional(),
@@ -44,7 +46,14 @@ export type TrailState = {
 };
 
 export type TrailView =
-  | { kind: "playing"; size: number; dots: number[]; elapsedMs: number; runner?: Media }
+  | {
+      kind: "playing";
+      size: number;
+      dots: number[];
+      elapsedMs: number;
+      runner?: Media;
+      floor?: "carpet";
+    }
   | { kind: "done"; solved: boolean; tookMs: number | null; size: number; dots: number[] };
 
 const Move = z.object({
@@ -88,6 +97,7 @@ export const trail: GameLogic<TrailContent, TrailState, TrailView> = {
           dots: s.dots,
           elapsedMs: Math.max(0, now - s.startedAt),
           ...(c.runner ? { runner: { src: c.runner.src, alt: c.runner.alt } } : {}),
+          ...(c.floor ? { floor: c.floor } : {}),
         }
       : {
           kind: "done",

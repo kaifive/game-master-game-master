@@ -102,6 +102,7 @@ export const holiday2026: EventConfig = {
           {
             size: 7,
             checkpoints: 8,
+            floor: "carpet",
             // Danny stands on 1 and walks the trail (Khai, 2026-11-14).
             runner: {
               src: "/events/holiday-2026/danny.png",

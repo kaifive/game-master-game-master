@@ -180,6 +180,19 @@ describe("quick game screens (spec 16)", () => {
     );
   });
 
+  test("S16-AC11: a carpet floor draws blue mats inside a white boundary line", () => {
+    const view = { kind: "playing" as const, size: 3, dots: [0, 2, 8], elapsedMs: 0 };
+    const { rerender } = render(<TrailGame {...props({ ...view, floor: "carpet" })} />);
+    const floor = () => document.querySelector("[data-floor]") as HTMLElement;
+    expect(floor().getAttribute("data-floor")).toBe("carpet");
+    expect(floor().style.boxShadow).toContain("inset");
+    const square = document.querySelector('[data-cell="4"]') as HTMLElement;
+    expect(square.style.background).not.toBe("");
+    rerender(<TrailGame {...props(view)} />);
+    expect(floor().getAttribute("data-floor")).toBe("plain");
+    expect((document.querySelector('[data-cell="4"]') as HTMLElement).style.background).toBe("");
+  });
+
   test("S16-AC9 S16-AC10: the runner starts on 1, follows and faces the trail, and numbers turn green or red", () => {
     // A 3×3 grid, dots 1, 2, 3 on squares 0, 2, 8.
     const view = {
