@@ -148,19 +148,6 @@ export function TapsGame({ view: served, onMove }: GameRendererProps) {
               </span>
             )}
           </div>
-          <div
-            role="progressbar"
-            aria-label="Form"
-            aria-valuemin={0}
-            aria-valuemax={frames}
-            aria-valuenow={Math.min(taps, frames)}
-            className="h-2 overflow-hidden rounded-full bg-gm-surface ring-1 ring-gm-border"
-          >
-            <div
-              className="h-full rounded-full bg-gm-accent transition-[width] duration-75 motion-reduce:transition-none"
-              style={{ width: `${String((Math.min(taps, frames) / frames) * 100)}%` }}
-            />
-          </div>
         </figure>
       )}
       <button
