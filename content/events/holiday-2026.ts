@@ -93,7 +93,7 @@ export const holiday2026: EventConfig = {
     // Quick games (spec 16). Open now for testing, like trivia; decide before the party.
     ...(
       [
-        ["t-timer", "timer", "T-Timer", { targetSeconds: 7, visibleSeconds: 3 }],
+        ["t-timer", "timer", "T-Timer", { fromSeconds: 1.2, toSeconds: 1.25 }],
         ["tap-masher", "taps", "Tap Masher", { seconds: 5, target: 50 }],
         ["pathfinder", "trail", "Pathfinder", { size: 7, checkpoints: 8 }],
         ["stack-attack", "stacker", "Stack Attack", { rows: 12, width: 7 }],

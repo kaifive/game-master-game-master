@@ -26,10 +26,14 @@ test.beforeEach(({}, info) => {
 
 test("S16-AC7: T-Timer", async ({ page }) => {
   await joinAndOpen(page, "T-Timer");
+  // The clock and the window show the whole time.
+  await expect(page.getByText("1.20 – 1.25")).toBeVisible();
   await page.waitForTimeout(1200);
   await page.getByRole("button", { name: "Stop" }).click();
   await scored(page);
-  await expect(page.getByRole("region", { name: "Your score" })).toContainText(/s off/);
+  await expect(page.getByRole("region", { name: "Your score" })).toContainText(
+    /Stopped at \d\.\d\d/,
+  );
 });
 
 test("S16-AC7: Tap Masher", async ({ page }) => {

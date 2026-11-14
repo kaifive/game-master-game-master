@@ -19,8 +19,8 @@ Five more solo games for the party, so there's plenty to play and test. Each is 
 
 ### T-Timer (`timer`)
 
-4. The clock starts counting up as the instructions close. It shows for the first `visibleSeconds` (3) and then hides. One big round stopwatch button, **Stop**: tap it when you think `targetSeconds` (7) have passed. Stop counts on the press, and the screen freezes at once, without waiting for the server. The screen repeats no instructions (How to play has them).
-5. The result shows your time to the hundredth and how far off you were. Within ±0.1 s earns all the points; it drops linearly to 0 at 3 s off. A run not stopped within the target plus 10 s scores 0.
+4. The clock starts counting up as the instructions close and shows the whole time, to the hundredth (Khai, 2026-11-14: it's a reflex game now, not a counting one). A **Target** chip under it shows the window, `fromSeconds` to `toSeconds` (1.20 to 1.25). One big round stopwatch button, **Stop**: tap it inside the window. Stop counts on the press, and the screen freezes at once, without waiting for the server; a stop inside the window turns the clock green. The phone sends the time its clock shows (cut to the hundredth), so what the player sees is what's judged; network lag would swamp a 50 ms window, so the server doesn't time the stop itself.
+5. The result says "Stopped at 1.23" and either "in the window!" or how far early or late. Anywhere in the window, edges included, earns all the points; outside, they drop linearly to 0 at 0.5 s from the nearest edge. A run not stopped within the window's end plus 10 s scores 0.
 
 ### Tap Masher (`taps`)
 
@@ -54,7 +54,7 @@ Phone, in the pack: one big primary action per screen, the game's numbers in the
 ## Acceptance criteria
 
 - [x] AC-1: Each game's content is validated, with defaults for the party, and its instructions are built from it.
-- [x] AC-2: T-Timer shows the clock for the visible seconds, then hides it; the score is all points within ±0.1 s of the target, falling to 0 at 3 s off, and the server refuses a claimed time longer than really passed.
+- [x] AC-2: T-Timer always shows the clock and the window; stopping inside the window (edges included) earns all points, falling to 0 at 0.5 s outside it; the phone sends the time its clock shows, and the server refuses a claimed time longer than really passed.
 - [x] AC-3: Tap Masher counts taps for its seconds after a countdown; points scale to the target and an impossible count is refused.
 - [x] AC-4: Pathfinder makes a different puzzle per seed that always has a solution; the server accepts only a path that covers every square once, moves between neighbours and passes the dots in order, and scores half for solving plus up to half for speed, with no time limit.
 - [x] AC-5: Stack Attack trims each stopped bar to the row below, ends on a miss or the top row, and scores by rows stacked.

@@ -6,7 +6,7 @@ export { gamesApi } from "./client";
 export type { PlayStatus } from "./repo";
 export type { PlayChange, PlayRecord, PlayRepo } from "./repo";
 export { MemoryPlayRepo } from "./repo.memory";
-export type { TimerView } from "./timer/logic";
+export { offWindow, type TimerView } from "./timer/logic";
 export type { TapsView } from "./taps/logic";
 export type { StackerView } from "./stacker/logic";
 export { barStart, START_LENGTH, trim, type Bar } from "./stacker/engine";
