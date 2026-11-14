@@ -127,7 +127,8 @@ describe("quick game screens (spec 16)", () => {
     // Frame 4: second row, middle column of a 3 × 2 sheet.
     expect(frame()).toHaveAttribute("data-frame", "4");
     expect(frame().style.backgroundPosition).toBe("50% 100%");
-    expect(screen.getByRole("progressbar", { name: "Form" })).toHaveAttribute("aria-valuenow", "4");
+    // No progress bar: they tap blind (Khai, 2026-11-14).
+    expect(screen.queryByRole("progressbar")).toBeNull();
     fireEvent.pointerDown(pad);
     fireEvent.pointerDown(pad);
     // The last frame ends the run at once, without waiting for the clock.
@@ -141,7 +142,9 @@ describe("quick game screens (spec 16)", () => {
     expect(tapsSummary({ kind: "done", taps: 6, target: 6, film })).toBe(
       "Finished the whole form!",
     );
-    expect(tapsSummary({ kind: "done", taps: 4, target: 6, film })).toBe("4 of 6 moves");
+    expect(tapsSummary({ kind: "done", taps: 4, target: 6, film })).toBe("4 moves");
+    // The count never shows the total.
+    expect(screen.queryByText(/\/6|of 6/)).toBeNull();
     vi.unstubAllGlobals();
   });
 

@@ -47,7 +47,7 @@ test("S16-AC7: Tap Masher", async ({ page }) => {
   await expect(frame).toHaveAttribute("data-frame", "12");
   // The rest of the 5 s, then the last frame holds a moment before the score.
   await expect(page.getByRole("region", { name: "Your score" })).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByRole("region", { name: "Your score" })).toContainText("12 of 50 moves");
+  await expect(page.getByRole("region", { name: "Your score" })).toContainText("12 moves");
 });
 
 test("S16-AC7: Stack Attack", async ({ page }) => {
