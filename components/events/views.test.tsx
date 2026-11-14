@@ -84,7 +84,8 @@ describe("S01-AC5: an upcoming event waits for the host and lists its games, loc
 
   test("S08-AC13: an alwaysOpen game can be played before the start", () => {
     inPack(<UpcomingView event={event} />);
-    expect(screen.getByText(/Some games are open now/)).toBeInTheDocument();
+    // No "some games are open" line: the list shows which are (Khai, 2026-11-14).
+    expect(screen.queryByText(/Some games are open/)).toBeNull();
     expect(screen.getByRole("link", { name: /Holiday Trivia/ })).toHaveAttribute(
       "href",
       "/holiday-2026/play/trivia",

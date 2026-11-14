@@ -10,6 +10,11 @@ export const DrawContent = z
   .object({
     prompt: z.string().min(1).max(120).optional(),
     reference: z.enum(["nova-logo"]).optional(),
+    /** The pen's color, such as the logo's own (Khai, 2026-11-14); the canvas turns white like paper. */
+    ink: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/)
+      .optional(),
   })
   .strict();
 export type DrawContent = z.infer<typeof DrawContent>;
@@ -29,7 +34,8 @@ export type DrawState = {
   step: number;
 };
 
-export type DrawView = { kind: "drawing"; prompt: string } | { kind: "done"; match: number | null };
+export type DrawView =
+  { kind: "drawing"; prompt: string; ink?: string } | { kind: "done"; match: number | null };
 
 const Coord = z.number().min(0).max(1);
 const Move = z.object({
@@ -70,7 +76,7 @@ export const draw: GameLogic<DrawContent, DrawState, DrawView> = {
     s.phase === "done"
       ? // The judge's verdict as the share of points earned, so it agrees with the score card.
         { kind: "done", match: s.match === null ? null : drawShare(s.match) }
-      : { kind: "drawing", prompt: prompt(c) },
+      : { kind: "drawing", prompt: prompt(c), ...(c.ink ? { ink: c.ink } : {}) },
   move(s, _c, raw) {
     const parsed = Move.safeParse(raw);
     if (!parsed.success) return fail("Draw something first.");

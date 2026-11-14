@@ -193,7 +193,7 @@ describe("quick game screens (spec 16)", () => {
     expect(container.querySelectorAll("[data-bow]")).toHaveLength(1);
   });
 
-  test("S16-AC6: Rapid Recall shows the squares, hides them, and sends the picks", async () => {
+  test("S16-AC6 S16-AC15: Rapid Recall shows the squares, hides them, and sends the picks", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const onMove = vi.fn();
     render(
@@ -215,12 +215,19 @@ describe("quick game screens (spec 16)", () => {
     );
     expect(screen.getByText("Remember the lit squares…")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Square 1" })).toBeDisabled();
+    // S16-AC15: every square is a present; the lit ones light up red with a bow.
+    const wrapOf = (n: number) =>
+      screen.getByRole("button", { name: new RegExp(`^Square ${String(n)}(,|$)`) }).dataset.wrap;
+    expect(wrapOf(1)).toBe("lit");
+    expect(wrapOf(2)).toBe("hidden");
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1600);
     });
     for (const n of [1, 5, 2])
       fireEvent.click(screen.getByRole("button", { name: `Square ${String(n)}` }));
     expect(screen.getByText("2 of 3 right")).toBeInTheDocument();
+    expect(wrapOf(1)).toBe("right");
+    expect(wrapOf(2)).toBe("wrong");
     await act(async () => {
       await vi.advanceTimersByTimeAsync(FEEDBACK_MS + 50);
     });

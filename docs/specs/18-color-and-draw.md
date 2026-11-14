@@ -19,6 +19,7 @@ Two games about the Nova Wushu logo (`public/events/nova-wushu-logo.png`, from K
 ### Quick Draw (`draw`)
 
 4. Content: a `prompt` and the `reference` outline (`nova-logo`). Replayable when the event is, like the other games (Khai, 2026-11-10).
+4a. Optional `ink`: the pen's color as `#RRGGBB`; with it the canvas turns white like paper. At the party it's the logo's purple, `#882E7E` (Khai, 2026-11-14).
 5. No clock (Khai, 2026-11-10): one pen draws on a square canvas; **Clear** wipes it; **I'm done** sends the strokes.
 6. The judge (`lib/games/draw/score.ts`) fits the drawing and the reference to the same 64×64 grid, so size and position don't matter, sizing it by all but the outermost 1.5% of the ink so a stray mark doesn't shrink it, then compares them within two squares of slack (half credit one square further): how much of the ink lands near the logo's lines, and how much of the logo the ink comes near, the inner shapes counting more than the outer ring. Heavy scribbling counts against it. A match of 0.55 or less earns nothing and 0.9 or more earns everything: a careful hand drawing of the logo scores about 90%, a circle alone nothing (retuned 2026-11-10: Khai found scores random). The outline comes from the logo image, edges only.
 7. The result shows the match as the share of points earned ("72% match"), with Play again in a replayable event. The host can change any score in Controls.
@@ -56,3 +57,4 @@ Two games about the Nova Wushu logo (`public/events/nova-wushu-logo.png`, from K
 
 - Showing drawings on the TV or in a recap (with photos, spec 13).
 - Votes on drawings.
+- [x] AC-9: With `ink`, the pen draws in that color on a white canvas; without it, the theme's pen on the theme's surface.

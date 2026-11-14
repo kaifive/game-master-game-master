@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useSlots } from "@/components/slots/registry";
 import type { DrawView } from "@/lib/games";
+import { cx } from "@/lib/ui";
 import type { GameRendererProps } from "../types";
 
 type Point = [number, number];
@@ -29,7 +30,7 @@ export function DrawGame({ view: raw, onMove, busy }: GameRendererProps) {
     const el = canvas.current;
     const ctx = el?.getContext("2d");
     if (!el || !ctx) return;
-    ctx.strokeStyle = getComputedStyle(el).color;
+    ctx.strokeStyle = view.ink ?? getComputedStyle(el).color;
     ctx.lineWidth = el.width / 80;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -48,7 +49,11 @@ export function DrawGame({ view: raw, onMove, busy }: GameRendererProps) {
         width={600}
         height={600}
         aria-label="Drawing area"
-        className="aspect-square w-full touch-none rounded-gm bg-gm-surface text-gm-text ring-2 ring-gm-border"
+        data-ink={view.ink}
+        className={cx(
+          "aspect-square w-full touch-none rounded-gm text-gm-text ring-2 ring-gm-border",
+          view.ink ? "bg-white" : "bg-gm-surface",
+        )}
         onPointerDown={(e) => {
           if (sent) return;
           drawing.current = true;

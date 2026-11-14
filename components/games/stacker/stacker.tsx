@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { barStart, START_LENGTH, trim, type Bar, type StackerView } from "@/lib/games";
 import { cx } from "@/lib/ui";
+import { Bow } from "../gift";
 import type { GameRendererProps } from "../types";
 
 /** Where a tap doesn't stop the bar: links, the header, the tab bar and dialogs. */
@@ -42,23 +43,6 @@ const PRESENT: Record<PresentSize, { paper: string; ribbon: string; bow: string 
     bow: "var(--gm-accent)",
   },
 };
-
-/** Two loops and a knot, sat on the box's lid. */
-function Bow({ color }: { color: string }) {
-  return (
-    <svg
-      data-bow
-      viewBox="0 0 40 22"
-      aria-hidden="true"
-      className="pointer-events-none absolute bottom-[calc(100%-5px)] left-1/2 h-[55%] max-h-6 min-h-3 -translate-x-1/2 overflow-visible drop-shadow-[0_1px_1px_rgb(0_0_0/0.35)]"
-    >
-      <path d="M20 15 C12 2, 2 4, 5 12 C7 18, 15 17, 20 15 Z" fill={color} />
-      <path d="M20 15 C28 2, 38 4, 35 12 C33 18, 25 17, 20 15 Z" fill={color} />
-      <path d="M18 16 L13 22 M22 16 L27 22" stroke={color} strokeWidth="3" strokeLinecap="round" />
-      <circle cx="20" cy="15" r="3.6" fill={color} stroke="rgb(0 0 0 / 0.25)" strokeWidth="1" />
-    </svg>
-  );
-}
 
 /** A wrapped present filling its bar's squares: paper, a lid, a ribbon, and a bow on the top box. */
 function Present({ bar, moving, bow }: { bar: Bar; moving: boolean; bow: boolean }) {

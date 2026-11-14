@@ -51,4 +51,26 @@ describe("Number Slide screen (spec 21)", () => {
     rerender(<SlideGame {...base} view={{ kind: "done", size: 3, tookMs: 5000, moves: 1 }} />);
     expect(screen.getByRole("img", { name: "Solved: A picture" })).toBeInTheDocument();
   });
+
+  test("S21-AC7: a swipe slides the piece next to the gap that way; a short press is still a tap", () => {
+    const onMove = vi.fn();
+    render(<SlideGame {...props(onMove)} />);
+    const board = screen.getByRole("group", { name: "Tiles" });
+    const swipe = (dx: number, dy: number) => {
+      fireEvent.pointerDown(board, { clientX: 100, clientY: 100 });
+      fireEvent.pointerUp(board, { clientX: 100 + dx, clientY: 100 + dy });
+    };
+    // The gap is at the right of the middle row: nothing to its right, so a left swipe does nothing.
+    swipe(-60, 0);
+    expect(screen.getByText("0 moves")).toBeInTheDocument();
+    // Swiping right pulls tile 5 into the gap, and left pulls it back.
+    swipe(60, 0);
+    expect(screen.getByRole("button", { name: "Tile 5" })).toBeInTheDocument();
+    expect(screen.getByText("1 move")).toBeInTheDocument();
+    swipe(-60, 0);
+    expect(screen.getByRole("button", { name: "Tile 5, in place" })).toBeInTheDocument();
+    // Swiping up pulls tile 6 up from below: solved.
+    swipe(0, -60);
+    expect(onMove).toHaveBeenCalledWith({ type: "solve", taps: [5, 5, 6] });
+  });
 });
