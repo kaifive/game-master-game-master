@@ -150,4 +150,37 @@ describe("Block Fit screen (spec 22)", () => {
     dragTo(tray()[0] as HTMLElement, 24, 24);
     expect(screen.getByRole("img", { name: "Solved: A photo" })).toBeInTheDocument();
   });
+
+  test("S22-AC7: a sideways press scrolls the drawer; a diagonal one still picks the piece up", () => {
+    render(<BlocksGame {...props()} />);
+    const drawer = screen.getByRole("group", { name: "Pieces" });
+    const tray = () => within(drawer).getAllByRole("button");
+    const piece = tray()[0] as HTMLElement;
+    drawer.scrollLeft = 100;
+    // Mostly sideways: the drawer scrolls by the finger's travel, and nothing is placed or turned.
+    fireEvent.pointerDown(piece, { pointerId: 1, clientX: 50, clientY: 50 });
+    fireEvent.pointerMove(piece, { pointerId: 1, clientX: 30, clientY: 52 });
+    fireEvent.pointerMove(piece, { pointerId: 1, clientX: 10, clientY: 53 });
+    fireEvent.pointerUp(piece, { pointerId: 1, clientX: 10, clientY: 53 });
+    expect(drawer.scrollLeft).toBe(140);
+    expect(screen.getByText("0 of 2 placed")).toBeInTheDocument();
+    // Sideways first, then up toward the board: it becomes a drag after all, and drops.
+    // (The piece sits below the board here, at 0, 100.)
+    (piece.firstElementChild as HTMLElement).getBoundingClientRect = () =>
+      ({
+        left: 0,
+        top: 100,
+        width: 84,
+        height: 28,
+        right: 84,
+        bottom: 128,
+        x: 0,
+        y: 100,
+      }) as DOMRect;
+    fireEvent.pointerDown(piece, { pointerId: 1, clientX: 5, clientY: 105 });
+    fireEvent.pointerMove(piece, { pointerId: 1, clientX: 16, clientY: 103 });
+    fireEvent.pointerMove(piece, { pointerId: 1, clientX: 24, clientY: 24 });
+    fireEvent.pointerUp(piece, { pointerId: 1, clientX: 24, clientY: 24 });
+    expect(screen.getByText("1 of 2 placed")).toBeInTheDocument();
+  });
 });
