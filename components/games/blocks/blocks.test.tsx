@@ -76,12 +76,33 @@ describe("Block Fit screen (spec 22)", () => {
     const tray = () => within(screen.getByRole("group", { name: "Pieces" })).getAllByRole("button");
     dragTo(tray()[0] as HTMLElement, 24, 24);
     expect(screen.getByText("1 of 2 placed")).toBeInTheDocument();
-    fireEvent.click(
-      screen.getAllByRole("button", {
-        name: "Placed piece: tap to take it back",
-      })[0] as HTMLElement,
-    );
+    const placedSquare = screen.getAllByRole("button", { name: /^Placed piece/ })[0] as HTMLElement;
+    fireEvent.pointerDown(placedSquare, { pointerId: 1, clientX: 5, clientY: 5 });
+    fireEvent.pointerUp(placedSquare, { pointerId: 1, clientX: 5, clientY: 5 });
     expect(screen.getByText("0 of 2 placed")).toBeInTheDocument();
+  });
+
+  test("S22-AC6: a placed piece drags to a new spot, and off the board back to the tray", () => {
+    const onMove = vi.fn();
+    render(<BlocksGame {...props(onMove)} />);
+    const tray = () => within(screen.getByRole("group", { name: "Pieces" })).getAllByRole("button");
+    const squares = () =>
+      within(screen.getByRole("group", { name: "Board" })).getAllByRole("button");
+    const placedAt = () =>
+      squares()
+        .map((b, i) => (b.getAttribute("aria-label")?.startsWith("Placed") ? i : -1))
+        .filter((i) => i >= 0);
+    dragTo(tray()[0] as HTMLElement, 24, 24);
+    expect(placedAt()).toEqual([0, 1, 2]);
+    // Drag it from its first square down a row.
+    dragTo(squares()[0] as HTMLElement, 24, 72);
+    expect(placedAt()).toEqual([3, 4, 5]);
+    expect(screen.getByText("1 of 2 placed")).toBeInTheDocument();
+    // Off the bottom of the board: back to the tray.
+    dragTo(squares()[3] as HTMLElement, 24, 300);
+    expect(placedAt()).toEqual([]);
+    expect(screen.getByText("0 of 2 placed")).toBeInTheDocument();
+    expect(onMove).not.toHaveBeenCalled();
   });
 
   test("S22-AC5: picture pieces show their photo slices, turned as dealt, and a full board shows the whole photo", () => {
