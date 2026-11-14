@@ -299,3 +299,124 @@ test("S20-AC5: Spot and Snipe: send a photo, the host rates it, the points reach
   const games = page.getByRole("list", { name: "Games" });
   await expect(games.getByRole("img", { name: "Spot and Snipe: 80 points" })).toBeVisible();
 });
+
+/** The taps that solve a sliding board, by breadth-first search (3×3 only). */
+function solveSlide(board: number[], size: number): number[] {
+  const slideTile = (b: number[], tile: number): number[] | null => {
+    const at = b.indexOf(tile);
+    const gap = b.indexOf(0);
+    const [r, c, gr, gc] = [Math.floor(at / size), at % size, Math.floor(gap / size), gap % size];
+    if (r !== gr && c !== gc) return null;
+    const step = r === gr ? (c < gc ? -1 : 1) : r < gr ? -size : size;
+    const next = b.slice();
+    for (let hole = gap; hole !== at; hole += step) {
+      next[hole] = next[hole + step] as number;
+      next[hole + step] = 0;
+    }
+    return next;
+  };
+  const done = (b: number[]) => b.every((v, i) => v === (i === b.length - 1 ? 0 : i + 1));
+  const key = (b: number[]) => b.join(",");
+  const prev = new Map<string, { from: string; tap: number } | null>([[key(board), null]]);
+  const queue = [board];
+  for (let head = 0; head < queue.length; head++) {
+    const b = queue[head] as number[];
+    if (done(b)) {
+      const taps: number[] = [];
+      for (let k = key(b), s = prev.get(k); s; k = s.from, s = prev.get(k)) taps.unshift(s.tap);
+      return taps;
+    }
+    for (let t = 1; t < size * size; t++) {
+      const n = slideTile(b, t);
+      if (n && !prev.has(key(n))) {
+        prev.set(key(n), { from: key(b), tap: t });
+        queue.push(n);
+      }
+    }
+  }
+  throw new Error("unsolvable");
+}
+
+test("S21-AC4: Number Slide", async ({ page }) => {
+  const started = page.waitForResponse((r) => r.url().includes("/games/number-slide/play"));
+  await joinAndOpen(page, "Number Slide");
+  const { view } = (await (await started).json()) as { view: { board: number[]; size: number } };
+  for (const tile of solveSlide(view.board, view.size))
+    await page.getByRole("button", { name: new RegExp(`^Tile ${String(tile)}(,|$)`) }).click();
+  await scored(page);
+  await expect(page.getByRole("region", { name: "Your score" })).toContainText(
+    /Solved in \d+:\d\d/,
+  );
+});
+
+type Cell = [number, number];
+const turn = (cells: Cell[], turns: number): Cell[] => {
+  let out = cells;
+  for (let t = 0; t < turns; t++) {
+    const turned = out.map(([r, c]): Cell => [c, -r]);
+    const r0 = Math.min(...turned.map((x) => x[0]));
+    const c0 = Math.min(...turned.map((x) => x[1]));
+    out = turned.map(([r, c]): Cell => [r - r0, c - c0]).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  }
+  return out;
+};
+
+/** A Block Fit solution by search: each piece, each way round, on the first empty square. */
+function solveBlocks(width: number, height: number, pieces: { id: number; cells: Cell[] }[]) {
+  const filled = new Array<boolean>(width * height).fill(false);
+  const used = new Set<number>();
+  const out: { piece: number; turns: number; row: number; col: number }[] = [];
+  const go = (): boolean => {
+    const empty = filled.indexOf(false);
+    if (empty < 0) return used.size === pieces.length;
+    for (const p of pieces) {
+      if (used.has(p.id)) continue;
+      for (let turns = 0; turns < 4; turns++) {
+        const shape = turn(p.cells, turns);
+        const [fr, fc] = shape[0] as Cell;
+        const [row, col] = [Math.floor(empty / width) - fr, (empty % width) - fc];
+        const sq = shape.map(([r, c]): Cell => [r + row, c + col]);
+        if (
+          sq.some(([r, c]) => r < 0 || c < 0 || r >= height || c >= width || filled[r * width + c])
+        )
+          continue;
+        for (const [r, c] of sq) filled[r * width + c] = true;
+        used.add(p.id);
+        out.push({ piece: p.id, turns, row, col });
+        if (go()) return true;
+        out.pop();
+        used.delete(p.id);
+        for (const [r, c] of sq) filled[r * width + c] = false;
+      }
+    }
+    return false;
+  };
+  if (!go()) throw new Error("unsolvable");
+  return out;
+}
+
+test("S22-AC4: Block Fit", async ({ page }) => {
+  const started = page.waitForResponse((r) => r.url().includes("/games/block-fit/play"));
+  await joinAndOpen(page, "Block Fit");
+  const { view } = (await (await started).json()) as {
+    view: { width: number; height: number; pieces: { id: number; cells: Cell[] }[] };
+  };
+  const board = page.getByRole("group", { name: "Board" });
+  for (const p of solveBlocks(view.width, view.height, view.pieces)) {
+    const piece = page.getByRole("button", { name: new RegExp(`^Piece ${String(p.piece + 1)}:`) });
+    for (let t = 0; t < p.turns; t++) await piece.click({ position: { x: 4, y: 4 } });
+    const from = await piece.boundingBox();
+    const to = await board.boundingBox();
+    if (!from || !to) throw new Error("no layout");
+    const cell = to.width / view.width;
+    // Grab the piece's top-left square and drop it on its square of the board.
+    await page.mouse.move(from.x + 6, from.y + 6);
+    await page.mouse.down();
+    await page.mouse.move(to.x + (p.col + 0.5) * cell, to.y + (p.row + 0.5) * cell, { steps: 5 });
+    await page.mouse.up();
+  }
+  await scored(page);
+  await expect(page.getByRole("region", { name: "Your score" })).toContainText(
+    /Solved in \d+:\d\d/,
+  );
+});

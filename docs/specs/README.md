@@ -25,3 +25,5 @@ Statuses are explained in `../conventions/docs.md`.
 | 18 | [Color Matcher and Quick Draw](18-color-and-draw.md) | M2 | Done |
 | 19 | [Secret Word](19-secret-word.md) | M2 | Done |
 | 20 | [Photo challenge (Spot and Snipe)](20-photo-challenge.md) | M2 | Done |
+| 21 | [Number Slide](21-number-slide.md) | M2 | Done |
+| 22 | [Block Fit](22-block-fit.md) | M2 | Done |

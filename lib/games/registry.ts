@@ -3,8 +3,10 @@ import { cache } from "./cache/logic";
 import { color } from "./color/logic";
 import { draw } from "./draw/logic";
 import { jar } from "./jar/logic";
+import { blocks } from "./blocks/logic";
 import { photo } from "./photo/logic";
 import { recall } from "./recall/logic";
+import { slideGame } from "./slide/logic";
 import { stacker } from "./stacker/logic";
 import { taps } from "./taps/logic";
 import { timer } from "./timer/logic";
@@ -29,6 +31,8 @@ const LOGIC: Readonly<Record<string, AnyGameLogic>> = {
   draw: defineGame(draw),
   word: defineGame(word),
   "photo-challenge": defineGame(photo),
+  slide: defineGame(slideGame),
+  blocks: defineGame(blocks),
 };
 
 export const gameLogic = (type: string): AnyGameLogic | undefined => LOGIC[type];

@@ -127,6 +127,28 @@ export const holiday2026: EventConfig = {
       keepDrawings: true,
     },
     {
+      // Spec 21: the 3×3 sliding tile puzzle (Khai, 2026-11-14).
+      id: "number-slide",
+      type: "slide",
+      title: "Number Slide",
+      mode: "solo",
+      visibility: "listed",
+      content: { size: 3 },
+      scoring: { awardTo: "player" },
+      alwaysOpen: true,
+    },
+    {
+      // Spec 22: fit the pieces into the board; tap to turn.
+      id: "block-fit",
+      type: "blocks",
+      title: "Block Fit",
+      mode: "solo",
+      visibility: "listed",
+      content: { width: 5, height: 4 },
+      scoring: { awardTo: "player" },
+      alwaysOpen: true,
+    },
+    {
       // Spec 17: one guess; points when the host scores it in Controls.
       id: "guessing-jar",
       type: "jar",

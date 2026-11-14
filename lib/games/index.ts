@@ -17,6 +17,9 @@ export type { CacheView } from "./cache/logic";
 export { toHex, type ColorView } from "./color/logic";
 export type { DrawView } from "./draw/logic";
 export type { Mark, WordView } from "./word/logic";
+export { isSolved, slide, type SlideView } from "./slide/logic";
+export type { BlocksView } from "./blocks/logic";
+export { rotate, type Cell, type Piece, type Placement } from "./blocks/puzzle";
 export {
   photoShare,
   withRating,

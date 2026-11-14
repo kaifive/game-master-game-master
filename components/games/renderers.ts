@@ -1,9 +1,11 @@
+import { BlocksGame, blocksSummary } from "./blocks/blocks";
 import { CacheGame, cacheSummary } from "./cache/cache";
 import { ColorGame, colorSummary } from "./color/color";
 import { DrawGame, drawSummary } from "./draw/draw";
 import { JarGame, jarSummary } from "./jar/jar";
 import { PhotoGame, photoSummary } from "./photo/photo";
 import { RecallGame, recallSummary } from "./recall/recall";
+import { SLIDE_HOLD_MS, SlideGame, slideSummary } from "./slide/slide";
 import { StackerGame, stackerSummary } from "./stacker/stacker";
 import { TapsGame, tapsSummary } from "./taps/taps";
 import { TimerGame, timerSummary } from "./timer/timer";
@@ -26,6 +28,8 @@ const RENDERERS: Readonly<Record<string, GameRenderer>> = {
   draw: { Play: DrawGame, summary: drawSummary },
   word: { Play: WordGame, summary: wordSummary, holdResultMs: WORD_HOLD_MS },
   "photo-challenge": { Play: PhotoGame, summary: photoSummary },
+  slide: { Play: SlideGame, summary: slideSummary, holdResultMs: SLIDE_HOLD_MS },
+  blocks: { Play: BlocksGame, summary: blocksSummary, holdResultMs: 300 },
 };
 
 export const rendererFor = (type: string): GameRenderer | undefined => RENDERERS[type];
