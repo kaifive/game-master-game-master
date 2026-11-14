@@ -141,7 +141,9 @@ describe("quick game screens (spec 16)", () => {
     expect(tapsSummary({ kind: "done", taps: 6, target: 6, film })).toBe(
       "Finished the whole form!",
     );
-    expect(tapsSummary({ kind: "done", taps: 4, target: 6, film })).toBe("4 of 6 moves");
+    expect(tapsSummary({ kind: "done", taps: 4, target: 6, film })).toBe("4 moves");
+    // The count never shows the total.
+    expect(screen.queryByText(/\/6|of 6/)).toBeNull();
     vi.unstubAllGlobals();
   });
 
