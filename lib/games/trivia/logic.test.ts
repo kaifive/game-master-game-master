@@ -106,6 +106,14 @@ describe("trivia", () => {
     expect(trivia.tick(late, content, at(99_999))).toBe(late);
   });
 
+  it("S10-AC17: the phone's time's up marks the question wrong at once, but not while time is left", () => {
+    const s = start();
+    expect(trivia.move(s, content, { type: "timeout" }, at(10_000)).ok).toBe(false);
+    const late = play(s, { type: "timeout" }, 15_000);
+    expect(view(late, 15_000)).toMatchObject({ kind: "answered", chosen: null, right: false });
+    expect(trivia.move(late, content, { type: "answer", choice: 0 }, at(15_100)).ok).toBe(false);
+  });
+
   it("S10-AC6: a right answer earns half for being right and up to half for speed", () => {
     let s = start();
     s = next(answerRight(s, 0), 0); // instant: the whole share
@@ -137,8 +145,10 @@ describe("trivia", () => {
   it("S10-AC14: the next question's clock can start when the phone will show it", () => {
     const answered = answerRight(start(), 1000);
     const later = play(answered, { type: "next", startIn: 800 }, 1200);
-    expect(view(later, 1200)).toMatchObject({ number: 2, msLeft: 15_800 });
+    // The clock shows at most a question's time; it runs down only once the phone shows it.
+    expect(view(later, 1200)).toMatchObject({ number: 2, msLeft: 15_000 });
     expect(view(later, 2000)).toMatchObject({ msLeft: 15_000 });
+    expect(view(later, 3000)).toMatchObject({ msLeft: 14_000 });
     expect(
       trivia.move(answered, content, { type: "next", startIn: MAX_START_IN + 1 }, at(1200)).ok,
     ).toBe(false);

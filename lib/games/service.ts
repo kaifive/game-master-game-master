@@ -49,10 +49,18 @@ export type FinishedRun = {
   key?: string;
 };
 
+/** The longest countdown a phone may ask for before a run's clock starts. */
+export const MAX_START_IN_MS = 5000;
+
 export const StartBody = z.object({
   playerId: z.string().min(1).max(64),
-  /** Start a new run of a finished, replayable game (S08-AC12). */
+  /**
+   * Start a new run of a replayable game (S08-AC12): a finished one, or one
+   * left mid-run, which starts over when the player comes back (S08-AC18).
+   */
   again: z.boolean().optional(),
+  /** The phone counts 3-2-1 first: a new run's clock starts this many ms from now (S08-AC18). */
+  startIn: z.number().int().min(0).max(MAX_START_IN_MS).optional(),
 });
 export const MoveBody = z.object({
   playerId: z.string().min(1).max(64),
@@ -145,7 +153,23 @@ export function playable(event: EventConfig, gameId: string): Omit<Ready, "point
 export function instructionsFor(event: EventConfig, gameId: string): Instructions | null {
   const ready = playable(event, gameId);
   if (!ready) return null;
-  return ready.game.instructions ?? ready.logic.instructions(ready.content);
+  const base = ready.game.instructions ?? ready.logic.instructions(ready.content);
+  // Trivia's pictures would give questions away, so only the other games' load early.
+  const preload = ready.game.type === "trivia" ? [] : picturesIn(ready.content);
+  return preload.length > 0 ? { ...base, preload } : base;
+}
+
+/** Every picture a game's content names (any string ending in an image type), each once. */
+export function picturesIn(content: unknown): string[] {
+  const found = new Set<string>();
+  const walk = (v: unknown) => {
+    if (typeof v === "string") {
+      if (/^\/.+\.(png|jpe?g|webp|gif|svg)$/i.test(v)) found.add(v);
+    } else if (Array.isArray(v)) v.forEach(walk);
+    else if (v && typeof v === "object") Object.values(v).forEach(walk);
+  };
+  walk(content);
+  return [...found];
 }
 
 async function ownsPlayer(
@@ -242,7 +266,7 @@ export async function startPlay(
     const seed = deps.seed();
     return {
       seed,
-      state: r.logic.create(r.content, seed, { now }),
+      state: r.logic.create(r.content, seed, { now: now + (body.startIn ?? 0) }),
       status: "playing" as const,
       points: 0,
     };
@@ -258,10 +282,10 @@ export async function startPlay(
         scored: false,
         ...run(),
       };
-    if (cur.status === "finished")
-      return body.again && event.replayable === true && !r.logic.once
-        ? { ...cur, ...run(), runs: cur.runs + 1 }
-        : null;
+    const again = body.again === true && event.replayable === true && !r.logic.once;
+    if (cur.status === "finished") return again ? { ...cur, ...run(), runs: cur.runs + 1 } : null;
+    // Left mid-run and back again: a fresh run, so no clock kept going while away (S08-AC18).
+    if (again) return { ...cur, ...run(), runs: cur.runs + 1 };
     const ticked = r.logic.tick(cur.state, r.content, { now });
     return ticked === cur.state ? null : settle(cur, ticked, r);
   });

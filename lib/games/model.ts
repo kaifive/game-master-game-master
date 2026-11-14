@@ -11,7 +11,12 @@ export type GameContext = {
 };
 
 /** The box shown before a game starts (S08-AC9). */
-export type Instructions = { title: string; lines: string[] };
+export type Instructions = {
+  title: string;
+  lines: string[];
+  /** Pictures the game shows, for the phone to load while the instructions are read (Khai, 2026-11-14). */
+  preload?: string[];
+};
 
 export type MoveResult<S> = { ok: true; state: S } | { ok: false; message: string };
 

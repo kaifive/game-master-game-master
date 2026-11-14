@@ -11,7 +11,9 @@ import {
   hubPlays,
   instructionsFor,
   makeMove,
+  picturesIn,
   startPlay,
+  StartBody,
   type FinishedRun,
   type GameDeps,
 } from "./service";
@@ -206,6 +208,41 @@ describe("game service", () => {
     // Without replayable, `again` just shows the result.
     expect((await startPlay(deps, event, UID, "trivia", { playerId, again: true })).status).toBe(
       "finished",
+    );
+  });
+
+  it("S08-AC18: a run's clock can start after a 3-2-1, and a replayable run left midway starts over", async () => {
+    const replay: EventConfig = { ...event, replayable: true };
+    const res = await startPlay(deps, replay, UID, "trivia", { playerId, startIn: 3000 });
+    expect((res.view as Asked).msLeft).toBe(10_000);
+    // The clock hasn't started during the count; a second after it, it has.
+    clock += 3000;
+    const resumed = await startPlay(deps, replay, UID, "trivia", { playerId });
+    expect((resumed.view as Asked).msLeft).toBe(10_000);
+    clock += 1000;
+    expect(
+      ((await startPlay(deps, replay, UID, "trivia", { playerId })).view as Asked).msLeft,
+    ).toBe(9_000);
+    // Back mid-run with `again`: a fresh run.
+    await startPlay(deps, replay, UID, "trivia", { playerId, again: true });
+    expect((await hubPlays(deps, replay, UID, playerId)).plays.trivia).toMatchObject({ runs: 2 });
+    // Not replayable: `again` mid-run just resumes.
+    await startPlay(deps, event, UID, "stack-attack", { playerId });
+    await startPlay(deps, event, UID, "stack-attack", { playerId, again: true });
+    expect((await hubPlays(deps, event, UID, playerId)).plays["stack-attack"]).toMatchObject({
+      runs: 1,
+    });
+    expect(StartBody.safeParse({ playerId, startIn: 9000 }).success).toBe(false);
+  });
+
+  it("S08-AC18: a game's pictures come with its instructions to load early; trivia's don't", () => {
+    expect(instructionsFor(event, "number-slide")?.preload).toEqual([
+      "/events/nova-wushu-logo.png",
+    ]);
+    expect(instructionsFor(event, "block-fit")?.preload).toHaveLength(5);
+    expect(instructionsFor(event, "trivia")?.preload).toBeUndefined();
+    expect(picturesIn({ a: "/x.jpg", b: ["/x.jpg", { c: "/y.PNG" }], d: "not a picture" })).toEqual(
+      ["/x.jpg", "/y.PNG"],
     );
   });
 

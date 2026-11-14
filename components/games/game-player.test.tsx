@@ -3,7 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { PlayResponse } from "@/lib/games";
 import { setReducedMotion } from "@/tests/motion";
-import { GamePlayer, LEAVE_WARNING } from "./game-player";
+import { COUNTDOWN_MS, GamePlayer, LEAVE_WARNING, RESTART_WARNING } from "./game-player";
+import type * as Renderers from "./renderers";
 import { WORD_HOLD_MS } from "./word/word";
 
 const api = vi.hoisted(() => ({
@@ -14,6 +15,23 @@ const api = vi.hoisted(() => ({
 const push = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("@/lib/games", async (original) => ({ ...(await original<object>()), gamesApi: api }));
+// Trivia stands in for any game here, without its 3-2-1; "timed" is a stand-in game with one.
+vi.mock("./renderers", async (original) => {
+  const real = await original<typeof Renderers>();
+  return {
+    ...real,
+    rendererFor: (type: string) => {
+      if (type === "timed")
+        return {
+          Play: () => <p>Playing the timed game</p>,
+          summary: () => null,
+          countdown: true,
+        };
+      const r = real.rendererFor(type);
+      return r && { ...r, countdown: false };
+    },
+  };
+});
 
 type Active = { id: string; nickname: string } | null;
 const device = vi.hoisted(() => {
@@ -372,5 +390,57 @@ describe("GamePlayer", () => {
       "Solved in 1 guess",
     );
     vi.useRealTimers();
+  });
+
+  test("S08-AC18: a timed game counts 3-2-1 while its run starts, with its clock set to start after", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    api.plays.mockReturnValue(ok({ plays: {} }));
+    api.start.mockReturnValue(ok({ ...question, view: { kind: "playing" } }));
+    render(<GamePlayer gameId="t" type="timed" instructions={rules} replayable />);
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
+    expect(await screen.findByRole("timer")).toHaveTextContent("3");
+    expect(api.start).toHaveBeenCalledWith(
+      "holiday-2026",
+      "t",
+      "dev:phone",
+      "p1",
+      false,
+      COUNTDOWN_MS,
+    );
+    expect(screen.queryByText("Playing the timed game")).toBeNull();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(COUNTDOWN_MS + 200);
+    });
+    expect(screen.getByText("Playing the timed game")).toBeInTheDocument();
+    // Mid-run, leaving warns that it starts over.
+    expect(device.setLeaveWarning).toHaveBeenLastCalledWith(RESTART_WARNING);
+    vi.useRealTimers();
+  });
+
+  test("S08-AC18: a timed run left midway starts over: the instructions again, then a new run", async () => {
+    api.plays.mockReturnValue(ok({ plays: { t: { status: "playing", points: 0 } } }));
+    api.start.mockReturnValue(ok({ ...question, view: { kind: "playing" } }));
+    render(<GamePlayer gameId="t" type="timed" instructions={rules} replayable />);
+    expect(await screen.findByRole("dialog", { name: "How to play" })).toBeInTheDocument();
+    expect(api.start).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Start" }));
+    await waitFor(() => {
+      expect(api.start).toHaveBeenCalledWith(
+        "holiday-2026",
+        "t",
+        "dev:phone",
+        "p1",
+        true,
+        COUNTDOWN_MS,
+      );
+    });
+  });
+
+  test("S08-AC18: a timed run in an event that isn't replayable resumes as before", async () => {
+    api.plays.mockReturnValue(ok({ plays: { t: { status: "playing", points: 0 } } }));
+    api.start.mockReturnValue(ok({ ...question, view: { kind: "playing" } }));
+    render(<GamePlayer gameId="t" type="timed" instructions={rules} replayable={false} />);
+    expect(await screen.findByText("Playing the timed game")).toBeInTheDocument();
+    expect(api.start).toHaveBeenCalledWith("holiday-2026", "t", "dev:phone", "p1", false);
   });
 });
