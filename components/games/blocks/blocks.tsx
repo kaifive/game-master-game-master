@@ -89,12 +89,7 @@ function Shape({
               width: cell - 2,
               height: cell - 2,
               ...(art && slice
-                ? {
-                    ...sliceStyle(art.src, art.cols, art.rows, slice.at, slice.deg),
-                    // The piece's own color outlines each square, so the shape reads over the photo.
-                    outline: `3px solid ${color}`,
-                    outlineOffset: "-3px",
-                  }
+                ? sliceStyle(art.src, art.cols, art.rows, slice.at, slice.deg)
                 : { background: color }),
             }}
           />
