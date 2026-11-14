@@ -413,6 +413,8 @@ test("S22-AC4: Block Fit", async ({ page }) => {
   const board = page.getByRole("group", { name: "Board" });
   for (const p of solveBlocks(view.width, view.height, view.pieces)) {
     const piece = page.getByRole("button", { name: new RegExp(`^Piece ${String(p.piece + 1)}:`) });
+    // The tray scrolls sideways: bring the piece into view first.
+    await piece.scrollIntoViewIfNeeded();
     for (let t = 0; t < p.turns; t++) await piece.click({ position: { x: 4, y: 4 } });
     const from = await piece.boundingBox();
     const to = await board.boundingBox();

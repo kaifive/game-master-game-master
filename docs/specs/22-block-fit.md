@@ -11,10 +11,10 @@ A shape-fitting puzzle: chunky grid pieces (three to five squares each) fill a r
 ## Behavior
 
 1. Content: `width` and `height` (4 to 6, default 5 × 4). The puzzle cuts the board into connected pieces of 3 to 5 squares, then shows each piece turned a random way.
-2. Tap a piece in the tray to turn it a quarter turn. Drag it onto the board: it snaps to the squares under it, and only drops where it fits (inside the board, over no other piece). Tap a placed piece to send it back to the tray. **Reset** clears the board.
+2. Tap a piece in the tray to turn it a quarter turn. Drag it onto the board: it snaps to the squares under it, and only drops where it fits (inside the board, over no other piece). Drag a placed piece to move it (it drops only where it fits, or stays put); drag it off the board, or tap it, to send it back to the tray (Khai, 2026-11-14). **Reset** clears the board.
 3. When every square is covered, the phone sends the placements. The server turns each piece as the phone did, checks they stay inside the board, don't overlap and cover it exactly, and times the run.
 4. Points: solving earns a fifth, plus up to the rest for speed: all of it within 10 s, none from 90 s (Khai, 2026-11-14: hard to score big; was half plus speed within 30 s to 3 minutes). No time limit.
-4a. Tray pieces sit on their own small cards with 30 px squares, big enough to see which way a piece faces (Khai, 2026-11-14).
+4a. The tray is one row that scrolls sideways: swipe left or right to see every piece, and drag a piece up onto the board. Pieces have 28 px squares, big enough to see which way they face, with no frame around them. Reset sits beside the clock, and the board shrinks on short phones so the page fits without scrolling (Khai, 2026-11-14).
 5. Picture option: content `images`, a list of photos (`src`, `alt`) in the board's shape (5:4 for 5 × 4); each play takes one by its seed. Each piece shows its slices of the photo, turned as the piece is dealt and turning with it, so putting the photo back together solves the puzzle. Any exact fit still counts: the rules and scoring don't change. At the party: five club photos Khai cropped to 5:4 (2026-11-14).
 6. Finale, with a picture: when the board is full, a ripple spreads from the last piece and shows the whole photo before the result. With reduced motion the photo just shows.
 
@@ -25,3 +25,4 @@ A shape-fitting puzzle: chunky grid pieces (three to five squares each) fill a r
 - [x] AC-3: Solving earns a fifth of the points plus up to the rest for speed (full within 10 s, none from 90 s), with no time limit.
 - [x] AC-4: The phone turns a piece on tap, drops it only where it fits, sends the placements when the board is full, and the party has Block Fit, which plays end to end.
 - [x] AC-5: With photos set, each play takes one; each piece shows its slices of it, turned as dealt and turning with the piece, and a full board shows the whole photo.
+- [x] AC-6: A placed piece drags to a new spot where it fits, and dragged off the board it goes back to the tray.

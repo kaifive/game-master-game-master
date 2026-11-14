@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useSlots } from "@/components/slots/registry";
 import { rotate, turnCells, type BlocksView, type Cell, type Piece } from "@/lib/games";
 import { formatClock, PuzzleClock } from "../clock";
 import { PictureReveal, REVEAL_MS, sliceStyle } from "../picture";
@@ -19,13 +18,15 @@ type Drag = {
   moved: boolean;
   /** The board's square size in px, measured when the drag starts. */
   cell: number;
+  /** A piece from the tray, or one already on the board being moved. */
+  from: "tray" | "board";
 };
 
 /**
  * A tray piece's squares are this many px; on the board they take the board's
  * square size. Big enough to read a piece's shape at a glance (Khai, 2026-11-14).
  */
-const TRAY_CELL = 30;
+const TRAY_CELL = 28;
 /** A press that moves less than this is a tap (turn), not a drag. */
 const DRAG_SLOP = 6;
 
@@ -104,7 +105,6 @@ function Shape({
  * turn it, tap a placed one to take it back. The board sends itself once full.
  */
 export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
-  const { Button } = useSlots();
   const served = raw as BlocksView;
   // The run's last board stays up (with its finale) while the result holds.
   const [lastView, setLastView] = useState(served.kind === "playing" ? served : null);
@@ -182,57 +182,135 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
     cell: d.cell,
   });
 
+  const takeBack = (id: number) => {
+    setPlaced((p) => Object.fromEntries(Object.entries(p).filter(([k]) => Number(k) !== id)));
+  };
+
+  // Drops where it fits. A placed piece dropped off the board goes back to the
+  // tray; dropped where it doesn't fit, it stays where it was.
   const drop = (d: Drag) => {
     if (!board.current) return;
     const rect = board.current.getBoundingClientRect();
     const g = ghostAt(d);
     const col = Math.round((g.left - rect.left) / g.cell);
     const row = Math.round((g.top - rect.top) / g.cell);
-    if (fits(d.id, row, col)) place(d.id, row, col);
+    const offBoard = d.x < rect.left || d.x > rect.right || d.y < rect.top || d.y > rect.bottom;
+    if (d.from === "board" && offBoard) takeBack(d.id);
+    else if (fits(d.id, row, col)) place(d.id, row, col);
+  };
+
+  const follow = (e: React.PointerEvent, id: number) => {
+    setDrag((d) =>
+      d && d.id === id
+        ? {
+            ...d,
+            x: e.clientX,
+            y: e.clientY,
+            moved: d.moved || Math.hypot(e.clientX - d.sx, e.clientY - d.sy) > DRAG_SLOP,
+          }
+        : d,
+    );
   };
 
   const tray = pieces.filter((p) => !placed[p.id]);
   const locked = sent || busy;
 
   return (
-    <section aria-label="Block Fit" className="grid gap-4 select-none">
-      <div className="flex items-baseline justify-between">
+    <section aria-label="Block Fit" className="grid gap-3 select-none">
+      <div className="flex items-center justify-between gap-3">
         <PuzzleClock startMs={view.elapsedMs} stopped={sent} />
-        <span className="text-lg font-bold text-gm-text-muted tabular-nums">
+        <span className="ml-auto text-lg font-bold text-gm-text-muted tabular-nums">
           {pieces.length - tray.length} of {pieces.length} placed
         </span>
+        {/* Up here, so the board and tray fit a phone without scrolling. */}
+        <button
+          type="button"
+          disabled={locked || tray.length === pieces.length}
+          onClick={() => {
+            setPlaced({});
+          }}
+          className="min-h-11 rounded-gm px-3 font-gm-display text-lg font-bold text-gm-accent-ink ring-2 ring-gm-accent-ink disabled:opacity-40"
+        >
+          Reset
+        </button>
       </div>
       <div
         ref={board}
         role="group"
         aria-label="Board"
-        className="relative mx-auto grid w-full max-w-sm touch-none gap-0 overflow-hidden rounded-gm bg-gm-surface ring-1 ring-gm-border"
+        className="relative mx-auto grid w-full touch-none gap-0 overflow-hidden rounded-gm bg-gm-surface ring-1 ring-gm-border"
         style={{
           gridTemplateColumns: `repeat(${String(width)}, minmax(0, 1fr))`,
           aspectRatio: `${String(width)} / ${String(height)}`,
+          // Small enough on a short phone that the tray and Reset fit without scrolling.
+          maxWidth: `min(24rem, calc((100dvh - 23rem) * ${String(width / height)}))`,
         }}
       >
         {Array.from({ length: width * height }, (_, i) => {
           const who = owner.get(i);
+          // A placed piece being dragged fades where it was (it can still drop back there).
+          const lifted =
+            who !== undefined && drag?.from === "board" && drag.moved && drag.id === who;
           return (
             <button
               key={i}
               type="button"
               disabled={locked || who === undefined}
-              aria-label={who === undefined ? "Empty square" : "Placed piece: tap to take it back"}
-              onClick={() => {
-                if (who === undefined) return;
-                setPlaced(
-                  Object.fromEntries(Object.entries(placed).filter(([k]) => Number(k) !== who)),
-                );
+              aria-label={
+                who === undefined
+                  ? "Empty square"
+                  : "Placed piece: drag to move it, tap to take it back"
+              }
+              onPointerDown={(e) => {
+                if (who === undefined || locked) return;
+                const at = placed[who];
+                if (!at) return;
+                e.currentTarget.setPointerCapture(e.pointerId);
+                const cell = board.current
+                  ? board.current.getBoundingClientRect().width / width
+                  : 48;
+                setDrag({
+                  cell,
+                  id: who,
+                  // The square of the piece under the finger.
+                  grab: [Math.floor(i / width) - at.row, (i % width) - at.col],
+                  x: e.clientX,
+                  y: e.clientY,
+                  sx: e.clientX,
+                  sy: e.clientY,
+                  moved: false,
+                  from: "board",
+                });
               }}
-              className="m-[1px] overflow-hidden rounded-[3px] border border-gm-border/60 disabled:cursor-default"
+              onPointerMove={(e) => {
+                if (drag?.from === "board") follow(e, drag.id);
+              }}
+              onPointerUp={() => {
+                if (drag?.from === "board") {
+                  if (drag.moved) drop(drag);
+                  else takeBack(drag.id);
+                }
+                setDrag(null);
+              }}
+              onPointerCancel={() => {
+                setDrag(null);
+              }}
+              onKeyDown={(e) => {
+                // Keyboard: Enter or Space takes it back (moving needs a pointer).
+                if (who !== undefined && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  takeBack(who);
+                }
+              }}
+              className="m-[1px] touch-none overflow-hidden rounded-[3px] border border-gm-border/60 disabled:cursor-default"
               style={
                 who === undefined
                   ? undefined
-                  : art
-                    ? { background: "white", borderColor: "transparent" }
-                    : { background: colorOf(who), borderColor: "transparent" }
+                  : {
+                      background: art ? "white" : colorOf(who),
+                      borderColor: "transparent",
+                      opacity: lifted ? 0.3 : 1,
+                    }
               }
             >
               {art && shown.get(i) && (
@@ -262,7 +340,9 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
       <div
         role="group"
         aria-label="Pieces"
-        className="flex min-h-24 touch-none flex-wrap items-center justify-center gap-5 rounded-gm p-2"
+        // One row that scrolls sideways (Khai, 2026-11-14): swipe left or right to see every
+        // piece; drag one up onto the board.
+        className="-mx-4 flex min-h-24 snap-x [scrollbar-width:none] items-center gap-5 overflow-x-auto overscroll-x-contain px-4 py-1"
       >
         {tray.map((p) => (
           <button
@@ -273,7 +353,7 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
             onPointerDown={(e) => {
               if (locked) return;
               e.currentTarget.setPointerCapture(e.pointerId);
-              // The shape itself, inside the card's padding.
+              // The shape itself, inside the button's padding.
               const rect = (
                 e.currentTarget.firstElementChild ?? e.currentTarget
               ).getBoundingClientRect();
@@ -291,19 +371,11 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
                 sx: e.clientX,
                 sy: e.clientY,
                 moved: false,
+                from: "tray",
               });
             }}
             onPointerMove={(e) => {
-              setDrag((d) =>
-                d && d.id === p.id
-                  ? {
-                      ...d,
-                      x: e.clientX,
-                      y: e.clientY,
-                      moved: d.moved || Math.hypot(e.clientX - d.sx, e.clientY - d.sy) > DRAG_SLOP,
-                    }
-                  : d,
-              );
+              follow(e, p.id);
             }}
             onPointerUp={() => {
               if (drag?.id === p.id) {
@@ -322,7 +394,8 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
                 setTurns((t) => ({ ...t, [p.id]: ((t[p.id] ?? 0) + 1) % 4 }));
               }
             }}
-            className="touch-none rounded-gm bg-gm-surface p-2 ring-1 ring-gm-border transition-transform motion-safe:active:scale-95"
+            // A sideways swipe scrolls the tray; any other drag picks the piece up.
+            className="shrink-0 touch-pan-x snap-start rounded-gm p-1 transition-transform motion-safe:active:scale-95"
             style={{ opacity: drag?.id === p.id && drag.moved ? 0.25 : 1 }}
           >
             <Shape
@@ -335,17 +408,6 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
           </button>
         ))}
         {tray.length === 0 && !sent && <p className="m-0 text-gm-text-muted">All placed.</p>}
-      </div>
-      <div className="grid">
-        <Button
-          tone="secondary"
-          disabled={locked || tray.length === pieces.length}
-          onClick={() => {
-            setPlaced({});
-          }}
-        >
-          Reset
-        </Button>
       </div>
       {drag?.moved &&
         (() => {
