@@ -14,6 +14,7 @@ import { TeamNudge, TeamPanel } from "@/components/teams/team-panel";
 import { PlayerStrip } from "@/components/players/player-strip";
 import { TotalScore } from "@/components/players/total-score";
 import { useSlots } from "@/components/slots/registry";
+import { Skeleton } from "@/components/ui/skeleton";
 import { gameOpen, type EventStatus, type FinalStandings, type PublicEvent } from "@/lib/events";
 import type { HubPlays, Instructions, Seat } from "@/lib/games";
 
@@ -155,14 +156,15 @@ export function hubRows(
   });
 }
 
-function GameRow({ row }: { row: Row }) {
+function GameRow({ row, loading = false }: { row: Row; loading?: boolean }) {
   const { ScoreCard } = useSlots();
-  const card =
-    row.best === null ? (
-      <ScoreCard label={row.game.title} state={row.pending ? "pending" : "blank"} size="sm" />
-    ) : (
-      <ScoreCard label={row.game.title} value={row.best} state="scored" size="sm" />
-    );
+  const card = loading ? (
+    <Skeleton className="h-12 w-14 shrink-0" />
+  ) : row.best === null ? (
+    <ScoreCard label={row.game.title} state={row.pending ? "pending" : "blank"} size="sm" />
+  ) : (
+    <ScoreCard label={row.game.title} value={row.best} state="scored" size="sm" />
+  );
   const body = (
     <>
       <span className="grid min-w-0 gap-0.5">
@@ -206,9 +208,12 @@ function GameList({ event, status }: { event: PublicEvent; status: EventStatus }
   const rows = hubRows(event, status, plays, seat);
   // The pips count what this phone can score.
   const scorable = rows.filter((r) => r.game.mode === "solo");
+  // Until this phone's scores arrive, placeholders: never a 0 of 15 or blank cards (Khai, 2026-11-14).
+  const loading = device?.active !== null && device?.active !== undefined && !device.totalKnown;
   return (
     <section aria-label="Tonight's games" className="grid gap-4">
-      {device?.active && scorable.length > 0 && (
+      {loading && <Skeleton label="Loading your scores" className="h-10 w-full" />}
+      {device?.active && !loading && scorable.length > 0 && (
         <Progress
           done={scorable.filter((r) => r.group === "scored").length}
           total={scorable.length}
@@ -217,7 +222,7 @@ function GameList({ event, status }: { event: PublicEvent; status: EventStatus }
       )}
       <ul aria-label="Games" className="m-0 grid list-none p-0">
         {rows.map((r) => (
-          <GameRow key={r.game.id} row={r} />
+          <GameRow key={r.game.id} row={r} loading={loading} />
         ))}
       </ul>
     </section>

@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useOptionalDevice } from "@/components/players/device";
 import { useSlots } from "@/components/slots/registry";
 import { standingsApi } from "@/lib/points";
+import { SkeletonList } from "@/components/ui/skeleton";
 import { usePoll } from "./use-poll";
 
 export const PHONE_POLL_MS = 15_000;
@@ -20,7 +21,7 @@ export function PhoneLeaderboard({ slug }: { slug: string }) {
     return res.ok ? res.data : null;
   }, [slug, playerId]);
   const standings = usePoll(load, PHONE_POLL_MS);
-  if (!standings) return null;
+  if (!standings) return <SkeletonList label="Loading the leaderboard" rows={6} />;
   if (standings.hidden)
     return (
       <p className="m-0 text-lg">

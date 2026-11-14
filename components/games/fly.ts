@@ -22,7 +22,13 @@ export async function flyPoints(
     "pointer-events-none fixed z-50 inline-flex items-center gap-1 rounded-full bg-gm-text px-3 py-1 font-gm-display text-2xl font-bold text-gm-bg shadow-lg ring-2 ring-gm-bg";
   chip.style.left = `${String(a.left + a.width / 2)}px`;
   chip.style.top = `${String(a.top + a.height / 2)}px`;
-  document.body.append(chip);
+  // Inside the event's theme root, where its colors are defined: on <body> the chip had
+  // no theme colors and showed black (Khai, 2026-11-14).
+  (
+    target.closest("[data-theme-root]") ??
+    from.closest("[data-theme-root]") ??
+    document.body
+  ).append(chip);
   const dx = b.left + b.width / 2 - (a.left + a.width / 2);
   const dy = b.top + b.height / 2 - (a.top + a.height / 2);
   try {

@@ -38,3 +38,17 @@ describe("flyPoints icon", () => {
     expect(chipHtml).toContain("+80");
   });
 });
+
+describe("flyPoints colors", () => {
+  it("S08-AC19: flies inside the event's theme root, so it takes the event's colors", async () => {
+    document.body.innerHTML =
+      '<div data-theme-root="event" style="--gm-text: #fff"><p id="from">80</p><span data-total-score>100</span></div>';
+    let parent: Element | null = null;
+    animateSpy.mockImplementationOnce(function (this: Element) {
+      parent = this.parentElement;
+      return { cancel: () => undefined, finished: Promise.resolve() };
+    });
+    await flyPoints(document.getElementById("from") as Element, "+80", false);
+    expect(parent).toBe(document.querySelector("[data-theme-root]"));
+  });
+});
