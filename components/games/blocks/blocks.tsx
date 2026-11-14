@@ -26,7 +26,7 @@ type Drag = {
  * A tray piece's squares are this many px; on the board they take the board's
  * square size. Big enough to read a piece's shape at a glance (Khai, 2026-11-14).
  */
-const TRAY_CELL = 26;
+const TRAY_CELL = 28;
 /** A press that moves less than this is a tap (turn), not a drag. */
 const DRAG_SLOP = 6;
 
@@ -243,7 +243,7 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
           gridTemplateColumns: `repeat(${String(width)}, minmax(0, 1fr))`,
           aspectRatio: `${String(width)} / ${String(height)}`,
           // Small enough on a short phone that the tray and Reset fit without scrolling.
-          maxWidth: `min(24rem, calc((100dvh - 26rem) * ${String(width / height)}))`,
+          maxWidth: `min(24rem, calc((100dvh - 23rem) * ${String(width / height)}))`,
         }}
       >
         {Array.from({ length: width * height }, (_, i) => {
@@ -340,7 +340,9 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
       <div
         role="group"
         aria-label="Pieces"
-        className="flex min-h-24 flex-wrap items-center justify-center gap-x-4 gap-y-2 rounded-gm p-1"
+        // One row that scrolls sideways (Khai, 2026-11-14): swipe left or right to see every
+        // piece; drag one up onto the board.
+        className="-mx-4 flex min-h-24 snap-x [scrollbar-width:none] items-center gap-5 overflow-x-auto overscroll-x-contain px-4 py-1"
       >
         {tray.map((p) => (
           <button
@@ -392,7 +394,8 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
                 setTurns((t) => ({ ...t, [p.id]: ((t[p.id] ?? 0) + 1) % 4 }));
               }
             }}
-            className="touch-none rounded-gm p-1 transition-transform motion-safe:active:scale-95"
+            // A sideways swipe scrolls the tray; any other drag picks the piece up.
+            className="shrink-0 touch-pan-x snap-start rounded-gm p-1 transition-transform motion-safe:active:scale-95"
             style={{ opacity: drag?.id === p.id && drag.moved ? 0.25 : 1 }}
           >
             <Shape
