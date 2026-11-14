@@ -98,10 +98,11 @@ describe("Block Fit", () => {
     });
     const placements = solveBlocks(5, 4, s.pieces) ?? [];
     expect(blocks.move(s, c, { type: "solve", placements: [] }, { now: 1 }).ok).toBe(false);
-    const done = blocks.move(s, c, { type: "solve", placements }, { now: 25_000 });
+    const done = blocks.move(s, c, { type: "solve", placements }, { now: 8_000 });
     if (!done.ok) throw new Error(done.message);
     expect(blocks.score(done.state, 100)).toBe(100);
-    expect(blocksShare(180_000)).toBe(0.5);
+    expect(blocksShare(50_000)).toBeCloseTo(0.6);
+    expect(blocksShare(180_000)).toBeCloseTo(0.2);
     expect(blocks.tick(s, c, { now: 3_600_000 })).toBe(s);
   });
 

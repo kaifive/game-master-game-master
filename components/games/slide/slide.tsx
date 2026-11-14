@@ -52,7 +52,7 @@ export function SlideGame({ view: raw, onMove, busy }: GameRendererProps) {
   };
 
   return (
-    <section aria-label="Number Slide" className="grid gap-4">
+    <section aria-label={image ? "Picture Slide" : "Number Slide"} className="grid gap-4">
       <div className="flex items-baseline justify-between">
         <PuzzleClock startMs={view.elapsedMs} stopped={sent} />
         {image && (

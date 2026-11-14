@@ -17,9 +17,13 @@ export const BlocksContent = z
   .strict();
 export type BlocksContent = z.infer<typeof BlocksContent>;
 
-/** All the speed points within this; none at SLOW_MS (S22-AC3). */
-export const FAST_MS = 30_000;
-export const SLOW_MS = 180_000;
+/**
+ * Hard to score big (Khai, 2026-11-14): solving earns a fifth, and the rest
+ * is speed, all of it only within FAST_MS, none from SLOW_MS (S22-AC3).
+ */
+export const FAST_MS = 10_000;
+export const SLOW_MS = 90_000;
+export const SOLVE_SHARE = 0.2;
 
 export type BlocksState = {
   width: number;
@@ -60,7 +64,8 @@ const Move = z.object({
 });
 const fail = (message: string): MoveResult<BlocksState> => ({ ok: false, message });
 
-export const blocksShare = (tookMs: number) => solveAndSpeedShare(tookMs, FAST_MS, SLOW_MS);
+export const blocksShare = (tookMs: number) =>
+  solveAndSpeedShare(tookMs, FAST_MS, SLOW_MS, SOLVE_SHARE);
 
 export const blocks: GameLogic<BlocksContent, BlocksState, BlocksView> = {
   content: BlocksContent,
@@ -72,7 +77,7 @@ export const blocks: GameLogic<BlocksContent, BlocksState, BlocksView> = {
         : "Fill the board with every piece.",
       "Drag a piece onto the board. Tap a piece in the tray to turn it.",
       "Tap a placed piece to take it back off.",
-      "Solving it scores half the points. Solving it fast scores the rest.",
+      "Solving it earns a few points. Only the fastest score them all.",
     ],
   }),
   create(c, seed, { now }) {

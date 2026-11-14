@@ -173,7 +173,7 @@ export const holiday2026: EventConfig = {
       // Spec 21: the 3×3 sliding tile puzzle (Khai, 2026-11-14).
       id: "number-slide",
       type: "slide",
-      title: "Number Slide",
+      title: "Picture Slide",
       mode: "solo",
       visibility: "listed",
       // The logo instead of numbers, on white (Khai, 2026-11-14).

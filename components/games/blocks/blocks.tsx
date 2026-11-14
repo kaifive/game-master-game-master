@@ -21,8 +21,11 @@ type Drag = {
   cell: number;
 };
 
-/** A tray piece's squares are this many px; on the board they take the board's square size. */
-const TRAY_CELL = 22;
+/**
+ * A tray piece's squares are this many px; on the board they take the board's
+ * square size. Big enough to read a piece's shape at a glance (Khai, 2026-11-14).
+ */
+const TRAY_CELL = 30;
 /** A press that moves less than this is a tap (turn), not a drag. */
 const DRAG_SLOP = 6;
 
@@ -86,7 +89,12 @@ function Shape({
               width: cell - 2,
               height: cell - 2,
               ...(art && slice
-                ? sliceStyle(art.src, art.cols, art.rows, slice.at, slice.deg)
+                ? {
+                    ...sliceStyle(art.src, art.cols, art.rows, slice.at, slice.deg),
+                    // The piece's own color outlines each square, so the shape reads over the photo.
+                    outline: `3px solid ${color}`,
+                    outlineOffset: "-3px",
+                  }
                 : { background: color }),
             }}
           />
@@ -270,7 +278,10 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
             onPointerDown={(e) => {
               if (locked) return;
               e.currentTarget.setPointerCapture(e.pointerId);
-              const rect = e.currentTarget.getBoundingClientRect();
+              // The shape itself, inside the card's padding.
+              const rect = (
+                e.currentTarget.firstElementChild ?? e.currentTarget
+              ).getBoundingClientRect();
               const grab: Cell = [
                 Math.max(0, Math.floor((e.clientY - rect.top) / TRAY_CELL)),
                 Math.max(0, Math.floor((e.clientX - rect.left) / TRAY_CELL)),
@@ -316,7 +327,7 @@ export function BlocksGame({ view: raw, onMove, busy }: GameRendererProps) {
                 setTurns((t) => ({ ...t, [p.id]: ((t[p.id] ?? 0) + 1) % 4 }));
               }
             }}
-            className="touch-none rounded-gm p-1 transition-transform motion-safe:active:scale-95"
+            className="touch-none rounded-gm bg-gm-surface p-2 ring-1 ring-gm-border transition-transform motion-safe:active:scale-95"
             style={{ opacity: drag?.id === p.id && drag.moved ? 0.25 : 1 }}
           >
             <Shape
