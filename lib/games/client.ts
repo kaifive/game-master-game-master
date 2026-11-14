@@ -15,11 +15,19 @@ export const gamesApi = {
       `/api/events/${slug}/plays?playerId=${encodeURIComponent(playerId)}`,
       token,
     ),
-  start: (slug: string, gameId: string, token: string, playerId: string, again = false) =>
+  start: (
+    slug: string,
+    gameId: string,
+    token: string,
+    playerId: string,
+    again = false,
+    /** A countdown first: the run's clock starts this many ms from now. */
+    startIn = 0,
+  ) =>
     apiCall<PlayResponse>(
       `/api/events/${slug}/games/${gameId}/play`,
       token,
-      post(again ? { playerId, again } : { playerId }),
+      post({ playerId, ...(again ? { again } : {}), ...(startIn > 0 ? { startIn } : {}) }),
     ),
   move: (
     slug: string,

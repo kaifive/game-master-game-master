@@ -5,7 +5,7 @@ export type GameRendererProps = {
   view: unknown;
   /** `notBefore` (epoch ms): hold the reply until then, so a request can go out early (S10-AC14). */
   onMove: (move: unknown, options?: { notBefore?: number }) => void;
-  /** The local timer ran out: the page asks the server for the timed-out view. */
+  /** The local timer ran out: the page asks the server for the timed-out view (games other than trivia). */
   onTimeUp: () => void;
   busy: boolean;
   /** The game's id, for games that send more than moves (photos, spec 20). */
@@ -22,4 +22,10 @@ export type GameRenderer = {
   warnOnLeave?: boolean;
   /** Keep the game on screen this long after the move that finishes it, so its last animation plays (spec 19). */
   holdResultMs?: number;
+  /**
+   * A game scored on time: it starts after a 3-2-1, with its clock starting
+   * then, and a run left midway starts over on return in a replayable event
+   * (S08-AC18, Khai 2026-11-14).
+   */
+  countdown?: boolean;
 };

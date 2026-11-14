@@ -16,20 +16,25 @@ import type { GameRenderer } from "./types";
 
 /** Each game type's phone renderer (spec 08). */
 const RENDERERS: Readonly<Record<string, GameRenderer>> = {
-  trivia: { Play: TriviaGame, summary: triviaSummary, warnOnLeave: true },
-  timer: { Play: TimerGame, summary: timerSummary },
+  trivia: { Play: TriviaGame, summary: triviaSummary, warnOnLeave: true, countdown: true },
+  timer: { Play: TimerGame, summary: timerSummary, countdown: true },
   taps: { Play: TapsGame, summary: tapsSummary, holdResultMs: TAPS_HOLD_MS },
-  trail: { Play: TrailGame, summary: trailSummary },
-  stacker: { Play: StackerGame, summary: stackerSummary },
-  recall: { Play: RecallGame, summary: recallSummary },
+  trail: { Play: TrailGame, summary: trailSummary, countdown: true },
+  stacker: { Play: StackerGame, summary: stackerSummary, countdown: true },
+  recall: { Play: RecallGame, summary: recallSummary, countdown: true },
   jar: { Play: JarGame, summary: jarSummary },
   cache: { Play: CacheGame, summary: cacheSummary },
   color: { Play: ColorGame, summary: colorSummary },
   draw: { Play: DrawGame, summary: drawSummary },
   word: { Play: WordGame, summary: wordSummary, holdResultMs: WORD_HOLD_MS },
   "photo-challenge": { Play: PhotoGame, summary: photoSummary },
-  slide: { Play: SlideGame, summary: slideSummary, holdResultMs: SLIDE_HOLD_MS },
-  blocks: { Play: BlocksGame, summary: blocksSummary, holdResultMs: BLOCKS_HOLD_MS },
+  slide: { Play: SlideGame, summary: slideSummary, holdResultMs: SLIDE_HOLD_MS, countdown: true },
+  blocks: {
+    Play: BlocksGame,
+    summary: blocksSummary,
+    holdResultMs: BLOCKS_HOLD_MS,
+    countdown: true,
+  },
 };
 
 export const rendererFor = (type: string): GameRenderer | undefined => RENDERERS[type];

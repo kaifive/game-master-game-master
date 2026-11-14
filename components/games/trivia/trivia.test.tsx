@@ -86,14 +86,16 @@ describe("TriviaGame", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Time's up.");
   });
 
-  test("S10-AC5: when the local timer runs out, asks the server for the timed-out view", () => {
+  test("S10-AC5 S10-AC17: when the clock runs out, the question is wrong at once and the server is told", () => {
     vi.useFakeTimers();
-    const onTimeUp = vi.fn();
-    show(question({ msLeft: 1000 }), { onTimeUp });
+    const onMove = vi.fn();
+    show(question({ msLeft: 1000 }), { onMove });
     act(() => {
       vi.advanceTimersByTime(1200);
     });
-    expect(onTimeUp).toHaveBeenCalledOnce();
+    expect(onMove).toHaveBeenCalledWith({ type: "timeout" });
+    expect(screen.getByRole("status")).toHaveTextContent("Time's up.");
+    for (const b of screen.getAllByRole("button")) expect(b).toBeDisabled();
   });
 
   test("S10-AC6: sums up the result", () => {

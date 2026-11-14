@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { preload } from "react-dom";
 import { PointsIcon } from "@/components/icons/points";
 import { useReducedMotion } from "@/components/motion";
 import { useDevice } from "@/components/players/device";
@@ -27,6 +28,18 @@ type Phase =
   | { kind: "checking" }
   /** `again` starts a new run of a finished, replayable game on Start (S08-AC12). */
   | { kind: "instructions"; again: boolean }
+  /**
+   * 3-2-1 before a timed game (S08-AC18). The run starts on the server at
+   * once, with its clock set to start when the count ends, so the wait for it
+   * hides behind the count; `play` is its reply, `over` that the count ended.
+   */
+  | {
+      kind: "countdown";
+      endsAt: number;
+      play: PlayResponse | null;
+      over: boolean;
+      bestBefore: number;
+    }
   /** `hold`: the run just ended, but the game stays on screen for its last animation. */
   | { kind: "playing"; play: PlayResponse; bestBefore: number; hold?: boolean }
   | { kind: "error"; message: string };
@@ -38,6 +51,62 @@ const clockNow = () => Date.now();
 const FLIP_MS = 600;
 export const LEAVE_WARNING =
   "Leave the game? Your clock keeps running, so you may lose this question.";
+/** For a timed game that starts over when the player comes back (S08-AC18). */
+export const RESTART_WARNING = "Leave the game? You'll start this one over when you come back.";
+/** The 3-2-1 before a timed game. */
+export const COUNTDOWN_MS = 3000;
+
+/** 3, 2, 1, big, then the game. */
+function CountdownScreen({
+  endsAt,
+  waiting,
+  onDone,
+}: {
+  endsAt: number;
+  waiting: boolean;
+  onDone: () => void;
+}) {
+  const [now, setNow] = useState(clockNow);
+  const done = useRef(onDone);
+  useEffect(() => {
+    done.current = onDone;
+  }, [onDone]);
+  useEffect(() => {
+    const tick = setInterval(() => {
+      const t = clockNow();
+      setNow(t);
+      if (t >= endsAt) {
+        clearInterval(tick);
+        done.current();
+      }
+    }, 100);
+    return () => {
+      clearInterval(tick);
+    };
+  }, [endsAt]);
+  const left = Math.max(1, Math.ceil((endsAt - now) / 1000));
+  return (
+    <section aria-label="Get ready" className="grid justify-items-center gap-3 py-16 text-center">
+      {waiting && now >= endsAt ? (
+        <p aria-busy="true" className="m-0 text-gm-text-muted">
+          Getting the game ready…
+        </p>
+      ) : (
+        <>
+          <p className="m-0 text-xl font-bold text-gm-text-muted">Get ready…</p>
+          <p
+            key={left}
+            role="timer"
+            aria-live="assertive"
+            className="m-0 font-gm-display text-9xl font-bold text-gm-accent-ink tabular-nums motion-safe:animate-[gm-pop_300ms_ease-out_both]"
+          >
+            {left}
+          </p>
+        </>
+      )}
+    </section>
+  );
+}
 
 /**
  * The judges hold up the run's score card: it flips up on its handle, and a
@@ -147,6 +216,40 @@ export function GamePlayer({
   const playerId = active?.id ?? null;
   const bestNow = plays[gameId]?.best ?? 0;
 
+  // The game's pictures load while the instructions are read (Khai, 2026-11-14).
+  useEffect(() => {
+    for (const src of instructions.preload ?? []) preload(src, { as: "image" });
+  }, [instructions.preload]);
+
+  const toPlaying = (play: PlayResponse, bestBefore: number): Phase => ({
+    kind: "playing",
+    play,
+    bestBefore: play.status === "finished" ? play.best : bestBefore,
+  });
+
+  /** From Start: a timed game counts 3-2-1 while its run starts on the server. */
+  const startFresh = async (again: boolean) => {
+    if (!playerId) return;
+    if (!renderer?.countdown) {
+      await begin(again);
+      return;
+    }
+    setSheet(false);
+    setPhase({
+      kind: "countdown",
+      endsAt: clockNow() + COUNTDOWN_MS,
+      play: null,
+      over: false,
+      bestBefore: bestNow,
+    });
+    const res = await gamesApi.start(slug, gameId, await token(), playerId, again, COUNTDOWN_MS);
+    setPhase((p) => {
+      if (p.kind !== "countdown") return p;
+      if (!res.ok) return { kind: "error", message: res.message };
+      return p.over ? toPlaying(res.data, p.bestBefore) : { ...p, play: res.data };
+    });
+  };
+
   const begin = useCallback(
     async (again = false) => {
       if (!playerId) return;
@@ -181,7 +284,10 @@ export function GamePlayer({
       }
       const play = res.data.plays[gameId];
       const replay = play?.status === "finished" && replayable && !play.once && !play.waiting;
-      if (!play || replay) setPhase({ kind: "instructions", again: replay });
+      // A timed run left midway starts over, so no clock ran on while away (S08-AC18).
+      const restart =
+        play?.status === "playing" && renderer?.countdown === true && replayable && !play.once;
+      if (!play || replay || restart) setPhase({ kind: "instructions", again: replay || restart });
       else await begin();
     })();
     return () => {
@@ -201,14 +307,21 @@ export function GamePlayer({
   }, []);
 
   // Leaving mid-run costs time in a timed game, so the footer asks first (S08-AC14).
-  const inProgress =
-    renderer?.warnOnLeave === true && phase.kind === "playing" && phase.play.status === "playing";
+  const midRun = phase.kind === "playing" && phase.play.status === "playing";
+  const restarts =
+    renderer?.countdown === true && replayable && !(phase.kind === "playing" && phase.play.once);
+  const warning =
+    midRun && restarts
+      ? RESTART_WARNING
+      : midRun && renderer?.warnOnLeave === true
+        ? LEAVE_WARNING
+        : null;
   useEffect(() => {
-    setLeaveWarning(inProgress ? LEAVE_WARNING : null);
+    setLeaveWarning(warning);
     return () => {
       setLeaveWarning(null);
     };
-  }, [inProgress, setLeaveWarning]);
+  }, [warning, setLeaveWarning]);
 
   const move = async (m: unknown, options: { notBefore?: number } = {}) => {
     if (phase.kind !== "playing" || !playerId) return;
@@ -273,7 +386,7 @@ export function GamePlayer({
         <InstructionsDialog
           instructions={instructions}
           busy={busy}
-          onStart={() => void begin(phase.again)}
+          onStart={() => void startFresh(phase.again)}
           onClose={() => {
             setSheet(false);
           }}
@@ -283,10 +396,25 @@ export function GamePlayer({
       {phase.kind === "instructions" && !sheet && (
         <div className="grid justify-items-center gap-4 py-10 text-center">
           <p className="m-0 text-lg text-gm-text-muted">Tap ⓘ by the name to see how to play.</p>
-          <Button size="lg" onClick={() => void begin(phase.again)} disabled={busy}>
+          <Button size="lg" onClick={() => void startFresh(phase.again)} disabled={busy}>
             {busy ? "Starting…" : "Start"}
           </Button>
         </div>
+      )}
+      {phase.kind === "countdown" && (
+        <CountdownScreen
+          endsAt={phase.endsAt}
+          waiting={phase.play === null}
+          onDone={() => {
+            setPhase((p) =>
+              p.kind !== "countdown"
+                ? p
+                : p.play
+                  ? toPlaying(p.play, p.bestBefore)
+                  : { ...p, over: true },
+            );
+          }}
+        />
       )}
       {/* Opened again mid-game: a reminder, with a way back. */}
       {phase.kind === "playing" && sheet && phase.play.status === "playing" && (

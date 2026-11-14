@@ -192,17 +192,38 @@ function judgedLocally(view: Asked, picked: number): Asked {
   return { ...view, kind: "answered", chosen: picked, correct: shown, right };
 }
 
+/** Time ran out on the phone: wrong, shown as late, with the answer only where the game reveals it. */
+function timedOutLocally(view: Asked): Asked {
+  if (view.kind !== "question") return view;
+  const correct = readAnswerKey(view.key, view.number, view.choices.length);
+  return {
+    ...view,
+    kind: "answered",
+    chosen: null,
+    correct: view.reveal === false ? null : correct,
+    right: false,
+  };
+}
+
 const FEEDBACK = { right: "Right!", wrong: "Not quite.", late: "Time's up." };
 
 /** Trivia on the phone (spec 10): question, answers in a grid or list, a timer, then feedback. */
-export function TriviaGame({ view: raw, onMove, onTimeUp, busy }: GameRendererProps) {
+export function TriviaGame({ view: raw, onMove, busy }: GameRendererProps) {
   const serverView = raw as Asked;
   const asking = serverView.kind === "question";
   // The answer tapped on this question. With the question's answer key, the phone
   // says right or wrong at once; the server's reply then confirms it (S10-AC13, ADR-029).
   const [pick, setPicked] = useState<{ question: number; choice: number; at: number } | null>(null);
   const picked = asking && pick?.question === serverView.number ? pick.choice : null;
-  const view = picked === null ? serverView : judgedLocally(serverView, picked);
+  // The question whose clock ran out here: wrong at once, without waiting on the server.
+  const [late, setLate] = useState<number | null>(null);
+  const timedOut = asking && picked === null && late === serverView.number;
+  const view =
+    picked !== null
+      ? judgedLocally(serverView, picked)
+      : timedOut
+        ? timedOutLocally(serverView)
+        : serverView;
   // The next question waits for the server's reply, so its step is always current.
   useAdvance(
     serverView.kind === "answered",
@@ -231,8 +252,13 @@ export function TriviaGame({ view: raw, onMove, onTimeUp, busy }: GameRendererPr
           key={serverView.number}
           msLeft={serverView.msLeft}
           seconds={view.seconds}
-          running={asking && picked === null}
-          onDone={onTimeUp}
+          running={asking && picked === null && !timedOut}
+          onDone={() => {
+            // Time's up: the question is wrong, and the server is told so (S10-AC17).
+            if (!asking || picked !== null) return;
+            setLate(serverView.number);
+            onMove({ type: "timeout" });
+          }}
         />
       </div>
       <h2 className="m-0 font-gm-display text-2xl font-bold">{view.prompt}</h2>
@@ -251,7 +277,7 @@ export function TriviaGame({ view: raw, onMove, onTimeUp, busy }: GameRendererPr
               index={i}
               view={view}
               picked={picked}
-              disabled={!asking || busy || picked !== null}
+              disabled={!asking || busy || picked !== null || timedOut}
               onPick={(choiceIndex) => {
                 setPicked({ question: view.number, choice: choiceIndex, at: Date.now() });
                 onMove({ type: "answer", choice: choiceIndex });

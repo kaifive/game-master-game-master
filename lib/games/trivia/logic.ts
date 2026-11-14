@@ -15,6 +15,12 @@ export const MAX_START_IN = 2000;
 
 /** Network slack after a deadline before an answer counts as late (S10-AC5). */
 export const GRACE_MS = 2000;
+/**
+ * The phone says time's up when its clock runs out (Khai, 2026-11-14: the
+ * question is wrong at once). Its clock starts after the server's, so it never
+ * runs out early; this allows for small clock jitter.
+ */
+export const TIMEOUT_SLACK_MS = 1500;
 const SHORT_ANSWER = 16;
 
 export type TriviaState = {
@@ -76,6 +82,8 @@ export type TriviaView =
 
 const Move = z.discriminatedUnion("type", [
   z.object({ type: z.literal("answer"), choice: z.number().int().nonnegative() }),
+  /** The phone's clock ran out: the question counts as wrong (S10-AC17). */
+  z.object({ type: z.literal("timeout") }),
   /** `startIn`: the phone shows the next question this many ms from now, so its clock starts then (S10-AC14). */
   z.object({
     type: z.literal("next"),
@@ -190,7 +198,8 @@ export const trivia: GameLogic<TriviaContent, TriviaState, TriviaView> = {
       choices,
       layout: layoutOf(choices),
       seconds: seconds(c),
-      msLeft: Math.max(0, s.deadline - now),
+      // Never more than a question's time, even while the phone counts 3-2-1 first (S08-AC18).
+      msLeft: Math.min(seconds(c) * 1000, Math.max(0, s.deadline - now)),
       reveal: replayable !== true,
     };
     if (s.phase === "question")
@@ -217,6 +226,19 @@ export const trivia: GameLogic<TriviaContent, TriviaState, TriviaView> = {
     const parsed = Move.safeParse(raw);
     if (!parsed.success) return fail("That move isn't part of this game.");
     const move = parsed.data;
+    if (move.type === "timeout") {
+      if (s.phase !== "question") return fail("This question is already answered.");
+      if (now < s.deadline - TIMEOUT_SLACK_MS) return fail("There's still time on the clock.");
+      return {
+        ok: true,
+        state: {
+          ...s,
+          phase: "answered",
+          answers: [...s.answers, { choice: null, right: false, msLeft: 0 }],
+          step: s.step + 1,
+        },
+      };
+    }
     if (move.type === "answer") {
       if (s.phase !== "question") return fail("This question is already answered.");
       const { question, order } = current(s, c);

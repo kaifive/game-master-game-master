@@ -79,14 +79,13 @@ test("S08-AC12: Play again and Again both show the instructions before the new r
   await expect(page.getByText("Question 1 of 5")).toBeVisible();
 });
 
-test("S08-AC3 S08-AC14: leaving mid-game asks first, then resumes the same question", async ({
+test("S08-AC14 S08-AC18: leaving mid-game asks first, and coming back starts the game over", async ({
   page,
 }) => {
   await joinParty(page);
   await page.getByRole("link", { name: /Holiday Trivia/ }).click();
   await page.getByRole("button", { name: "Start" }).click();
   await expect(page.getByText("Question 1 of 5")).toBeVisible();
-  const prompt = await page.getByRole("heading", { level: 2 }).last().textContent();
 
   const games = page
     .getByRole("navigation", { name: "Party" })
@@ -99,8 +98,10 @@ test("S08-AC3 S08-AC14: leaving mid-game asks first, then resumes the same quest
 
   await expect(page.getByRole("link", { name: /Holiday Trivia/ })).toContainText("Continue");
   await page.getByRole("link", { name: /Holiday Trivia/ }).click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page.getByRole("heading", { level: 2 }).last()).toHaveText(prompt ?? "");
+  // The party is replayable: the run left midway starts over, from the instructions.
+  await expect(page.getByRole("dialog", { name: "How to play" })).toBeVisible();
+  await page.getByRole("button", { name: "Start" }).click();
+  await expect(page.getByText("Question 1 of 5")).toBeVisible();
 });
 
 test("S10-AC12: answers and the main buttons are big enough to tap in a hurry", async ({
