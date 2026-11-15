@@ -67,3 +67,18 @@ test("S07-AC3 S07-AC4 S07-AC6 S07-AC7: find a player, change their points, reset
   await phone.reload();
   await expect(phone.getByRole("heading", { name: "Join the party" })).toBeVisible();
 });
+
+test("S23-AC2: the game library lists every built game, for admins only", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "tablet", "One admin run is enough");
+  await page.goto("/admin/games");
+  await expect(page.getByLabel("Passphrase")).toBeVisible();
+  await signIn(page);
+  await page.getByRole("link", { name: "Game library →" }).click();
+  await expect(page.getByRole("heading", { name: "Games", exact: true })).toBeVisible();
+  const games = page.getByRole("list", { name: "Games" });
+  await expect(games.getByRole("listitem")).toHaveCount(14);
+  await expect(games).toContainText("Stack Attack");
+  await expect(games).toContainText("stacker");
+});

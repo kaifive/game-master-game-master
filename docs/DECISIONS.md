@@ -641,3 +641,24 @@ photo records can adopt them later.
 **Consequences:** each photo passes through one function call (well under
 Vercel's 4.5 MB request limit and the Hobby function budget at party
 scale), and nothing long-lived signs uploads.
+
+---
+
+## ADR-035: A game library from one catalog; events keep choosing in files
+
+**Status:** accepted (spec 23, Khai 2026-11-15). ADR-003 stands.
+
+Khai wants a list of every game he's built to pick from when planning an
+event. He chose a reference list, not an admin builder.
+
+**Decision:** one catalog in code (`lib/games/catalog.ts`): each built game
+type's name and one-line pitch. The admin Games page and `docs/GAMES.md` are
+both made from it, and tests tie it to the registry and the doc, so neither
+drifts. An event's games stay in its event file. A game can be turned fully
+`off` there (a third visibility beside `listed` and `hidden`): kept for later,
+but not listed and not playable.
+
+**Consequences:** adding a game type means adding its catalog entry (a test
+says so) and rerunning `npm run games:doc`. Changing an event's games is still
+a code change and a deploy.
+

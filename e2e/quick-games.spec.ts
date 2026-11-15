@@ -3,13 +3,12 @@ import { expect, test, type Page } from "@playwright/test";
 // One run of each quick game on a phone (S16-AC7). They're alwaysOpen, so no host is needed.
 const unique = (base: string) => `${base}${String(Math.floor(Math.random() * 1e6))}`;
 
-async function joinAndOpen(page: Page, title: string, { open = true } = {}) {
+async function joinAndOpen(page: Page, title: string) {
   const name = unique("Qg");
   await page.goto("/holiday-2026?code=WUSH7");
   await page.getByLabel("Your name").fill(name);
   await page.getByRole("button", { name: "Join", exact: true }).click();
   await expect(page.getByRole("navigation", { name: "Party" })).toBeVisible();
-  if (!open) return name;
   await page.getByRole("link", { name: new RegExp(title) }).click();
   await page
     .getByRole("dialog", { name: "How to play" })
@@ -167,29 +166,10 @@ test("S17-AC6: Guessing Jar is scored from Controls, and the points reach the ph
   );
 });
 
-test("S17-AC6: Geocache scores a hidden code once", async ({ page }) => {
-  // Off the party's games list (Khai, 2026-11-15), but kept in its file: open it by its link.
-  await joinAndOpen(page, "Holiday Trivia", { open: false });
+test("S23-AC4: an off game's link says it isn't there", async ({ page }) => {
+  // Geocache is off at the party (spec 23); it still plays in the service tests (S17-AC4).
   await page.goto("/holiday-2026/play/geocache");
-  await page
-    .getByRole("dialog", { name: "How to play" })
-    .getByRole("button", { name: "Start" })
-    .click();
-  const box = page.getByLabel("Found a code? Type it here");
-  await box.fill("snow1");
-  await page.getByRole("button", { name: "Check code" }).click();
-  await expect(page.getByText("Found one! The points are yours.")).toBeVisible();
-  await expect(page.getByText("1 of 3 found")).toBeVisible();
-  await box.fill("SNOW1");
-  await page.getByRole("button", { name: "Check code" }).click();
-  await expect(page.getByText("You've already found that one.")).toBeVisible();
-  await page
-    .getByRole("navigation", { name: "Party" })
-    .getByRole("link", { name: /Games/ })
-    .click();
-  // Not on the party's list.
-  await expect(page.getByRole("list", { name: "Games" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Geocache/ })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "We couldn't find that game" })).toBeVisible();
 });
 
 test("S18-AC5: Color Matcher", async ({ page }) => {

@@ -162,3 +162,9 @@ export function phaseOf(scoring: EventConfig["scoring"], stored: Phase | undefin
 /** A fair maximum team size: active players ÷ teams, rounded up (spec 03). */
 export const suggestedTeamSize = (players: number, teams: number) =>
   Math.max(1, Math.ceil(players / Math.max(1, teams)));
+
+/** An event without its games that are turned off: as if they weren't in its file (S23-AC4). */
+export const withoutOffGames = (event: EventConfig): EventConfig => ({
+  ...event,
+  games: event.games.filter((g) => g.visibility !== "off"),
+});

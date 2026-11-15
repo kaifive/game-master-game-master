@@ -17,7 +17,7 @@ async function joinOnPhone(browser: Browser, name: string, baseURL: string): Pro
   return phone;
 }
 
-test("S03-AC1 S03-AC2 S03-AC3 S03-AC5 S03-AC6 S03-AC8: teams from captain to TV", async ({
+test("S03-AC1 S03-AC2 S03-AC3 S03-AC6 S03-AC8: teams from captain to TV", async ({
   page,
   browser,
 }, info) => {
@@ -80,21 +80,8 @@ test("S03-AC1 S03-AC2 S03-AC3 S03-AC5 S03-AC6 S03-AC8: teams from captain to TV"
   await mem.getByRole("button", { name: "Yes, give 15" }).click();
   await expect(mem.getByText(`You gave 15 to ${team}.`)).toBeVisible();
 
-  // The captain plays the team game, and it never pays the captain (S03-AC5). Team Trivia is
-  // off the party's games list (Khai, 2026-11-13), so it opens by its link; the list's
-  // "Captain plays" note is covered in components/events/views.test.tsx.
-  await cap.goto("/holiday-2026/play/team-trivia");
-  await cap
-    .getByRole("dialog", { name: "How to play" })
-    .getByRole("button", { name: "Start" })
-    .click();
-  for (let n = 1; n <= 5; n++) {
-    await expect(cap.getByText(`Question ${String(n)} of 5`)).toBeVisible();
-    await cap.getByRole("list", { name: "Answers" }).getByRole("button").first().click();
-    await expect(cap.getByRole("status")).toHaveText(/Right!|Not quite\./);
-  }
-  await expect(cap.getByRole("region", { name: "Your score" })).toContainText(/of 5 right/);
-  await expect(cap.locator("[data-total-score]")).toHaveAttribute("aria-label", /: 0 points$/);
+  // The captain playing a team game (S03-AC5) is covered by the service tests: the party's
+  // only team game, Team Trivia, is off (spec 23).
 
   // Team standings on the phone and the TV (S03-AC8).
   await mem

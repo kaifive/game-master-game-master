@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { describe, expect, test, vi } from "vitest";
 import { PackRoot } from "@/components/packs/judges-table/root";
 import { holiday2026 } from "@/content/events/holiday-2026";
-import { toPublicEvent, type FinalStandings } from "@/lib/events";
+import { toPublicEvent, withoutOffGames, type FinalStandings } from "@/lib/events";
 import { DeviceProvider } from "@/components/players/device";
 import { HomeCodeEntry } from "./home";
 import {
@@ -347,11 +347,15 @@ describe("S05-AC2 S03-AC3: the Leaderboard and Team tabs", () => {
 });
 
 describe("S08-AC7: sorting the games", () => {
-  test("the party's list leaves out Team Trivia, Jeopardy and Geocache and ends with the one-play games", () => {
-    const ids = hubRows(toPublicEvent(holiday2026), "live", {}, null).map((r) => r.game.id);
-    expect(ids).not.toContain("team-trivia");
-    expect(ids).not.toContain("jeopardy");
-    expect(ids).not.toContain("geocache");
+  test("S23-AC4 S23-AC5: the party's list leaves out its off games and ends with the one-play games", () => {
+    // The app loads events without their off games (lib/events/registry.ts).
+    const ids = hubRows(toPublicEvent(withoutOffGames(holiday2026)), "live", {}, null).map(
+      (r) => r.game.id,
+    );
+    for (const off of ["team-trivia", "jeopardy", "geocache"]) {
+      expect(holiday2026.games.find((g) => g.id === off)?.visibility).toBe("off");
+      expect(ids).not.toContain(off);
+    }
     expect(ids.slice(-2)).toEqual(["guessing-jar", "spot-and-snipe"]);
   });
 

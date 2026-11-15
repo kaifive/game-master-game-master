@@ -36,7 +36,7 @@ type Game = {
   alwaysOpen?: boolean;      // playable before the start too
   opensAt?: string;
   closesAt?: string;
-  visibility: "listed" | "hidden";         // hidden games appear only once unlocked
+  visibility: "listed" | "hidden" | "off"; // hidden: unlisted but its link works; off: not part of the event (spec 23)
   codes?: GameCode[];                      // server-only; never sent to clients
 };
 

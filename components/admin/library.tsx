@@ -15,6 +15,10 @@ export function EventLibrary({
         <h1 className="m-0 text-2xl font-bold">Events</h1>
         <SignOutButton />
       </div>
+      {/* Every game that's been built, for planning an event (spec 23). */}
+      <Link href="/admin/games" className="font-bold text-gm-accent-ink">
+        Game library →
+      </Link>
       <Card title="All events">
         <ul aria-label="Events" className="m-0 grid list-none gap-2 p-0">
           {events.map((e) => (

@@ -28,3 +28,4 @@ export {
   type PhotoView,
 } from "./photo/logic";
 export { adjacent, checkPath, dotMarks, facing, turnToward, type DotMark } from "./trail/puzzle";
+export { CATALOG, catalogByName, gamesDoc, type CatalogEntry } from "./catalog";

@@ -46,6 +46,7 @@ A feature item needs its spec at `Ready` before it starts.
 - [x] Spec 20, photo challenge (Spot and Snipe): photos rated by the host with a slider
 - [x] Spec 21, Number Slide: the 3×3 sliding tile puzzle
 - [x] Spec 22, Block Fit: fit grid pieces into a rectangle
+- [x] Spec 23, game library: catalog of built games (admin Games page, docs/GAMES.md); games can be turned off per event
 - [ ] Spec 13, photos: swipe triage, photo vote, slideshow (the photo challenge is spec 20)
 - [ ] Photo export and prune scripts (ADR-012)
 

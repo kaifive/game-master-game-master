@@ -46,7 +46,7 @@ Phone: a big number box and **Lock in my guess** (with a confirm, since it's fin
 - [x] AC-3: Releasing the scores awards each guess `points × max(0.33, 1 − %off ÷ 50)` through the ledger, lists the closest guesses, and re-scoring voids the old points first.
 - [x] AC-4: A right Geocache code scores its share at once and only once; a found or wrong code says so; 5 wrong codes in a row wait 30 seconds.
 - [x] AC-5: The games list shows a scored jar's points, and Geocache's points so far while it's open; neither offers Again.
-- [x] AC-6: The party's event file has a jar and a Geocache with placeholder codes, and both play end to end. (Geocache is hidden from the party's games list, Khai 2026-11-15, and kept for other events.)
+- [x] AC-6: The party's event file has a jar and a Geocache with placeholder codes; the jar plays end to end at the party. (Geocache is off at the party, Khai 2026-11-15, spec 23; it plays end to end in the service tests.)
 
 ## Tests
 
