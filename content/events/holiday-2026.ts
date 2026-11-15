@@ -226,7 +226,8 @@ export const holiday2026: EventConfig = {
       type: "cache",
       title: "Geocache",
       mode: "solo",
-      visibility: "listed",
+      // Off at the party (Khai, 2026-11-15, spec 23); kept for other events.
+      visibility: "off",
       content: {
         caches: [
           { id: "c1", label: "Placeholder: by the front door", code: "SNOW1" },
@@ -259,8 +260,8 @@ export const holiday2026: EventConfig = {
       title: "Team Trivia",
       mode: "solo",
       phase: "team",
-      // Off the games list for the party (Khai, 2026-11-13); kept for later.
-      visibility: "hidden",
+      // Off at the party (Khai, 2026-11-15, spec 23); kept for later.
+      visibility: "off",
       content: holidayTrivia,
       scoring: { awardTo: "team" },
     },
@@ -270,8 +271,8 @@ export const holiday2026: EventConfig = {
       title: "Jeopardy",
       mode: "live",
       phase: "team",
-      // Off the games list for the party (Khai, 2026-11-13); kept for later.
-      visibility: "hidden",
+      // Off at the party (Khai, 2026-11-15, spec 23); kept for later.
+      visibility: "off",
       content: {},
       scoring: { points: 0, awardTo: "team" },
     },

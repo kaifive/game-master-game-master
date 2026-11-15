@@ -37,6 +37,9 @@ const LOGIC: Readonly<Record<string, AnyGameLogic>> = {
 
 export const gameLogic = (type: string): AnyGameLogic | undefined => LOGIC[type];
 
+/** Every game type with server logic: the built games (spec 23). */
+export const builtGameTypes = (): string[] => Object.keys(LOGIC);
+
 /** Problems with a game's content, as "path: message", or [] when it is valid (S08-AC1). */
 export function contentErrors(type: string, content: unknown): string[] {
   const logic = gameLogic(type);

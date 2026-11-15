@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { holiday2026 } from "@/content/events/holiday-2026";
 import { isAppError } from "@/lib/errors";
-import type { EventConfig, EventStatus } from "@/lib/events";
+import { withoutOffGames, type EventConfig, type EventStatus } from "@/lib/events";
 import { MemoryPlayerRepo } from "@/lib/players";
 import { MemoryPlayRepo } from "./repo.memory";
 import { MemoryDrawingFiles } from "@/lib/drawings";
@@ -25,7 +25,8 @@ const event: EventConfig = {
   // Plain games here; each test turns on replayable or alwaysOpen as it needs.
   replayable: false,
   games: [
-    ...holiday2026.games.map((g) => ({ ...g, alwaysOpen: false })),
+    // Every game on here (the party turns some off), to test the service on all of them.
+    ...holiday2026.games.map((g) => ({ ...g, alwaysOpen: false, visibility: "listed" as const })),
     {
       id: "own-rules",
       type: "trivia",
@@ -244,6 +245,17 @@ describe("game service", () => {
     expect(picturesIn({ a: "/x.jpg", b: ["/x.jpg", { c: "/y.PNG" }], d: "not a picture" })).toEqual(
       ["/x.jpg", "/y.PNG"],
     );
+  });
+
+  it("S23-AC4: an off game isn't part of the event: it can't start, and has no instructions", async () => {
+    const off: EventConfig = {
+      ...event,
+      games: event.games.map((g) => (g.id === "trivia" ? { ...g, visibility: "off" as const } : g)),
+    };
+    expect((await failure(startPlay(deps, off, UID, "trivia", { playerId }))).status).toBe(404);
+    expect(instructionsFor(off, "trivia")).toBeNull();
+    expect(withoutOffGames(off).games.map((g) => g.id)).not.toContain("trivia");
+    expect(withoutOffGames(event).games).toHaveLength(event.games.length);
   });
 
   it("S04-AC1: a finished run with a new best awards the improvement, once", async () => {

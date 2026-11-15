@@ -166,23 +166,10 @@ test("S17-AC6: Guessing Jar is scored from Controls, and the points reach the ph
   );
 });
 
-test("S17-AC6: Geocache scores a hidden code once", async ({ page }) => {
-  await joinAndOpen(page, "Geocache");
-  const box = page.getByLabel("Found a code? Type it here");
-  await box.fill("snow1");
-  await page.getByRole("button", { name: "Check code" }).click();
-  await expect(page.getByText("Found one! The points are yours.")).toBeVisible();
-  await expect(page.getByText("1 of 3 found")).toBeVisible();
-  await box.fill("SNOW1");
-  await page.getByRole("button", { name: "Check code" }).click();
-  await expect(page.getByText("You've already found that one.")).toBeVisible();
-  await page
-    .getByRole("navigation", { name: "Party" })
-    .getByRole("link", { name: /Games/ })
-    .click();
-  await expect(
-    page.getByRole("link", { name: /Geocache/ }).getByRole("img", { name: /Geocache: 33 points/ }),
-  ).toBeVisible();
+test("S23-AC4: an off game's link says it isn't there", async ({ page }) => {
+  // Geocache is off at the party (spec 23); it still plays in the service tests (S17-AC4).
+  await page.goto("/holiday-2026/play/geocache");
+  await expect(page.getByRole("heading", { name: "We couldn't find that game" })).toBeVisible();
 });
 
 test("S18-AC5: Color Matcher", async ({ page }) => {

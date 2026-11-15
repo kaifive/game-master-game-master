@@ -57,7 +57,11 @@ export const GameConfig = z.object({
   title: z.string().min(1),
   mode: z.enum(["solo", "live"]),
   phase: z.enum(["individual", "team"]).optional(),
-  visibility: z.enum(["listed", "hidden"]),
+  /**
+   * listed: on the games list. hidden: off the list, but its link works.
+   * off: kept in the file for later, but not part of the event (spec 23).
+   */
+  visibility: z.enum(["listed", "hidden", "off"]),
   content: z.unknown(),
   style: z.object({ variant: z.string().optional() }).optional(),
   /** Solo games take the event's soloGamePoints and may not set points (S08-AC10). */

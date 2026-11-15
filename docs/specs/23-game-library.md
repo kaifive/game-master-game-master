@@ -1,6 +1,6 @@
 # 23: Game library
 
-**Status:** Ready
+**Status:** Done
 **Backlog:** M2
 **Depends on:** 07, 08
 
@@ -50,11 +50,11 @@ A list of every game type Khai has built, so he can see what's available when pl
 
 ## Acceptance criteria
 
-- [ ] AC-1: Every built game type has a catalog entry with a name and a one-line pitch, and every entry is a built type.
-- [ ] AC-2: `/admin/games` lists every catalog entry, sorted by name, with name, pitch and type id, and is admin-only; the admin home links to it.
-- [ ] AC-3: `docs/GAMES.md` is generated from the catalog by `npm run games:doc`, and a test fails if it doesn't match.
-- [ ] AC-4: A game with `visibility: "off"` is not on the games list, Controls or the TV, its page shows "game not found", and its play and move routes return 404; `listed` and `hidden` behave as before.
-- [ ] AC-5: At the holiday party, Geocache, Team Trivia and Jeopardy are `off`.
+- [x] AC-1: Every built game type has a catalog entry with a name and a one-line pitch, and every entry is a built type.
+- [x] AC-2: `/admin/games` lists every catalog entry, sorted by name, with name, pitch and type id, and is admin-only; the admin home links to it.
+- [x] AC-3: `docs/GAMES.md` is generated from the catalog by `npm run games:doc`, and a test fails if it doesn't match.
+- [x] AC-4: A game with `visibility: "off"` is not on the games list, Controls or the TV, its page shows "game not found", and its play and move routes return 404; `listed` and `hidden` behave as before.
+- [x] AC-5: At the holiday party, Geocache, Team Trivia and Jeopardy are `off`.
 
 ## Tests
 

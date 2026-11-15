@@ -143,7 +143,10 @@ async function changePlay(
 
 /** The solo games with logic that a page can play (spec 08). */
 export function playable(event: EventConfig, gameId: string): Omit<Ready, "points"> | null {
-  const game = event.games.find((g) => g.id === gameId && g.mode === "solo");
+  // An off game isn't part of the event (S23-AC4), even if handed the raw event file.
+  const game = event.games.find(
+    (g) => g.id === gameId && g.mode === "solo" && g.visibility !== "off",
+  );
   const logic = game ? gameLogic(game.type) : undefined;
   if (!game || !logic) return null;
   return { game, logic, content: logic.content.parse(game.content) };
@@ -387,7 +390,9 @@ export async function hubPlays(
 ): Promise<{ plays: HubPlays; total: number; seat: Seat | null }> {
   await ownsPlayer(deps, event, uid, playerId);
   const teamGames = new Set(event.games.filter(isTeamGame).map((g) => g.id));
-  const seat = teamGames.size > 0 ? await deps.seat(event.slug, playerId) : null;
+  // The seat shows the player's team too, so any event with teams needs it, team games or not.
+  const hasTeams = teamGames.size > 0 || event.scoring !== "individual";
+  const seat = hasTeams ? await deps.seat(event.slug, playerId) : null;
   const [mine, team, total] = await Promise.all([
     deps.plays.forPlayer(event.slug, playerId),
     seat?.team ? deps.plays.forPlayer(event.slug, seat.team.id) : Promise.resolve([]),

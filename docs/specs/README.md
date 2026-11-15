@@ -27,4 +27,4 @@ Statuses are explained in `../conventions/docs.md`.
 | 20 | [Photo challenge (Spot and Snipe)](20-photo-challenge.md) | M2 | Done |
 | 21 | [Number Slide](21-number-slide.md) | M2 | Done |
 | 22 | [Block Fit](22-block-fit.md) | M2 | Done |
-| 23 | [Game library](23-game-library.md) | M2 | Ready |
+| 23 | [Game library](23-game-library.md) | M2 | Done |
