@@ -7,6 +7,8 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Event** | One occasion Khai runs, such as the 2026 Wushu holiday party. Has a slug, a theme and a list of games. | `Event`, `event.slug` |
 | **Slug** | The short URL name of an event, such as `holiday-2026`. | `slug` |
 | **Library** | The list of every event, past and upcoming, at `/`. | |
+| **Game library** | Every game type that's been built, each with a name and a one-line pitch: the admin Games page and `docs/GAMES.md`, both from one catalog (spec 23). | `catalog`, `/admin/games` |
+| **Off** (a game) | A game kept in an event file but not part of the event: not listed and not playable. Beside `listed` and `hidden`. | `visibility: "off"` |
 | **Device** | A browser with a lasting Firebase anonymous uid. Has one player per event (ADR-027). | `deviceUid` |
 | **Player** | A person in one event. Lives on one device; a device can hold several (parent and kids). Not a global account. | `Player`, `playerId` |
 | **Start over** | Replacing a phone's player with a new one. The old player is forfeited; limited per phone by `restartsPerDevice`. | `restart` |

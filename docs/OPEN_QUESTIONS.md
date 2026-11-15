@@ -53,3 +53,7 @@ Move answered ones to the bottom with the answer.
 | A29 | Donate to a team you're not on? (was Q14) | Yes. |
 | A30 | Solo points in the team phase? (was Q15) | Still go to the player, so they count for their team. |
 | A31 | Showing a replay improvement? | A "+10 new best" toast on the TV, and the row slides up. |
+| A32 | Game library: choose an event's games in the admin? (spec 23) | No: the library is reference only; Claude edits the event file on request. |
+| A33 | Game library: where? (spec 23) | Both an admin Games page and `docs/GAMES.md`, made from one catalog. |
+| A34 | Game library: what per game? (spec 23) | Name and a one-line pitch. No reorder in the admin; the file's order stands. |
+| A35 | Turning a game off for an event? (spec 23) | Fully off: off the list and its link stops working; points earned stay. Geocache, Team Trivia and Jeopardy are off at the party. |
