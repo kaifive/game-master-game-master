@@ -96,7 +96,8 @@ test("S08-AC14 S08-AC18: leaving mid-game asks first, and coming back starts the
   await games.click();
   await page.getByRole("button", { name: "Leave" }).click();
 
-  await expect(page.getByRole("link", { name: /Holiday Trivia/ })).toContainText("Continue");
+  // Leaving forfeits the run: the list says Again, never Continue.
+  await expect(page.getByRole("link", { name: /Holiday Trivia/ })).toContainText("Again");
   await page.getByRole("link", { name: /Holiday Trivia/ }).click();
   // The party is replayable: the run left midway starts over, from the instructions.
   await expect(page.getByRole("dialog", { name: "How to play" })).toBeVisible();
