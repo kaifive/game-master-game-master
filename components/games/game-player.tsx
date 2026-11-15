@@ -52,7 +52,8 @@ const FLIP_MS = 600;
 export const LEAVE_WARNING =
   "Leave the game? Your clock keeps running, so you may lose this question.";
 /** For a timed game that starts over when the player comes back (S08-AC18). */
-export const RESTART_WARNING = "Leave the game? You'll start this one over when you come back.";
+export const RESTART_WARNING =
+  "Leave the game? This run ends, and you'll start over when you come back.";
 /** The 3-2-1 before a timed game. */
 export const COUNTDOWN_MS = 3000;
 
@@ -284,9 +285,9 @@ export function GamePlayer({
       }
       const play = res.data.plays[gameId];
       const replay = play?.status === "finished" && replayable && !play.once && !play.waiting;
-      // A timed run left midway starts over, so no clock ran on while away (S08-AC18).
-      const restart =
-        play?.status === "playing" && renderer?.countdown === true && replayable && !play.once;
+      // A run left midway is forfeited: coming back starts over (S08-AC18, Khai 2026-11-15).
+      // A one-chance game keeps its run, and so does any game in an event that isn't replayable.
+      const restart = play?.status === "playing" && replayable && !play.once;
       if (!play || replay || restart) setPhase({ kind: "instructions", again: replay || restart });
       else await begin();
     })();
@@ -308,8 +309,7 @@ export function GamePlayer({
 
   // Leaving mid-run costs time in a timed game, so the footer asks first (S08-AC14).
   const midRun = phase.kind === "playing" && phase.play.status === "playing";
-  const restarts =
-    renderer?.countdown === true && replayable && !(phase.kind === "playing" && phase.play.once);
+  const restarts = replayable && !(phase.kind === "playing" && phase.play.once);
   const warning =
     midRun && restarts
       ? RESTART_WARNING

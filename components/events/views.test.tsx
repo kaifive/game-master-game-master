@@ -359,7 +359,7 @@ describe("S08-AC7: sorting the games", () => {
     expect(ids.slice(-2)).toEqual(["guessing-jar", "spot-and-snipe"]);
   });
 
-  test("a playable game says Play, then Continue; a live game waits; an unbuilt one isn't listed", () => {
+  test("S08-AC18: a playable game says Play, and Again once started (never Continue); a live game waits; an unbuilt one isn't listed", () => {
     const rows = hubRows(event, "live", {}, null);
     const byId = Object.fromEntries(rows.map((r) => [r.game.id, r]));
     expect(byId.trivia).toMatchObject({ group: "open", note: "Play" });
@@ -371,7 +371,18 @@ describe("S08-AC7: sorting the games", () => {
       { trivia: { status: "playing", best: 0, runs: 1 } },
       null,
     );
-    expect(playing.find((r) => r.game.id === "trivia")?.note).toBe("Continue");
+    // Left midway: Again in a replayable event (the run starts over), Play where it isn't.
+    expect(playing.find((r) => r.game.id === "trivia")?.note).toBe(
+      event.replayable ? "Again" : "Play",
+    );
+    const notReplayable = hubRows(
+      { ...event, replayable: false },
+      "live",
+      { trivia: { status: "playing", best: 0, runs: 1 } },
+      null,
+    );
+    expect(notReplayable.find((r) => r.game.id === "trivia")?.note).toBe("Play");
+    for (const row of [...playing, ...notReplayable]) expect(row.note).not.toBe("Continue");
   });
 });
 
@@ -395,7 +406,8 @@ describe("S17-AC5: jars and caches on the games list", () => {
       best: null,
       pending: true,
     });
-    expect(byId.geocache).toMatchObject({ group: "open", note: "Continue", best: 33 });
+    // A one-chance game keeps its run: Play, not Continue.
+    expect(byId.geocache).toMatchObject({ group: "open", note: "Play", best: 33 });
     expect(byId.trivia).toMatchObject({ note: "Again" });
     const scoredJar = hubRows(
       replay,

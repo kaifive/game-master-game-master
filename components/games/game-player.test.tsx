@@ -217,20 +217,23 @@ describe("GamePlayer", () => {
 
   test("S08-AC11: a result has Back to games beside Play again", async () => {
     setReducedMotion(true);
-    api.plays.mockReturnValue(ok({ plays: { trivia: { status: "playing", best: 0, runs: 1 } } }));
+    api.plays.mockReturnValue(ok({ plays: {} }));
     api.start.mockReturnValue(ok(finished));
     page(true);
-    await userEvent.setup().click(await screen.findByRole("button", { name: "Back to games" }));
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Start" }));
+    await user.click(await screen.findByRole("button", { name: "Back to games" }));
     expect(push).toHaveBeenCalledWith("/holiday-2026");
     expect(screen.getByRole("button", { name: "Play again" })).toBeInTheDocument();
   });
 
   test("S08-AC12: Play again on a result shows the instructions before the new run", async () => {
     setReducedMotion(true);
-    api.plays.mockReturnValue(ok({ plays: { trivia: { status: "playing", best: 0, runs: 1 } } }));
+    api.plays.mockReturnValue(ok({ plays: {} }));
     api.start.mockReturnValueOnce(ok(finished)).mockReturnValueOnce(ok(question));
     page(true);
     const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Start" }));
     await user.click(await screen.findByRole("button", { name: "Play again" }));
     expect(await screen.findByRole("dialog", { name: "How to play" })).toBeInTheDocument();
     expect(api.start).toHaveBeenCalledTimes(1);
@@ -275,7 +278,10 @@ describe("GamePlayer", () => {
     api.start.mockReturnValue(ok(question));
     api.move.mockReturnValue(ok({ ...finished, best: 90 }));
     page(true);
-    await userEvent.setup().click(await screen.findByRole("button", { name: "Rudolph" }));
+    const user = userEvent.setup();
+    // Left midway last time: that run is forfeited, so it starts over from the instructions.
+    await user.click(await screen.findByRole("button", { name: "Start" }));
+    await user.click(await screen.findByRole("button", { name: "Rudolph" }));
     expect(await screen.findByText("Your best: 90")).toBeInTheDocument();
     await waitFor(() => {
       expect(device.refreshPlays).toHaveBeenCalled();

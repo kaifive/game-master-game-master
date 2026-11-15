@@ -67,10 +67,16 @@ const Body = ({ children }: { children: React.ReactNode }) => (
 
 const listed = (event: PublicEvent) => event.games.filter((g) => g.visibility === "listed");
 
-/** The action at the end of an open row (S08-AC7, AC12). */
-function playLabel(play: HubPlays[string] | undefined): string {
+/**
+ * The action at the end of an open row (S08-AC7, AC12). Never "Continue"
+ * (Khai, 2026-11-15): leaving a run forfeits it, so a replayable game left
+ * midway says Again and starts over. A one-chance game, or any game in an
+ * event that isn't replayable, keeps its run and says Play.
+ */
+function playLabel(play: HubPlays[string] | undefined, replayable: boolean): string {
   if (!play) return "Play";
-  return play.status === "playing" ? "Continue" : "Again";
+  if (play.status === "playing") return replayable && !play.once ? "Again" : "Play";
+  return "Again";
 }
 
 /** Why a team game can't be opened from this phone, or null when it can (S03-AC5). */
@@ -143,7 +149,7 @@ export function hubRows(
         game,
         group: "open",
         href,
-        note: playLabel(play),
+        note: playLabel(play, event.replayable),
         best: play?.best ? play.best : null,
       };
     return {
