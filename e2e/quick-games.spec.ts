@@ -3,12 +3,13 @@ import { expect, test, type Page } from "@playwright/test";
 // One run of each quick game on a phone (S16-AC7). They're alwaysOpen, so no host is needed.
 const unique = (base: string) => `${base}${String(Math.floor(Math.random() * 1e6))}`;
 
-async function joinAndOpen(page: Page, title: string) {
+async function joinAndOpen(page: Page, title: string, { open = true } = {}) {
   const name = unique("Qg");
   await page.goto("/holiday-2026?code=WUSH7");
   await page.getByLabel("Your name").fill(name);
   await page.getByRole("button", { name: "Join", exact: true }).click();
   await expect(page.getByRole("navigation", { name: "Party" })).toBeVisible();
+  if (!open) return name;
   await page.getByRole("link", { name: new RegExp(title) }).click();
   await page
     .getByRole("dialog", { name: "How to play" })
@@ -167,7 +168,13 @@ test("S17-AC6: Guessing Jar is scored from Controls, and the points reach the ph
 });
 
 test("S17-AC6: Geocache scores a hidden code once", async ({ page }) => {
-  await joinAndOpen(page, "Geocache");
+  // Off the party's games list (Khai, 2026-11-15), but kept in its file: open it by its link.
+  await joinAndOpen(page, "Holiday Trivia", { open: false });
+  await page.goto("/holiday-2026/play/geocache");
+  await page
+    .getByRole("dialog", { name: "How to play" })
+    .getByRole("button", { name: "Start" })
+    .click();
   const box = page.getByLabel("Found a code? Type it here");
   await box.fill("snow1");
   await page.getByRole("button", { name: "Check code" }).click();
@@ -180,9 +187,9 @@ test("S17-AC6: Geocache scores a hidden code once", async ({ page }) => {
     .getByRole("navigation", { name: "Party" })
     .getByRole("link", { name: /Games/ })
     .click();
-  await expect(
-    page.getByRole("link", { name: /Geocache/ }).getByRole("img", { name: /Geocache: 33 points/ }),
-  ).toBeVisible();
+  // Not on the party's list.
+  await expect(page.getByRole("list", { name: "Games" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Geocache/ })).toHaveCount(0);
 });
 
 test("S18-AC5: Color Matcher", async ({ page }) => {

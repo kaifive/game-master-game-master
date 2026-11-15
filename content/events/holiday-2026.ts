@@ -226,7 +226,8 @@ export const holiday2026: EventConfig = {
       type: "cache",
       title: "Geocache",
       mode: "solo",
-      visibility: "listed",
+      // Off the games list for the party (Khai, 2026-11-15); kept for other events.
+      visibility: "hidden",
       content: {
         caches: [
           { id: "c1", label: "Placeholder: by the front door", code: "SNOW1" },
