@@ -63,3 +63,7 @@ Move answered ones to the bottom with the answer.
 | A39 | Showdowns: pacing? (spec 24) | The host taps Next in Controls for every step. |
 | A40 | Animated how-to-play? (spec 24) | On the TV, for showdowns first; solo games later in their own spec. |
 | A41 | Land Mass rules? (spec 24) | Pieces go anywhere they fit; the game ends when nothing in the tray fits (after one fresh tray); a new teammate plays each turn; points ranked by squares held (150/100/70/50/30, then 10). |
+| A42 | Auction: reuse numbers? (spec 24) | No: each team has 1 to 10, each once per game. Tied bids cancel; the highest untied bid wins. |
+| A43 | Present Shuffle: how do teams pick? (spec 24) | One at a time in turn order; a picked present is gone for everyone. |
+| A44 | Stocking Stuffer: turns or together? (spec 24) | All at once each round: Open or Bank; coal empties the round's pot. |
+| A45 | Snowball to 21: points? (spec 24) | Three rounds, a different team starting each; making exactly 21 scores 100. |

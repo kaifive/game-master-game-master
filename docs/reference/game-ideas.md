@@ -38,6 +38,9 @@ game trains it where that fits.
 Like Land Mass, the best ones make teams play against each other, not just
 side by side.
 
+Now in spec 24 (2026-11-17): Present Shuffle (from Shell Game), Auction (from
+Blind Bid), Snowball to 21, Stocking Stuffer and Snow Sum.
+
 ### Outsmart the other teams
 
 | Idea | How it plays | Trained by |
