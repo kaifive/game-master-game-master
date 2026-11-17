@@ -36,6 +36,9 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Live session** | A game the admin runs for the whole room at once, such as Jeopardy. | `LiveSession` |
 | **Round** | One question or prompt inside a live session. Opened, buzzed, judged, closed. | `Round` |
 | **Buzz** | A captain pressing the buzzer during an open round. Stamped with server time. | `Buzz` |
+| **Showdown** | A team game on the TV with each captain's phone as the controller: Fly-by Count, Memory Path, Blind Stop (spec 24). | `flyby`, `path`, `blindstop` |
+| **Who's up** | The step where each captain picks which teammate plays the round. | |
+| **Rotation** | A team's turn order for showdowns: nobody goes again until everyone has gone. Kept for the whole event. | `rotation` |
 | **Judge** | The admin marking a buzz right or wrong. | `judge()` |
 | **Result** | The finished outcome of one player's solo game. One scored result per player per game. | `GameResult` |
 | **Award** | One grant of points, to a player or a team. Always a ledger entry. | `Award` |

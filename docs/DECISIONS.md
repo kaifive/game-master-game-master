@@ -662,3 +662,25 @@ but not listed and not playable.
 says so) and rerunning `npm run games:doc`. Changing an event's games is still
 a code change and a deploy.
 
+
+---
+
+## ADR-036: Team showdowns: the TV shows the game, the captain's phone is the controller
+
+**Status:** accepted (spec 24, Khai 2026-11-17). Builds on ADR-014 and spec 11.
+
+Khai wants team games where the solo games are practice, teams choose who
+plays, and the same people don't play every time, with only the captain's
+phone needed.
+
+**Decision:** showdowns run as live sessions (spec 11): the TV carries the
+game, each captain's phone is the controller, and the host steps through with
+Next in Controls. Each round the captain picks who's up; a rotation per team,
+kept in Realtime Database for the whole event, blocks repeats until everyone
+has gone. Scoring is per game and goes to teams through the ledger. Timing
+that has to be fair to a hundredth (Blind Stop) is measured on the phone, as
+in T-Timer, because network lag would swamp it.
+
+**Consequences:** spec 11's engine needs a step machine with host-driven
+Next, which showdowns and Jeopardy (spec 12) share. Each showdown type adds a
+TV view, a phone controller and a short looping demo.

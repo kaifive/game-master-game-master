@@ -57,3 +57,8 @@ Move answered ones to the bottom with the answer.
 | A33 | Game library: where? (spec 23) | Both an admin Games page and `docs/GAMES.md`, made from one catalog. |
 | A34 | Game library: what per game? (spec 23) | Name and a one-line pitch. No reorder in the admin; the file's order stands. |
 | A35 | Turning a game off for an event? (spec 23) | Fully off: off the list and its link stops working; points earned stay. Geocache, Team Trivia and Jeopardy are off at the party. |
+| A36 | Showdowns: who plays each round? (spec 24) | The captain picks; nobody repeats until everyone on the team has gone, across all showdowns in the event. One device per team: the captain's. |
+| A37 | Showdowns: points? (spec 24) | Per game. Fly-by Count: exact 100, one off 50. Memory Path: only the finisher scores. Blind Stop: ranked by closeness, 100/70/50/30, then 10, plus 50 for exactly 10.00. |
+| A38 | Memory Path: taking too long on a step? (spec 24) | Out, like a wrong step. |
+| A39 | Showdowns: pacing? (spec 24) | The host taps Next in Controls for every step. |
+| A40 | Animated how-to-play? (spec 24) | On the TV, for showdowns first; solo games later in their own spec. |
