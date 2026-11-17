@@ -52,9 +52,13 @@ A feature item needs its spec at `Ready` before it starts.
 
 ## M3: Live sessions (by Dec 13)
 
-- [ ] Spec 11, live session engine: state machine, rounds, admin controls
+- [ ] Spec 11, live session engine: server-owned sessions, polled views on a shared clock, host steps (ADR-037)
 - [ ] Spec 12, buzzer and Jeopardy board
-- [ ] Spec 24, team showdowns: twelve games (Fly-by Count, Memory Path, Blind Stop, Land Mass, Present Shuffle, Auction, Snowball to 21, Stocking Stuffer, Snow Sum, Share or Snatch, Last Second, Color Count) on the TV with captains' phones as controllers (waiting on Khai's go-ahead to build)
+- [ ] Spec 24, showdown framework: who's up and rotation, TV demos, fair leads and clocks, bot play tests
+- [ ] Spec 25, showdowns: Fly-by Count, Snow Sum, Color Count, Blind Stop, Last Second
+- [ ] Spec 26, showdowns: Auction, Stocking Stuffer, Share or Snatch
+- [ ] Spec 27, showdowns: Memory Path, Present Shuffle, Snowball to 21, Land Mass
+- [ ] Blind review of every showdown (docs/reviews/showdowns.md)
 
 ## M4: Party ready (Dec 14–18)
 

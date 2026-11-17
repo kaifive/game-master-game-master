@@ -6,6 +6,8 @@
 - Status line at the top: `Draft` → `Ready` → `Building` → `Done`.
   - **Draft:** ideas and questions. Don't build.
   - **Ready:** Khai has agreed; acceptance criteria are concrete.
+    `check:ac` fails a Ready spec whose criteria have no tests, so an agreed
+    spec waits as "Draft (agreed)" and turns Ready in the PR that builds it.
   - **Building:** code in progress.
   - **Done:** shipped; the spec describes what the code does.
 - A spec says *what* and *why*. Code-level *how* belongs only where it is a

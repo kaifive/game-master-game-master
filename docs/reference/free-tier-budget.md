@@ -50,6 +50,7 @@ full 1 GB.
 | Team changes (captains, names, joins, moves), each rewriting the summary | ~100 | ~6,000 | ~200 | small |
 | Donations | ~100 | ~300 | ~400 | small |
 | Controls open all night, refreshing every minute (~55 reads each) | 180 | ~10,000 | 0 | small |
+| Showdowns: 50 phones, TV and Controls polling the live view every 700 ms for 30 minutes (ADR-037) | ~130,000 fetches | 0 | ~2,000 | ~300 MB |
 | **Total** | | **~26,000** | **~9,000** | **< 1 GB** |
 
 About half of Firestore's daily read limit, 45% of writes. Fine, with room
