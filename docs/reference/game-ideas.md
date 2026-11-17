@@ -32,3 +32,43 @@ game trains it where that fits.
 | **Rhythm Strikes** | Tap in time with drumbeats; on-beat taps score. |
 | **Photo Pairs** | A memory card game with club photos: flip two at a time to find pairs. |
 | **Count the Kicks** | A short clip of a form plays once; how many kicks were in it? |
+
+## More team showdowns (2026-11-17)
+
+Like Land Mass, the best ones make teams play against each other, not just
+side by side.
+
+### Outsmart the other teams
+
+| Idea | How it plays | Trained by |
+| ---- | ------------ | ---------- |
+| **White Elephant** | Wrapped presents with hidden point values sit on the TV. On its turn a team opens a new one or steals an opened one from another team (a present can be stolen twice, then it's locked). Values are revealed at the end. The holiday game. | (none: pure strategy) |
+| **Blind Bid** | Each round a prize card (worth 20 to 100) goes up; every team secretly bids from a shared budget of 100 for the whole game. Highest bid wins it; tied top bids both lose. | Guessing Jar |
+| **Snowball to 21** | A shared snowball count starts at 0; teams take turns adding 1, 2 or 3. Whoever makes it exactly 21 wins the round. A real strategy you can figure out, so it gets better each round. | (none: logic) |
+| **Tower Topple** | One shared tower on the TV; teams take turns dropping a sliding present on it, Stack Attack style. Each row narrows; the team whose present misses loses points, and everyone who placed before them scores. | Stack Attack |
+| **Trap Path** | Memory Path, but before it starts each team secretly hides one trap square for the others. Step on a trap and you're out; your own trap is safe for you. | Pathfinder |
+
+### Fast hands
+
+| Idea | How it plays | Trained by |
+| ---- | ------------ | ---------- |
+| **Grid Grab** | Numbers 1 to 30 light up on a TV grid one at a time; the first team to tap that square on their phone claims it. Claim squares in a row of three for a bonus. | Rapid Recall |
+| **Stance Call** | The TV calls a stance and a direction ("Horse! Left!"); tap the matching picture. Wrong or last is out; it speeds up until one team is left. Like Simon Says. | Wushu Trivia |
+| **Musical Mats** | Music plays and the TV shows mats; when it stops, tap a mat. One fewer mat than teams each round, and two teams on the same mat both bounce. Musical chairs. | (none: luck and nerve) |
+| **Snowball Shot** | A target slides across the TV; tap to throw when it's lined up. Hits score, and a bullseye freezes another team's next throw. | T-Timer |
+
+### Push your luck
+
+| Idea | How it plays | Trained by |
+| ---- | ------------ | ---------- |
+| **Stocking Stuffer** | Each turn, open a stocking for points (5 to 30) or bank what you have. Pull a lump of coal and you lose everything you didn't bank this round. | (none: nerve) |
+| **Ice Bridge** | Two tiles per step, one cracked; teams pick left or right to cross, and a wrong pick drops them. Teams who go later learn from the falls before them. | Memory Path |
+
+### Watch closely
+
+| Idea | How it plays | Trained by |
+| ---- | ------------ | ---------- |
+| **Snow Sum** | Snowflakes fall on the TV with numbers and signs (+3, −2, ×2); keep a running total in your head and type the answer. | Rapid Recall |
+| **Mirror Me** | Half a pattern lights up on a grid; tap the mirror image on your side. | Pathfinder |
+| **Unblur** | A club photo starts blurred and slowly sharpens; buzz in and pick who or what it is. The sooner, the more points. | Trivia |
+| **Shell Game** | Coach's medal goes under one of three presents, which shuffle faster each round; pick the right present. | Rapid Recall |
