@@ -67,3 +67,6 @@ Move answered ones to the bottom with the answer.
 | A43 | Present Shuffle: how do teams pick? (spec 24) | One at a time in turn order; a picked present is gone for everyone. |
 | A44 | Stocking Stuffer: turns or together? (spec 24) | All at once each round: Open or Bank; coal empties the round's pot. |
 | A45 | Snowball to 21: points? (spec 24) | Three rounds, a different team starting each; making exactly 21 scores 100. |
+| A46 | Share or Snatch: who plays whom? (spec 24) | Random pairs for three rounds over a pot of 100; an odd team sits a round out. |
+| A47 | Last Second: is the countdown visible? Points? (spec 24) | Fully visible. Ranked by how late you stopped before zero (100/70/50/30, then 10); hitting zero scores 0. |
+| A48 | Color Count: points? (spec 24) | Ranked by closeness (100/70/50/30, then 10). The color to count is only asked at the end. |

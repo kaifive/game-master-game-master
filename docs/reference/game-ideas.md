@@ -78,6 +78,9 @@ Blind Bid), Snowball to 21, Stocking Stuffer and Snow Sum.
 
 ## Even more team showdowns (2026-11-17)
 
+Now in spec 24 (2026-11-17): Share or Snatch, Last Second (a visible
+countdown: stop as late as you dare) and Color Count (from Count the Reds).
+
 ### Mind games
 
 | Idea | How it plays |

@@ -1,12 +1,12 @@
 # 24: Team showdowns
 
-**Status:** Ready
+**Status:** Draft (agreed with Khai 2026-11-17; moves to Ready when he says to build, since Ready means tests come first)
 **Backlog:** M3
 **Depends on:** 03, 11
 
 ## Summary
 
-Team games played on the big screen, with each team's captain's phone as the controller (Khai, 2026-11-17). The solo games train players for them: a showdown is like a solo game, but not exactly the same, so a team has to choose who is best for it. Each round, a team sends one player, and nobody goes again until everyone on their team has had a turn. The host runs the pace from Controls. Before each game the TV plays a short animated demo of how it works, not just text. Nine games:
+Team games played on the big screen, with each team's captain's phone as the controller (Khai, 2026-11-17). The solo games train players for them: a showdown is like a solo game, but not exactly the same, so a team has to choose who is best for it. Each round, a team sends one player, and nobody goes again until everyone on their team has had a turn. The host runs the pace from Controls. Before each game the TV plays a short animated demo of how it works, not just text. Twelve games:
 
 - **Fly-by Count:** a grid of presents flies across the TV; teams count them. Like Mario Party's "Goomba Spotting". Trained by Rapid Recall.
 - **Memory Path:** a long winding path lights up across a grid and then hides; teams take turns crossing it from memory, and a wrong or slow step knocks them out. Like MrBeast's memorize-the-path challenge. Trained by Pathfinder.
@@ -17,6 +17,9 @@ Team games played on the big screen, with each team's captain's phone as the con
 - **Snowball to 21:** a shared count goes up by 1, 2 or 3 a turn; whoever lands on exactly 21 wins. A classic strategy game you can work out.
 - **Stocking Stuffer:** every round, open another stocking for points or bank what you have; coal loses the round's haul. Push your luck.
 - **Snow Sum:** snowflakes with +3, −2 or ×2 fall on the TV; keep a running total in your head. Trained by Rapid Recall.
+- **Share or Snatch:** two teams, one pot: each secretly picks Share or Snatch. Both share, they split it; one snatches, they take it all; both snatch, nobody gets it. Pure nerve and trust.
+- **Last Second:** a countdown runs on the TV; stop it as late as you dare. The last team to stop before zero wins; hit zero and you get nothing. Trained by T-Timer.
+- **Color Count:** ornaments of different colors flash on the TV; only at the end does it ask how many of one color there were, so teams don't know which to count. Trained by Rapid Recall.
 
 ## User stories
 
@@ -30,7 +33,7 @@ Team games played on the big screen, with each team's captain's phone as the con
 
 ### Showdowns in general
 
-1. A showdown is a team game (`phase: "team"`, `mode: "live"`) of type `flyby`, `path`, `blindstop`, `landmass`, `shuffle`, `auction`, `to21`, `stockings` or `snowsum`, run as a live session (spec 11). One runs at a time. Only captains' phones control it (ADR-014). Other players' phones show "Watch the TV" and their team's status.
+1. A showdown is a team game (`phase: "team"`, `mode: "live"`) of type `flyby`, `path`, `blindstop`, `landmass`, `shuffle`, `auction`, `to21`, `stockings`, `snowsum`, `snatch`, `lastsecond` or `colorcount`, run as a live session (spec 11). One runs at a time. Only captains' phones control it (ADR-014). Other players' phones show "Watch the TV" and their team's status.
 2. **Steps, driven by the host's Next in Controls:** intro (the animated demo) → who's up → play → results → (next round: who's up again) → final standings → end. Controls shows which step is live and what Next will do. The host can also end a showdown early; points already given stay.
 3. **Who's up.** At the start of each round, each captain's phone lists their team. The captain taps who's playing, and that person takes the captain's phone. Rotation: a player can't be picked again until everyone on their team has had a turn; the app greys them out. When everyone has gone, the rotation starts over. Rotation counts across every showdown in the event, so it spreads turns across the night, not just one game. A team of one is always its captain. The TV shows each team's player for the round. If a captain hasn't picked when the host taps Next, the app picks the next teammate in rotation.
 4. **Points** go to the team through the ledger (ADR-006, ADR-030), each game by its own rule (below). Results show each team's answer or progress and the points.
@@ -104,6 +107,24 @@ Team games played on the big screen, with each team's captain's phone as the con
 39. Play: the snowflakes fall one at a time on the TV, starting from 0. When the last has fallen, every team types the total within 10 s and locks it in.
 40. Results: the TV replays the sum step by step. **Points per round: exactly right 100, one off 50, otherwise 0.**
 
+### Share or Snatch (`snatch`)
+
+41. Three rounds. Each round the teams are paired at random, never the same pair twice in a game if it can be helped; with an odd number of teams, one sits the round out, a different team each time.
+42. Each pair plays for a pot of 100, shown on the TV with both team names. Each team secretly taps **Share** or **Snatch** within 15 s (no choice counts as Share). The TV reveals both at once.
+43. **Points: both share, 50 each; one snatches, that team gets 100 and the other 0; both snatch, 0 each.**
+
+### Last Second (`lastsecond`)
+
+44. Content: rounds (default 3), countdown length (default 10 s).
+45. Play: a big countdown runs on the TV, fully visible (Khai, 2026-11-17), from 10.00 to 0.00. Each team's player taps **Stop** on the captain's phone whenever they dare. Each phone times its stop from when it got the start, to the hundredth, like Blind Stop. A team that hasn't stopped by zero has busted.
+46. Results: the TV shows every team's stop time, latest first, and the busts. **Points per round: ranked by how late they stopped before zero: 100, 70, 50, 30, then 10 for every other team that stopped; a bust scores 0.** Ties share the place.
+
+### Color Count (`colorcount`)
+
+47. Content: rounds (default 3), getting harder: 3 colors and 12 ornaments over 4 s, 4 colors and 18 over 3.5 s, 5 colors and 24 over 3 s; dealt from the seed.
+48. Play: ornaments of different colors flash on the TV, a few at a time. Only when they're done does the TV ask "How many **red**?" (one color picked from the seed), so teams have to keep track of every color. Every team types a number within 10 s.
+49. Results: the TV replays the flashes with that color highlighted and counted. **Points per round: ranked by closeness: 100, 70, 50, 30, then 10; exact gets the top place even if alone; ties share.**
+
 ## Data
 
 - Showdown game content in the event file, validated per type like solo games.
@@ -148,12 +169,15 @@ Team games played on the big screen, with each team's captain's phone as the con
 - [ ] AC-12: Snowball to 21 runs three rounds with a different team starting each, takes 1, 2 or 3 per turn (never past 21, 1 if too slow), and pays 100 to the team that makes exactly 21.
 - [ ] AC-13: Stocking Stuffer takes Open or Bank from every team at once each round (Bank if no choice), reveals each opener's seeded stocking, empties a team's pot and puts it out for the round on coal, ends the round when all have banked or busted, and pays what each team banked.
 - [ ] AC-14: Snow Sum deals harder seeded snowflake sums each round, takes one locked-in total per team within 10 s, and scores exact 100, one off 50, else 0.
+- [ ] AC-15: Share or Snatch pairs teams at random for three rounds (an odd team out sits a round, a different one each time), takes one secret Share or Snatch per team (Share if none), and pays 50/50, 100/0 or 0/0.
+- [ ] AC-16: Last Second runs a visible countdown, takes each team's phone-timed stop, busts teams that didn't stop by zero, and ranks the rest by how late they stopped: 100, 70, 50, 30, then 10, ties sharing, busts 0.
+- [ ] AC-17: Color Count flashes seeded colored ornaments, asks for one color only at the end, takes one number per team within 10 s, and ranks by closeness: 100, 70, 50, 30, then 10, ties sharing.
 
 ## Tests
 
-- Unit: the step machine and rotation (AC-1, AC-2); each game's dealing and scoring from a seed (AC-5 to AC-7, AC-9 to AC-14); Land Mass placement, refill, swap and end (AC-9); Auction ties and spent numbers (AC-11); Snowball to 21 limits (AC-12); Stocking Stuffer pots and coal (AC-13); award ids (AC-8).
+- Unit: the step machine and rotation (AC-1, AC-2); each game's dealing and scoring from a seed (AC-5 to AC-7, AC-9 to AC-17); Land Mass placement, refill, swap and end (AC-9); Auction ties and spent numbers (AC-11); Snowball to 21 limits (AC-12); Stocking Stuffer pots and coal (AC-13); award ids (AC-8).
 - Component: captain who's-up list with greyed players; each controller; Watch the TV for others (AC-2, AC-3).
-- E2E: a showdown with two teams on two captain phones, the TV and Controls, through each game type (AC-1 to AC-14).
+- E2E: a showdown with two teams on two captain phones, the TV and Controls, through each game type (AC-1 to AC-17).
 
 ## Out of scope
 
@@ -163,4 +187,4 @@ Team games played on the big screen, with each team's captain's phone as the con
 
 ## Open questions
 
-None open. Answered 2026-11-17: A36–A45 in `OPEN_QUESTIONS.md`.
+None open. Answered 2026-11-17: A36–A48 in `OPEN_QUESTIONS.md`.

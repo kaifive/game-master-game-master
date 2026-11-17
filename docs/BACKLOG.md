@@ -54,7 +54,7 @@ A feature item needs its spec at `Ready` before it starts.
 
 - [ ] Spec 11, live session engine: state machine, rounds, admin controls
 - [ ] Spec 12, buzzer and Jeopardy board
-- [ ] Spec 24, team showdowns: nine games (Fly-by Count, Memory Path, Blind Stop, Land Mass, Present Shuffle, Auction, Snowball to 21, Stocking Stuffer, Snow Sum) on the TV with captains' phones as controllers (waiting on Khai's go-ahead to build)
+- [ ] Spec 24, team showdowns: twelve games (Fly-by Count, Memory Path, Blind Stop, Land Mass, Present Shuffle, Auction, Snowball to 21, Stocking Stuffer, Snow Sum, Share or Snatch, Last Second, Color Count) on the TV with captains' phones as controllers (waiting on Khai's go-ahead to build)
 
 ## M4: Party ready (Dec 14–18)
 
