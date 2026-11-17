@@ -6,6 +6,8 @@ import { GamePlayer } from "@/components/games/game-player";
 import { HowToPlayButton } from "@/components/games/instructions";
 import { rendererFor } from "@/components/games/renderers";
 import { PhoneLeaderboard } from "@/components/leaderboard/phone-leaderboard";
+import { LiveBanner } from "@/components/live/live-banner";
+import { LivePhone } from "@/components/live/live-phone";
 import { useOptionalDevice } from "@/components/players/device";
 import { PlayerHub } from "@/components/players/hub";
 import { ArrowIcon, BackIcon } from "@/components/icons/nav";
@@ -273,6 +275,7 @@ export function LiveView({ event }: { event: PublicEvent }) {
       <Body>
         <JoinGate>
           <PlayerStrip />
+          {event.games.some((g) => g.mode === "live") && <LiveBanner slug={event.slug} />}
           {event.scoring !== "individual" && <TeamNudge slug={event.slug} />}
           <GameList event={event} status="live" />
         </JoinGate>
@@ -289,6 +292,20 @@ export function LeaderboardView({ event }: { event: PublicEvent }) {
       <Body>
         <JoinGate>
           <PhoneLeaderboard slug={event.slug} />
+        </JoinGate>
+      </Body>
+    </>
+  );
+}
+
+/** A live game on this phone: the captain's controller, or Watch the TV (specs 11, 24). */
+export function LiveGameView({ event }: { event: PublicEvent }) {
+  return (
+    <>
+      <EventBanner event={event} title="Live game" back />
+      <Body>
+        <JoinGate>
+          <LivePhone />
         </JoinGate>
       </Body>
     </>

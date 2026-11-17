@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useId, useState } from "react";
 import type { EventStatus } from "@/lib/events";
+import { LiveControls } from "@/components/live/live-controls";
 import { AdminButton, Card, field, StatusBadge } from "./ui";
 
 type Player = {
@@ -796,11 +797,14 @@ export function Controls({
   name,
   games,
   initial,
+  live = false,
 }: {
   slug: string;
   name: string;
   games: Game[];
   initial: View;
+  /** Whether the event has live games: shows the Live card (S11-AC1). */
+  live?: boolean;
 }) {
   const [view, setView] = useState(initial);
   const [donations, setDonations] = useState<Donation[] | null>(null);
@@ -943,6 +947,8 @@ export function Controls({
         </div>
         <BoardSwitches board={view.board ?? { phones: true, tv: true }} run={run} busy={busy} />
       </Card>
+
+      {live && <LiveControls slug={slug} />}
 
       {view.teams && (
         <>

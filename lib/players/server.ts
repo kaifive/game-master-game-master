@@ -31,6 +31,10 @@ export const playerRepo = () => playersRuntime().repo;
 /** Route `auth`: the calling phone's device uid. */
 export const requireDevice = (request: Request) => deviceUid(request, playersRuntime().verify);
 
+/** Route `auth` for public reads that a phone may prove itself on: its uid, or null (spec 11). */
+export const optionalDevice = (request: Request): Promise<string | null> =>
+  deviceUid(request, playersRuntime().verify).catch(() => null);
+
 export const getDevice = (slug: string | string[] | undefined, uid: string) =>
   deviceView(deps(), requireEvent(slug), uid);
 

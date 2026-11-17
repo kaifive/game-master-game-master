@@ -1,6 +1,6 @@
 # 24: Team showdowns (the framework)
 
-**Status:** Draft (agreed with Khai 2026-11-17: "let's build"; marked Ready in the PR that builds it, since check:ac makes Ready mean its tests exist)
+**Status:** Building (framework done; the games are specs 25 to 27)
 **Backlog:** M3
 **Depends on:** 03, 11. The games themselves are specs 25 (count and stop), 26 (nerve) and 27 (turns).
 
@@ -59,7 +59,7 @@ Team games played on the big screen, with each team's captain's phone as the con
 
 - Showdown game content in the event file, validated per type like solo games.
 - Live session state in Realtime Database under the session (spec 11): step, round, seed, each team's player, answers, progress, and for Memory Path the turn order and who's out. Answers that score are checked and awarded by the server.
-- Rotation: `live/{slug}/rotation/{teamId}`: the player ids who've had a turn since it last started over. Kept for the whole event.
+- Rotation: stored with the session at `live/{slug}` (spec 11): per team, the player ids who've had a turn since it last started over. Kept for the whole event.
 - Awards: ledger entries per team per round, with the showdown and round in the award id so a retry can't pay twice.
 
 ## Routes and real-time
@@ -99,7 +99,7 @@ Team games played on the big screen, with each team's captain's phone as the con
 - Unit: the step machine, who's up and rotation (AC-1, AC-2), the ledger award ids (AC-5), the turn-order rotation helper (AC-6), and the shared clock and answer windows (AC-7).
 - Component: the captain's who's-up list with greyed-out players; Watch the TV for other phones (AC-2, AC-3); the demo frame, with a still under reduced motion (AC-4).
 - Play tests (AC-8): the shared bot harness in `lib/live/playtest.ts`, run by each game's `playtest.test.ts` (specs 25 to 27), with a stand-in game here.
-- E2E: a showdown with a stand-in game, two teams on two captain phones, the TV and Controls (AC-1 to AC-3).
+- E2E: Fly-by Count (spec 25), two teams on two captain phones, the TV and Controls (AC-1 to AC-3).
 - Blind review (6f): `docs/reviews/showdowns.md`.
 
 ## Out of scope

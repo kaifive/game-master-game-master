@@ -24,14 +24,16 @@ function serve(...responses: unknown[]) {
   let i = 0;
   vi.stubGlobal(
     "fetch",
-    vi.fn(() =>
+    vi.fn((url: string) =>
       Promise.resolve(
-        Response.json({
-          hidden: false,
-          phase: "individual",
-          teams: [],
-          ...(responses[Math.min(i++, responses.length - 1)] as object),
-        }),
+        url.includes("/live")
+          ? Response.json({ active: false, serverNow: 0 })
+          : Response.json({
+              hidden: false,
+              phase: "individual",
+              teams: [],
+              ...(responses[Math.min(i++, responses.length - 1)] as object),
+            }),
       ),
     ),
   );
