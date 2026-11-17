@@ -1,8 +1,8 @@
-# 24: Team showdowns
+# 24: Team showdowns (the framework)
 
-**Status:** Draft (agreed with Khai 2026-11-17; moves to Ready when he says to build, since Ready means tests come first)
+**Status:** Draft (agreed with Khai 2026-11-17: "let's build"; marked Ready in the PR that builds it, since check:ac makes Ready mean its tests exist)
 **Backlog:** M3
-**Depends on:** 03, 11
+**Depends on:** 03, 11. The games themselves are specs 25 (count and stop), 26 (nerve) and 27 (turns).
 
 ## Summary
 
@@ -43,87 +43,17 @@ Team games played on the big screen, with each team's captain's phone as the con
 
 6. Each showdown type has a short looping demo (about 5 seconds), drawn in the event's style: a mini version of the game with a hand or cursor showing the moves, and one line of text under it. It plays on the TV during the intro step. Phones show the same line and "Watch the TV". Reduced motion: a still frame with the line.
 
-### Fly-by Count (`flyby`)
+### Fair for every team (Khai, 2026-11-17)
 
-7. Content: `rounds`, each with a count range, how long the fly-by lasts and the grid size; defaults are 3 rounds that get harder (6 to 12 presents over 4 s, 10 to 18 over 3.5 s, 15 to 25 over 3 s). The layout comes from the session's seed; the count is never sent to phones before the reveal.
-8. Play: the presents fly across the TV in rows and columns with gaps (some rows offset). When they've passed, every team's player types a number on the captain's phone and taps Lock in, within 10 seconds.
-9. Results: the TV replays the fly-by slowly, counting up, then shows each team's number. **Points per round: exactly right 100, one off 50, otherwise 0.**
+6a. **Going first is shared.** In any game where going or picking first helps, who leads rotates so every team leads equally often, and the game runs whole rotations so nobody leads one more time than another: Memory Path and Present Shuffle play one round per team, each team leading one round; Snowball to 21 plays one round per team, each team starting one; Land Mass rotates who leads each time round the table. Share or Snatch gives every team the same number of matchups: with an odd number of teams it plays one round per team, so each sits out exactly once.
+6b. **Starts are shared clock times.** The server sets when a round starts (a moment a couple of seconds ahead), and every device times against the server's clock (spec 11), so no phone or the TV gets a head start from a faster network. Blind Stop and Last Second time each stop from that shared start.
+6c. **Secret answers stay secret.** In games where teams answer at once, no team's phone or the TV sees another team's answer until the reveal, and nothing that gives the answer away (a count, the next stocking, a path) reaches a phone before it's needed.
+6d. **Same time for everyone.** Answer windows are the same length for every team and are checked on the server's clock.
 
-### Memory Path (`path`)
+### Play-tested and blind-reviewed
 
-10. Content: grid size (default 5 wide × 9 tall), path length (default 12 to 16 steps), how long the path shows (default 6 s), seconds per step (default 5), and the finisher's points (default 150). The path comes from the seed: it starts on the bottom row, moves one square up, left or right at a time, never back on itself, and ends on the top row.
-11. Show: the path lights up square by square on the TV, then hides. Teams cross in a random order, shown on the TV.
-12. A team's turn: the phone shows the grid; the player taps the next square, starting on the bottom row. Each step must be tapped within the step time. **A wrong square, or running out of time, knocks the team out**; the TV marks how far they got. The squares a team got right stay lit for the teams after them, so each try makes it easier for the next.
-13. **Points: only the team that makes it across scores** (150). If every team is knocked out, nobody scores, and the TV shows the whole path.
-
-### Blind Stop (`blindstop`)
-
-14. Content: target (default 10.00 s), seconds the clock shows before turning into "?" (default 3). Several rounds (default 1; the host can run it again).
-15. Play: the TV shows a big clock counting up from 0.00. After 3 s the numbers become a "?" while it keeps running. Every team's player taps Stop on the captain's phone. Each phone times from when it got the start, to the hundredth (network lag would swamp a server-side time; same idea as T-Timer, spec 16). A phone that hasn't stopped by 20 s counts as no answer.
-16. Results: the TV reveals every team's time, closest first. **Points: ranked by how close to 10.00: 100, 70, 50, 30, then 10 for every team after; an exact 10.00 gets a 50 bonus.** Ties share the place.
-
-### Land Mass (`landmass`)
-
-17. Content: board size (default 12 wide × 10 tall), tray size (default 4), seconds per turn (default 20). Pieces are 3 to 5 squares, like Block Fit's, dealt from the seed.
-18. One shared board and one shared tray, seen by every team on the TV. Teams take turns in a random order, shown on the TV, round and round.
-19. A turn: the next teammate in the team's rotation is up (the TV shows their name; the captain can swap who before they place), and plays on the captain's phone. They pick a piece from the tray, tap to turn it, and drag it onto the board. **It can go anywhere it fits**: inside the board and on empty squares only (Khai, 2026-11-17). Placed, it takes the team's color. A new piece comes into the tray in its place. Out of time: the turn passes with nothing placed.
-20. Turns pass on their own inside the game; the host's Next starts it and shows the results.
-21. **End:** when no piece in the tray fits anywhere on the board, the tray is swapped for a fresh one once; if still nothing fits, the game ends. A team whose turn comes while nothing fits is skipped the same way.
-22. Results: the TV shows the board with each team's squares counted. **Points: ranked by squares held: 150, 100, 70, 50, 30, then 10 for every team after.** Ties share the place.
-
-### Turn-based showdowns
-
-23. In the turn-based showdowns (Land Mass, Present Shuffle, Snowball to 21), each turn is played by the next teammate in the team's rotation, like Land Mass (19), and turns pass on their own inside the game. In the others, one player plays each round (3).
-
-### Present Shuffle (`shuffle`)
-
-24. Content: number of presents (default 9, in a 3 × 3 grid), point values (default 10 to 100, dealt from the seed), seconds shown (default 4), shuffle time (default 5 s, getting faster), seconds per pick (default 15).
-25. Show: the presents appear with their points showing, then the lids close and they shuffle around the TV, where everyone can follow them.
-26. Picking: teams take turns in a random order. On a team's turn the phone shows the presents where they now stand; the player taps one, and the TV opens it: those points go to the team, and the present is gone for everyone. Too slow: the turn passes.
-27. Teams pick until each has had the same number of picks (as many as the presents allow); any left over open at the end for show. **Points: the sum of the presents a team picked.**
-
-### Auction (`auction`)
-
-28. Content: number of rounds (default 10), prize values (default 10 to 100, dealt from the seed), seconds to bid (default 15).
-29. Each team has the numbers 1 to 10, and **each number can be used once per game** (Khai, 2026-11-17). The phone shows the ones left.
-30. A round: the TV shows the prize. Every team secretly picks one of its numbers. Then the TV reveals the bids: **numbers that tie cancel each other out, and the highest bid that nobody tied wins the prize.** If every bid ties, nobody wins it. A team that doesn't bid in time spends its lowest number left.
-31. **Points: the prizes a team won.** The TV keeps a running total and shows which numbers each team has left.
-
-### Snowball to 21 (`to21`)
-
-32. Three rounds. A shared snowball count starts at 0. Teams take turns in order, and a different team starts each round.
-33. On its turn a team adds 1, 2 or 3 to the count (a choice that would go past 21 is off), within 10 s; too slow adds 1.
-34. **The team that makes the count exactly 21 wins the round: 100 points.**
-
-### Stocking Stuffer (`stockings`)
-
-35. Content: number of rounds (default 5), stocking values (default 5 to 30), how often coal turns up (default 1 in 6), seconds to choose (default 10).
-36. A round: every team still in taps **Open** or **Bank** at the same time. Each team that opens gets its own stocking from the seed, revealed on the TV: points go into that team's pot for the round, or **coal empties the pot and the team is out until the next round**. A team that banks keeps its pot and sits out the rest of the round. No choice in time counts as Bank.
-37. The round ends when every team has banked or hit coal. **Points: everything a team banked.**
-
-### Snow Sum (`snowsum`)
-
-38. Content: rounds (default 3), each with how many snowflakes and which operations, getting harder (5 flakes of + and −, 7 flakes, then 8 flakes with ×2), dealt from the seed. Totals stay between −50 and 200.
-39. Play: the snowflakes fall one at a time on the TV, starting from 0. When the last has fallen, every team types the total within 10 s and locks it in.
-40. Results: the TV replays the sum step by step. **Points per round: exactly right 100, one off 50, otherwise 0.**
-
-### Share or Snatch (`snatch`)
-
-41. Three rounds. Each round the teams are paired at random, never the same pair twice in a game if it can be helped; with an odd number of teams, one sits the round out, a different team each time.
-42. Each pair plays for a pot of 100, shown on the TV with both team names. Each team secretly taps **Share** or **Snatch** within 15 s (no choice counts as Share). The TV reveals both at once.
-43. **Points: both share, 50 each; one snatches, that team gets 100 and the other 0; both snatch, 0 each.**
-
-### Last Second (`lastsecond`)
-
-44. Content: rounds (default 3), countdown length (default 10 s).
-45. Play: a big countdown runs on the TV, fully visible (Khai, 2026-11-17), from 10.00 to 0.00. Each team's player taps **Stop** on the captain's phone whenever they dare. Each phone times its stop from when it got the start, to the hundredth, like Blind Stop. A team that hasn't stopped by zero has busted.
-46. Results: the TV shows every team's stop time, latest first, and the busts. **Points per round: ranked by how late they stopped before zero: 100, 70, 50, 30, then 10 for every other team that stopped; a bust scores 0.** Ties share the place.
-
-### Color Count (`colorcount`)
-
-47. Content: rounds (default 3), getting harder: 3 colors and 12 ornaments over 4 s, 4 colors and 18 over 3.5 s, 5 colors and 24 over 3 s; dealt from the seed.
-48. Play: ornaments of different colors flash on the TV, a few at a time. Only when they're done does the TV ask "How many **red**?" (one color picked from the seed), so teams have to keep track of every color. Every team types a number within 10 s.
-49. Results: the TV replays the flashes with that color highlighted and counted. **Points per round: ranked by closeness: 100, 70, 50, 30, then 10; exact gets the top place even if alone; ties share.**
+6e. **Mock play tests.** Every showdown has a scripted play-test suite that runs whole games with bot teams in many scenarios: 2, 3, 5 and 8 teams; perfect, random, cautious and reckless players; teams that never answer, answer late, or drop out mid-game; and ties. Each run checks the game always ends, every score is within the game's limits and paid once, secrets never leak to phones, and leading is shared (6a).
+6f. **Blind review.** Before a showdown ships, reviewers who see only what players see (the demo line, the instructions, the TV and phone screens and their words), never the spec or code, play it through in their heads and say what they'd find confusing or unfair. Their findings and the fixes are written up in `docs/reviews/showdowns.md`.
 
 ## Data
 
@@ -159,25 +89,18 @@ Team games played on the big screen, with each team's captain's phone as the con
 - [ ] AC-2: The captain picks who's up from their team; someone who's had a turn is greyed out until everyone on the team has gone, counting across all showdowns in the event; an unpicked team gets the next teammate in rotation on Next.
 - [ ] AC-3: Only a team's captain can pick and answer for it; other phones show Watch the TV and their team's status.
 - [ ] AC-4: Each showdown's TV intro plays a looping animated demo with one line of text (a still frame under reduced motion).
-- [ ] AC-5: Fly-by Count deals rounds from the seed, never sends the count early, takes one locked-in number per team within 10 s, and scores exact 100, one off 50, else 0.
-- [ ] AC-6: Memory Path deals a path from the seed (bottom to top, up/left/right, never doubling back), hides it after showing it, gives teams turns in a random order, knocks a team out on a wrong square or a slow step, keeps their right squares lit for the next teams, and pays 150 only to the team that crosses.
-- [ ] AC-7: Blind Stop shows the clock for 3 s then a "?", takes each team's phone-timed stop, and ranks by closeness to 10.00: 100, 70, 50, 30, then 10, with a 50 bonus for exactly 10.00 and ties sharing.
-- [ ] AC-8: All showdown points go to teams through the ledger, once per team per round.
-- [ ] AC-9: Land Mass shares one board and a tray of 4 seeded pieces with every team; teams take turns in a random order, each turn played by the next teammate in rotation; a piece goes anywhere it fits with no overlap, takes the team's color, and is replaced in the tray; a turn times out after 20 s; the tray swaps once when nothing fits and the game ends when still nothing fits; points are ranked by squares: 150, 100, 70, 50, 30, then 10, ties sharing.
-- [ ] AC-10: Present Shuffle shows seeded values, covers and shuffles them on the TV, lets teams pick one at a time in a random order (each picked present gone for everyone, a slow pick passing), gives each team the same number of picks, and pays the sum of each team's presents.
-- [ ] AC-11: Auction gives each team the numbers 1 to 10 once each, takes one secret bid a round (the lowest left if none), cancels tied bids, gives the prize to the highest untied bid (nobody if all tie), and pays the prizes won.
-- [ ] AC-12: Snowball to 21 runs three rounds with a different team starting each, takes 1, 2 or 3 per turn (never past 21, 1 if too slow), and pays 100 to the team that makes exactly 21.
-- [ ] AC-13: Stocking Stuffer takes Open or Bank from every team at once each round (Bank if no choice), reveals each opener's seeded stocking, empties a team's pot and puts it out for the round on coal, ends the round when all have banked or busted, and pays what each team banked.
-- [ ] AC-14: Snow Sum deals harder seeded snowflake sums each round, takes one locked-in total per team within 10 s, and scores exact 100, one off 50, else 0.
-- [ ] AC-15: Share or Snatch pairs teams at random for three rounds (an odd team out sits a round, a different one each time), takes one secret Share or Snatch per team (Share if none), and pays 50/50, 100/0 or 0/0.
-- [ ] AC-16: Last Second runs a visible countdown, takes each team's phone-timed stop, busts teams that didn't stop by zero, and ranks the rest by how late they stopped: 100, 70, 50, 30, then 10, ties sharing, busts 0.
-- [ ] AC-17: Color Count flashes seeded colored ornaments, asks for one color only at the end, takes one number per team within 10 s, and ranks by closeness: 100, 70, 50, 30, then 10, ties sharing.
+- [ ] AC-5: All showdown points go to teams through the ledger, once per team per round.
+- [ ] AC-6: Every game where going or picking first helps rotates who leads so each team leads equally often over a whole game (Memory Path, Present Shuffle, Snowball to 21, Land Mass), and Share or Snatch gives every team the same number of matchups.
+- [ ] AC-7: Round starts are server times, and every device and the server time stops and answer windows against the server clock; secret answers and anything that gives an answer away never reach a phone or the TV before the reveal.
+- [ ] AC-8: Every showdown has a mock play-test suite (2, 3, 5 and 8 teams; perfect, random, cautious, reckless, silent, late and dropped-out teams; ties) in which every game ends, scores stay within limits and are paid once, nothing secret leaks, and leading is shared.
 
 ## Tests
 
-- Unit: the step machine and rotation (AC-1, AC-2); each game's dealing and scoring from a seed (AC-5 to AC-7, AC-9 to AC-17); Land Mass placement, refill, swap and end (AC-9); Auction ties and spent numbers (AC-11); Snowball to 21 limits (AC-12); Stocking Stuffer pots and coal (AC-13); award ids (AC-8).
-- Component: captain who's-up list with greyed players; each controller; Watch the TV for others (AC-2, AC-3).
-- E2E: a showdown with two teams on two captain phones, the TV and Controls, through each game type (AC-1 to AC-17).
+- Unit: the step machine, who's up and rotation (AC-1, AC-2), the ledger award ids (AC-5), the turn-order rotation helper (AC-6), and the shared clock and answer windows (AC-7).
+- Component: the captain's who's-up list with greyed-out players; Watch the TV for other phones (AC-2, AC-3); the demo frame, with a still under reduced motion (AC-4).
+- Play tests (AC-8): the shared bot harness in `lib/live/playtest.ts`, run by each game's `playtest.test.ts` (specs 25 to 27), with a stand-in game here.
+- E2E: a showdown with a stand-in game, two teams on two captain phones, the TV and Controls (AC-1 to AC-3).
+- Blind review (6f): `docs/reviews/showdowns.md`.
 
 ## Out of scope
 

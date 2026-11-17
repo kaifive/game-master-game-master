@@ -7,7 +7,6 @@ Move answered ones to the bottom with the answer.
 
 | # | Question | Blocks | Default until answered |
 |---|----------|--------|------------------------|
-| Q7 | Is Jeopardy the only live session type for the party? | Spec 11, 12 | Yes |
 | Q16 | Can a captain lead a team without anyone else joining? | Spec 03 | Yes |
 | Q17 | Photo vote: can players vote for their own team's photo? | Spec 13 | No |
 | Q18 | Automatic photo screening with AI later? Costs roughly $1 per few hundred photos. | ADR-010 | Not for the party |
@@ -70,3 +69,5 @@ Move answered ones to the bottom with the answer.
 | A46 | Share or Snatch: who plays whom? (spec 24) | Random pairs for three rounds over a pot of 100; an odd team sits a round out. |
 | A47 | Last Second: is the countdown visible? Points? (spec 24) | Fully visible. Ranked by how late you stopped before zero (100/70/50/30, then 10); hitting zero scores 0. |
 | A48 | Color Count: points? (spec 24) | Ranked by closeness (100/70/50/30, then 10). The color to count is only asked at the end. |
+| A49 | Live games for the party? (was Q7) | Showdowns (specs 24 to 27); Jeopardy later. |
+| A50 | Fairness? (spec 24) | Going first rotates so every team leads equally; starts use a shared server clock; secret answers stay hidden; every game is play-tested with bots and blind-reviewed. |

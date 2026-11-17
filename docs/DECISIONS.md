@@ -684,3 +684,29 @@ in T-Timer, because network lag would swamp it.
 **Consequences:** spec 11's engine needs a step machine with host-driven
 Next, which showdowns and Jeopardy (spec 12) share. Each showdown type adds a
 TV view, a phone controller and a short looping demo.
+
+---
+
+## ADR-037: Live sessions are polled from the server, on a shared server clock
+
+**Status:** accepted (spec 11, 2026-11-17). Narrows ADR-004 for live play.
+
+Showdowns need phones and the TV to follow a game within about a second, and
+some (Blind Stop, Last Second) need a round's start to land at the same
+moment everywhere. Realtime Database listeners on every phone would do it,
+but they count against the 100-connection limit all night and put secret
+state where phones can read it.
+
+**Decision:** the server owns each live session, stored at `live/{slug}` in
+Realtime Database (in memory in dev), and only route handlers read or write
+it. The TV, Controls and phones poll a per-role view about every 700 ms
+during a session (4 s otherwise, paused when hidden). Every view carries the
+server's time; devices estimate their clock offset from the fastest reply and
+run timers against the server clock. Rounds start at a shared server time
+about 2 s ahead, so every device has the start before it happens.
+
+**Consequences:** secrets never leave the server early; no phone holds a
+database connection. A 30-minute showdown block with 50 phones is about
+130,000 small requests, fine on Vercel Hobby, and costs Realtime Database
+bandwidth only (well under 1 GB). Timing fairness depends on clock offset
+estimates, good to tens of milliseconds on party wifi.
