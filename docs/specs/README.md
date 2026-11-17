@@ -28,3 +28,4 @@ Statuses are explained in `../conventions/docs.md`.
 | 21 | [Number Slide](21-number-slide.md) | M2 | Done |
 | 22 | [Block Fit](22-block-fit.md) | M2 | Done |
 | 23 | [Game library](23-game-library.md) | M2 | Done |
+| 24 | [Team showdowns](24-team-showdowns.md) | M3 | Draft (agreed) |

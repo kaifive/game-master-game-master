@@ -57,3 +57,16 @@ Move answered ones to the bottom with the answer.
 | A33 | Game library: where? (spec 23) | Both an admin Games page and `docs/GAMES.md`, made from one catalog. |
 | A34 | Game library: what per game? (spec 23) | Name and a one-line pitch. No reorder in the admin; the file's order stands. |
 | A35 | Turning a game off for an event? (spec 23) | Fully off: off the list and its link stops working; points earned stay. Geocache, Team Trivia and Jeopardy are off at the party. |
+| A36 | Showdowns: who plays each round? (spec 24) | The captain picks; nobody repeats until everyone on the team has gone, across all showdowns in the event. One device per team: the captain's. |
+| A37 | Showdowns: points? (spec 24) | Per game. Fly-by Count: exact 100, one off 50. Memory Path: only the finisher scores. Blind Stop: ranked by closeness, 100/70/50/30, then 10, plus 50 for exactly 10.00. |
+| A38 | Memory Path: taking too long on a step? (spec 24) | Out, like a wrong step. |
+| A39 | Showdowns: pacing? (spec 24) | The host taps Next in Controls for every step. |
+| A40 | Animated how-to-play? (spec 24) | On the TV, for showdowns first; solo games later in their own spec. |
+| A41 | Land Mass rules? (spec 24) | Pieces go anywhere they fit; the game ends when nothing in the tray fits (after one fresh tray); a new teammate plays each turn; points ranked by squares held (150/100/70/50/30, then 10). |
+| A42 | Auction: reuse numbers? (spec 24) | No: each team has 1 to 10, each once per game. Tied bids cancel; the highest untied bid wins. |
+| A43 | Present Shuffle: how do teams pick? (spec 24) | One at a time in turn order; a picked present is gone for everyone. |
+| A44 | Stocking Stuffer: turns or together? (spec 24) | All at once each round: Open or Bank; coal empties the round's pot. |
+| A45 | Snowball to 21: points? (spec 24) | Three rounds, a different team starting each; making exactly 21 scores 100. |
+| A46 | Share or Snatch: who plays whom? (spec 24) | Random pairs for three rounds over a pot of 100; an odd team sits a round out. |
+| A47 | Last Second: is the countdown visible? Points? (spec 24) | Fully visible. Ranked by how late you stopped before zero (100/70/50/30, then 10); hitting zero scores 0. |
+| A48 | Color Count: points? (spec 24) | Ranked by closeness (100/70/50/30, then 10). The color to count is only asked at the end. |
