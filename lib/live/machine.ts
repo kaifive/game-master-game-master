@@ -1,39 +1,35 @@
 import { START_LEAD_MS, type AnyShowdown, type LiveTeam, type Session, type Step } from "./model";
-import { afterTurn, available, nextUp, type Rotation } from "./rotation";
 
 /**
  * The live session state machine (S11-AC2, S24-AC1): pure, so the server,
- * the tests and the bot play tests all run the same rules.
+ * the tests and the bot play tests all run the same rules. Who plays for a
+ * team is the room's call, tracked by the host (ADR-038), so the machine only
+ * knows teams.
  */
 
 export type Machine = { game: AnyShowdown; content: unknown };
 
-/** A transition's outcome: the new session (null once ended), the rotation, and points to pay. */
+/** A transition's outcome: the new session (null once ended) and points to pay. */
 export type Outcome =
   | {
       ok: true;
       session: Session | null;
-      rotation: Rotation;
       /** Points to pay for a round that just closed, by team (S11-AC7). */
       award: { round: number; points: Record<string, number> } | null;
     }
   | { ok: false; message: string };
 
 const fail = (message: string): Outcome => ({ ok: false, message });
-const done = (session: Session | null, rotation: Rotation): Outcome => ({
-  ok: true,
-  session,
-  rotation,
-  award: null,
-});
+const done = (session: Session | null): Outcome => ({ ok: true, session, award: null });
 const bump = (s: Session, patch: Partial<Session>): Session => ({
   ...s,
   ...patch,
   revision: s.revision + 1,
 });
 const ids = (s: Session) => s.teams.map((t) => t.id);
-const teamOf = (s: Session, teamId: string): LiveTeam | undefined =>
-  s.teams.find((t) => t.id === teamId);
+
+/** Fewest teams a game can be played with (S24-AC11). */
+export const minTeams = (m: Pick<Machine, "game">) => Math.max(1, m.game.minTeams ?? 1);
 
 /** A new session on its intro step (S11-AC1). */
 export function startSession(
@@ -58,8 +54,6 @@ export function startSession(
     rounds: Math.max(1, m.game.rounds(m.content, init.teams.length)),
     seed: init.seed,
     teams: init.teams,
-    up: {},
-    upTurn: null,
     state: null,
     scores: Object.fromEntries(init.teams.map((t) => [t.id, 0])),
     roundPoints: null,
@@ -73,55 +67,19 @@ export function startSession(
 export const roundSeed = (s: Session, round: number) =>
   Math.abs(Math.imul(s.seed ^ (round * 0x9e3779b1), 0x85ebca6b)) >>> 0;
 
-/** Starts round `round`'s play: everyone without a pick gets the next teammate in rotation. */
-function startPlay(m: Machine, s: Session, rotation: Rotation, round: number, now: number) {
-  const startsAt = now + START_LEAD_MS;
+/** Starts a round on a shared start a little ahead (S11-AC5). */
+function startPlay(m: Machine, s: Session, round: number, now: number): Session {
   const state = m.game.deal(m.content, {
     seed: roundSeed(s, round),
     round,
     teams: ids(s),
-    startsAt,
+    startsAt: now + START_LEAD_MS,
   });
-  let rot = rotation;
-  const up: Record<string, string | null> = {};
-  if (m.game.turns) {
-    // Turn games pick a teammate when each turn comes round (assignTurn).
-  } else {
-    for (const team of s.teams) {
-      const used = rot[team.id] ?? [];
-      const picked = s.up[team.id];
-      const who = picked && available(team, used).includes(picked) ? picked : nextUp(team, used);
-      up[team.id] = who;
-      if (who) rot = { ...rot, [team.id]: afterTurn(team, used, who) };
-    }
-  }
-  const next = bump(s, { step: "play", round, state, up, upTurn: null, roundPoints: null });
-  return assignTurn(m, next, rot, now);
-}
-
-/**
- * In a turn game, whoever's turn it is gets the next teammate in rotation
- * when their turn comes round, unless the captain already swapped someone in.
- */
-function assignTurn(m: Machine, s: Session, rotation: Rotation, now: number) {
-  if (!m.game.turns || s.step !== "play") return { session: s, rotation };
-  const turn = m.game.turn?.(s.state, m.content, now) ?? null;
-  if (!turn) return { session: s, rotation };
-  const team = teamOf(s, turn.teamId);
-  if (!team || s.upTurn === turn.turnNo) return { session: s, rotation };
-  const used = rotation[team.id] ?? [];
-  const who = nextUp(team, used);
-  if (!who) return { session: s, rotation };
-  // Other teams' up players stand down when the turn moves on.
-  const up = Object.fromEntries(s.teams.map((t) => [t.id, t.id === team.id ? who : null]));
-  return {
-    session: bump(s, { up, upTurn: turn.turnNo }),
-    rotation: { ...rotation, [team.id]: afterTurn(team, used, who) },
-  };
+  return bump(s, { step: "play", round, state, roundPoints: null });
 }
 
 /** Closes the round: final tick, score, and the points to pay (S11-AC7). */
-function closeRound(m: Machine, s: Session, rotation: Rotation, now: number): Outcome {
+function closeRound(m: Machine, s: Session, now: number): Outcome {
   const state = m.game.tick(s.state, m.content, now);
   const points = m.game.score(state, m.content, ids(s));
   const scores = { ...s.scores };
@@ -129,107 +87,49 @@ function closeRound(m: Machine, s: Session, rotation: Rotation, now: number): Ou
   return {
     ok: true,
     session: bump(s, { step: "results", state, scores, roundPoints: points }),
-    rotation,
     award: { round: s.round, points },
   };
 }
 
 /** What the host's Next does from each step, for Controls' button (S11-AC1). */
-export function nextLabel(m: Machine, s: Session): string {
+export function nextLabel(_m: Machine, s: Session): string {
   const labels: Record<Step, string> = {
-    intro: m.game.turns ? "Start round 1" : "Pick players",
-    pick: `Start round ${String(s.round)}`,
+    intro: "Start round 1",
     play: "Show results",
-    results: s.round >= s.rounds ? "Final standings" : m.game.turns ? "Next round" : "Pick players",
+    results: s.round >= s.rounds ? "Final standings" : `Start round ${String(s.round + 1)}`,
     final: "End the game",
   };
   return labels[s.step];
 }
 
 /** The host's Next (S24-AC1). */
-export function next(m: Machine, s: Session, rotation: Rotation, now: number): Outcome {
+export function next(m: Machine, s: Session, now: number): Outcome {
   switch (s.step) {
     case "intro":
-      if (m.game.turns) {
-        const r = startPlay(m, s, rotation, 1, now);
-        return done(r.session, r.rotation);
-      }
-      return done(bump(s, { step: "pick", round: 1, up: {} }), rotation);
-    case "pick": {
-      const r = startPlay(m, s, rotation, s.round, now);
-      return done(r.session, r.rotation);
-    }
+      return done(startPlay(m, s, 1, now));
     case "play":
-      return closeRound(m, s, rotation, now);
-    case "results": {
-      if (s.round >= s.rounds) return done(bump(s, { step: "final", state: null }), rotation);
-      const round = s.round + 1;
-      if (m.game.turns) {
-        const r = startPlay(m, s, rotation, round, now);
-        return done(r.session, r.rotation);
-      }
-      return done(bump(s, { step: "pick", round, up: {}, state: null }), rotation);
-    }
+      return closeRound(m, s, now);
+    case "results":
+      if (s.round >= s.rounds) return done(bump(s, { step: "final", state: null }));
+      return done(startPlay(m, s, s.round + 1, now));
     case "final":
-      return done(null, rotation);
+      return done(null);
   }
-}
-
-/**
- * A captain picks who's up (S24-AC2): on the pick step, or in a turn game
- * while it's their team's turn and before they've moved.
- */
-export function pick(
-  m: Machine,
-  s: Session,
-  rotation: Rotation,
-  teamId: string,
-  who: string,
-  now: number,
-): Outcome {
-  const team = teamOf(s, teamId);
-  if (!team) return fail("Your team isn't in this game.");
-  const used = rotation[teamId] ?? [];
-  if (m.game.turns) {
-    const turn = m.game.turn?.(s.state, m.content, now) ?? null;
-    if (s.step !== "play" || turn?.teamId !== teamId) return fail("It isn't your turn.");
-    const current = s.up[teamId];
-    // The swapped-out teammate gets their turn back.
-    const restored = current ? used.filter((id) => id !== current) : used;
-    if (!available(team, restored).includes(who)) return fail("They've already had a turn.");
-    return done(bump(s, { up: { ...s.up, [teamId]: who } }), {
-      ...rotation,
-      [teamId]: afterTurn(team, restored, who),
-    });
-  }
-  if (s.step !== "pick") return fail("Picks are closed for this round.");
-  if (!available(team, used).includes(who)) return fail("They've already had a turn.");
-  return done(bump(s, { up: { ...s.up, [teamId]: who } }), rotation);
 }
 
 /** A captain's move for their team (S11-AC6). */
-export function move(
-  m: Machine,
-  s: Session,
-  rotation: Rotation,
-  teamId: string,
-  input: unknown,
-  now: number,
-): Outcome {
+export function move(m: Machine, s: Session, teamId: string, input: unknown, now: number): Outcome {
   if (s.step !== "play") return fail("There's nothing to play right now.");
-  if (!teamOf(s, teamId)) return fail("Your team isn't in this game.");
+  if (!s.teams.some((t) => t.id === teamId)) return fail("Your team isn't in this game.");
   const ticked = m.game.tick(s.state, m.content, now);
   const result = m.game.move(ticked, m.content, { teamId, move: input, now });
   if (!result.ok) return fail(result.message);
-  const r = assignTurn(m, bump(s, { state: result.state }), rotation, now);
-  return done(r.session, r.rotation);
+  return done(bump(s, { state: result.state }));
 }
 
 /** Time passing (S11-AC2): windows close and turns move on; the same session when nothing changed. */
-export function tick(m: Machine, s: Session, rotation: Rotation, now: number): Outcome {
-  if (s.step !== "play") return done(s, rotation);
+export function tick(m: Machine, s: Session, now: number): Outcome {
+  if (s.step !== "play") return done(s);
   const state = m.game.tick(s.state, m.content, now);
-  const base = state === s.state ? s : bump(s, { state });
-  const r = assignTurn(m, base, rotation, now);
-  return done(r.session, r.rotation);
+  return done(state === s.state ? s : bump(s, { state }));
 }

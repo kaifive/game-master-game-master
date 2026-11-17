@@ -10,11 +10,11 @@ Four showdowns where teams take turns, so who goes first matters and is rotated:
 
 ## Behavior
 
-Every game here follows spec 24: the host's steps, who's up and rotation, the TV demo, fair play (shared leads, shared clock starts, secret answers), points to teams through the ledger, a mock play-test suite and a blind review.
+Every game here follows spec 24: the host's steps, Who's played, the TV demo, 1 to 10 teams, fair play (shared leads, shared clock starts, secret answers), points to teams through the ledger, a mock play-test suite and a blind review.
 
 ### Turn-based showdowns
 
-1. In the turn-based showdowns (Land Mass, Present Shuffle, Snowball to 21), each turn is played by the next teammate in the team's rotation, like a Land Mass turn, and turns pass on their own inside the game. In the others, one player plays each round (spec 24, who's up).
+1. In the turn-based showdowns (Land Mass, Present Shuffle, Snowball to 21), turns pass on their own inside the game, and the team sends up a new teammate for each turn, tracked by the host in Who's played (spec 24). In Memory Path, one player crosses for the team each round.
 
 ### Memory Path (`path`)
 
@@ -40,7 +40,7 @@ Every game here follows spec 24: the host's steps, who's up and rotation, the TV
 
 1. Content: board size (default 12 wide × 10 tall), tray size (default 4), seconds per turn (default 20). Pieces are 3 to 5 squares, like Block Fit's, dealt from the seed.
 2. One shared board and one shared tray, seen by every team on the TV. Teams take turns round and round; who leads moves one team on each time round, so every team leads as often as the others (spec 24, "Fair for every team").
-3. A turn: the next teammate in the team's rotation is up (the TV shows their name; the captain can swap who before they place), and plays on the captain's phone. They pick a piece from the tray, tap to turn it, and drag it onto the board. **It can go anywhere it fits**: inside the board and on empty squares only (Khai, 2026-11-17). Placed, it takes the team's color. A new piece comes into the tray in its place. Out of time: the turn passes with nothing placed.
+3. A turn: the team sends up a new teammate, who plays on the captain's phone. They pick a piece from the tray, tap to turn it, and drag it onto the board. **It can go anywhere it fits**: inside the board and on empty squares only (Khai, 2026-11-17). Placed, it takes the team's color. A new piece comes into the tray in its place. Out of time: the turn passes with nothing placed.
 4. Turns pass on their own inside the game; the host's Next starts it and shows the results.
 5. **End:** when no piece in the tray fits anywhere on the board, the tray is swapped for a fresh one once; if still nothing fits, the game ends. A team whose turn comes while nothing fits is skipped the same way.
 6. Results: the TV shows the board with each team's squares counted. **Points: ranked by squares held: 150, 100, 70, 50, 30, then 10 for every team after.** Ties share the place.
@@ -60,12 +60,12 @@ Each game's content is validated in the event file and its round state lives in 
 - [ ] AC-1: Memory Path deals a path from the seed (bottom to top, up/left/right, never doubling back), hides it after showing it, plays one round per team with a new path and an order that rotates so each team goes first once, knocks a team out on a wrong square or a slow step, keeps their right squares lit for the next teams, and pays 150 only to a team that crosses.
 - [ ] AC-2: Present Shuffle shows seeded values, covers and shuffles them on the TV, plays one round per team with one pick each, first pick rotating so each team picks first once (each picked present gone for everyone, a slow pick getting nothing), and pays the sum of each team's presents.
 - [ ] AC-3: Snowball to 21 plays one round per team with each team starting one, takes 1, 2 or 3 per turn (never past 21, 1 if too slow), and pays 100 to the team that makes exactly 21.
-- [ ] AC-4: Land Mass shares one board and a tray of 4 seeded pieces with every team; teams take turns with the lead moving one team on each time round, each turn played by the next teammate in rotation; a piece goes anywhere it fits with no overlap, takes the team's color, and is replaced in the tray; a turn times out after 20 s; the tray swaps once when nothing fits and the game ends when still nothing fits; points are ranked by squares: 150, 100, 70, 50, 30, then 10, ties sharing.
+- [ ] AC-4: Land Mass shares one board and a tray of 4 seeded pieces with every team; teams take turns with the lead moving one team on each time round, each turn played by a new teammate; a piece goes anywhere it fits with no overlap, takes the team's color, and is replaced in the tray; a turn times out after 20 s; the tray swaps once when nothing fits and the game ends when still nothing fits; points are ranked by squares: 150, 100, 70, 50, 30, then 10, ties sharing.
 
 ## Tests
 
 - Unit: each game's dealing and scoring from a seed, and its edge rules.
-- Play tests: `lib/live/<type>/playtest.test.ts` on spec 24's bot harness: 2, 3, 5 and 8 teams; perfect, random, cautious, reckless, silent, late and dropped-out teams; ties. Every run also checks each team led the same number of times.
+- Play tests: `lib/live/<type>/playtest.test.ts` on spec 24's bot harness: 1, 2, 3, 5, 8 and 10 teams; perfect, random, cautious, reckless, silent, late and dropped-out teams; ties. Every run also checks each team led the same number of times.
 - Component: the TV view and the phone controller for each game.
 - E2E: one game of each type with two captain phones, the TV and Controls.
 - Blind review: findings and fixes in `docs/reviews/showdowns.md`.

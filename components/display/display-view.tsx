@@ -3,9 +3,12 @@
 import { useCallback } from "react";
 import { MomentsProvider, MomentsStage, ToastChainView, useCelebrate } from "@/components/motion";
 import { usePoll } from "@/components/leaderboard/use-poll";
-import { LiveTv } from "@/components/live/live-tv";
+import { ShowdownScreen } from "@/components/live/live-tv";
 import type { LiveRenderer } from "@/components/live/types";
 import { useLive } from "@/components/live/use-live";
+
+/** How often the TV checks which screen to show between showdowns, so a switch lands quickly. */
+export const SCREEN_POLL_MS = 1500;
 import { liveApi } from "@/lib/live";
 import { useSlots } from "@/components/slots/registry";
 import { leadChange, newAwards, standingsApi, type DisplayStandings } from "@/lib/points";
@@ -216,17 +219,18 @@ function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers }: Props) {
     return res.ok ? res.data : null;
   }, [slug]);
   const data = usePoll(load, DISPLAY_POLL_MS, announce);
-  // A live game takes over the screen while it runs (spec 11 UI).
+  // The host switches the TV between the leaderboard and the showdown (S24-AC9).
   const loadLive = useCallback(() => liveApi.view(slug, "", null), [slug]);
-  const live = useLive(loadLive);
-  if (live.view?.active)
+  const live = useLive(loadLive, { idleMs: SCREEN_POLL_MS });
+  if (live.view?.screen === "showdown")
     return (
       <div className="grid h-dvh grid-rows-[auto_1fr] overflow-hidden">
         <Banner title={name} size="lg" />
         <main className="min-h-0 overflow-hidden">
-          <LiveTv
+          <ShowdownScreen
             view={live.view}
             serverNow={live.serverNow}
+            totals={data && !data.hidden ? data.teams : []}
             {...(renderers ? { renderers } : {})}
           />
         </main>

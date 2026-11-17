@@ -1,8 +1,7 @@
 import { seededRandom } from "@/lib/games";
-import { move, next, pick, startSession, tick, type Machine } from "./machine";
+import { move, next, startSession, tick, type Machine } from "./machine";
 import type { AnyShowdown, LiveTeam, Role, Session } from "./model";
-import type { Rotation } from "./rotation";
-import { liveView, type LiveView } from "./view";
+import { liveView, type ActiveView } from "./view";
 
 /**
  * Mock play tests (S24-AC8): whole showdowns played by bot teams on the real
@@ -13,7 +12,7 @@ import { liveView, type LiveView } from "./view";
 /** What a bot sees: its captain view, the time, a random source, and (for "perfect" bots) the true state. */
 export type BotContext = {
   teamId: string;
-  view: Extract<LiveView, { active: true }>;
+  view: ActiveView;
   now: number;
   random: () => number;
   /** The game's real state: only "perfect" bots may look. */
@@ -34,8 +33,6 @@ export type PlaytestOptions = {
   roundCapMs?: number;
   /** Teams that drop out (stop answering) from this round on, by index. */
   dropOutFrom?: Record<number, number>;
-  /** How many teammates each team has. */
-  teamSize?: number;
   /** Checks an unrevealed view for leaked secrets; returns a problem, or null. */
   leakCheck?: (view: unknown, state: unknown, role: Role) => string | null;
 };
@@ -49,10 +46,11 @@ export type PlaytestResult = {
   /** Moves the game turned down: fine for random bots, a bug for perfect ones. */
   rejected: { teamId: string; message: string }[];
   leaks: string[];
-  /** Who played each round for each team. */
-  players: Record<string, string | null>[];
   ended: boolean;
 };
+
+/** The team counts every showdown's play tests run with (S24-AC8, AC11). */
+export const PLAYTEST_TEAM_COUNTS = [1, 2, 3, 5, 8, 10] as const;
 
 export const playtestTeams = (n: number, size = 3): LiveTeam[] =>
   Array.from({ length: n }, (_, i) => {
@@ -80,9 +78,8 @@ export function playtest(
   const random = seededRandom(opts.seed);
   const stepMs = opts.stepMs ?? 100;
   const cap = opts.roundCapMs ?? 120_000;
-  const teams = playtestTeams(opts.teams, opts.teamSize ?? 3);
+  const teams = playtestTeams(opts.teams);
   let now = 1_000_000;
-  let rotation: Rotation = {};
   let s: Session | null = startSession(m, {
     id: "play",
     gameId: "g",
@@ -98,7 +95,6 @@ export function playtest(
     turnOrders: [],
     rejected: [],
     leaks: [],
-    players: [],
     ended: false,
   };
 
@@ -112,7 +108,7 @@ export function playtest(
       ]),
     ];
     for (const role of roles) {
-      const view = liveView(m, session, rotation, role, now);
+      const view = liveView(m, session, role, now);
       if (!view.active) continue;
       const problem = opts.leakCheck(view.game, session.state, role);
       if (problem)
@@ -121,34 +117,13 @@ export function playtest(
   };
 
   const hostNext = (session: Session): Session | null => {
-    const out = next(m, session, rotation, now);
+    const out = next(m, session, now);
     if (!out.ok) throw new Error(`Next refused on ${session.step}: ${out.message}`);
-    if (out.award) {
-      result.rounds.push(out.award.points);
-      result.players.push({ ...session.up });
-    }
-    rotation = out.rotation;
+    if (out.award) result.rounds.push(out.award.points);
     return out.session;
   };
 
   for (let guard = 0; s && guard < 1000; guard++) {
-    if (s.step === "pick") {
-      // Captains pick at random among who's available, or leave it to the app.
-      for (const team of teams) {
-        if (random() < 0.3) continue;
-        const view = liveView(m, s, rotation, { kind: "captain", teamId: team.id }, now);
-        const free = view.active ? (view.you?.pickable.filter((p) => p.available) ?? []) : [];
-        const who = free[Math.floor(random() * free.length)];
-        if (!who) continue;
-        const out = pick(m, s, rotation, team.id, who.id, now);
-        if (out.ok && out.session) {
-          s = out.session;
-          rotation = out.rotation;
-        }
-      }
-      s = hostNext(s);
-      continue;
-    }
     if (s.step !== "play") {
       s = hostNext(s);
       continue;
@@ -159,11 +134,8 @@ export function playtest(
     const roundEnds = now + cap;
     let playing: Session = s;
     while (playing.step === "play" && now < roundEnds) {
-      const ticked = tick(m, playing, rotation, now);
-      if (ticked.ok && ticked.session) {
-        playing = ticked.session;
-        rotation = ticked.rotation;
-      }
+      const ticked = tick(m, playing, now);
+      if (ticked.ok && ticked.session) playing = ticked.session;
       checkLeaks(playing);
       const turn = m.game.turn?.(playing.state, m.content, now) ?? null;
       if (turn && order[order.length - 1] !== turn.teamId) order.push(turn.teamId);
@@ -173,15 +145,13 @@ export function playtest(
         if (dropped !== undefined && round >= dropped) continue;
         const bot = opts.bots(i);
         if (!bot) continue;
-        const view = liveView(m, playing, rotation, { kind: "captain", teamId: team.id }, now);
+        const view = liveView(m, playing, { kind: "captain", teamId: team.id }, now);
         if (!view.active) continue;
         const choice = bot({ teamId: team.id, view, now, random, peek: playing.state });
         if (choice === undefined || choice === null) continue;
-        const out = move(m, playing, rotation, team.id, choice, now);
-        if (out.ok && out.session) {
-          playing = out.session;
-          rotation = out.rotation;
-        } else if (!out.ok) result.rejected.push({ teamId: team.id, message: out.message });
+        const out = move(m, playing, team.id, choice, now);
+        if (out.ok && out.session) playing = out.session;
+        else if (!out.ok) result.rejected.push({ teamId: team.id, message: out.message });
       }
       now += stepMs;
     }

@@ -9,7 +9,7 @@ export const GET = defineRoute({
     liveForPhone(params.slug, new URL(request.url).searchParams.get("playerId"), auth),
 });
 
-/** POST: a captain picks who's up or makes a move (S11-AC6). */
+/** POST: a captain makes a move for their team (S11-AC6). */
 export const POST = defineRoute({
   auth: requireDevice,
   body: PlayerLiveAction,

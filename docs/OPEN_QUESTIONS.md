@@ -16,6 +16,7 @@ Move answered ones to the bottom with the answer.
 | Q23 | Pathfinder: what counts as skipping a number (red)? | Spec 16 | Reaching a later number before an earlier one turns the missed ones red; after that nothing turns green until the trail is undone past the skip. The number reached early stays grey. |
 | Q24 | T-Timer: "stop in the range of 1 sec 20ms or 1 sec 25ms": is the window 1.20 to 1.25 s? (A literal 1.020 to 1.025 s is 5 ms, shorter than one screen frame.) And how fast should points fall off outside it? | Spec 16 | 1.20 to 1.25 s; full points inside, falling to 0 at 0.5 s outside |
 | Q27 | Tap Masher film: which part of the video, and how many frames? | Spec 16 | Khai (2026-11-14): play like video (skip at most one frame) using the form's first 11.5 s, and 50 taps is all the points (the video is styling). So 172 frames, every other frame, at 256 × 192 to keep the sheet to 1.3 MB; nobody reaches the end in 5 s. |
+| Q28 | With 7 to 10 teams, the one-round-per-team showdowns (Memory Path, Present Shuffle, Snowball to 21, and Share or Snatch with an odd count) run 7 to 10 rounds: about 15 to 25 minutes each. Fine, or play fewer rounds and give up equal leads? | Spec 27 | One round per team always, so every team leads once (A50); Controls shows the round count before Start |
 
 ## Answered
 
@@ -71,3 +72,6 @@ Move answered ones to the bottom with the answer.
 | A48 | Color Count: points? (spec 24) | Ranked by closeness (100/70/50/30, then 10). The color to count is only asked at the end. |
 | A49 | Live games for the party? (was Q7) | Showdowns (specs 24 to 27); Jeopardy later. |
 | A50 | Fairness? (spec 24) | Going first rotates so every team leads equally; starts use a shared server clock; secret answers stay hidden; every game is play-tested with bots and blind-reviewed. |
+| A51 | Who's up with players who have no phone? (spec 24) | Khai (2026-11-17): the app doesn't pick. The host tracks Who's played in Controls: joined players plus names added by hand, colored once they've played. |
+| A52 | How do showdowns get on the TV? (spec 24) | Khai (2026-11-17): Showdown is its own TV screen, swapped to like the leaderboard. |
+| A53 | How many teams? (spec 24) | Khai (2026-11-17): 1 to 10, usually 4 or 5. |

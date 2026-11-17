@@ -4,7 +4,7 @@ import { isAppError } from "@/lib/errors";
 import type { EventConfig } from "@/lib/events";
 import { MemoryBoardRepo, MemoryPointsRepo } from "@/lib/points";
 import type { TeamsSummary } from "@/lib/teams";
-import { START_LEAD_MS } from "./model";
+import { defineShowdown, START_LEAD_MS } from "./model";
 import { MemoryLiveRepo } from "./repo.memory";
 import {
   adminLiveAction,
@@ -27,6 +27,16 @@ const event: EventConfig = {
       phase: "team",
       visibility: "listed",
       content: { rounds: 1 },
+      scoring: { awardTo: "team" },
+    },
+    {
+      id: "pairs",
+      type: "cache",
+      title: "Pairs",
+      mode: "live",
+      phase: "team",
+      visibility: "listed",
+      content: {},
       scoring: { awardTo: "team" },
     },
     {
@@ -71,6 +81,8 @@ const summary: TeamsSummary = {
   ],
 };
 
+const pairsShowdown = defineShowdown({ ...tapShowdown, minTeams: 3 });
+
 let clock = 0;
 let ownsCalls = 0;
 let deps: LiveDeps;
@@ -90,7 +102,13 @@ beforeEach(() => {
     points: { points, board: new MemoryBoardRepo(), now: () => clock },
     // The stand-ins play the parts of real showdown types here.
     showdown: (type) =>
-      type === "jeopardy" ? tapShowdown : type === "trivia" ? passShowdown : undefined,
+      type === "jeopardy"
+        ? tapShowdown
+        : type === "trivia"
+          ? passShowdown
+          : type === "cache"
+            ? pairsShowdown
+            : undefined,
     now: () => clock,
     id: () => "sess1",
     seed: () => 42,
@@ -107,9 +125,9 @@ describe("live service (spec 11)", () => {
   it("S11-AC1: the host starts a live game, a second start is refused, and End stops it", async () => {
     const view = await adminLiveView(deps, event);
     expect(view.active).toBe(false);
-    expect(view.games.map((g) => g.id)).toEqual(["tap-off", "pass-on"]);
+    expect(view.games.map((g) => g.id)).toEqual(["tap-off", "pairs", "pass-on"]);
     const started = await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
-    expect(started).toMatchObject({ active: true, next: "Pick players" });
+    expect(started).toMatchObject({ active: true, next: "Start round 1" });
     expect(
       await failure(adminLiveAction(deps, event, { action: "start", gameId: "pass-on" })),
     ).toEqual({
@@ -129,20 +147,12 @@ describe("live service (spec 11)", () => {
     const tv = await phoneLiveView(deps, event, null, null);
     expect(tv.active && tv.you).toBeNull();
     const member = await phoneLiveView(deps, event, "m1", "dev-m1");
-    expect(member.active && member.you).toMatchObject({
-      teamId: "t1",
-      captain: false,
-      pickable: [],
-    });
+    expect(member.active && member.you).toEqual({ teamId: "t1", captain: false });
     // Someone else's phone claiming to be the captain gets the member view.
     const imposter = await phoneLiveView(deps, event, "c1", "dev-someone");
     expect(imposter.active && imposter.you?.captain).toBe(false);
     const captain = await phoneLiveView(deps, event, "c1", "dev-c1");
-    expect(captain.active && captain.you).toMatchObject({
-      teamId: "t1",
-      captain: true,
-      canPick: true,
-    });
+    expect(captain.active && captain.you).toEqual({ teamId: "t1", captain: true });
     const calls = ownsCalls;
     await phoneLiveView(deps, event, "c1", "dev-c1");
     expect(ownsCalls).toBe(calls); // no Firestore read on later polls
@@ -152,29 +162,19 @@ describe("live service (spec 11)", () => {
   it("S11-AC6: only the captain moves, for the current round; an old round changes nothing", async () => {
     await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
     await adminLiveAction(deps, event, { action: "next" });
+    clock += START_LEAD_MS + 100;
     expect(
       (
         await failure(
           playerLiveAction(deps, event, "dev-m1", {
-            action: "pick",
+            action: "move",
             playerId: "m1",
             round: 1,
-            who: "m1",
+            move: "tap",
           }),
         )
       ).status,
     ).toBe(403);
-    const picked = await playerLiveAction(deps, event, "dev-c1", {
-      action: "pick",
-      playerId: "c1",
-      round: 1,
-      who: "m1",
-    });
-    expect(picked.active && picked.you?.pickable.find((p) => p.id === "m1")).toMatchObject({
-      available: true,
-    });
-    await adminLiveAction(deps, event, { action: "next" });
-    clock += START_LEAD_MS + 100;
     const stale = await playerLiveAction(deps, event, "dev-c1", {
       action: "move",
       playerId: "c1",
@@ -208,7 +208,6 @@ describe("live service (spec 11)", () => {
   it("S11-AC7 S24-AC5: round points go to teams through the ledger once, even if results are reached twice", async () => {
     await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
     await adminLiveAction(deps, event, { action: "next" });
-    await adminLiveAction(deps, event, { action: "next" });
     clock += START_LEAD_MS + 50;
     await playerLiveAction(deps, event, "dev-c2", {
       action: "move",
@@ -235,5 +234,104 @@ describe("live service (spec 11)", () => {
       to: { kind: "team", id: "t2" },
     });
     expect((await points.entries(event.slug)).length).toBe(1);
+  });
+});
+
+describe("showdown screen and Who's played (spec 24)", () => {
+  it("S24-AC9: the host switches the TV between the leaderboard and the showdown; starting a showdown switches to it", async () => {
+    expect((await phoneLiveView(deps, event, null, null)).screen).toBe("leaderboard");
+    await adminLiveAction(deps, event, { action: "screen", screen: "showdown" });
+    expect(await phoneLiveView(deps, event, null, null)).toMatchObject({
+      active: false,
+      screen: "showdown",
+    });
+    await adminLiveAction(deps, event, { action: "screen", screen: "leaderboard" });
+    const started = await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
+    expect(started.screen).toBe("showdown");
+    // The host can still show the leaderboard mid-game; the game keeps its place.
+    const back = await adminLiveAction(deps, event, { action: "screen", screen: "leaderboard" });
+    expect(back).toMatchObject({ active: true, screen: "leaderboard" });
+    expect((await phoneLiveView(deps, event, null, null)).screen).toBe("leaderboard");
+  });
+
+  it("S24-AC2: Who's played lists joined players and added names per team, and keeps them across showdowns", async () => {
+    let view = await adminLiveView(deps, event);
+    expect(view.played.map((r) => [r.teamId, r.people.map((p) => p.name)])).toEqual([
+      ["t1", ["Cap One", "Mo"]],
+      ["t2", ["Cap Two"]],
+    ]);
+    view = await adminLiveAction(deps, event, { action: "add", teamId: "t2", name: " Grandma " });
+    const grandma = view.played[1]?.people[1];
+    expect(grandma).toMatchObject({ name: "Grandma", added: true, played: false });
+    view = await adminLiveAction(deps, event, {
+      action: "played",
+      teamId: "t2",
+      personId: grandma?.id ?? "",
+      played: true,
+    });
+    view = await adminLiveAction(deps, event, {
+      action: "played",
+      teamId: "t2",
+      personId: "c2",
+      played: true,
+    });
+    expect(view.played[1]).toMatchObject({ done: 2, total: 2, everyone: true });
+    // A showdown starting and ending leaves the list alone.
+    await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
+    view = await adminLiveAction(deps, event, { action: "end" });
+    expect(view.played[1]?.done).toBe(2);
+    view = await adminLiveAction(deps, event, { action: "reset", teamId: "t2" });
+    expect(view.played[1]).toMatchObject({ done: 0, total: 2 });
+    // Joined players can't be removed; added names can; bad input is refused.
+    expect(
+      (
+        await failure(
+          adminLiveAction(deps, event, { action: "remove", teamId: "t2", personId: "c2" }),
+        )
+      ).message,
+    ).toBe("Only names you added can be removed.");
+    view = await adminLiveAction(deps, event, {
+      action: "remove",
+      teamId: "t2",
+      personId: grandma?.id ?? "",
+    });
+    expect(view.played[1]?.total).toBe(1);
+    expect(
+      (await failure(adminLiveAction(deps, event, { action: "add", teamId: "t2", name: "  " })))
+        .message,
+    ).toBe("Type a name.");
+    expect(
+      (await failure(adminLiveAction(deps, event, { action: "add", teamId: "nope", name: "A" })))
+        .status,
+    ).toBe(404);
+  });
+
+  it("S24-AC11: a game needing more teams than are playing can't start, and Controls says why", async () => {
+    const view = await adminLiveView(deps, event);
+    expect(view.games.find((g) => g.id === "pairs")?.blocked).toBe(
+      "This game needs at least 3 teams.",
+    );
+    expect(view.games.find((g) => g.id === "tap-off")?.blocked).toBeNull();
+    expect(
+      (await failure(adminLiveAction(deps, event, { action: "start", gameId: "pairs" }))).message,
+    ).toBe("This game needs at least 3 teams.");
+    // Only teams with a captain play; more than 10 is refused.
+    const many: TeamsSummary = {
+      ...summary,
+      teams: Array.from({ length: 11 }, (_, i) => ({
+        ...summary.teams[1],
+        id: `t${String(i)}`,
+        name: `T${String(i)}`,
+        named: true,
+        color: 1,
+        captain: { id: `c${String(i)}`, nickname: `C${String(i)}` },
+        members: [{ id: `c${String(i)}`, nickname: `C${String(i)}` }],
+        room: 5,
+      })),
+    };
+    deps.teams = () => Promise.resolve(many);
+    expect(
+      (await failure(adminLiveAction(deps, event, { action: "start", gameId: "tap-off" }))).message,
+    ).toBe("Showdowns are built for up to 10 teams.");
   });
 });

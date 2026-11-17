@@ -6,14 +6,23 @@ import { awardTeam } from "@/lib/points";
 import type { TeamsSummary } from "@/lib/teams";
 import {
   move as machineMove,
+  minTeams,
   next as machineNext,
-  pick as machinePick,
   startSession,
   tick as machineTick,
   type Machine,
   type Outcome,
 } from "./machine";
-import type { AnyShowdown, LiveTeam, Role, Session } from "./model";
+import { MAX_TEAMS, type AnyShowdown, type LiveTeam, type Role, type Session } from "./model";
+import {
+  addPerson,
+  checkName,
+  markPlayed,
+  MAX_ADDED,
+  removePerson,
+  resetTeam,
+  roster,
+} from "./played";
 import type { LiveRepo, LiveState } from "./repo";
 import { controlsView, liveView } from "./view";
 
@@ -74,7 +83,7 @@ async function pay(deps: LiveDeps, slug: string, s: Session, outcome: Outcome) {
 async function transition(
   deps: LiveDeps,
   event: EventConfig,
-  run: (m: Machine, state: LiveState, now: number) => Outcome,
+  run: (m: Machine, session: Session, now: number) => Outcome,
 ): Promise<{ state: LiveState; outcome: Outcome }> {
   // Set inside the store's update callback, which TypeScript can't follow.
   const box: { outcome: Outcome; before: Session | null } = {
@@ -88,9 +97,9 @@ async function transition(
       return null;
     }
     box.before = current.session;
-    box.outcome = run(m, current, deps.now());
+    box.outcome = run(m, current.session, deps.now());
     if (!box.outcome.ok) return null;
-    return { session: box.outcome.session, rotation: box.outcome.rotation };
+    return { ...current, session: box.outcome.session };
   });
   const outcome = box.outcome;
   if (!outcome.ok) throw new AppError("CONFLICT", outcome.message);
@@ -103,48 +112,131 @@ async function current(deps: LiveDeps, event: EventConfig): Promise<LiveState> {
   const state = await deps.live.read(event.slug);
   const m = machineFor(deps, event, state.session);
   if (!m || !state.session || state.session.step !== "play") return state;
-  const ticked = machineTick(m, state.session, state.rotation, deps.now());
+  const ticked = machineTick(m, state.session, deps.now());
   if (!ticked.ok || ticked.session === state.session) return state;
   return deps.live.update(event.slug, (latest) => {
     if (!latest.session || latest.session.revision !== state.session?.revision) return null;
-    const again = machineTick(m, latest.session, latest.rotation, deps.now());
-    return again.ok ? { session: again.session, rotation: again.rotation } : null;
+    const again = machineTick(m, latest.session, deps.now());
+    return again.ok ? { ...latest, session: again.session } : null;
   });
 }
 
-/** Teams as they are now, for a new session: named, coloured, with members captain first. */
+type SummaryTeam = TeamsSummary["teams"][number];
+
+/** A team's members, captain first. */
+const membersOf = (t: SummaryTeam) =>
+  (t.captain ? [t.captain, ...t.members.filter((m) => m.id !== t.captain?.id)] : t.members).map(
+    (m) => ({ id: m.id, nickname: m.nickname }),
+  );
+
+/**
+ * Teams as they are now, for a new session. Only teams with a captain can
+ * play: someone has to hold the controller (S24, behavior 5).
+ */
 function teamsFrom(summary: TeamsSummary | null): LiveTeam[] {
-  return (summary?.teams ?? []).map((t) => {
-    const members = t.captain
-      ? [t.captain, ...t.members.filter((m) => m.id !== t.captain?.id)]
-      : t.members;
-    return {
+  return (summary?.teams ?? [])
+    .filter((t) => t.captain)
+    .map((t) => ({
       id: t.id,
       name: t.name,
       color: t.color,
       captainId: t.captain?.id ?? null,
-      members: members.map((m) => ({ id: m.id, nickname: m.nickname })),
-    };
-  });
+      members: membersOf(t),
+    }));
 }
 
+const Id = z.string().min(1).max(64);
+
 export const AdminLiveAction = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("start"), gameId: z.string().min(1).max(64) }),
+  z.object({ action: z.literal("start"), gameId: Id }),
   z.object({ action: z.literal("next") }),
   z.object({ action: z.literal("end") }),
+  z.object({ action: z.literal("screen"), screen: z.enum(["leaderboard", "showdown"]) }),
+  z.object({ action: z.literal("played"), teamId: Id, personId: Id, played: z.boolean() }),
+  z.object({ action: z.literal("add"), teamId: Id, name: z.string().max(80) }),
+  z.object({ action: z.literal("remove"), teamId: Id, personId: Id }),
+  z.object({ action: z.literal("reset"), teamId: Id }),
 ]);
 
-/** Controls' view of the live session. */
+/** Why a game can't start with this many teams, or null when it can (S24-AC11). */
+function teamsProblem(m: Pick<Machine, "game">, teams: number): string | null {
+  if (teams === 0) return "Make some teams with captains first.";
+  if (teams > MAX_TEAMS) return `Showdowns are built for up to ${String(MAX_TEAMS)} teams.`;
+  const need = minTeams(m);
+  if (teams < need) return `This game needs at least ${String(need)} teams.`;
+  return null;
+}
+
+/** Controls' view: the session, the TV screen, the games to start, and Who's played. */
 export async function adminLiveView(deps: LiveDeps, event: EventConfig) {
   const state = await current(deps, event);
   const m = machineFor(deps, event, state.session);
+  const summary = await deps.teams(event.slug);
+  const playing = teamsFrom(summary).length;
   return {
-    ...controlsView(m, state.session, state.rotation, deps.now()),
-    games: liveGames(deps, event).map((g) => ({ id: g.id, title: g.title, type: g.type })),
+    ...controlsView(m, state.session, deps.now(), state.screen),
+    games: liveGames(deps, event).map((g) => {
+      const showdown = deps.showdown(g.type);
+      return {
+        id: g.id,
+        title: g.title,
+        type: g.type,
+        blocked: showdown ? teamsProblem({ game: showdown }, playing) : null,
+      };
+    }),
+    played: (summary?.teams ?? []).map((t) =>
+      roster({ id: t.id, name: t.name, color: t.color, members: membersOf(t) }, state.played),
+    ),
   };
 }
 
-/** The host starts, steps or ends a live game (S11-AC1, S24-AC1). */
+/** Checks a Who's played change against the event's teams as they are now. */
+async function changePlayed(
+  deps: LiveDeps,
+  event: EventConfig,
+  body: Extract<z.infer<typeof AdminLiveAction>, { teamId: string }>,
+) {
+  const summary = await deps.teams(event.slug);
+  const t = summary?.teams.find((x) => x.id === body.teamId);
+  if (!t) throw new AppError("NOT_FOUND", "That team isn't in this event.");
+  const box: { error: string | null } = { error: null };
+  const newId = body.action === "add" ? `x${deps.id()}` : "";
+  await deps.live.update(event.slug, (cur) => {
+    const list = roster(
+      { id: t.id, name: t.name, color: t.color, members: membersOf(t) },
+      cur.played,
+    );
+    if (body.action === "reset") return { ...cur, played: resetTeam(cur.played, t.id) };
+    if (body.action === "add") {
+      const name = checkName(body.name);
+      if (!name.ok) {
+        box.error = name.message;
+        return null;
+      }
+      if (list.people.filter((p) => p.added).length >= MAX_ADDED) {
+        box.error = "That team has enough added names.";
+        return null;
+      }
+      return { ...cur, played: addPerson(cur.played, t.id, newId, name.name) };
+    }
+    const person = list.people.find((p) => p.id === body.personId);
+    if (!person) {
+      box.error = "They aren't on that team.";
+      return null;
+    }
+    if (body.action === "remove") {
+      if (!person.added) {
+        box.error = "Only names you added can be removed.";
+        return null;
+      }
+      return { ...cur, played: removePerson(cur.played, t.id, person.id) };
+    }
+    return { ...cur, played: markPlayed(cur.played, t.id, person.id, body.played) };
+  });
+  if (box.error) throw new AppError("CONFLICT", box.error);
+}
+
+/** The host starts, steps or ends a live game, switches the TV, or updates Who's played. */
 export async function adminLiveAction(
   deps: LiveDeps,
   event: EventConfig,
@@ -155,15 +247,19 @@ export async function adminLiveAction(
     const showdown = game ? deps.showdown(game.type) : undefined;
     if (!game || !showdown) throw new AppError("NOT_FOUND", "That live game isn't in this event.");
     const teams = teamsFrom(await deps.teams(event.slug));
-    if (teams.length === 0) throw new AppError("CONFLICT", "Make some teams first.");
     const m: Machine = { game: showdown, content: showdown.content.parse(game.content) };
+    const problem = teamsProblem(m, teams.length);
+    if (problem) throw new AppError("CONFLICT", problem);
     const box = { refused: false };
     await deps.live.update(event.slug, (cur) => {
       if (cur.session) {
         box.refused = true;
         return null;
       }
+      // Starting a showdown puts it on the TV (S24-AC9).
       return {
+        ...cur,
+        screen: "showdown",
         session: startSession(m, {
           id: deps.id(),
           gameId: game.id,
@@ -173,18 +269,20 @@ export async function adminLiveAction(
           seed: deps.seed(),
           now: deps.now(),
         }),
-        rotation: cur.rotation,
       };
     });
     if (box.refused)
       throw new AppError("CONFLICT", "A live game is already running. End it first.");
   } else if (body.action === "next") {
-    await transition(deps, event, (m, st, now) =>
-      st.session ? machineNext(m, st.session, st.rotation, now) : { ok: false, message: "" },
-    );
+    await transition(deps, event, (m, s, now) => machineNext(m, s, now));
+  } else if (body.action === "end") {
+    // Ending keeps Who's played and the screen: turns are tracked all night (ADR-038).
+    await deps.live.update(event.slug, (cur) => ({ ...cur, session: null }));
+  } else if (body.action === "screen") {
+    const screen = body.screen;
+    await deps.live.update(event.slug, (cur) => ({ ...cur, screen }));
   } else {
-    // Ending keeps the rotation, so turns stay spread across the night (S24-AC2).
-    await deps.live.update(event.slug, (cur) => ({ session: null, rotation: cur.rotation }));
+    await changePlayed(deps, event, body);
   }
   return adminLiveView(deps, event);
 }
@@ -227,18 +325,19 @@ export async function phoneLiveView(
 ) {
   const state = await current(deps, event);
   const m = machineFor(deps, event, state.session);
-  if (!m || !state.session) return liveView(null, null, state.rotation, { kind: "tv" }, deps.now());
+  if (!m || !state.session) return liveView(null, null, { kind: "tv" }, deps.now(), state.screen);
   const role = await roleOf(deps, event, state.session, playerId, uid);
-  return liveView(m, state.session, state.rotation, role, deps.now());
+  return liveView(m, state.session, role, deps.now(), state.screen);
 }
 
-const Id = z.string().min(1).max(64);
-export const PlayerLiveAction = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("pick"), playerId: Id, round: z.number().int(), who: Id }),
-  z.object({ action: z.literal("move"), playerId: Id, round: z.number().int(), move: z.unknown() }),
-]);
+export const PlayerLiveAction = z.object({
+  action: z.literal("move"),
+  playerId: Id,
+  round: z.number().int(),
+  move: z.unknown(),
+});
 
-/** A captain picks who's up or makes a move (S11-AC6, S24-AC2). */
+/** A captain makes a move for their team (S11-AC6). */
 export async function playerLiveAction(
   deps: LiveDeps,
   event: EventConfig,
@@ -253,13 +352,11 @@ export async function playerLiveAction(
     throw new AppError("FORBIDDEN", "Only your team's captain can do that.");
   // A move for an old round changes nothing (S11-AC6).
   if (body.round !== s.round) return phoneLiveView(deps, event, body.playerId, uid);
-  await transition(deps, event, (m, st, now) => {
-    if (!st.session || st.session.round !== body.round)
-      return { ok: false, message: "That round is over." };
-    return body.action === "pick"
-      ? machinePick(m, st.session, st.rotation, role.teamId, body.who, now)
-      : machineMove(m, st.session, st.rotation, role.teamId, body.move, now);
-  });
+  await transition(deps, event, (m, session, now) =>
+    session.round !== body.round
+      ? { ok: false, message: "That round is over." }
+      : machineMove(m, session, role.teamId, body.move, now),
+  );
   return phoneLiveView(deps, event, body.playerId, uid);
 }
 

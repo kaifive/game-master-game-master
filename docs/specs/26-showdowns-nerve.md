@@ -10,7 +10,7 @@ Three showdowns about nerve and reading the room: bid numbers you can only use o
 
 ## Behavior
 
-Every game here follows spec 24: the host's steps, who's up and rotation, the TV demo, fair play (shared leads, shared clock starts, secret answers), points to teams through the ledger, a mock play-test suite and a blind review.
+Every game here follows spec 24: the host's steps, Who's played, the TV demo, 1 to 10 teams, fair play (shared leads, shared clock starts, secret answers), points to teams through the ledger, a mock play-test suite and a blind review.
 
 ### Auction (`auction`)
 
@@ -27,7 +27,7 @@ Every game here follows spec 24: the host's steps, who's up and rotation, the TV
 
 ### Share or Snatch (`snatch`)
 
-1. Three rounds with an even number of teams; with an odd number, one round per team, each team sitting out exactly once (spec 24, "Fair for every team"). Each round the teams are paired at random, never the same pair twice in a game if it can be helped.
+1. Needs at least 2 teams (spec 24, 3b). Three rounds with an even number of teams; with an odd number, one round per team, each team sitting out exactly once (spec 24, "Fair for every team"). Each round the teams are paired at random, never the same pair twice in a game if it can be helped.
 2. Each pair plays for a pot of 100, shown on the TV with both team names. Each team secretly taps **Share** or **Snatch** within 15 s (no choice counts as Share). The TV reveals both at once.
 3. **Points: both share, 50 each; one snatches, that team gets 100 and the other 0; both snatch, 0 each.**
 
@@ -45,12 +45,12 @@ Each game's content is validated in the event file and its round state lives in 
 
 - [ ] AC-1: Auction gives each team the numbers 1 to 10 once each, takes one secret bid a round (the lowest left if none), cancels tied bids, gives the prize to the highest untied bid (nobody if all tie), and pays the prizes won.
 - [ ] AC-2: Stocking Stuffer takes Open or Bank from every team at once each round (Bank if no choice), reveals each opener's seeded stocking, empties a team's pot and puts it out for the round on coal, ends the round when all have banked or busted, and pays what each team banked.
-- [ ] AC-3: Share or Snatch pairs teams at random for three rounds (one round per team with an odd number, each team sitting out exactly once), takes one secret Share or Snatch per team (Share if none), and pays 50/50, 100/0 or 0/0.
+- [ ] AC-3: Share or Snatch needs 2 teams or more, pairs teams at random for three rounds (one round per team with an odd number, each team sitting out exactly once), takes one secret Share or Snatch per team (Share if none), and pays 50/50, 100/0 or 0/0.
 
 ## Tests
 
 - Unit: each game's dealing and scoring from a seed, and its edge rules.
-- Play tests: `lib/live/<type>/playtest.test.ts` on spec 24's bot harness: 2, 3, 5 and 8 teams; perfect, random, cautious, reckless, silent, late and dropped-out teams; ties. Scenarios include all teams bidding the same, everyone snatching, and everyone banking at once.
+- Play tests: `lib/live/<type>/playtest.test.ts` on spec 24's bot harness: 1, 2, 3, 5, 8 and 10 teams; perfect, random, cautious, reckless, silent, late and dropped-out teams; ties. Scenarios include all teams bidding the same, everyone snatching, and everyone banking at once.
 - Component: the TV view and the phone controller for each game.
 - E2E: one game of each type with two captain phones, the TV and Controls.
 - Blind review: findings and fixes in `docs/reviews/showdowns.md`.

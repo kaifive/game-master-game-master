@@ -53,7 +53,6 @@ export const passShowdown = defineShowdown<Record<string, never>, PassState>({
   content: z.object({}).strict(),
   demo: "Pass the snowball along on your turn.",
   rounds: (_c, teams) => teams,
-  turns: true,
   deal: (_c, { teams, round, startsAt }) => {
     const shift = (round - 1) % teams.length;
     return {

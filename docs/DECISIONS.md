@@ -710,3 +710,26 @@ database connection. A 30-minute showdown block with 50 phones is about
 130,000 small requests, fine on Vercel Hobby, and costs Realtime Database
 bandwidth only (well under 1 GB). Timing fairness depends on clock offset
 estimates, good to tens of milliseconds on party wifi.
+
+---
+
+## ADR-038: The host tracks who's played; showdowns are their own TV screen
+
+**Status:** accepted (spec 24, Khai 2026-11-17). Supersedes the who's-up picks in ADR-036.
+
+ADR-036 had each captain pick who's up on their phone from the team's joined
+players, with the app rotating turns. At the party, not everyone on a team
+will have a phone, so the app can't know the whole team.
+
+**Decision:** the app doesn't pick players. Controls has a Who's played list
+per team: the team's joined players plus names the host adds by hand, tapped
+to mark who has played, in the team's color. It is stored with the live state
+at `live/{slug}` and kept for the whole event. The captain's phone stays the
+controller, passed to whoever's up. Showdowns get their own TV screen, which
+the host switches to and from like the leaderboard; starting a showdown
+switches to it. Showdowns support 1 to 10 teams.
+
+**Consequences:** no who's-up step on phones or the TV; a round goes from
+results straight to the next round's countdown. Fair turns rely on the host
+and the room, helped by the colors. The TV screen choice is server state, so
+a reloaded TV comes back on the right screen.

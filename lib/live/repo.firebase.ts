@@ -1,12 +1,12 @@
 import "server-only";
 import { firebaseAdmin, type FirebaseAdmin } from "@/lib/firebase/admin";
 import { rtdb } from "@/lib/firebase/paths";
-import { EMPTY_LIVE, type LiveRepo, type LiveState } from "./repo";
+import { EMPTY_LIVE, normalizeLive, type LiveRepo, type LiveState } from "./repo";
 
 const parse = (raw: unknown): LiveState => {
   if (typeof raw !== "string") return EMPTY_LIVE;
   try {
-    return JSON.parse(raw) as LiveState;
+    return normalizeLive(JSON.parse(raw));
   } catch {
     return EMPTY_LIVE;
   }

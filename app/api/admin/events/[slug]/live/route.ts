@@ -8,7 +8,7 @@ export const GET = defineRoute({
   handler: ({ params }) => liveForAdmin(params.slug),
 });
 
-/** POST: start, Next or end a live game (S11-AC1). Admin only. */
+/** POST: start, Next or end a live game, switch the TV screen, or update Who's played (S11-AC1, S24-AC2, AC9). Admin only. */
 export const POST = defineRoute({
   auth: requireAdmin,
   body: AdminLiveAction,
