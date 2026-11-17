@@ -1,4 +1,4 @@
-# 24: Team showdowns (Fly-by Count, Memory Path, Blind Stop)
+# 24: Team showdowns (Fly-by Count, Memory Path, Blind Stop, Land Mass)
 
 **Status:** Ready
 **Backlog:** M3
@@ -6,11 +6,12 @@
 
 ## Summary
 
-Team games played on the big screen, with each team's captain's phone as the controller (Khai, 2026-11-17). The solo games train players for them: a showdown is like a solo game, but not exactly the same, so a team has to choose who is best for it. Each round, a team sends one player, and nobody goes again until everyone on their team has had a turn. The host runs the pace from Controls. Before each game the TV plays a short animated demo of how it works, not just text. Three games to start:
+Team games played on the big screen, with each team's captain's phone as the controller (Khai, 2026-11-17). The solo games train players for them: a showdown is like a solo game, but not exactly the same, so a team has to choose who is best for it. Each round, a team sends one player, and nobody goes again until everyone on their team has had a turn. The host runs the pace from Controls. Before each game the TV plays a short animated demo of how it works, not just text. Four games to start:
 
 - **Fly-by Count:** a grid of presents flies across the TV; teams count them. Like Mario Party's "Goomba Spotting". Trained by Rapid Recall.
 - **Memory Path:** a long winding path lights up across a grid and then hides; teams take turns crossing it from memory, and a wrong or slow step knocks them out. Like MrBeast's memorize-the-path challenge. Trained by Pathfinder.
 - **Blind Stop:** a clock starts on the TV, turns into a "?" after 3 seconds, and every team tries to stop it at exactly 10.00. Trained by T-Timer.
+- **Land Mass:** teams take turns dragging block pieces from a shared tray onto one board, claiming squares in their color; the most land wins. Like a mix of Tetris pieces and Blokus territory, with drafting: take the piece another team wanted. Trained by Block Fit.
 
 ## User stories
 
@@ -24,7 +25,7 @@ Team games played on the big screen, with each team's captain's phone as the con
 
 ### Showdowns in general
 
-1. A showdown is a team game (`phase: "team"`, `mode: "live"`) of type `flyby`, `path` or `blindstop`, run as a live session (spec 11). One runs at a time. Only captains' phones control it (ADR-014). Other players' phones show "Watch the TV" and their team's status.
+1. A showdown is a team game (`phase: "team"`, `mode: "live"`) of type `flyby`, `path`, `blindstop` or `landmass`, run as a live session (spec 11). One runs at a time. Only captains' phones control it (ADR-014). Other players' phones show "Watch the TV" and their team's status.
 2. **Steps, driven by the host's Next in Controls:** intro (the animated demo) → who's up → play → results → (next round: who's up again) → final standings → end. Controls shows which step is live and what Next will do. The host can also end a showdown early; points already given stay.
 3. **Who's up.** At the start of each round, each captain's phone lists their team. The captain taps who's playing, and that person takes the captain's phone. Rotation: a player can't be picked again until everyone on their team has had a turn; the app greys them out. When everyone has gone, the rotation starts over. Rotation counts across every showdown in the event, so it spreads turns across the night, not just one game. A team of one is always its captain. The TV shows each team's player for the round. If a captain hasn't picked when the host taps Next, the app picks the next teammate in rotation.
 4. **Points** go to the team through the ledger (ADR-006, ADR-030), each game by its own rule (below). Results show each team's answer or progress and the points.
@@ -52,6 +53,15 @@ Team games played on the big screen, with each team's captain's phone as the con
 14. Content: target (default 10.00 s), seconds the clock shows before turning into "?" (default 3). Several rounds (default 1; the host can run it again).
 15. Play: the TV shows a big clock counting up from 0.00. After 3 s the numbers become a "?" while it keeps running. Every team's player taps Stop on the captain's phone. Each phone times from when it got the start, to the hundredth (network lag would swamp a server-side time; same idea as T-Timer, spec 16). A phone that hasn't stopped by 20 s counts as no answer.
 16. Results: the TV reveals every team's time, closest first. **Points: ranked by how close to 10.00: 100, 70, 50, 30, then 10 for every team after; an exact 10.00 gets a 50 bonus.** Ties share the place.
+
+### Land Mass (`landmass`)
+
+17. Content: board size (default 12 wide × 10 tall), tray size (default 4), seconds per turn (default 20). Pieces are 3 to 5 squares, like Block Fit's, dealt from the seed.
+18. One shared board and one shared tray, seen by every team on the TV. Teams take turns in a random order, shown on the TV, round and round.
+19. A turn: the next teammate in the team's rotation is up (the TV shows their name; the captain can swap who before they place), and plays on the captain's phone. They pick a piece from the tray, tap to turn it, and drag it onto the board. **It can go anywhere it fits**: inside the board and on empty squares only (Khai, 2026-11-17). Placed, it takes the team's color. A new piece comes into the tray in its place. Out of time: the turn passes with nothing placed.
+20. Turns pass on their own inside the game; the host's Next starts it and shows the results.
+21. **End:** when no piece in the tray fits anywhere on the board, the tray is swapped for a fresh one once; if still nothing fits, the game ends. A team whose turn comes while nothing fits is skipped the same way.
+22. Results: the TV shows the board with each team's squares counted. **Points: ranked by squares held: 150, 100, 70, 50, 30, then 10 for every team after.** Ties share the place.
 
 ## Data
 
@@ -91,10 +101,11 @@ Team games played on the big screen, with each team's captain's phone as the con
 - [ ] AC-6: Memory Path deals a path from the seed (bottom to top, up/left/right, never doubling back), hides it after showing it, gives teams turns in a random order, knocks a team out on a wrong square or a slow step, keeps their right squares lit for the next teams, and pays 150 only to the team that crosses.
 - [ ] AC-7: Blind Stop shows the clock for 3 s then a "?", takes each team's phone-timed stop, and ranks by closeness to 10.00: 100, 70, 50, 30, then 10, with a 50 bonus for exactly 10.00 and ties sharing.
 - [ ] AC-8: All showdown points go to teams through the ledger, once per team per round.
+- [ ] AC-9: Land Mass shares one board and a tray of 4 seeded pieces with every team; teams take turns in a random order, each turn played by the next teammate in rotation; a piece goes anywhere it fits with no overlap, takes the team's color, and is replaced in the tray; a turn times out after 20 s; the tray swaps once when nothing fits and the game ends when still nothing fits; points are ranked by squares: 150, 100, 70, 50, 30, then 10, ties sharing.
 
 ## Tests
 
-- Unit: the step machine and rotation (AC-1, AC-2); each game's dealing and scoring from a seed (AC-5 to AC-7); award ids (AC-8).
+- Unit: the step machine and rotation (AC-1, AC-2); each game's dealing and scoring from a seed (AC-5 to AC-7, AC-9); Land Mass placement, refill, swap and end (AC-9); award ids (AC-8).
 - Component: captain who's-up list with greyed players; each controller; Watch the TV for others (AC-2, AC-3).
 - E2E: a showdown with two teams on two captain phones, the TV and Controls, through each game type (AC-1 to AC-7).
 
@@ -106,4 +117,4 @@ Team games played on the big screen, with each team's captain's phone as the con
 
 ## Open questions
 
-None open. Answered 2026-11-17: A36–A40 in `OPEN_QUESTIONS.md`.
+None open. Answered 2026-11-17: A36–A41 in `OPEN_QUESTIONS.md`.

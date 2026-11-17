@@ -62,3 +62,4 @@ Move answered ones to the bottom with the answer.
 | A38 | Memory Path: taking too long on a step? (spec 24) | Out, like a wrong step. |
 | A39 | Showdowns: pacing? (spec 24) | The host taps Next in Controls for every step. |
 | A40 | Animated how-to-play? (spec 24) | On the TV, for showdowns first; solo games later in their own spec. |
+| A41 | Land Mass rules? (spec 24) | Pieces go anywhere they fit; the game ends when nothing in the tray fits (after one fresh tray); a new teammate plays each turn; points ranked by squares held (150/100/70/50/30, then 10). |
