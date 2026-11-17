@@ -54,6 +54,8 @@ export const rtdb = {
     `leaderboard/${slug(s)}/players/${id(playerId)}`,
   leaderboardTeams: (s: string) => `leaderboard/${slug(s)}/teams`,
   leaderboardTeam: (s: string, teamId: string) => `leaderboard/${slug(s)}/teams/${id(teamId)}`,
+  /** The live session and who's-up rotation, written only by the server (spec 11, ADR-037). */
+  live: (s: string) => `live/${slug(s)}`,
   /** What phones see of teams, written by the server after every team change (spec 03). */
   teams: (s: string) => `teams/${slug(s)}`,
   leaderboardRecent: (s: string) => `leaderboard/${slug(s)}/recent`,

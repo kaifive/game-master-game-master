@@ -52,9 +52,9 @@ A feature item needs its spec at `Ready` before it starts.
 
 ## M3: Live sessions (by Dec 13)
 
-- [ ] Spec 11, live session engine: server-owned sessions, polled views on a shared clock, host steps (ADR-037)
+- [x] Spec 11, live session engine: server-owned sessions, polled views on a shared clock, host steps (ADR-037)
 - [ ] Spec 12, buzzer and Jeopardy board
-- [ ] Spec 24, showdown framework: who's up and rotation, TV demos, fair leads and clocks, bot play tests
+- [ ] Spec 24, showdown framework: who's up and rotation, TV demos, fair leads and clocks, bot play tests (framework built; its e2e lands with Fly-by)
 - [ ] Spec 25, showdowns: Fly-by Count, Snow Sum, Color Count, Blind Stop, Last Second
 - [ ] Spec 26, showdowns: Auction, Stocking Stuffer, Share or Snatch
 - [ ] Spec 27, showdowns: Memory Path, Present Shuffle, Snowball to 21, Land Mass

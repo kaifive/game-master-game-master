@@ -1,4 +1,5 @@
 import "server-only";
+import { liveRepo } from "@/lib/live/server";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { AppError } from "@/lib/errors";
@@ -108,7 +109,12 @@ export function signIn(request: Request, body: z.infer<typeof SignInBody>): Resp
 export const signOut = (request: Request) =>
   new Response(null, { status: 204, headers: { "set-cookie": sessionCookie(request, "", 0) } });
 
-const deps = (): AdminDeps => ({ ...teamDeps(), plays: playRepo(), drawings: drawingDeps() });
+const deps = (): AdminDeps => ({
+  ...teamDeps(),
+  plays: playRepo(),
+  drawings: drawingDeps(),
+  live: liveRepo(),
+});
 
 type Slug = string | string[] | undefined;
 

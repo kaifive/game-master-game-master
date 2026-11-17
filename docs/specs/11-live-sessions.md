@@ -1,6 +1,6 @@
 # 11: Live session engine
 
-**Status:** Draft (agreed with Khai 2026-11-17 as part of "let's build" for showdowns; marked Ready in the PR that builds it, since check:ac makes Ready mean its tests exist)
+**Status:** Done
 **Backlog:** M3
 **Depends on:** 03, 04, 06
 
@@ -22,21 +22,20 @@ The engine for games the host runs for the whole room at once, on the TV, with c
 4. **Views per role.** `GET /api/events/[slug]/live` returns the view for the caller: the **TV** (no player), a **captain** (their team's controls and whatever they're allowed to know), or a **member** (Watch the TV and their team's status). Every view includes the server's current time. Nothing secret (answers not yet revealed, the next card or stocking, a path that's hidden) is in any view before it should be.
 5. **Following along.** The TV, Controls and phones poll the view about every 700 ms while a session runs and every 4 s otherwise, and pause while their tab is hidden. A reload picks up the current state.
 6. **Shared clock.** Each device estimates its offset from the server's clock from the view replies (the time sent, received and the server's time; keeping the reply with the shortest round trip), and shows timers against that clock. A round starts at `startsAt`, a moment about 2 s ahead, so every device has the start in hand before it happens.
-7. **Moves.** `POST /api/events/[slug]/live` with the player and a move. The server checks the player is their team's captain (or, for who's-up picks, the captain), that the step and round match, and that the move arrived inside its window by the server's clock; then applies it through the state machine. A move for an old revision or round changes nothing.
+7. **Moves.** `POST /api/events/[slug]/live` with the player and a move. The server checks the player is their team's captain (or, for who's-up picks, the captain), that the step and round match, and that the move arrived inside its window by the server's clock; then applies it through the state machine. A move for an old round changes nothing.
 8. **Points** for a round are paid when its results step is reached, to teams through the ledger, with ids made from the session, round and team so a repeated step can't pay twice.
 9. **Storage.** The session lives at `live/{slug}` in Realtime Database (written only by the server; phones never read it directly), with an in-memory store of the same contract for dev and tests.
 
 ## Data
 
-- RTDB `live/{slug}`: the session as one JSON value (step, round, seed, teams, timing, game state, revision).
-- RTDB `live/{slug}/rotation/{teamId}`: spec 24's who's-up rotation.
+- RTDB `live/{slug}`: one JSON string holding `{ session, rotation }`: the session (step, round, seed, teams, timing, game state, revision, and the captains' proven phones) and spec 24's who's-up rotation (player ids per team who've had a turn). One value, so every change is one transaction. Ending a session clears `session` and keeps `rotation`.
 - Ledger entries `live_{sessionId}_{round}_{teamId}` (spec 04).
 
 ## Routes and real-time
 
 - `POST /api/admin/events/[slug]/live`: `{ action: "start", gameId }`, `{ action: "next" }`, `{ action: "end" }`. Admin only. Returns the Controls view.
 - `GET /api/events/[slug]/live?playerId=...`: the caller's view, with `serverNow`. No playerId: the TV view.
-- `POST /api/events/[slug]/live`: `{ playerId, revision, action: "pick", who }` or `{ playerId, revision, action: "move", move }`. Captain only. Returns the captain view.
+- `POST /api/events/[slug]/live`: `{ playerId, round, action: "pick", who }` or `{ playerId, round, action: "move", move }`. Captain only. Returns the captain view.
 - Polling as in behavior 5; no Realtime Database listeners on phones (ADR-037).
 
 ## UI
@@ -54,20 +53,20 @@ The engine for games the host runs for the whole room at once, on the TV, with c
 
 ## Acceptance criteria
 
-- [ ] AC-1: The host starts a live game from Controls, only one session runs at a time (a second start is refused), and End stops it with earlier rounds' points kept.
-- [ ] AC-2: A pure state machine moves the session on Next, moves and time, refuses invalid transitions with a reason, and bumps the revision on every change.
-- [ ] AC-3: The live view is built per role (TV, captain, member), includes the server's time, and never contains a secret before its reveal.
-- [ ] AC-4: TV, Controls and phones poll about every 700 ms during a session and every 4 s otherwise, pause while hidden, and pick up the current state on reload.
-- [ ] AC-5: Devices estimate their offset from the server clock from view replies, keeping the shortest round trip, and rounds start at a shared server time about 2 s ahead.
-- [ ] AC-6: The server accepts a move only from that team's captain, for the current step and round, inside its window by the server clock; old revisions change nothing.
-- [ ] AC-7: Round points go to teams through the ledger with ids made from session, round and team, so a repeated step never pays twice.
-- [ ] AC-8: The session store has an in-memory and a Realtime Database backend that pass the same contract tests.
+- [x] AC-1: The host starts a live game from Controls, only one session runs at a time (a second start is refused), and End stops it with earlier rounds' points kept.
+- [x] AC-2: A pure state machine moves the session on Next, moves and time, refuses invalid transitions with a reason, and bumps the revision on every change.
+- [x] AC-3: The live view is built per role (TV, captain, member), includes the server's time, and never contains a secret before its reveal.
+- [x] AC-4: TV, Controls and phones poll about every 700 ms during a session and every 4 s otherwise, pause while hidden, and pick up the current state on reload.
+- [x] AC-5: Devices estimate their offset from the server clock from view replies, keeping the shortest round trip, and rounds start at a shared server time about 2 s ahead.
+- [x] AC-6: The server accepts a move only from that team's captain, for the current step and round, inside its window by the server clock; a move for an old round changes nothing.
+- [x] AC-7: Round points go to teams through the ledger with ids made from session, round and team, so a repeated step never pays twice.
+- [x] AC-8: The session store has an in-memory and a Realtime Database backend that pass the same contract tests.
 
 ## Tests
 
 - Unit: the state machine with a stand-in game (AC-2, AC-6), views (AC-3), clock offset estimation (AC-5), awards (AC-7), store contract (AC-8).
 - Component: the poll and clock hooks (AC-4, AC-5); the Controls Live card (AC-1).
-- E2E: start, step and end a live game with a stand-in showdown from Controls, with the TV and two captain phones (AC-1, AC-4).
+- E2E: start, step and end a live game from Controls, with the TV and two captain phones (AC-1, AC-4), using the first real showdown, Fly-by Count (spec 25), since stand-in games aren't registered in a production build.
 
 ## Out of scope
 

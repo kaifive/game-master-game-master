@@ -23,6 +23,7 @@ export default async function ControlsPage({ params }: { params: Promise<{ slug:
           type: g.type,
           ...(g.keepDrawings ? { keepDrawings: true } : {}),
         }))}
+      live={event.games.some((g) => g.mode === "live" && g.visibility !== "off")}
       initial={await controlsFor(slug)}
     />
   );

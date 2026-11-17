@@ -1,4 +1,5 @@
 import { AppError } from "@/lib/errors";
+import type { LiveRepo } from "@/lib/live";
 import { clearDrawings, type DrawingDeps } from "@/lib/drawings";
 import { pointsFor, type EventConfig, type EventStatus } from "@/lib/events";
 import {
@@ -33,6 +34,8 @@ export type AdminDeps = TeamDeps & {
   plays: PlayRepo;
   /** Kept drawings (ADR-032); left out where no test needs them. */
   drawings?: DrawingDeps;
+  /** The live session store (spec 11), cleared with test data. */
+  live?: LiveRepo;
 };
 
 export type ControlsPlayer = AdminPlayer & { points: number; teamId: string | null };
@@ -298,6 +301,8 @@ export async function clearTestData(deps: AdminDeps, event: EventConfig, confirm
   ]);
   await clearTeams(deps, event);
   if (deps.drawings) await clearDrawings(deps.drawings, event.slug);
+  // A live game and the who's-up rotation are test data too (spec 11).
+  if (deps.live) await deps.live.clear(event.slug);
 }
 
 /** The kept drawings, with each player's name and game title (S18-AC8). */

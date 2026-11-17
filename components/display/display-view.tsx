@@ -3,6 +3,10 @@
 import { useCallback } from "react";
 import { MomentsProvider, MomentsStage, ToastChainView, useCelebrate } from "@/components/motion";
 import { usePoll } from "@/components/leaderboard/use-poll";
+import { LiveTv } from "@/components/live/live-tv";
+import type { LiveRenderer } from "@/components/live/types";
+import { useLive } from "@/components/live/use-live";
+import { liveApi } from "@/lib/live";
 import { useSlots } from "@/components/slots/registry";
 import { leadChange, newAwards, standingsApi, type DisplayStandings } from "@/lib/points";
 import { cx } from "@/lib/ui";
@@ -10,7 +14,15 @@ import { QrCode } from "./qr";
 
 export const DISPLAY_POLL_MS = 3000;
 
-type Props = { slug: string; name: string; joinUrl: string; shortUrl: string; joinCode: string };
+type Props = {
+  slug: string;
+  name: string;
+  joinUrl: string;
+  shortUrl: string;
+  joinCode: string;
+  /** Live game screens; tests pass stand-ins. */
+  renderers?: Readonly<Record<string, LiveRenderer>>;
+};
 
 /** Spots what changed since the last update: new awards become toasts, a new leader a callout. */
 function useAnnouncements() {
@@ -196,7 +208,7 @@ function Board({ data }: { data: DisplayStandings }) {
   return <Results label="Leaderboard" rows={players} />;
 }
 
-function Screen({ slug, name, joinUrl, shortUrl, joinCode }: Props) {
+function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers }: Props) {
   const { Banner } = useSlots();
   const announce = useAnnouncements();
   const load = useCallback(async () => {
@@ -204,6 +216,22 @@ function Screen({ slug, name, joinUrl, shortUrl, joinCode }: Props) {
     return res.ok ? res.data : null;
   }, [slug]);
   const data = usePoll(load, DISPLAY_POLL_MS, announce);
+  // A live game takes over the screen while it runs (spec 11 UI).
+  const loadLive = useCallback(() => liveApi.view(slug, "", null), [slug]);
+  const live = useLive(loadLive);
+  if (live.view?.active)
+    return (
+      <div className="grid h-dvh grid-rows-[auto_1fr] overflow-hidden">
+        <Banner title={name} size="lg" />
+        <main className="min-h-0 overflow-hidden">
+          <LiveTv
+            view={live.view}
+            serverNow={live.serverNow}
+            {...(renderers ? { renderers } : {})}
+          />
+        </main>
+      </div>
+    );
   return (
     <div className="grid h-dvh grid-rows-[auto_1fr] overflow-hidden">
       <Banner title={name} size="lg" />
