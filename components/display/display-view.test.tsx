@@ -2,7 +2,7 @@ import { act, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { PackRoot } from "@/components/packs/judges-table/root";
 import { holiday2026 } from "@/content/events/holiday-2026";
-import { DISPLAY_POLL_MS, DisplayView } from "./display-view";
+import { DISPLAY_POLL_MS, DisplayView, SCREEN_POLL_MS } from "./display-view";
 
 vi.mock("@/components/motion/confetti", () => ({ fireConfetti: vi.fn() }));
 
@@ -20,6 +20,8 @@ const award = (id: string, nickname: string, points: number, reason: string, at:
   at,
 });
 
+let liveScreen = "leaderboard";
+
 function serve(...responses: unknown[]) {
   let i = 0;
   vi.stubGlobal(
@@ -27,7 +29,7 @@ function serve(...responses: unknown[]) {
     vi.fn((url: string) =>
       Promise.resolve(
         url.includes("/live")
-          ? Response.json({ active: false, serverNow: 0 })
+          ? Response.json({ active: false, serverNow: 0, screen: liveScreen })
           : Response.json({
               hidden: false,
               phase: "individual",
@@ -59,11 +61,38 @@ const next = async () => {
 };
 
 afterEach(() => {
+  liveScreen = "leaderboard";
   vi.unstubAllGlobals();
   vi.useRealTimers();
 });
 
 describe("DisplayView", () => {
+  test("S24-AC9: the host's switch puts the Showdown screen on the TV in place of the leaderboard, and back", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    serve({
+      phase: "team",
+      players: [],
+      recent: [],
+      teams: [{ id: "t1", rank: 1, name: "Reds", color: 1, points: 90 }],
+    });
+    show();
+    expect(await screen.findByRole("region", { name: "Join the party" })).toBeInTheDocument();
+    liveScreen = "showdown";
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(SCREEN_POLL_MS);
+    });
+    expect(
+      await screen.findByRole("heading", { name: "Next showdown coming up" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Team standings" })).toHaveTextContent("Reds");
+    expect(screen.queryByRole("region", { name: "Join the party" })).toBeNull();
+    liveScreen = "leaderboard";
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(SCREEN_POLL_MS);
+    });
+    expect(await screen.findByRole("region", { name: "Join the party" })).toBeInTheDocument();
+  });
+
   test("S05-AC3: shows the QR code, the short URL and the join code", () => {
     serve({ players: [], recent: [] });
     show();

@@ -39,7 +39,10 @@ test("S03-AC1 S03-AC2 S03-AC3 S03-AC6 S03-AC8: teams from captain to TV", async 
     await expect(page.getByText("Phase: Individual")).toBeVisible();
   }
   await page.getByPlaceholder("Find a player").fill(captain);
-  await page.getByRole("button", { name: new RegExp(captain) }).click();
+  await page
+    .getByRole("list", { name: "Players" })
+    .getByRole("button", { name: new RegExp(captain) })
+    .click();
   await page.getByRole("button", { name: "Make captain" }).click();
   await expect(page.getByRole("list", { name: "Teams" })).toContainText(`Team ${captain}`);
 
@@ -70,7 +73,10 @@ test("S03-AC1 S03-AC2 S03-AC3 S03-AC6 S03-AC8: teams from captain to TV", async 
 
   // A member gives the team some of the points the host gave them (S03-AC6).
   await page.getByPlaceholder("Find a player").fill(player);
-  await page.getByRole("button", { name: new RegExp(player) }).click();
+  await page
+    .getByRole("list", { name: "Players" })
+    .getByRole("button", { name: new RegExp(player) })
+    .click();
   await page.getByLabel("Points to add (negative to take away)").fill("40");
   await page.getByRole("button", { name: "Change points" }).click();
   await expect(page.getByRole("list", { name: "Players" })).toContainText("40");

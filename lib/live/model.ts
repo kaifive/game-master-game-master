@@ -6,7 +6,13 @@ import type { z } from "zod";
  */
 
 /** The host's steps through a showdown (S24-AC1). */
-export type Step = "intro" | "pick" | "play" | "results" | "final";
+export type Step = "intro" | "play" | "results" | "final";
+
+/** What the TV shows: the leaderboard, or the showdown (S24-AC9, ADR-038). */
+export type Screen = "leaderboard" | "showdown";
+
+/** Most and fewest teams a showdown is built for (S24-AC11). */
+export const MAX_TEAMS = 10;
 
 /** A team taking part, as it was when the session started. */
 export type LiveTeam = {
@@ -14,7 +20,7 @@ export type LiveTeam = {
   name: string;
   color: number;
   captainId: string | null;
-  /** Members in join order, captain first; each with the nickname to show. */
+  /** Members in join order, captain first: who can be this team's captain view or member view. */
   members: { id: string; nickname: string }[];
 };
 
@@ -33,16 +39,12 @@ export type Session = {
   rounds: number;
   seed: number;
   teams: LiveTeam[];
-  /** Who's up for each team this round (or this turn, in turn games). */
-  up: Record<string, string | null>;
   /** The game's own state for the current round, or null between rounds. */
   state: unknown;
   /** Points each team has won in this session so far. */
   scores: Record<string, number>;
   /** The last round's points, shown on the results step. */
   roundPoints: Record<string, number> | null;
-  /** In a turn game, the turn the current up player was given for. */
-  upTurn: number | null;
   /** Each captain's phone, once it has proved itself (ADR-037: no Firestore read per poll). */
   captainDevices: Record<string, string>;
   revision: number;
@@ -65,8 +67,8 @@ export type ShowdownGame<C = unknown, S = unknown> = {
   demo: string;
   /** How many rounds, for this many teams (fair leads: often one per team, S24-AC6). */
   rounds: (c: C, teams: number) => number;
-  /** Turn games pick a new teammate each turn, automatically (spec 27). */
-  turns?: boolean;
+  /** Fewest teams it can be played with (S24-AC11); 1 when left out. */
+  minTeams?: number;
   /** A round's starting state; `startsAt` is the shared server time it begins (S24-AC7). */
   deal: (c: C, ctx: { seed: number; round: number; teams: string[]; startsAt: number }) => S;
   /** A captain's move for their team, checked against the server clock. */

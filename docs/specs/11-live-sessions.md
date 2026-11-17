@@ -22,26 +22,26 @@ The engine for games the host runs for the whole room at once, on the TV, with c
 4. **Views per role.** `GET /api/events/[slug]/live` returns the view for the caller: the **TV** (no player), a **captain** (their team's controls and whatever they're allowed to know), or a **member** (Watch the TV and their team's status). Every view includes the server's current time. Nothing secret (answers not yet revealed, the next card or stocking, a path that's hidden) is in any view before it should be.
 5. **Following along.** The TV, Controls and phones poll the view about every 700 ms while a session runs and every 4 s otherwise, and pause while their tab is hidden. A reload picks up the current state.
 6. **Shared clock.** Each device estimates its offset from the server's clock from the view replies (the time sent, received and the server's time; keeping the reply with the shortest round trip), and shows timers against that clock. A round starts at `startsAt`, a moment about 2 s ahead, so every device has the start in hand before it happens.
-7. **Moves.** `POST /api/events/[slug]/live` with the player and a move. The server checks the player is their team's captain (or, for who's-up picks, the captain), that the step and round match, and that the move arrived inside its window by the server's clock; then applies it through the state machine. A move for an old round changes nothing.
+7. **Moves.** `POST /api/events/[slug]/live` with the player and a move. The server checks the player is their team's captain, that the step and round match, and that the move arrived inside its window by the server's clock; then applies it through the state machine. A move for an old round changes nothing.
 8. **Points** for a round are paid when its results step is reached, to teams through the ledger, with ids made from the session, round and team so a repeated step can't pay twice.
 9. **Storage.** The session lives at `live/{slug}` in Realtime Database (written only by the server; phones never read it directly), with an in-memory store of the same contract for dev and tests.
 
 ## Data
 
-- RTDB `live/{slug}`: one JSON string holding `{ session, rotation }`: the session (step, round, seed, teams, timing, game state, revision, and the captains' proven phones) and spec 24's who's-up rotation (player ids per team who've had a turn). One value, so every change is one transaction. Ending a session clears `session` and keeps `rotation`.
+- RTDB `live/{slug}`: one JSON string holding `{ session, played, screen }`: the session (step, round, seed, teams, timing, game state, revision, and the captains' proven phones), spec 24's Who's played (per team: people added by name and everyone marked played), and the TV screen (`leaderboard` or `showdown`). One value, so every change is one transaction. Ending a session clears `session` and keeps the rest.
 - Ledger entries `live_{sessionId}_{round}_{teamId}` (spec 04).
 
 ## Routes and real-time
 
-- `POST /api/admin/events/[slug]/live`: `{ action: "start", gameId }`, `{ action: "next" }`, `{ action: "end" }`. Admin only. Returns the Controls view.
+- `POST /api/admin/events/[slug]/live`: `{ action: "start", gameId }`, `{ action: "next" }`, `{ action: "end" }`, `{ action: "screen", screen }`, and Who's played: `{ action: "played", teamId, personId, played }`, `{ action: "add", teamId, name }`, `{ action: "remove", teamId, personId }`, `{ action: "reset", teamId }`. Admin only. Returns the Controls view.
 - `GET /api/events/[slug]/live?playerId=...`: the caller's view, with `serverNow`. No playerId: the TV view.
-- `POST /api/events/[slug]/live`: `{ playerId, round, action: "pick", who }` or `{ playerId, round, action: "move", move }`. Captain only. Returns the captain view.
+- `POST /api/events/[slug]/live`: `{ playerId, round, action: "move", move }`. Captain only. Returns the captain view.
 - Polling as in behavior 5; no Realtime Database listeners on phones (ADR-037).
 
 ## UI
 
-- **Controls:** a Live card: pick a live game and Start; while one runs, the step, what Next will do, Next, End, and each team's status.
-- **TV:** while a session runs, the display shows it instead of the leaderboard.
+- **Controls:** a Live card: the TV screen switch, pick a live game and Start; while one runs, the step, what Next will do, Next, End, and each team's points; and spec 24's Who's played.
+- **TV:** the display has a leaderboard screen and a live screen; the host switches between them, and starting a session switches to the live screen (spec 24, AC-9).
 - **Phones:** a "Live now" banner on the games list; captains get the game's controller, members Watch the TV.
 
 ## Edge cases

@@ -14,8 +14,6 @@ const session = (revision: number): Session => ({
   rounds: 1,
   seed: 1,
   teams: [],
-  up: {},
-  upTurn: null,
   state: null,
   scores: {},
   roundPoints: null,
@@ -28,16 +26,22 @@ const session = (revision: number): Session => ({
 export function liveRepoContract(make: () => Promise<LiveRepo>) {
   test("S11-AC8: starts empty, stores the session and rotation, and clears", async () => {
     const repo = await make();
-    expect(await repo.read(SLUG)).toEqual({ session: null, rotation: {} });
-    await repo.update(SLUG, () => ({ session: session(1), rotation: { t1: ["p1"] } }));
-    expect(await repo.read(SLUG)).toEqual({ session: session(1), rotation: { t1: ["p1"] } });
+    const empty = { session: null, played: {}, screen: "leaderboard" };
+    expect(await repo.read(SLUG)).toEqual(empty);
+    const stored = {
+      session: session(1),
+      played: { t1: { added: [{ id: "x1", name: "Grandma" }], played: ["p1"] } },
+      screen: "showdown" as const,
+    };
+    await repo.update(SLUG, () => stored);
+    expect(await repo.read(SLUG)).toEqual(stored);
     await repo.clear(SLUG);
-    expect(await repo.read(SLUG)).toEqual({ session: null, rotation: {} });
+    expect(await repo.read(SLUG)).toEqual(empty);
   });
 
   test("S11-AC8: an update sees the latest state, and returning null leaves it", async () => {
     const repo = await make();
-    await repo.update(SLUG, () => ({ session: session(1), rotation: {} }));
+    await repo.update(SLUG, () => ({ session: session(1), played: {}, screen: "leaderboard" }));
     const after = await repo.update(SLUG, (cur) =>
       cur.session
         ? { ...cur, session: { ...cur.session, revision: cur.session.revision + 1 } }

@@ -803,7 +803,7 @@ export function Controls({
   name: string;
   games: Game[];
   initial: View;
-  /** Whether the event has live games: shows the Live card (S11-AC1). */
+  /** Whether the event has teams or live games: shows the Showdown card and Who's played (S11-AC1, S24-AC2). */
   live?: boolean;
 }) {
   const [view, setView] = useState(initial);

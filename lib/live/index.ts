@@ -1,6 +1,6 @@
 export * from "./model";
 export * from "./machine";
-export * from "./rotation";
+export * from "./played";
 export * from "./fairness";
 export * from "./clock";
 export * from "./view";
@@ -9,4 +9,4 @@ export { EMPTY_LIVE } from "./repo";
 export { MemoryLiveRepo } from "./repo.memory";
 export { showdownFor, showdownTypes } from "./registry";
 export * from "./service";
-export { liveApi, adminLiveApi, type AdminLiveView } from "./client";
+export { liveApi, adminLiveApi, type AdminLiveAct, type AdminLiveView } from "./client";
