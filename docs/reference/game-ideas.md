@@ -75,3 +75,39 @@ Blind Bid), Snowball to 21, Stocking Stuffer and Snow Sum.
 | **Mirror Me** | Half a pattern lights up on a grid; tap the mirror image on your side. | Pathfinder |
 | **Unblur** | A club photo starts blurred and slowly sharpens; buzz in and pick who or what it is. The sooner, the more points. | Trivia |
 | **Shell Game** | Coach's medal goes under one of three presents, which shuffle faster each round; pick the right present. | Rapid Recall |
+
+## Even more team showdowns (2026-11-17)
+
+### Mind games
+
+| Idea | How it plays |
+| ---- | ------------ |
+| **Lowest Lonely Number** | Every team secretly picks a number from 1 to 20; the lowest number that nobody else picked wins. Pick 1 and hope nobody else dared. |
+| **Share or Snatch** | Teams pair up over a pot of points; each secretly picks Share or Snatch. Both share: split it. One snatches: they take it all. Both snatch: nobody gets it. |
+| **Odd One Wins** | A silly question with three answers ("Best weapon for a snowball fight?"); teams in the smallest group score. Guess what the room won't pick. |
+| **Hot Cocoa** | A hot cocoa mug sits with one team; on your turn pass it to any team. A hidden timer goes off, and whoever's holding it loses points. |
+
+### Board games on the big screen
+
+| Idea | How it plays |
+| ---- | ------------ |
+| **Dots and Boxes** | A dot grid on the TV; teams take turns drawing one line. Close a box to claim it and go again. Most boxes wins. |
+| **Ornament Drop** | A tall grid like Connect Four, but with every team: drop an ornament in a column on your turn; four in a row wins the round. |
+| **Snowball Strike** | Each team secretly hides three presents on its own small grid; teams take turns lobbing a snowball at another team's grid. Hit them all to knock that team out. Like Battleship. |
+| **Hide the Elf** | One team hides an elf on a grid; the others take turns guessing a square and hear hotter or colder. The longer it stays hidden, the more the hiders score. |
+
+### Eyes and ears
+
+| Idea | How it plays |
+| ---- | ------------ |
+| **What Moved?** | A holiday scene on the TV blinks, and one ornament has moved; tap where. |
+| **Count the Reds** | A flash of mixed ornaments; how many were red? (Or gold, or stars.) |
+| **Carol Clip** | Two seconds of a carol, sped up or backwards; pick the song from four. |
+
+### Off the phone
+
+| Idea | How it plays |
+| ---- | ------------ |
+| **Freeze** | Music plays and the up player dances holding the captain's phone; when it stops, freeze. The phone's motion sensor catches anyone still moving. |
+| **Strike a Pose** | The TV calls a stance or move; the up player does it for real. The host taps the best ones in Controls. |
+| **Forehead** | The up player holds the phone to their forehead with a wushu or holiday word on it; the team shouts clues, and tilting down means got it. Most in 60 s wins. |
