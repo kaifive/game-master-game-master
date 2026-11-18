@@ -46,6 +46,8 @@ export type PlaytestResult = {
   /** Moves the game turned down: fine for random bots, a bug for perfect ones. */
   rejected: { teamId: string; message: string }[];
   leaks: string[];
+  /** Each round's state once it closed (after the game's close step), for checking rules. */
+  finals: unknown[];
   ended: boolean;
 };
 
@@ -95,6 +97,7 @@ export function playtest(
     turnOrders: [],
     rejected: [],
     leaks: [],
+    finals: [],
     ended: false,
   };
 
@@ -119,7 +122,10 @@ export function playtest(
   const hostNext = (session: Session): Session | null => {
     const out = next(m, session, now);
     if (!out.ok) throw new Error(`Next refused on ${session.step}: ${out.message}`);
-    if (out.award) result.rounds.push(out.award.points);
+    if (out.award) {
+      result.rounds.push(out.award.points);
+      result.finals.push(out.session?.state);
+    }
     return out.session;
   };
 

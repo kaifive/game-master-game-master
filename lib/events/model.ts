@@ -28,6 +28,9 @@ export const GAME_TYPES = [
   "colorcount",
   "blindstop",
   "lastsecond",
+  "auction",
+  "stockings",
+  "snatch",
 ] as const;
 
 /** Game types that make a drawing, so they may keep it (ADR-032). */

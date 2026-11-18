@@ -74,13 +74,16 @@ function startPlay(m: Machine, s: Session, round: number, now: number): Session 
     round,
     teams: ids(s),
     startsAt: now + START_LEAD_MS,
+    // The last round's final state, for games that carry something forward.
+    prev: round > 1 ? s.state : null,
   });
   return bump(s, { step: "play", round, state, roundPoints: null });
 }
 
 /** Closes the round: final tick, score, and the points to pay (S11-AC7). */
 function closeRound(m: Machine, s: Session, now: number): Outcome {
-  const state = m.game.tick(s.state, m.content, now);
+  const ticked = m.game.tick(s.state, m.content, now);
+  const state = m.game.close ? m.game.close(ticked, m.content, now) : ticked;
   const points = m.game.score(state, m.content, ids(s));
   const scores = { ...s.scores };
   for (const [teamId, p] of Object.entries(points)) scores[teamId] = (scores[teamId] ?? 0) + p;

@@ -6,6 +6,7 @@ event's file in `content/events/` with its type id.
 
 | Game | Type id | What it is |
 | ---- | ------- | ---------- |
+| Auction | `auction` | Showdown: bid your numbers 1 to 10, each once a game; tied bids cancel, highest wins. |
 | Blind Stop | `blindstop` | Showdown: stop a clock at exactly 10.00 after it hides behind a question mark. |
 | Block Fit | `blocks` | Drag and turn pieces to fill a board exactly; can rebuild a photo. |
 | Color Count | `colorcount` | Showdown: ornaments flash on the TV, then it asks how many of one color there were. |
@@ -20,8 +21,10 @@ event's file in `content/events/` with its type id.
 | Quick Draw | `draw` | Draw a shape from memory, such as a logo; a judge scores how close it is. |
 | Rapid Recall | `recall` | Remember which squares lit up, over rounds that get bigger. |
 | Secret Word | `word` | Guess a hidden 5-letter word in 6 tries, with colored tiles as clues. |
+| Share or Snatch | `snatch` | Showdown: two teams, one pot; both share and split it, one snatches and takes it all. |
 | Snow Sum | `snowsum` | Showdown: snowflakes marked +3, -2 or x2 fall one at a time; teams keep the total. |
 | Stack Attack | `stacker` | Tap to drop a sliding row and stack it as high as you can; overhangs get chopped. |
+| Stocking Stuffer | `stockings` | Showdown: open another stocking for points or bank them; coal loses the round's haul. |
 | T-Timer | `timer` | Stop a running clock inside a tiny target window, like 1.20 to 1.25 seconds. |
 | Tap Masher | `taps` | Tap as fast as you can for a few seconds; can play a video one frame per tap. |
 | Trivia | `trivia` | Multiple-choice questions against the clock; faster right answers score more. |

@@ -1,5 +1,6 @@
 import { colorcountRenderer } from "./games/colorcount";
 import { flybyRenderer } from "./games/flyby";
+import { auctionRenderer, snatchRenderer, stockingsRenderer } from "./games/nerve";
 import { snowsumRenderer } from "./games/snowsum";
 import { blindstopRenderer, lastsecondRenderer } from "./games/stops";
 import type { LiveRenderer } from "./types";
@@ -11,4 +12,7 @@ export const LIVE_RENDERERS: Readonly<Record<string, LiveRenderer>> = {
   colorcount: colorcountRenderer,
   blindstop: blindstopRenderer,
   lastsecond: lastsecondRenderer,
+  auction: auctionRenderer,
+  stockings: stockingsRenderer,
+  snatch: snatchRenderer,
 };
