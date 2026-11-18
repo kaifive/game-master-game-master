@@ -119,7 +119,8 @@ export function Reveal({
   note,
 }: {
   view: ActiveLiveView;
-  answer: (teamId: string) => string | null;
+  /** What a team answered; leave out for games with no one answer per team. */
+  answer?: (teamId: string) => string | null;
   note?: (teamId: string) => string | null;
 }) {
   const { ScoreCard } = useSlots();
@@ -133,7 +134,7 @@ export function Reveal({
       }}
     >
       {ranked.map((t) => {
-        const said = answer(t.id);
+        const said = answer ? answer(t.id) : undefined;
         const extra = note?.(t.id) ?? null;
         return (
           <li
@@ -144,16 +145,18 @@ export function Reveal({
               <Swatch color={t.color} />
               <span className="truncate">{t.name}</span>
             </span>
-            <span
-              className={cx(
-                "font-gm-display leading-none font-bold tabular-nums",
-                said === null
-                  ? "py-[1vh] text-[clamp(1.2rem,3.4vh,2.4rem)] text-gm-text-muted"
-                  : "text-[clamp(2.4rem,8.5vh,6rem)]",
-              )}
-            >
-              {said ?? "No answer"}
-            </span>
+            {said !== undefined && (
+              <span
+                className={cx(
+                  "font-gm-display leading-none font-bold tabular-nums",
+                  said === null
+                    ? "py-[1vh] text-[clamp(1.2rem,3.4vh,2.4rem)] text-gm-text-muted"
+                    : "text-[clamp(2.4rem,8.5vh,6rem)]",
+                )}
+              >
+                {said ?? "No answer"}
+              </span>
+            )}
             {extra && (
               <span className="text-[clamp(0.9rem,2.2vh,1.6rem)] text-gm-text-muted">{extra}</span>
             )}
@@ -350,5 +353,37 @@ export function StopButton({
     >
       {label}
     </button>
+  );
+}
+
+/** Whose turn it is, on the TV: the team, big, and the time it has left. */
+export function TurnBanner({
+  view,
+  team,
+  endsAt,
+  total,
+  now,
+  doing,
+}: {
+  view: ActiveLiveView;
+  team: string | null;
+  endsAt: number;
+  total: number;
+  now: number;
+  /** What the team is doing, after its name: "is up", "is crossing". */
+  doing: string;
+}) {
+  const t = view.teams.find((x) => x.id === team);
+  if (!t) return null;
+  return (
+    <div className="grid gap-[1.2vh]">
+      <p className="m-0 flex items-center justify-center gap-[0.4em] font-gm-display text-[clamp(1.8rem,5vh,3.8rem)] font-bold">
+        <Swatch color={t.color} />
+        <span>
+          {t.name} {doing}
+        </span>
+      </p>
+      <TimeLeft closesAt={endsAt} now={now} total={total} />
+    </div>
   );
 }

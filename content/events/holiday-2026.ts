@@ -277,6 +277,10 @@ export const holiday2026: EventConfig = {
         ["auction", "Auction"],
         ["stockings", "Stocking Stuffer"],
         ["snatch", "Share or Snatch"],
+        ["path", "Memory Path"],
+        ["shuffle", "Present Shuffle"],
+        ["to21", "Snowball to 21"],
+        ["landmass", "Land Mass"],
       ] as const
     ).map(([type, title]) => ({
       id: type,

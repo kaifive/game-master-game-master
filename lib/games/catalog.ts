@@ -126,6 +126,26 @@ export const CATALOG: readonly CatalogEntry[] = [
     name: "Share or Snatch",
     pitch: "Showdown: two teams, one pot; both share and split it, one snatches and takes it all.",
   },
+  {
+    type: "path",
+    name: "Memory Path",
+    pitch: "Showdown: a path lights up and hides; teams take turns crossing it from memory.",
+  },
+  {
+    type: "shuffle",
+    name: "Present Shuffle",
+    pitch: "Showdown: presents show their points, then shuffle; teams take turns picking one.",
+  },
+  {
+    type: "to21",
+    name: "Snowball to 21",
+    pitch: "Showdown: teams take turns adding 1, 2 or 3; whoever makes exactly 21 wins.",
+  },
+  {
+    type: "landmass",
+    name: "Land Mass",
+    pitch: "Showdown: teams take turns placing block pieces on one board; the most land wins.",
+  },
 ];
 
 /** The library, sorted by name, as the admin shows it. */

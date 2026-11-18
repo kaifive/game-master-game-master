@@ -5,7 +5,9 @@ import { LiveTv } from "@/components/live/live-tv";
 import type { ActiveLiveView } from "@/components/live/types";
 import { useSlots } from "@/components/slots/registry";
 import type { GalleryMoment } from "./showdown-moments";
+import type { Cell } from "@/lib/games";
 import {
+  cover,
   liveView,
   move,
   next,
@@ -45,7 +47,13 @@ function teams(n: number): LiveTeam[] {
 type Script = (
   state: unknown,
   n: number,
-) => { moves: [string, unknown, number][]; show: number; answer: number };
+) => {
+  moves: [string, unknown, number][];
+  show: number;
+  answer: number;
+  /** Turn games: the move the team whose turn it is makes now, from the state as it stands. */
+  drive?: (state: unknown, turn: string, i: number) => unknown;
+};
 
 const SCRIPTS: Record<string, Script> = {
   auction: () => ({
@@ -68,6 +76,53 @@ const SCRIPTS: Record<string, Script> = {
     ],
     show: 2000,
     answer: 5600,
+  }),
+  to21: () => ({ moves: [], show: 3500, answer: 3500, drive: () => ({ add: 3 }) }),
+  path: (state) => {
+    const p = state as {
+      showEndsAt: number;
+      startsAt: number;
+      path: [number, number][];
+      progress: number;
+      at: number;
+    };
+    const show = p.showEndsAt - p.startsAt;
+    return {
+      moves: [],
+      show: Math.round(show * 0.6),
+      answer: show + 4200,
+      // The first team gets 4 right, then misses; the next crosses.
+      drive: (s) => {
+        const st = s as typeof p;
+        if (st.at === 0 && st.progress === 4) return { square: [-1, -1] };
+        return { square: st.path[st.progress] };
+      },
+    };
+  },
+  shuffle: (state) => {
+    const p = state as { shuffleEndsAt: number; startsAt: number; picks: Record<string, unknown> };
+    const settled = p.shuffleEndsAt - p.startsAt;
+    return {
+      moves: [],
+      show: settled - 2400,
+      answer: settled + 2000,
+      drive: (_s, _t, i) => ({ slot: (i * 4) % 9 }),
+    };
+  },
+  landmass: () => ({
+    moves: [],
+    show: 9000,
+    answer: 9000,
+    drive: (s, _t, i) => {
+      const st = s as Parameters<typeof cover>[0] & { tray: Cell[][] };
+      for (const [k, piece] of st.tray.entries()) {
+        for (let row = 0; row < st.rows; row++)
+          for (let col = (i * 3) % st.cols; col < st.cols; col++)
+            for (let turns = 0; turns < 4; turns++)
+              if (cover(st, piece, turns, row, col)) return { piece: k, turns, row, col };
+      }
+      return null;
+    },
   }),
   snatch: (state) => {
     const pairs = (state as { pairs: [string, string][] }).pairs;
@@ -124,6 +179,21 @@ function freeze(type: string, moment: GalleryMoment, n: number) {
       const out = move(m, s, teamId, mv, startsAt + at);
       if (out.ok && out.session) s = out.session;
     }
+    // Turn games: whoever's turn it is moves every 0.7 s, from the state as it stands.
+    if (script.drive)
+      for (let i = 0, at = 0; i < 60; i++) {
+        const turn = m.game.turn?.(s.state, m.content, startsAt + at);
+        at = Math.max(at, 800) + 700;
+        if (!turn) {
+          if (at > until) break;
+          continue;
+        }
+        if (at > until) break;
+        const mv = script.drive(s.state, turn.teamId, i);
+        if (mv === null) break;
+        const out = move(m, s, turn.teamId, mv, startsAt + at);
+        if (out.ok && out.session) s = out.session;
+      }
     let now = startsAt + Math.min(until, 30_000);
     const t = tick(m, s, now);
     if (t.ok && t.session) s = t.session;
@@ -195,6 +265,10 @@ export const TITLES: Record<string, string> = {
   auction: "Auction",
   stockings: "Stocking Stuffer",
   snatch: "Share or Snatch",
+  path: "Memory Path",
+  shuffle: "Present Shuffle",
+  to21: "Snowball to 21",
+  landmass: "Land Mass",
 };
 
 /** The TV at a moment, as the display shows it. */
@@ -233,14 +307,17 @@ export function ShowdownPhoneFrame({
   type,
   moment,
   teamCount = 4,
+  as,
 }: {
   type: string;
   moment: GalleryMoment;
   teamCount?: number;
+  /** Whose phone to show; by default team 4 on the answer moment, else team 1. */
+  as?: string | undefined;
 }) {
   const frozen = freeze(type, moment, teamCount);
   if (!frozen) return <p>Unknown showdown {type}</p>;
-  const captain = moment === "answer" ? "t4" : "t1";
+  const captain = as ?? (moment === "answer" ? "t4" : "t1");
   const view = liveView(frozen.m, frozen.s, { kind: "captain", teamId: captain }, frozen.now);
   return (
     <main className="mx-auto grid w-full max-w-xl gap-5 px-4 py-5">

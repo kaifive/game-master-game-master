@@ -31,6 +31,10 @@ export const GAME_TYPES = [
   "auction",
   "stockings",
   "snatch",
+  "path",
+  "shuffle",
+  "to21",
+  "landmass",
 ] as const;
 
 /** Game types that make a drawing, so they may keep it (ADR-032). */
