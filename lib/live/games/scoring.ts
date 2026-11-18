@@ -10,6 +10,8 @@ export const REST = 10;
 export function rankedPoints(
   teams: readonly string[],
   score: (teamId: string) => number | null,
+  ladder: readonly number[] = LADDER,
+  rest: number = REST,
 ): Record<string, number> {
   const answered = teams
     .map((t) => ({ t, v: score(t) }))
@@ -20,7 +22,7 @@ export function rankedPoints(
   answered.forEach((x, i) => {
     const prev = answered[i - 1];
     if (!prev || prev.v !== x.v) place = i;
-    out[x.t] = LADDER[place] ?? REST;
+    out[x.t] = ladder[place] ?? rest;
   });
   return out;
 }

@@ -1,4 +1,13 @@
-import { blindstop, colorcount, flyby, lastsecond, snowsum } from "./games";
+import {
+  auction,
+  blindstop,
+  colorcount,
+  flyby,
+  lastsecond,
+  snatch,
+  snowsum,
+  stockings,
+} from "./games";
 import type { AnyShowdown } from "./model";
 
 /**
@@ -11,6 +20,9 @@ const SHOWDOWNS: Record<string, AnyShowdown> = {
   colorcount,
   blindstop,
   lastsecond,
+  auction,
+  stockings,
+  snatch,
 };
 
 export const showdownFor = (type: string): AnyShowdown | undefined => SHOWDOWNS[type];

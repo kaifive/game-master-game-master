@@ -111,6 +111,21 @@ export const CATALOG: readonly CatalogEntry[] = [
     name: "Last Second",
     pitch: "Showdown: stop a countdown as late as you dare; hit zero and you get nothing.",
   },
+  {
+    type: "auction",
+    name: "Auction",
+    pitch: "Showdown: bid your numbers 1 to 10, each once a game; tied bids cancel, highest wins.",
+  },
+  {
+    type: "stockings",
+    name: "Stocking Stuffer",
+    pitch: "Showdown: open another stocking for points or bank them; coal loses the round's haul.",
+  },
+  {
+    type: "snatch",
+    name: "Share or Snatch",
+    pitch: "Showdown: two teams, one pot; both share and split it, one snatches and takes it all.",
+  },
 ];
 
 /** The library, sorted by name, as the admin shows it. */

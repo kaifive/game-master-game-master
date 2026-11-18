@@ -56,7 +56,7 @@ A feature item needs its spec at `Ready` before it starts.
 - [ ] Spec 12, buzzer and Jeopardy board
 - [x] Spec 24, showdown framework: Who's played, the Showdown screen, TV demos, fair leads and clocks, bot play tests
 - [ ] Spec 25, showdowns: Fly-by Count, Snow Sum, Color Count, Blind Stop, Last Second (built; blind review next)
-- [ ] Spec 26, showdowns: Auction, Stocking Stuffer, Share or Snatch
+- [ ] Spec 26, showdowns: Auction, Stocking Stuffer, Share or Snatch (built; blind review next)
 - [ ] Spec 27, showdowns: Memory Path, Present Shuffle, Snowball to 21, Land Mass
 - [ ] Blind review of every showdown (docs/reviews/showdowns.md)
 

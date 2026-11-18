@@ -9,6 +9,7 @@ import {
   liveView,
   move,
   next,
+  tick,
   playtestTeams,
   showdownFor,
   startSession,
@@ -35,6 +36,51 @@ const NAMES = [
 function teams(n: number): LiveTeam[] {
   return playtestTeams(n).map((t, i) => ({ ...t, name: NAMES[i] ?? t.name }));
 }
+
+/**
+ * Made-up play for games whose rounds aren't a single answer: moves at times
+ * after the shared start, and the times the "show" and "answer" moments
+ * freeze at. Moves up to the frozen time are played.
+ */
+type Script = (
+  state: unknown,
+  n: number,
+) => { moves: [string, unknown, number][]; show: number; answer: number };
+
+const SCRIPTS: Record<string, Script> = {
+  auction: () => ({
+    moves: [
+      ["t1", { bid: 10 }, 800],
+      ["t2", { bid: 10 }, 1600],
+      ["t3", { bid: 7 }, 2400],
+    ],
+    show: 2000,
+    answer: 4000,
+  }),
+  stockings: (_s, n) => ({
+    moves: [
+      ...Array.from({ length: n }, (_, i): [string, unknown, number] => [
+        `t${String(i + 1)}`,
+        { choice: i === 2 ? "bank" : "open" },
+        800 + i * 100,
+      ]),
+      ["t1", { choice: "open" }, 5200],
+    ],
+    show: 2000,
+    answer: 5600,
+  }),
+  snatch: (state) => {
+    const pairs = (state as { pairs: [string, string][] }).pairs;
+    return {
+      moves: pairs.flatMap(([a, b], i): [string, unknown, number][] => [
+        [a, { choice: i === 0 ? "snatch" : "share" }, 900],
+        [b, { choice: "share" }, 1700],
+      ]),
+      show: 1200,
+      answer: 3000,
+    };
+  },
+};
 
 /** Plays the round up to the moment, with made-up answers from a few teams. */
 function freeze(type: string, moment: GalleryMoment, n: number) {
@@ -63,6 +109,28 @@ function freeze(type: string, moment: GalleryMoment, n: number) {
   if (moment === "intro") return { m, s: fresh, now: T0 };
   let s = step(fresh, T0);
   const startsAt = T0 + START_LEAD_MS;
+  const script = SCRIPTS[type]?.(s.state, n);
+  if (script) {
+    const until =
+      moment === "ready"
+        ? -1400
+        : moment === "show"
+          ? script.show
+          : moment === "answer"
+            ? script.answer
+            : 60_000;
+    for (const [teamId, mv, at] of script.moves) {
+      if (at > until) break;
+      const out = move(m, s, teamId, mv, startsAt + at);
+      if (out.ok && out.session) s = out.session;
+    }
+    let now = startsAt + Math.min(until, 30_000);
+    const t = tick(m, s, now);
+    if (t.ok && t.session) s = t.session;
+    if (moment === "results" || moment === "final") s = step(s, (now += 1000));
+    if (moment === "final") while (s.step !== "final") s = step(s, now);
+    return { m, s, now };
+  }
   const st = s.state as {
     showEndsAt?: number;
     closesAt?: number;
@@ -124,6 +192,9 @@ export const TITLES: Record<string, string> = {
   colorcount: "Color Count",
   blindstop: "Blind Stop",
   lastsecond: "Last Second",
+  auction: "Auction",
+  stockings: "Stocking Stuffer",
+  snatch: "Share or Snatch",
 };
 
 /** The TV at a moment, as the display shows it. */

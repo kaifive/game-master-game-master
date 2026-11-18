@@ -69,12 +69,24 @@ export type ShowdownGame<C = unknown, S = unknown> = {
   rounds: (c: C, teams: number) => number;
   /** Fewest teams it can be played with (S24-AC11); 1 when left out. */
   minTeams?: number;
-  /** A round's starting state; `startsAt` is the shared server time it begins (S24-AC7). */
-  deal: (c: C, ctx: { seed: number; round: number; teams: string[]; startsAt: number }) => S;
+  /**
+   * A round's starting state; `startsAt` is the shared server time it begins
+   * (S24-AC7). `prev` is the last round's final state (null in round 1), for
+   * games that carry something from round to round, like Auction's numbers.
+   */
+  deal: (
+    c: C,
+    ctx: { seed: number; round: number; teams: string[]; startsAt: number; prev: S | null },
+  ) => S;
   /** A captain's move for their team, checked against the server clock. */
   move: (s: S, c: C, ctx: { teamId: string; move: unknown; now: number }) => MoveResult<S>;
   /** Time passing: windows closing, turns timing out. Returns the same object when nothing changed. */
   tick: (s: S, c: C, now: number) => S;
+  /**
+   * Settles anything still open when the round closes, even early: a team
+   * that didn't answer gets its default (Bank, Share, its lowest number).
+   */
+  close?: (s: S, c: C, now: number) => S;
   /** Whether the round has nothing left to wait for (Next is allowed any time regardless). */
   over: (s: S, c: C, now: number) => boolean;
   /** Points per team for the round; teams that didn't play score 0. */

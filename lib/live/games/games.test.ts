@@ -16,7 +16,7 @@ const cap = (teamId: string) => ({ kind: "captain", teamId }) as const;
 
 function play<S>(game: AnyShowdown, content: unknown, round = 1, seed = 7) {
   const c = game.content.parse(content);
-  const state = game.deal(c, { seed, round, teams, startsAt: T0 }) as S;
+  const state = game.deal(c, { seed, round, teams, startsAt: T0, prev: null }) as S;
   const step = (s: S, teamId: string, move: unknown, now: number) => {
     const r = game.move(s, c, { teamId, move, now }) as MoveResult<S>;
     if (!r.ok) throw new Error(r.message);

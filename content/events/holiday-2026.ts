@@ -274,6 +274,9 @@ export const holiday2026: EventConfig = {
         ["colorcount", "Color Count"],
         ["blindstop", "Blind Stop"],
         ["lastsecond", "Last Second"],
+        ["auction", "Auction"],
+        ["stockings", "Stocking Stuffer"],
+        ["snatch", "Share or Snatch"],
       ] as const
     ).map(([type, title]) => ({
       id: type,

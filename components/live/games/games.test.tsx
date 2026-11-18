@@ -18,7 +18,7 @@ function round(type: string, moves: [string, unknown, number][] = []) {
   const game = showdownFor(type);
   if (!game) throw new Error(type);
   const c = game.content.parse({});
-  let state = game.deal(c, { seed: 4, round: 1, teams: ["t1", "t2"], startsAt: T0 });
+  let state = game.deal(c, { seed: 4, round: 1, teams: ["t1", "t2"], startsAt: T0, prev: null });
   for (const [teamId, move, at] of moves) {
     const r = game.move(state, c, { teamId, move, now: at });
     if (!r.ok) throw new Error(r.message);

@@ -16,7 +16,7 @@ async function joinOnPhone(browser: Browser, name: string, baseURL: string): Pro
   return phone;
 }
 
-test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1: a Fly-by Count showdown from Controls, on the TV and two captains' phones", async ({
+test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1 S26-AC2: Fly-by Count and Stocking Stuffer showdowns from Controls, on the TV and two captains' phones", async ({
   page,
   browser,
 }, info) => {
@@ -44,7 +44,9 @@ test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1: a Fly-by Count sh
       .getByRole("button", { name: new RegExp(name) })
       .click();
     await page.getByRole("button", { name: "Make captain" }).click();
-    await expect(page.getByRole("list", { name: "Teams" })).toContainText(`Team ${name}`);
+    await expect(page.getByRole("list", { name: "Teams", exact: true })).toContainText(
+      `Team ${name}`,
+    );
   }
   await page.getByRole("button", { name: "Start the team phase" }).click();
   await page.getByRole("button", { name: "Yes, start teams" }).click();
@@ -91,7 +93,24 @@ test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1: a Fly-by Count sh
   await expect(capA.getByText("Look at the TV!")).toBeVisible();
 
   await expect(page.getByText("Phase: Team")).toBeVisible();
-  // End early, then the host switches the TV back to the leaderboard (S11-AC1, S24-AC9).
+  // End early: the TV shows the standings between showdowns (S11-AC1, S24-AC9).
+  await page.getByRole("button", { name: "End early" }).click();
+  await expect(tv.getByRole("heading", { name: "Next showdown coming up" })).toBeVisible();
+
+  // A nerve game: Stocking Stuffer, one team opens and one banks (S26-AC2).
+  await page.getByLabel("Showdown to start").selectOption({ label: "Stocking Stuffer" });
+  await page.getByRole("button", { name: "Start on the TV" }).click();
+  await expect(tv.getByRole("heading", { name: "Stocking Stuffer" })).toBeVisible();
+  await page.getByRole("button", { name: "Start round 1" }).click();
+  await capA.reload();
+  await capB.reload();
+  await capA.getByRole("button", { name: "Open a stocking" }).click();
+  await capB.getByRole("button", { name: /Bank/ }).click();
+  // Choices are secret until every team still in has chosen (teams with no phone haven't yet).
+  await expect(capB.getByText("Banking 0")).toBeVisible();
+  await expect(tv.getByRole("list", { name: "Teams" })).toContainText("Chosen");
+  await page.getByRole("button", { name: "Show results" }).click();
+  await expect(tv.getByText("Banked this round")).toBeVisible();
   await page.getByRole("button", { name: "End early" }).click();
   await expect(tv.getByRole("heading", { name: "Next showdown coming up" })).toBeVisible();
   await page.getByRole("button", { name: "Leaderboard" }).click();
