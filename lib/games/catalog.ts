@@ -1,7 +1,8 @@
 /**
  * The game library (spec 23): every game type that's been built, with a name
  * and a one-line pitch. The admin Games page and docs/GAMES.md both come from
- * here; a test ties it to the registry, so a new game type needs an entry.
+ * here; a test ties it to the registries (solo games and showdowns), so a
+ * new game type needs an entry.
  * Choosing an event's games stays in its event file (ADR-035).
  */
 export type CatalogEntry = {
@@ -83,6 +84,32 @@ export const CATALOG: readonly CatalogEntry[] = [
     type: "photo-challenge",
     name: "Photo Challenge",
     pitch: "Take a photo to a prompt, like Spot and Snipe; the host rates it.",
+  },
+  // Showdowns: team games on the TV, captains' phones as controllers (spec 24).
+  {
+    type: "flyby",
+    name: "Fly-by Count",
+    pitch: "Showdown: presents fly across the TV and teams count them; exact scores 100.",
+  },
+  {
+    type: "snowsum",
+    name: "Snow Sum",
+    pitch: "Showdown: snowflakes marked +3, -2 or x2 fall one at a time; teams keep the total.",
+  },
+  {
+    type: "colorcount",
+    name: "Color Count",
+    pitch: "Showdown: ornaments flash on the TV, then it asks how many of one color there were.",
+  },
+  {
+    type: "blindstop",
+    name: "Blind Stop",
+    pitch: "Showdown: stop a clock at exactly 10.00 after it hides behind a question mark.",
+  },
+  {
+    type: "lastsecond",
+    name: "Last Second",
+    pitch: "Showdown: stop a countdown as late as you dare; hit zero and you get nothing.",
   },
 ];
 

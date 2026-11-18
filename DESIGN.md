@@ -360,6 +360,16 @@ Big moments play one at a time. Flip moments show a highlight score card with an
 
 The fixed admin theme: white cards with a gray header strip ("Event", "Teams (2)"), indigo primary buttons, white secondary buttons with a slate border, red-outlined destructive actions that confirm (type CLEAR), dense player rows with bold tabular scores on the right, small uppercase status pill beside the event name.
 
+### Showdown screens (specs 24, 25)
+
+Showdowns use only core tokens, so any event's pack skins them.
+
+- **TV:** one moment fills the screen at a time: a giant "get ready" count in `accent-ink` Oswald, then the game (presents in gift wrap flying across, a falling snowflake with its sum, ornaments flashing, a white clock card), then "How many presents?" with a gold draining bar and a lock-in row (team swatch, name, a drawn check and "In", or "Thinking"; never the answer). The reveal holds every team up in one row of up to 6: name and swatch, its answer in big Oswald (or "No answer" in muted ink), a note ("Exactly right!", "One off", "+0.04 off"), its round points on a `lg` Score Card, and its showdown total.
+- **Clock card:** white (`tile-present`) with Oswald numerals at up to 20rem; Last Second turns it `accent` with a pop each second for the last 3 seconds; Blind Stop swaps the numerals for a "?" after 3 seconds.
+- **Ornaments:** five colors from the team palette, each with its own white pattern (stripes, dots, zigzag, star, rings), so color is never the only signal; the question shows the ornament beside its color's name.
+- **Captain phone:** a white number card over a 3 x 3 pad of white keys (64 px tall), a drawn rub-out key, a minus key where totals can go negative, and a full-width `accent` Lock in that names the number. Stop games get one round `buzzer` button, 20rem across, that fires on press, not release; Blind Stop's phone never shows the clock.
+- **Standings update:** the final step's team bars, old order first, then the points roll on and teams slide to their places, with a gold chip and drawn up-arrow for each team that rose.
+
 ## Do's and Don'ts
 
 ### Do:

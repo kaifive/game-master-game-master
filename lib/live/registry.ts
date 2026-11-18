@@ -1,10 +1,17 @@
+import { blindstop, colorcount, flyby, lastsecond, snowsum } from "./games";
 import type { AnyShowdown } from "./model";
 
 /**
  * Every showdown type the server can run (specs 25 to 27). Each game's
  * module adds itself here; a type missing from this list can't be started.
  */
-const SHOWDOWNS: Record<string, AnyShowdown> = {};
+const SHOWDOWNS: Record<string, AnyShowdown> = {
+  flyby,
+  snowsum,
+  colorcount,
+  blindstop,
+  lastsecond,
+};
 
 export const showdownFor = (type: string): AnyShowdown | undefined => SHOWDOWNS[type];
 

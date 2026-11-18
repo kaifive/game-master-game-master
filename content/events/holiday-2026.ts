@@ -265,6 +265,26 @@ export const holiday2026: EventConfig = {
       content: holidayTrivia,
       scoring: { awardTo: "team" },
     },
+    // Showdowns (specs 24, 25): team games the host runs on the TV; captains' phones are
+    // the controllers. Hidden from the phones' list: the "Live now" banner leads there.
+    ...(
+      [
+        ["flyby", "Fly-by Count"],
+        ["snowsum", "Snow Sum"],
+        ["colorcount", "Color Count"],
+        ["blindstop", "Blind Stop"],
+        ["lastsecond", "Last Second"],
+      ] as const
+    ).map(([type, title]) => ({
+      id: type,
+      type,
+      title,
+      mode: "live" as const,
+      phase: "team" as const,
+      visibility: "hidden" as const,
+      content: {},
+      scoring: { awardTo: "team" as const },
+    })),
     {
       id: "jeopardy",
       type: "jeopardy",

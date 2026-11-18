@@ -19,6 +19,7 @@ import {
   TeamView,
   UpcomingView,
 } from "./views";
+import { showdownTypes } from "@/lib/live";
 
 const push = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -29,10 +30,13 @@ vi.mock("@/components/motion/confetti", () => ({ fireConfetti: vi.fn() }));
 
 // The party's games, plus one with no phone screen yet (a solo Jeopardy) to show it isn't listed.
 // Team Trivia and Jeopardy are hidden at the party; listed here to cover team and live games.
+// Showdowns stay off the list (the Live now banner leads to them), so they're left out.
 const event = toPublicEvent({
   ...holiday2026,
   games: [
-    ...holiday2026.games.map((g) => ({ ...g, visibility: "listed" as const })),
+    ...holiday2026.games
+      .filter((g) => !showdownTypes().includes(g.type))
+      .map((g) => ({ ...g, visibility: "listed" as const })),
     {
       id: "ornament-hunt",
       type: "jeopardy",
