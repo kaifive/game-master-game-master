@@ -2,6 +2,7 @@
 
 import { useCallback, useId, useState } from "react";
 import { AdminButton, Card, field } from "@/components/admin/ui";
+import { CheckIcon } from "@/components/icons/game";
 import { adminLiveApi, type AdminLiveAct, type AdminLiveView, type Roster } from "@/lib/live";
 import { cx } from "@/lib/ui";
 import { useLive } from "./use-live";
@@ -60,7 +61,7 @@ function StartGame({ view, act, busy }: { view: AdminLiveView; act: Act; busy: b
       <div className="flex flex-wrap items-end gap-3">
         <div className="grid min-w-48 flex-1 gap-1">
           <label htmlFor={selectId} className="text-sm font-bold">
-            Game
+            Showdown to start
           </label>
           <select
             id={selectId}
@@ -145,7 +146,7 @@ function TeamPlayed({ team, act, busy }: { team: Roster; act: Act; busy: boolean
                   : undefined
               }
             >
-              {p.played && <span aria-hidden="true">✓</span>}
+              {p.played && <CheckIcon size={16} />}
               {p.name}
             </button>
             {p.added && (

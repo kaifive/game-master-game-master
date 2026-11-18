@@ -22,6 +22,12 @@ export const GAME_TYPES = [
   "blocks",
   "photo-challenge",
   "jeopardy",
+  // Showdowns (specs 24 to 27).
+  "flyby",
+  "snowsum",
+  "colorcount",
+  "blindstop",
+  "lastsecond",
 ] as const;
 
 /** Game types that make a drawing, so they may keep it (ADR-032). */

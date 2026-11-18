@@ -78,7 +78,9 @@ test("S23-AC2: the game library lists every built game, for admins only", async 
   await page.getByRole("link", { name: "Game library →" }).click();
   await expect(page.getByRole("heading", { name: "Games", exact: true })).toBeVisible();
   const games = page.getByRole("list", { name: "Games" });
-  await expect(games.getByRole("listitem")).toHaveCount(14);
+  // 14 solo games and 5 showdowns (spec 25).
+  await expect(games.getByRole("listitem")).toHaveCount(19);
   await expect(games).toContainText("Stack Attack");
   await expect(games).toContainText("stacker");
+  await expect(games).toContainText("Fly-by Count");
 });

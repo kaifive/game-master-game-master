@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { RiseIcon } from "@/components/icons/game";
 import { CountUp, useFlip, useReducedMotion } from "@/components/motion";
 import { useTheme } from "@/components/theme/context";
 import { barShare } from "@/lib/motion";
@@ -111,8 +112,9 @@ export function StandingsUpdate({ rows }: { rows: StandingsRow[] }) {
                 </span>
               )}
               {after && moved > 0 && (
-                <span className="rounded-full bg-gm-tile-correct px-2 text-[clamp(0.9rem,2.4vh,1.8rem)] text-gm-tile-correct-ink">
-                  ▲{moved}
+                <span className="inline-flex items-center gap-0.5 rounded-full bg-gm-tile-correct px-2 text-[clamp(0.9rem,2.4vh,1.8rem)] text-gm-tile-correct-ink">
+                  <RiseIcon size={20} />
+                  {moved}
                 </span>
               )}
             </span>

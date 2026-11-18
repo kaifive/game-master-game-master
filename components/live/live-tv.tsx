@@ -7,38 +7,8 @@ import { LIVE_RENDERERS } from "./renderers";
 import { StandingsUpdate, type StandingsRow } from "./standings-update";
 import type { ActiveLiveView, LiveRenderer } from "./types";
 
-const teamColor = (color: number) => `var(--gm-team-${String(color)})`;
-
 /** The event's team totals, from the display's standings (spec 05). */
 export type TeamTotal = { id: string; name: string; color: number; points: number };
-
-/** Each team's showdown points beside the game: sized so 10 teams fit (S24-AC11). */
-function TeamStrip({ view, revealed }: { view: ActiveLiveView; revealed: boolean }) {
-  return (
-    <ul
-      aria-label="Teams"
-      className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))] gap-[1.2vmin] p-0"
-    >
-      {view.teams.map((t) => (
-        <li
-          key={t.id}
-          className="grid gap-0.5 rounded-gm bg-gm-surface px-3 py-2 ring-1 ring-gm-border"
-          style={{ borderLeft: `0.5rem solid ${teamColor(t.color)}` }}
-        >
-          <span className="truncate font-gm-display text-[clamp(1rem,2.2vmin,1.9rem)] font-bold">
-            {t.name}
-          </span>
-          <span className="font-gm-display text-[clamp(1.1rem,2.6vmin,2.2rem)] font-bold tabular-nums">
-            {revealed && t.roundPoints !== null && t.roundPoints > 0 && (
-              <span className="text-gm-accent-ink">+{t.roundPoints} · </span>
-            )}
-            {t.score}
-          </span>
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 /** The update for the final step: the showdown's points rolled onto each team's event total. */
 export function standingsRows(view: ActiveLiveView, totals: readonly TeamTotal[]): StandingsRow[] {
@@ -87,10 +57,7 @@ export function LiveTv({
       </header>
       {step === "intro" && <DemoFrame renderer={renderer} line={view.demo} />}
       {(step === "play" || step === "results") && renderer && (
-        <>
-          <renderer.Tv view={view} game={view.game} serverNow={serverNow} revealed={revealed} />
-          <TeamStrip view={view} revealed={revealed} />
-        </>
+        <renderer.Tv view={view} game={view.game} serverNow={serverNow} revealed={revealed} />
       )}
       {step === "final" && <StandingsUpdate rows={standingsRows(view, totals)} />}
     </section>

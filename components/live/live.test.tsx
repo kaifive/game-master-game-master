@@ -239,7 +239,6 @@ describe("the TV (spec 24)", () => {
       "2. Greens, 450 points",
       "3. Blues, 400 points",
     ]);
-    expect(screen.getByText("▲2")).toBeInTheDocument();
   });
 
   test("S24-AC10: under reduced motion the new standings show at once", () => {
@@ -278,7 +277,7 @@ describe("Controls (spec 11, spec 24)", () => {
   test("S24-AC11: a showdown that needs more teams can't be started, and says why", async () => {
     const user = userEvent.setup();
     wrap(<LiveCard view={adminView()} act={vi.fn()} busy={false} />);
-    await user.selectOptions(screen.getByLabelText("Game"), "g2");
+    await user.selectOptions(screen.getByLabelText("Showdown to start"), "g2");
     expect(screen.getByRole("button", { name: "Start on the TV" })).toBeDisabled();
     expect(screen.getByText("This game needs at least 3 teams.")).toBeInTheDocument();
   });

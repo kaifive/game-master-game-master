@@ -1,6 +1,6 @@
 # 25: Showdowns: count and stop games (Fly-by Count, Snow Sum, Color Count, Blind Stop, Last Second)
 
-**Status:** Draft (agreed with Khai 2026-11-17; marked Ready in the PR that builds it, since check:ac makes Ready mean its tests exist)
+**Status:** Building (built and play-tested; the blind review comes next, spec 24 6f)
 **Backlog:** M3
 **Depends on:** 11, 24
 
@@ -21,13 +21,13 @@ Every game here follows spec 24: the host's steps, Who's played, the TV demo, 1 
 ### Snow Sum (`snowsum`)
 
 1. Content: rounds (default 3), each with how many snowflakes and which operations, getting harder (5 flakes of + and −, 7 flakes, then 8 flakes with ×2), dealt from the seed. Totals stay between −50 and 200.
-2. Play: the snowflakes fall one at a time on the TV, starting from 0. When the last has fallen, every team types the total within 10 s and locks it in.
+2. Play: the snowflakes fall one at a time on the TV, starting from 0. A flake never takes away from 0 or less, so totals stay friendly for kids. When the last has fallen, every team types the total within 10 s and locks it in.
 3. Results: the TV replays the sum step by step. **Points per round: exactly right 100, one off 50, otherwise 0.**
 
 ### Color Count (`colorcount`)
 
 1. Content: rounds (default 3), getting harder: 3 colors and 12 ornaments over 4 s, 4 colors and 18 over 3.5 s, 5 colors and 24 over 3 s; dealt from the seed.
-2. Play: ornaments of different colors flash on the TV, a few at a time. Only when they're done does the TV ask "How many **red**?" (one color picked from the seed), so teams have to keep track of every color. Every team types a number within 10 s.
+2. Play: ornaments of different colors flash on the TV, a few at a time. Each color also has its own pattern (stripes, dots, zigzag, star, rings), so color isn't the only way to count. Only when they're done does the TV ask "How many **red**?" (one color picked from the seed), so teams have to keep track of every color. Every team types a number within 10 s.
 3. Results: the TV replays the flashes with that color highlighted and counted. **Points per round: ranked by closeness: 100, 70, 50, 30, then 10; exact gets the top place even if alone; ties share.**
 
 ### Blind Stop (`blindstop`)
@@ -54,18 +54,19 @@ Each game's content is validated in the event file and its round state lives in 
 
 ## Acceptance criteria
 
-- [ ] AC-1: Fly-by Count deals rounds from the seed, never sends the count early, takes one locked-in number per team within 10 s, and scores exact 100, one off 50, else 0.
-- [ ] AC-2: Snow Sum deals harder seeded snowflake sums each round, takes one locked-in total per team within 10 s, and scores exact 100, one off 50, else 0.
-- [ ] AC-3: Color Count flashes seeded colored ornaments, asks for one color only at the end, takes one number per team within 10 s, and ranks by closeness: 100, 70, 50, 30, then 10, ties sharing.
-- [ ] AC-4: Blind Stop shows the clock for 3 s then a "?", takes each team's phone-timed stop, and ranks by closeness to 10.00: 100, 70, 50, 30, then 10, with a 50 bonus for exactly 10.00 and ties sharing.
-- [ ] AC-5: Last Second runs a visible countdown, takes each team's phone-timed stop, busts teams that didn't stop by zero, and ranks the rest by how late they stopped: 100, 70, 50, 30, then 10, ties sharing, busts 0.
+- [x] AC-1: Fly-by Count deals rounds from the seed, never sends the count early, takes one locked-in number per team within 10 s, and scores exact 100, one off 50, else 0.
+- [x] AC-2: Snow Sum deals harder seeded snowflake sums each round, takes one locked-in total per team within 10 s, and scores exact 100, one off 50, else 0.
+- [x] AC-3: Color Count flashes seeded colored ornaments, asks for one color only at the end, takes one number per team within 10 s, and ranks by closeness: 100, 70, 50, 30, then 10, ties sharing.
+- [x] AC-4: Blind Stop shows the clock for 3 s then a "?", takes each team's phone-timed stop, and ranks by closeness to 10.00: 100, 70, 50, 30, then 10, with a 50 bonus for exactly 10.00 and ties sharing.
+- [x] AC-5: Last Second runs a visible countdown, takes each team's phone-timed stop, busts teams that didn't stop by zero, and ranks the rest by how late they stopped: 100, 70, 50, 30, then 10, ties sharing, busts 0.
 
 ## Tests
 
 - Unit: each game's dealing and scoring from a seed, and its edge rules.
-- Play tests: `lib/live/<type>/playtest.test.ts` on spec 24's bot harness: 1, 2, 3, 4, 5 and 6 teams; perfect, random, cautious, reckless, silent, late and dropped-out teams; ties. Each answer type also gets a no-answer and an out-of-range case.
+- Play tests: `lib/live/games/playtest.test.ts` on spec 24's bot harness: 1, 2, 3, 4, 5 and 6 teams; perfect, random, cautious, reckless, silent, late and dropped-out teams; ties. Each answer type also gets a no-answer and an out-of-range case.
 - Component: the TV view and the phone controller for each game.
-- E2E: one game of each type with two captain phones, the TV and Controls.
+- E2E: a whole Fly-by Count round with two captain phones, the TV and Controls (`e2e/showdowns.spec.ts`). The other four share its answer and stop pieces, which the component tests cover.
+- Gallery: `/dev/ui/showdowns?game=<type>&moment=<intro|ready|show|answer|results|final>&on=<tv|phone>&teams=<1-6>` freezes any round on the real logic, for looking and for the blind review.
 - Blind review: findings and fixes in `docs/reviews/showdowns.md`.
 
 ## Out of scope

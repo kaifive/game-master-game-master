@@ -108,7 +108,7 @@ Team games played on the big screen, with each team's captain's phone as the con
 - Unit: the step machine and Who's played (AC-1, AC-2), the screen switch (AC-9), minimum teams (AC-11), the ledger award ids (AC-5), the turn-order rotation helper (AC-6), and the shared clock and answer windows (AC-7).
 - Component: Who's played in Controls (AC-2); Watch the TV for other phones (AC-3); the demo frame, with a still under reduced motion (AC-4); the screen switch on the TV (AC-9); the standings update, moving and still (AC-10).
 - Play tests (AC-8): the shared bot harness in `lib/live/playtest.ts`, run by each game's `playtest.test.ts` (specs 25 to 27), with a stand-in game here.
-- E2E: Fly-by Count (spec 25), two teams on two captain phones, the TV and Controls (AC-1 to AC-3).
+- E2E: Fly-by Count (spec 25), two teams on two captain phones, the TV and Controls (AC-1 to AC-3, AC-9), in `e2e/showdowns.spec.ts`.
 - Blind review (6f): `docs/reviews/showdowns.md`.
 
 ## Out of scope

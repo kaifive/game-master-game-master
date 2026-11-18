@@ -10,3 +10,5 @@ export { MemoryLiveRepo } from "./repo.memory";
 export { showdownFor, showdownTypes } from "./registry";
 export * from "./service";
 export { liveApi, adminLiveApi, type AdminLiveAct, type AdminLiveView } from "./client";
+export * from "./games";
+export { PLAYTEST_TEAM_COUNTS, playtestTeams } from "./playtest";
