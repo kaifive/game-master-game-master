@@ -9,21 +9,43 @@ import { defineShowdown, type Role, type ShowdownGame, type TurnInfo } from "../
  * knocks a team out; the squares it got right stay lit for the teams after.
  * Only a team that makes it across scores.
  */
+/**
+ * Each round is harder than the last (Khai, 2026-11-18): a longer path and
+ * less time to learn it. Round n uses level n, the last level repeating.
+ */
+const Level = z
+  .object({
+    minLength: z.number().int().min(4).max(40),
+    maxLength: z.number().int().min(4).max(40),
+    showMs: z.number().int().min(2000).max(20_000),
+  })
+  .refine((l) => l.minLength <= l.maxLength, "minLength must not be above maxLength");
+
+export const PATH_LEVELS = [
+  { minLength: 10, maxLength: 12, showMs: 7000 },
+  { minLength: 12, maxLength: 14, showMs: 6500 },
+  { minLength: 14, maxLength: 16, showMs: 6000 },
+  { minLength: 15, maxLength: 17, showMs: 5500 },
+  { minLength: 17, maxLength: 19, showMs: 5000 },
+  { minLength: 18, maxLength: 20, showMs: 4500 },
+];
+
 const Content = z
   .object({
     cols: z.number().int().min(3).max(8).default(5),
     rows: z.number().int().min(4).max(12).default(9),
-    minLength: z.number().int().min(4).max(40).default(12),
-    maxLength: z.number().int().min(4).max(40).default(16),
-    showMs: z.number().int().min(2000).max(20_000).default(6000),
+    levels: z.array(Level).min(1).max(10).default(PATH_LEVELS),
     stepMs: z.number().int().min(2000).max(20_000).default(5000),
     points: z.number().int().min(1).max(500).default(150),
   })
-  .refine((c) => c.minLength <= c.maxLength, "minLength must not be above maxLength")
   .refine(
-    (c) => c.minLength >= c.rows,
-    "a path crosses every row, so minLength must be at least rows",
+    (c) => c.levels.every((l) => l.minLength >= c.rows),
+    "a path crosses every row, so every minLength must be at least rows",
   );
+
+/** The level for a round: harder each round, the last one repeating. */
+export const levelFor = (levels: readonly z.infer<typeof Level>[], round: number) =>
+  levels[Math.min(round, levels.length) - 1] ?? levels[0] ?? PATH_LEVELS[0];
 
 export type Square = [number, number]; // [col, row], row 0 at the top
 
@@ -158,26 +180,29 @@ function view(s: PathState, _c: unknown, { role, revealed, now }: ViewCtx) {
 
 const game: ShowdownGame<C, PathState> = {
   content: Content,
-  demo: "Watch the path light up from the bottom row to the top, then cross it one square at a time. A wrong square, or 5 seconds on one step, and you're out!",
+  demo: "Watch the path light up from the bottom row to the top, then cross it one square at a time. A wrong square, or 5 seconds on one step, and you're out! Each round is longer.",
   timeout: "Out of time? 5 seconds on one step and you're out.",
   rounds: (_c, teams) => Math.max(1, teams),
-  deal: (c, { seed, round, teams, startsAt }) => ({
-    path: dealPath(seed, c),
-    cols: c.cols,
-    rows: c.rows,
-    // Who crosses first rotates so every team goes first once (S24-AC6).
-    order: leadOrder(teams, round - 1),
-    startsAt,
-    showEndsAt: startsAt + c.showMs,
-    stepMs: c.stepMs,
-    at: 0,
-    progress: 0,
-    stepEndsAt: startsAt + c.showMs + c.stepMs,
-    lit: 0,
-    results: {},
-    lastMiss: null,
-    winner: null,
-  }),
+  deal: (c, { seed, round, teams, startsAt }) => {
+    const level = levelFor(c.levels, round) ?? { minLength: 12, maxLength: 16, showMs: 6000 };
+    return {
+      path: dealPath(seed, { cols: c.cols, rows: c.rows, ...level }),
+      cols: c.cols,
+      rows: c.rows,
+      // Who crosses first rotates so every team goes first once (S24-AC6).
+      order: leadOrder(teams, round - 1),
+      startsAt,
+      showEndsAt: startsAt + level.showMs,
+      stepMs: c.stepMs,
+      at: 0,
+      progress: 0,
+      stepEndsAt: startsAt + level.showMs + c.stepMs,
+      lit: 0,
+      results: {},
+      lastMiss: null,
+      winner: null,
+    };
+  },
   move(s, _c, { teamId, move, now }) {
     const parsed = z
       .object({ square: z.tuple([z.number().int(), z.number().int()]) })

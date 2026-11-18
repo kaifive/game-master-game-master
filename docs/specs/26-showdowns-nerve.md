@@ -29,7 +29,7 @@ Every game here follows spec 24: the host's steps, Who's played, the TV demo, 1 
 
 1. Needs at least 2 teams (spec 24, 3b). Three rounds with an even number of teams; with an odd number, one round per team, each team sitting out exactly once (spec 24, "Fair for every team"). Pairs come from a round-robin schedule over a seeded order of teams, so no two teams meet twice until every pairing has been played (with two teams they always meet).
 2. Each pair plays for a pot of 100, shown on the TV with both team names. Each team secretly taps **Share** or **Snatch** within 15 s (no choice counts as Share). The TV reveals both at once.
-3. **Points: both share, 50 each; one snatches, that team gets 100 and the other 0; both snatch, 0 each.**
+3. **Game points: both share, 50 each; one snatches, that team gets 100 and the other 0; both snatch, both lose 20** (Khai, 2026-11-18). Game points are only for this game and can go below zero. On the last round, the teams' order by game points pays the showdown points: 150, 100, 70, 50, 30, then 10, ties sharing a place. The TV shows the game points after each round.
 
 ## Data
 
@@ -45,7 +45,7 @@ Each game's content is validated in the event file and its round state lives in 
 
 - [x] AC-1: Auction gives each team the numbers 1 to 10 once each, takes one secret bid a round (the lowest left if none), cancels tied bids, gives the prize to the highest untied bid (nobody if all tie), and pays the prizes won.
 - [x] AC-2: Stocking Stuffer takes Open or Bank from every team at once each round (Bank if no choice), reveals each opener's seeded stocking, empties a team's pot and puts it out for the round on coal, ends the round when all have banked or busted, and pays what each team banked.
-- [x] AC-3: Share or Snatch needs 2 teams or more, pairs teams at random for three rounds (one round per team with an odd number, each team sitting out exactly once), takes one secret Share or Snatch per team (Share if none), and pays 50/50, 100/0 or 0/0.
+- [x] AC-3: Share or Snatch needs 2 teams or more, pairs teams at random for three rounds (one round per team with an odd number, each team sitting out exactly once), takes one secret Share or Snatch per team (Share if none), scores game points 50/50, 100/0 or −20/−20, and on the last round pays showdown points by the order of game points: 150, 100, 70, 50, 30, then 10, ties sharing.
 
 ## Tests
 
