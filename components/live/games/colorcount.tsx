@@ -31,6 +31,15 @@ const LOOK: Record<(typeof ORNAMENT_COLORS)[number], { token: string; pattern: s
 
 const name = (i: number) => ORNAMENT_COLORS[i] ?? "red";
 
+/** Each pattern's name, said with its color, so color isn't the only way to count. */
+const PATTERN_NAME: Record<string, string> = {
+  stripes: "striped",
+  dots: "spotted",
+  zigzag: "zigzag",
+  star: "starred",
+  rings: "ringed",
+};
+
 function Pattern({ kind }: { kind: string }) {
   const ink = { stroke: "var(--gm-tile-present)", strokeWidth: 4, fill: "none", opacity: 0.75 };
   if (kind === "stripes")
@@ -111,7 +120,7 @@ function Ask({ color, size }: { color: number; size: "tv" | "phone" }) {
     <span className="inline-flex items-center gap-[0.3em]">
       How many
       <Ornament color={color} className={size === "tv" ? "size-[1.3em]" : "size-10"} />
-      <strong className="font-bold">{`${name(color)}?`}</strong>
+      <strong className="font-bold">{`${name(color)} (${PATTERN_NAME[LOOK[name(color)].pattern] ?? ""}) ornaments?`}</strong>
     </span>
   );
 }

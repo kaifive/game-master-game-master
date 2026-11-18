@@ -45,8 +45,9 @@ function take(s: To21State, add: number, now: number, auto: boolean): To21State 
 type C = z.infer<typeof Content>;
 type ViewCtx = { role: Role; revealed: boolean; now: number };
 
-function view(s: To21State, _c: unknown, { role }: ViewCtx) {
-  const turn = s.winner === null ? whose(s) : null;
+function view(s: To21State, _c: unknown, { role, now }: ViewCtx) {
+  // Nobody's turn until the round starts, so no phone shows live buttons during the count.
+  const turn = s.winner === null && now >= s.startsAt ? whose(s) : null;
   return {
     startsAt: s.startsAt,
     count: s.count,
@@ -63,7 +64,8 @@ function view(s: To21State, _c: unknown, { role }: ViewCtx) {
 
 const game: ShowdownGame<C, To21State> = {
   content: Content,
-  demo: "Take turns adding 1, 2 or 3 to the snowball. Whoever makes exactly 21 wins!",
+  demo: "Take turns adding 1, 2 or 3 to the snowball, never past 21. Whoever makes exactly 21 wins 100!",
+  timeout: "Out of time? 10 seconds, or you add 1.",
   rounds: (_c, teams) => Math.max(1, teams),
   deal: (c, { round, teams, startsAt }) => ({
     startsAt,

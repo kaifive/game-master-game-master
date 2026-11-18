@@ -11,10 +11,13 @@ import type { LiveRenderer } from "./types";
 export function DemoFrame({
   renderer,
   line,
+  timeout,
   size = "tv",
 }: {
   renderer: LiveRenderer | undefined;
   line: string;
+  /** What happens if a team runs out of time. */
+  timeout?: string | undefined;
   size?: "tv" | "phone";
 }) {
   const still = useReducedMotion();
@@ -30,19 +33,31 @@ export function DemoFrame({
           aria-hidden="true"
           className={cx(
             "grid place-items-center overflow-hidden rounded-gm bg-gm-surface ring-1 ring-gm-border",
-            size === "tv" ? "aspect-video w-[min(70vw,110vh)]" : "aspect-video w-full",
+            size === "tv" ? "aspect-video h-[42vh]" : "aspect-video w-full",
           )}
         >
           <Demo still={still} />
         </div>
       )}
-      <figcaption
-        className={cx(
-          "max-w-[40ch] font-gm-display font-bold text-balance",
-          size === "tv" ? "text-[clamp(1.5rem,3.5vmin,3rem)]" : "text-xl",
+      <figcaption className="grid max-w-[56ch] gap-[1.2vh]">
+        <span
+          className={cx(
+            "font-gm-display font-bold text-balance",
+            size === "tv" ? "text-[clamp(1.4rem,3.4vh,2.6rem)]" : "text-xl",
+          )}
+        >
+          {line}
+        </span>
+        {timeout && (
+          <span
+            className={cx(
+              "font-bold text-balance text-gm-tile-correct",
+              size === "tv" ? "text-[clamp(1.1rem,2.6vh,2rem)]" : "text-lg",
+            )}
+          >
+            {timeout}
+          </span>
         )}
-      >
-        {line}
       </figcaption>
     </figure>
   );

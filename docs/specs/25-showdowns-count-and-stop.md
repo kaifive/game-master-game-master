@@ -1,6 +1,6 @@
 # 25: Showdowns: count and stop games (Fly-by Count, Snow Sum, Color Count, Blind Stop, Last Second)
 
-**Status:** Building (built and play-tested; the blind review comes next, spec 24 6f)
+**Status:** Done (blind-reviewed 2026-11-18: `docs/reviews/showdowns.md`)
 **Backlog:** M3
 **Depends on:** 11, 24
 

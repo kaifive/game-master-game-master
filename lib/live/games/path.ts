@@ -44,9 +44,17 @@ export function dealPath(
     let lastSide = 0;
     while ((path[path.length - 1]?.[1] ?? 0) > 0) {
       const [col, row] = path[path.length - 1] ?? [0, 0];
+      // A step may not touch any earlier square but the one it came from, so the
+      // path is one clean line with no blocks or forks to puzzle over.
+      const touches = (x: number, y: number) =>
+        path.slice(0, -1).some(([px, py]) => Math.abs(px - x) + Math.abs(py - y) === 1);
       const sides = [-1, 1].filter(
         (d) =>
-          d !== -lastSide && col + d >= 0 && col + d < c.cols && !seen.has(String([col + d, row])),
+          d !== -lastSide &&
+          col + d >= 0 &&
+          col + d < c.cols &&
+          !seen.has(String([col + d, row])) &&
+          !touches(col + d, row),
       );
       // Sideways now and then, to wind the path; never so often it can't fit the length.
       const roomLeft = c.maxLength - path.length - row;
@@ -54,6 +62,7 @@ export function dealPath(
         sides.length > 0 && roomLeft > 0 && random() < 0.42
           ? sides[Math.floor(random() * sides.length)]
           : undefined;
+      // Going up onto a square beside an earlier one would fork too: go up only where it's clear.
       const next: Square = side !== undefined ? [col + side, row] : [col, row - 1];
       lastSide = side ?? 0;
       path.push(next);
@@ -149,7 +158,8 @@ function view(s: PathState, _c: unknown, { role, revealed, now }: ViewCtx) {
 
 const game: ShowdownGame<C, PathState> = {
   content: Content,
-  demo: "Remember the path, then cross it square by square. One wrong step and you're out!",
+  demo: "Watch the path light up from the bottom row to the top, then cross it one square at a time. A wrong square, or 5 seconds on one step, and you're out!",
+  timeout: "Out of time? 5 seconds on one step and you're out.",
   rounds: (_c, teams) => Math.max(1, teams),
   deal: (c, { seed, round, teams, startsAt }) => ({
     path: dealPath(seed, c),

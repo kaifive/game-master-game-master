@@ -58,13 +58,22 @@ export function TimeLeft({
 }) {
   const left = Math.max(0, closesAt - now);
   return (
-    <div className="grid gap-2" aria-label={`${String(Math.ceil(left / 1000))} seconds left`}>
+    <div
+      className="grid grid-cols-[1fr_auto] items-center gap-3"
+      aria-label={`${String(Math.ceil(left / 1000))} seconds left`}
+    >
       <div className="h-[1.2vh] min-h-2 overflow-hidden rounded-full bg-gm-tile-absent">
         <div
           className="h-full origin-left bg-gm-tile-correct"
           style={{ transform: `scaleX(${String(Math.min(1, left / total))})` }}
         />
       </div>
+      <span
+        aria-hidden="true"
+        className="min-w-[2.5ch] text-right font-gm-display text-[clamp(1.1rem,3vh,2.2rem)] font-bold tabular-nums"
+      >
+        {Math.ceil(left / 1000)}
+      </span>
     </div>
   );
 }
@@ -168,7 +177,7 @@ export function Reveal({
               fresh
             />
             <span className="text-[clamp(0.9rem,2.2vh,1.6rem)] font-bold text-gm-text-muted tabular-nums">
-              Showdown total {t.score}
+              This showdown: {t.score}
             </span>
           </li>
         );

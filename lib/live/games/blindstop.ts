@@ -46,7 +46,8 @@ function view(s: BlindState, _c: unknown, { role, revealed }: ViewCtx) {
 
 const game: ShowdownGame<C, BlindState> = {
   content: Content,
-  demo: "Stop the clock at exactly 10.00. It hides after 3 seconds, so count in your head!",
+  demo: "Stop the clock at exactly 10.00. It hides after 3 seconds, so count in your head: no stopwatches! Closest scores most; exactly 10.00 gets 50 extra.",
+  timeout: "Out of time? No stop by 20 seconds scores 0.",
   rounds: (c) => c.rounds,
   deal: (c, { startsAt, teams }) => ({
     startsAt,

@@ -29,6 +29,8 @@ export type LiveView =
         revision: number;
       };
       demo: string;
+      /** What happens if a team runs out of time. */
+      timeout?: string;
       teams: LiveTeamView[];
       /** The game's own view for this role (specs 25 to 27). */
       game: unknown;
@@ -72,6 +74,7 @@ export function liveView(
       revision: s.revision,
     },
     demo: m.game.demo,
+    ...(m.game.timeout ? { timeout: m.game.timeout } : {}),
     teams: s.teams.map((t) => ({
       id: t.id,
       name: t.name,

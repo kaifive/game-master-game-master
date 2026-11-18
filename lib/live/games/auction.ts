@@ -65,7 +65,8 @@ function view(s: AuctionState, _c: unknown, { role, revealed }: ViewCtx) {
 
 const game: ShowdownGame<C, AuctionState> = {
   content: Content,
-  demo: "Bid a number from 1 to 10 for the prize. Each number once a game. Tied bids cancel out!",
+  demo: "Bid one of your numbers from 1 to 10. The highest number nobody else picked wins the prize. Every number is used up once you play it, even in a tie.",
+  timeout: "Out of time? You spend your lowest number.",
   rounds: (c) => c.rounds,
   deal(c, { seed, startsAt, teams, prev }) {
     // Round 1 deals the prizes in a seeded order; later rounds carry everything forward.

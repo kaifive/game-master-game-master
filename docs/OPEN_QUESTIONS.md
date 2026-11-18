@@ -16,6 +16,9 @@ Move answered ones to the bottom with the answer.
 | Q23 | Pathfinder: what counts as skipping a number (red)? | Spec 16 | Reaching a later number before an earlier one turns the missed ones red; after that nothing turns green until the trail is undone past the skip. The number reached early stays grey. |
 | Q24 | T-Timer: "stop in the range of 1 sec 20ms or 1 sec 25ms": is the window 1.20 to 1.25 s? (A literal 1.020 to 1.025 s is 5 ms, shorter than one screen frame.) And how fast should points fall off outside it? | Spec 16 | 1.20 to 1.25 s; full points inside, falling to 0 at 0.5 s outside |
 | Q27 | Tap Masher film: which part of the video, and how many frames? | Spec 16 | Khai (2026-11-14): play like video (skip at most one frame) using the form's first 11.5 s, and 50 taps is all the points (the video is styling). So 172 frames, every other frame, at 256 × 192 to keep the sheet to 1.3 MB; nobody reaches the end in 5 s. |
+| Q29 | Memory Path: the first team across ends the round, so later teams don't get a turn and partial progress scores nothing (blind review found this harsh). Give every team a turn and points for squares reached? | Spec 27 | Keep Khai's rule (A37, A38): only the finisher scores; going first rotates so it evens out over the game |
+| Q30 | Share or Snatch: Snatch is never worse than Share, so a room can learn to always snatch and score 0 (blind review). Add a penalty when both snatch (say, each loses 20)? | Spec 26 | No penalty: 50/50, 100/0, 0/0 as agreed (A46) |
+| Q31 | Land Mass: ranked points are steep (26, 26, 22, 19 squares gives 150, 150, 70, 50). Points per square instead? | Spec 27 | Keep ranked points (A41) |
 
 ## Answered
 

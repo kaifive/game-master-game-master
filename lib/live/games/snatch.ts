@@ -91,7 +91,8 @@ function view(s: SnatchState, _c: unknown, { role, revealed }: ViewCtx) {
 
 const game: ShowdownGame<C, SnatchState> = {
   content: Content,
-  demo: "Share the pot or snatch it all? If you both snatch, nobody gets a thing.",
+  demo: "Two teams, one pot. Both Share: you split it. One Snatches: they take it all. Both Snatch: nobody gets a thing.",
+  timeout: "Out of time? You Share.",
   minTeams: 2,
   rounds: (c, teams) => (teams % 2 === 1 ? teams : c.evenRounds),
   deal(c, { seed, round, startsAt, teams, prev }) {

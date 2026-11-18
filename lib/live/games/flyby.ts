@@ -54,7 +54,8 @@ function view(s: FlybyState, _c: unknown, { role, revealed }: ViewCtx) {
 
 const game: ShowdownGame<z.infer<typeof Content>, FlybyState> = {
   content: Content,
-  demo: "Count the presents as they fly past. Exactly right scores 100, one off scores 50.",
+  demo: "Count the presents as they fly past, then type how many. Exactly right scores 100, one off scores 50.",
+  timeout: "Out of time? No answer scores 0.",
   rounds: (c) => c.rounds.length,
   deal(c, { seed, round, startsAt, teams }) {
     const r = c.rounds[round - 1] ?? c.rounds[c.rounds.length - 1] ?? FLYBY_ROUNDS[0];
