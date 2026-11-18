@@ -8,7 +8,13 @@ import { holiday2026 } from "@/content/events/holiday-2026";
 export const metadata: Metadata = { title: "Showdown gallery · Game Master" };
 
 type Props = {
-  searchParams: Promise<{ game?: string; moment?: string; on?: string; teams?: string }>;
+  searchParams: Promise<{
+    game?: string;
+    moment?: string;
+    on?: string;
+    teams?: string;
+    as?: string;
+  }>;
 };
 
 /**
@@ -27,7 +33,7 @@ export default async function ShowdownGalleryPage({ searchParams }: Props) {
   return (
     <PackRoot styleRef={holiday2026.style}>
       {q.on === "phone" ? (
-        <ShowdownPhoneFrame type={type} moment={moment} teamCount={teamCount} />
+        <ShowdownPhoneFrame type={type} moment={moment} teamCount={teamCount} as={q.as} />
       ) : (
         <ShowdownTvFrame type={type} moment={moment} teamCount={teamCount} />
       )}

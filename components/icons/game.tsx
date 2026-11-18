@@ -30,3 +30,10 @@ export const BackspaceIcon = ({ size = 26 }: { size?: number }) => (
     <path d="M12.5 9.5l5 5M17.5 9.5l-5 5" />
   </svg>
 );
+
+/** A miss: the wrong square. */
+export const CrossIcon = ({ size = 18 }: { size?: number }) => (
+  <svg {...base} width={size} height={size}>
+    <path d="M6 6l12 12M18 6L6 18" />
+  </svg>
+);
