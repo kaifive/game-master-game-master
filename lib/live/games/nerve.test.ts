@@ -9,7 +9,14 @@ import {
   type BotContext,
 } from "../playtest";
 import { auction, auctionWinner, type AuctionState } from "./auction";
-import { pairPoints, pairUp, snatch, type SnatchState } from "./snatch";
+import {
+  gameTotals,
+  pairPoints,
+  pairUp,
+  roundGamePoints,
+  snatch,
+  type SnatchState,
+} from "./snatch";
 import { MAX_OPENINGS, REVEAL_MS, stockingFor, stockings, type StockingState } from "./stockings";
 
 const T0 = 1_000_000;
@@ -174,11 +181,11 @@ describe("Share or Snatch", () => {
     expect(new Set(seen).size).toBe(6);
   });
 
-  it("S26-AC3: one secret choice each (Share if none) pays 50/50, 100/0 or 0/0", () => {
+  it("S26-AC3: one secret choice each (Share if none) scores game points 50/50, 100/0, or both lose 20", () => {
     expect(pairPoints("share", "share", 100)).toEqual([50, 50]);
     expect(pairPoints("snatch", "share", 100)).toEqual([100, 0]);
     expect(pairPoints("share", "snatch", 100)).toEqual([0, 100]);
-    expect(pairPoints("snatch", "snatch", 100)).toEqual([0, 0]);
+    expect(pairPoints("snatch", "snatch", 100)).toEqual([-20, -20]);
     const g = rig<SnatchState>(snatch);
     let s = g.deal(1, null);
     const [a, b] = s.pairs[0] ?? ["", ""];
@@ -186,8 +193,30 @@ describe("Share or Snatch", () => {
     expect(g.view(s, cap(b))).toMatchObject({ choices: null, mine: null, lockedIn: [a] });
     s = g.close(s);
     expect(s.choices[b]).toBe("share");
-    expect(g.score(s)[a]).toBe(100);
-    expect(g.score(s)[b]).toBe(0);
+    expect(roundGamePoints(s)[a]).toBe(100);
+    expect(roundGamePoints(s)[b]).toBe(0);
+    // Game points only set the order: no showdown points until the last round.
+    expect(Object.values(g.score(s))).toEqual([0, 0, 0, 0]);
+  });
+
+  it("S26-AC3: game points carry from round to round, and the last round pays by their order: 150, 100, 70, 50, 30, then 10", () => {
+    const g = rig<SnatchState>(snatch);
+    let s = g.deal(1, null);
+    const winner = s.pairs[0]?.[0] ?? "";
+    for (const [a, b] of s.pairs) {
+      s = g.step(s, a, { choice: "snatch" });
+      s = g.step(s, b, { choice: a === winner ? "share" : "snatch" });
+    }
+    s = g.close(s);
+    const totals1 = gameTotals(s);
+    expect(totals1[winner]).toBe(100);
+    const s2 = g.deal(2, s);
+    expect(s2.before).toEqual(totals1);
+    expect(s2.last).toBe(false);
+    const s3 = g.close(g.deal(3, g.close(s2)));
+    expect(s3.last).toBe(true);
+    const pts = g.score(s3);
+    expect(pts[winner]).toBe(150);
   });
 });
 
@@ -396,18 +425,22 @@ describe("spec 26 play tests (S24-AC8)", () => {
         }
         expect(new Set(Object.values(games)).size).toBe(1);
         if (n % 2 === 1) expect(Object.values(sat)).toEqual(Array(n).fill(1));
-        for (const round of r.rounds)
-          for (const p of Object.values(round)) expect([0, 50, 100]).toContain(p);
+        // Showdown points come only from the final order of game points.
+        r.rounds.slice(0, -1).forEach((round) => {
+          expect(Object.values(round).every((p) => p === 0)).toBe(true);
+        });
+        for (const p of Object.values(r.rounds.at(-1) ?? {}))
+          expect([10, 30, 50, 70, 100, 150]).toContain(p);
       }
   });
 
-  it("S24-AC8: Share or Snatch where everyone snatches pays nobody", () => {
+  it("S24-AC8: Share or Snatch where everyone snatches leaves every team tied", () => {
     const r = playtest(
       snatch,
       {},
       { teams: 4, seed: 1, stepMs: 250, bots: () => SNATCH_BOTS.snatcher ?? null },
     );
-    expect(Object.values(r.scores)).toEqual([0, 0, 0, 0]);
+    expect(new Set(Object.values(r.scores)).size).toBe(1);
   });
 
   it("S24-AC11: Share or Snatch can't start with one team", () => {

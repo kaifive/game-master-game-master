@@ -1,18 +1,26 @@
 import { z } from "zod";
 import { seededRandom, shuffled } from "@/lib/games";
 import { defineShowdown, type Role, type ShowdownGame } from "../model";
+import { rankedPoints } from "./scoring";
 
 /**
  * Share or Snatch (spec 26, S26-AC3): teams play in pairs for a pot of 100.
  * Each secretly picks Share or Snatch: both share, 50 each; one snatches, it
- * takes all; both snatch, nobody gets anything.
+ * takes all; both snatch, both lose 20. Those are game points, kept only for
+ * this game: at the end, the teams' order by game points sets the showdown
+ * points, 150, 100, 70, 50, 30, then 10 (Khai, 2026-11-18).
  */
 const Content = z.object({
   pot: z.number().int().min(2).max(1000).default(100),
   chooseMs: z.number().int().min(5000).max(60_000).default(15_000),
   /** Rounds with an even number of teams; an odd number plays one per team. */
   evenRounds: z.number().int().min(1).max(10).default(3),
+  /** Game points each team loses when both snatch. */
+  bothSnatch: z.number().int().min(0).max(1000).default(20),
 });
+
+/** Showdown points by final order of game points; ties share a place. */
+export const SNATCH_LADDER = [150, 100, 70, 50, 30] as const;
 
 export type Pair = [string, string];
 
@@ -26,6 +34,11 @@ export type SnatchState = {
   choices: Record<string, "share" | "snatch">;
   /** The seeded team order the schedule runs over, kept for the whole game. */
   order: string[];
+  bothSnatch: number;
+  /** Game points before this round. */
+  before: Record<string, number>;
+  /** Whether this is the game's last round, when the order pays out. */
+  last: boolean;
 };
 
 /** The seat that sits out when the number of teams is odd. */
@@ -60,15 +73,38 @@ export function pairUp(order: readonly string[], round: number) {
   return { pairs, sitOut };
 }
 
-/** Points for one pair: 50/50, 100/0 or 0/0 of the pot. */
+/** Game points for one pair: 50/50, 100/0, or both lose `bothSnatch`. */
 export function pairPoints(
   a: "share" | "snatch",
   b: "share" | "snatch",
   pot: number,
+  bothSnatch = 20,
 ): [number, number] {
   if (a === "share" && b === "share") return [pot / 2, pot / 2];
-  if (a === "snatch" && b === "snatch") return [0, 0];
+  if (a === "snatch" && b === "snatch") return [-bothSnatch, -bothSnatch];
   return a === "snatch" ? [pot, 0] : [0, pot];
+}
+
+/** This round's game points per team (sitting out scores nothing), once everyone has chosen. */
+export function roundGamePoints(s: SnatchState): Record<string, number> {
+  const out: Record<string, number> = Object.fromEntries(s.teams.map((t) => [t, 0]));
+  for (const [a, b] of s.pairs) {
+    const [pa, pb] = pairPoints(
+      s.choices[a] ?? "share",
+      s.choices[b] ?? "share",
+      s.pot,
+      s.bothSnatch,
+    );
+    out[a] = pa;
+    out[b] = pb;
+  }
+  return out;
+}
+
+/** Game points after this round. */
+export function gameTotals(s: SnatchState): Record<string, number> {
+  const gained = roundGamePoints(s);
+  return Object.fromEntries(s.teams.map((t) => [t, (s.before[t] ?? 0) + (gained[t] ?? 0)]));
 }
 
 type C = z.infer<typeof Content>;
@@ -86,18 +122,24 @@ function view(s: SnatchState, _c: unknown, { role, revealed }: ViewCtx) {
     /** Who has chosen, without what: both sides show at once on the reveal. */
     lockedIn: Object.keys(s.choices),
     choices: revealed ? s.choices : null,
+    /** Game points before this round, and after it once revealed. */
+    before: s.before,
+    gained: revealed ? roundGamePoints(s) : null,
+    totals: revealed ? gameTotals(s) : null,
+    last: s.last,
   };
 }
 
 const game: ShowdownGame<C, SnatchState> = {
   content: Content,
-  demo: "Two teams, one pot. Both Share: you split it. One Snatches: they take it all. Both Snatch: nobody gets a thing.",
+  demo: "Two teams, one pot of 100. Both Share: 50 each. One Snatches: they take it all. Both Snatch: both lose 20. Most game points at the end wins.",
   timeout: "Out of time? You Share.",
   minTeams: 2,
   rounds: (c, teams) => (teams % 2 === 1 ? teams : c.evenRounds),
   deal(c, { seed, round, startsAt, teams, prev }) {
     const order = prev?.order ?? shuffled(teams, seededRandom(seed));
     const { pairs, sitOut } = pairUp(order, round);
+    const rounds = teams.length % 2 === 1 ? teams.length : c.evenRounds;
     return {
       startsAt,
       closesAt: startsAt + c.chooseMs,
@@ -107,6 +149,9 @@ const game: ShowdownGame<C, SnatchState> = {
       sitOut,
       choices: {},
       order,
+      bothSnatch: c.bothSnatch,
+      before: prev ? gameTotals(prev) : Object.fromEntries(teams.map((t) => [t, 0])),
+      last: round >= rounds,
     };
   },
   move(s, _c, { teamId, move, now }) {
@@ -129,14 +174,11 @@ const game: ShowdownGame<C, SnatchState> = {
     return { ...s, choices };
   },
   over: (s, _c, now) => now > s.closesAt || s.pairs.flat().every((t) => s.choices[t]),
+  // Game points only set the order: showdown points are paid once, on the last round.
   score(s, _c, teams) {
-    const out: Record<string, number> = Object.fromEntries(teams.map((t) => [t, 0]));
-    for (const [a, b] of s.pairs) {
-      const [pa, pb] = pairPoints(s.choices[a] ?? "share", s.choices[b] ?? "share", s.pot);
-      out[a] = pa;
-      out[b] = pb;
-    }
-    return out;
+    if (!s.last) return Object.fromEntries(teams.map((t) => [t, 0]));
+    const totals = gameTotals(s);
+    return rankedPoints(teams, (t) => -(totals[t] ?? 0), SNATCH_LADDER, 10);
   },
   view,
 };

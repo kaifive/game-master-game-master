@@ -2,7 +2,6 @@ import { z } from "zod";
 import { rotate, seededRandom, type Cell } from "@/lib/games";
 import { leadOrder } from "../fairness";
 import { defineShowdown, type Role, type ShowdownGame, type TurnInfo } from "../model";
-import { rankedPoints } from "./scoring";
 
 /**
  * Land Mass (spec 27, S27-AC4): teams take turns placing block pieces from a
@@ -15,9 +14,10 @@ const Content = z.object({
   rows: z.number().int().min(6).max(14).default(10),
   tray: z.number().int().min(2).max(6).default(4),
   turnMs: z.number().int().min(5000).max(60_000).default(30_000),
+  /** Showdown points for each square a team holds at the end (Khai, 2026-11-18). */
+  pointsPerSquare: z.number().int().min(1).max(50).default(5),
 });
 
-export const LAND_LADDER = [150, 100, 70, 50, 30] as const;
 /** Turns before the game ends anyway, so it can't run on forever. */
 export const MAX_TURNS = 200;
 
@@ -28,18 +28,32 @@ const DIRS: [number, number][] = [
   [0, -1],
 ];
 
-/** A piece of 3 to 5 squares, grown from one square in seeded directions ([row, col] cells). */
+/**
+ * A piece of 4 to 6 squares, grown from one square in seeded directions, and
+ * irregular (Khai, 2026-11-18): never a straight line, never a plain
+ * rectangle ([row, col] cells).
+ */
 export function dealPiece(seed: number): Cell[] {
   const random = seededRandom(seed);
-  const size = 3 + Math.floor(random() * 3);
-  const cells: Cell[] = [[0, 0]];
-  while (cells.length < size) {
-    const [r, c] = cells[Math.floor(random() * cells.length)] ?? [0, 0];
-    const [dr, dc] = DIRS[Math.floor(random() * 4)] ?? [0, 1];
-    const next: Cell = [r + dr, c + dc];
-    if (!cells.some((x) => x[0] === next[0] && x[1] === next[1])) cells.push(next);
+  for (;;) {
+    const size = 4 + Math.floor(random() * 3);
+    const cells: Cell[] = [[0, 0]];
+    while (cells.length < size) {
+      const [r, c] = cells[Math.floor(random() * cells.length)] ?? [0, 0];
+      const [dr, dc] = DIRS[Math.floor(random() * 4)] ?? [0, 1];
+      const next: Cell = [r + dr, c + dc];
+      if (!cells.some((x) => x[0] === next[0] && x[1] === next[1])) cells.push(next);
+    }
+    const piece = rotate(cells, 0);
+    if (irregular(piece)) return piece;
   }
-  return rotate(cells, 0);
+}
+
+/** Not a straight line and not a filled rectangle. */
+export function irregular(cells: Cell[]): boolean {
+  const rows = new Set(cells.map((c) => c[0])).size;
+  const cols = new Set(cells.map((c) => c[1])).size;
+  return rows > 1 && cols > 1 && rows * cols !== cells.length;
 }
 
 export type LandState = {
@@ -152,7 +166,7 @@ function view(s: LandState, _c: unknown, { role, now }: ViewCtx) {
 
 const game: ShowdownGame<C, LandState> = {
   content: Content,
-  demo: "On your turn: pick a piece, turn it, tap where it goes, then place it. Pieces go anywhere they fit. Most squares wins!",
+  demo: "On your turn: pick a piece, turn it, tap where it goes, then place it. Pieces go anywhere they fit. Every square you hold scores 5.",
   timeout: "Out of time? 30 seconds, or your turn passes.",
   rounds: () => 1,
   deal(c, { seed, teams, startsAt }) {
@@ -207,16 +221,9 @@ const game: ShowdownGame<C, LandState> = {
     return st;
   },
   over: (s) => s.ended,
-  score: (s, _c, teams) =>
-    rankedPoints(
-      teams,
-      (t) => {
-        const n = squaresOf(s, t);
-        return n > 0 ? -n : null;
-      },
-      LAND_LADDER,
-      10,
-    ),
+  // Points for every square held (Khai, 2026-11-18).
+  score: (s, c, teams) =>
+    Object.fromEntries(teams.map((t) => [t, squaresOf(s, t) * c.pointsPerSquare])),
   turn: (s, _c, now): TurnInfo =>
     !s.ended && now >= s.startsAt ? { teamId: whose(s), turnNo: s.turnNo } : null,
   view,

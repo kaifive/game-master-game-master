@@ -411,7 +411,8 @@ function SnatchSide({
   align: "start" | "end";
 }) {
   const choice = g.choices?.[team];
-  const pts = view.teams.find((x) => x.id === team)?.roundPoints ?? 0;
+  // Game points this round: they only set the order (spec 26).
+  const pts = g.gained?.[team] ?? 0;
   return (
     <span
       className={cx(
@@ -433,7 +434,7 @@ function SnatchSide({
         )}
       >
         {choice
-          ? `${choice === "share" ? "Share" : "Snatch"} · +${String(pts)}`
+          ? `${choice === "share" ? "Share" : "Snatch"} · ${pts < 0 ? "−" : "+"}${String(Math.abs(pts))}`
           : g.lockedIn.includes(team)
             ? "Chosen"
             : "Thinking"}
@@ -469,7 +470,44 @@ function SnatchTv({ view, game, serverNow, revealed }: LiveTvProps) {
           {teamName(view, g.sitOut)} sits this one out.
         </p>
       )}
+      <GamePoints view={view} totals={g.totals ?? g.before} last={revealed && g.last} />
     </div>
+  );
+}
+
+/**
+ * Game points so far, best first. They're only for this game: on the last
+ * round, their order pays the showdown points (spec 26).
+ */
+function GamePoints({
+  view,
+  totals,
+  last,
+}: {
+  view: ActiveLiveView;
+  totals: Record<string, number>;
+  last: boolean;
+}) {
+  const ranked = [...view.teams].sort((a, b) => (totals[b.id] ?? 0) - (totals[a.id] ?? 0));
+  return (
+    <section aria-label="Game points" className="grid gap-[1vh]">
+      <p className="m-0 text-center font-gm-display text-[clamp(1.2rem,3vh,2.2rem)] font-bold">
+        {last ? "Final order: showdown points" : "Game points so far"}
+      </p>
+      <ol className="m-0 flex list-none flex-wrap justify-center gap-[1vw] p-0">
+        {ranked.map((t) => (
+          <li
+            key={t.id}
+            className="flex items-center gap-2 rounded-gm bg-gm-surface px-3 py-[0.8vh] text-[clamp(1rem,2.6vh,1.9rem)] font-bold ring-1 ring-gm-border"
+          >
+            <Swatch color={t.color} />
+            {t.name}
+            <span className="font-gm-display tabular-nums">{totals[t.id] ?? 0}</span>
+            {last && <span className="text-gm-tile-correct">+{t.roundPoints ?? 0}</span>}
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 
@@ -477,7 +515,17 @@ function SnatchController({ view, game, serverNow, revealed, send, busy }: LiveC
   const g = game as SnatchView | null;
   const now = useServerTime(serverNow, !revealed);
   if (!g) return null;
-  if (revealed) return <PhoneResult view={view} />;
+  if (revealed) {
+    const me = view.you?.teamId ?? "";
+    const got = g.gained?.[me] ?? 0;
+    return (
+      <PhoneNote title={`${got < 0 ? "−" : "+"}${String(Math.abs(got))} game points`}>
+        {g.last
+          ? `+${String(view.teams.find((t) => t.id === me)?.roundPoints ?? 0)} showdown points for your place.`
+          : `Your team has ${String(g.totals?.[me] ?? 0)} game points. Look at the TV!`}
+      </PhoneNote>
+    );
+  }
   const me = view.you?.teamId ?? "";
   if (g.sitOut === me) return <PhoneNote title="You sit this one out">Watch the TV.</PhoneNote>;
   const pair = g.pairs.find((p) => p.includes(me));
@@ -515,7 +563,7 @@ function SnatchController({ view, game, serverNow, revealed, send, busy }: LiveC
         Snatch
       </button>
       <p className="m-0 text-center text-gm-text-muted">
-        Both share: {g.pot / 2} each. One snatches: they take it all. Both snatch: nothing.
+        Both share: {g.pot / 2} each. One snatches: they take it all. Both snatch: both lose 20.
       </p>
     </section>
   );

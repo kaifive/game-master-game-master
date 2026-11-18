@@ -5,8 +5,8 @@ import { PLAYTEST_TEAM_COUNTS, playtest, type Bot, type BotContext } from "../pl
 import {
   cover,
   dealPiece,
+  irregular,
   landmass,
-  LAND_LADDER,
   placements,
   squaresOf,
   type LandState,
@@ -77,6 +77,18 @@ describe("Snowball to 21", () => {
 });
 
 describe("Memory Path", () => {
+  it("S27-AC1: each round is harder: a longer path and less time to learn it", () => {
+    const g = rig<PathState>(path);
+    const rounds = [1, 2, 3, 4, 5, 6].map((r) => g.deal(r, 7, teams));
+    for (let i = 1; i < rounds.length; i++) {
+      const [a, b] = [rounds[i - 1], rounds[i]];
+      if (!a || !b) throw new Error("no round");
+      expect(b.path.length).toBeGreaterThan(a.path.length - 1);
+      expect(b.showEndsAt - b.startsAt).toBeLessThan(a.showEndsAt - a.startsAt);
+    }
+    expect(rounds[5]?.path.length).toBeGreaterThanOrEqual(18);
+  });
+
   it("S27-AC1: deals a path from the seed, bottom to top, up/left/right, never doubling back, in length", () => {
     for (let seed = 1; seed < 200; seed++) {
       const p = dealPath(seed, { cols: 5, rows: 9, minLength: 12, maxLength: 16 });
@@ -174,11 +186,16 @@ describe("Present Shuffle", () => {
 });
 
 describe("Land Mass", () => {
-  it("S27-AC4: deals pieces of 3 to 5 squares; a piece goes anywhere it fits, takes the team's color, and is replaced in the tray", () => {
+  it("S27-AC4: deals irregular pieces of 4 to 6 squares; a piece goes anywhere it fits, takes the team's color, and is replaced in the tray", () => {
     for (let seed = 1; seed < 100; seed++) {
       const p = dealPiece(seed);
-      expect(p.length).toBeGreaterThanOrEqual(3);
-      expect(p.length).toBeLessThanOrEqual(5);
+      expect(p.length).toBeGreaterThanOrEqual(4);
+      expect(p.length).toBeLessThanOrEqual(6);
+      // Irregular: never a straight line, never a filled rectangle (Khai, 2026-11-18).
+      expect(irregular(p)).toBe(true);
+      const rows = new Set(p.map((c) => c[0])).size;
+      const cols = new Set(p.map((c) => c[1])).size;
+      expect(rows > 1 && cols > 1 && rows * cols !== p.length).toBe(true);
     }
     const g = rig<LandState>(landmass);
     expect(landmass.rounds(g.c, 4)).toBe(1);
@@ -212,16 +229,16 @@ describe("Land Mass", () => {
     expect(turns).toEqual([...leadOrder(teams, 0), ...leadOrder(teams, 1), ...leadOrder(teams, 2)]);
   });
 
-  it("S27-AC4: when nothing fits the tray swaps once, then the game ends; points are ranked by squares", () => {
+  it("S27-AC4: when nothing fits the tray swaps once, then the game ends; every square scores 5", () => {
     const g = rig<LandState>(landmass, { cols: 6, rows: 6 });
     let s = g.deal();
-    // Fill the board but one lone square: no piece of 3 or more can fit.
+    // Fill the board but one lone square: no piece of 4 or more can fit.
     s = { ...s, board: s.board.map((_, i) => (i === 0 ? null : i % 2 ? "t1" : "t2")) };
     s = g.tick(s, T0 + 30_001);
     expect(s.ended).toBe(true);
     expect(s.swaps).toBe(1);
     const pts = g.score({ ...s, board: s.board.map((o, i) => (i < 3 ? "t3" : o)) });
-    expect(pts.t3).toBe(LAND_LADDER[2]);
+    expect(pts.t3).toBe(3 * 5);
     expect(g.score({ ...s, board: s.board.map(() => null) })).toEqual({ t1: 0, t2: 0, t3: 0 });
   });
 });
@@ -388,7 +405,7 @@ describe("spec 27 play tests (S24-AC8, S24-AC6)", () => {
         }
     });
 
-  it("S24-AC8 S24-AC6: Land Mass plays to the end with 1 to 6 teams, leads rotating each lap, squares ranked into points", () => {
+  it("S24-AC8 S24-AC6: Land Mass plays to the end with 1 to 6 teams, leads rotating each lap, 5 points a square", () => {
     for (const n of PLAYTEST_TEAM_COUNTS)
       for (const shift of [0, 2, 4, 6]) {
         const line = lineup(LAND, n, shift);
@@ -418,8 +435,7 @@ describe("spec 27 play tests (S24-AC8, S24-AC6)", () => {
             ).slice(0, flat.slice(lap * n, lap * n + n).length),
           );
         expect(order.length).toBeGreaterThan(0);
-        for (const p of Object.values(r.rounds[0] ?? {}))
-          expect([0, 10, ...LAND_LADDER]).toContain(p);
+        for (const p of Object.values(r.rounds[0] ?? {})) expect(p % 5).toBe(0);
         // Nobody owns a square twice: the board adds up.
         const owned = final.board.filter((o) => o !== null).length;
         expect(owned).toBe(Object.keys(r.scores).reduce((a, t) => a + squaresOf(final, t), 0));

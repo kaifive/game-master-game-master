@@ -78,13 +78,11 @@ unfair. This is what they found and what changed.
 | Land Mass: four steps in 20 s, and board squares about 25 px on a phone (rated a blocker for older players). | 30 s a turn; numbered steps ("1. Pick a piece, 2. Tap the board, 3. Place it"); arrow buttons nudge the piece a square at a time, so a rough tap is enough; the "fits" preview is white, not a team color. |
 | Land Mass, Memory Path: results cards overflowed beside the board. | Results stack under a smaller board, every card full width. |
 
-## Rules left for Khai (open questions)
+## Rules the reviewers questioned (Khai's answers, 2026-11-18)
 
-Reviewers also questioned rules Khai set. These are logged rather than changed:
-
-- **Q29, Memory Path:** the first team across ends the round, and partial progress scores nothing.
-- **Q30, Share or Snatch:** Snatch is never worse than Share.
-- **Q31, Land Mass:** ranked points are steep.
+- **Memory Path:** the first team across ends the round, and getting partway scores nothing. Kept: going early is the chance, but it's hard. Now each round is harder (longer path, less time to learn it). (A55)
+- **Share or Snatch:** Snatch was never worse than Share. Now both snatching loses each team 20 game points, and the final order of game points pays the showdown points. (A56)
+- **Land Mass:** ranked points were steep. Now every square scores 5, and pieces are more irregular. (A57)
 
 Also noted, not changed:
 - **Auction:** the last rounds are forced, and teams can gang up on the leader.
