@@ -1,6 +1,6 @@
 # 26: Showdowns: nerve games (Auction, Stocking Stuffer, Share or Snatch)
 
-**Status:** Building (built and play-tested; the blind review comes next, spec 24 6f)
+**Status:** Done (blind-reviewed 2026-11-18: `docs/reviews/showdowns.md`)
 **Backlog:** M3
 **Depends on:** 11, 24
 

@@ -212,3 +212,14 @@ describe("Snow Sum dealing", () => {
     }
   });
 });
+
+describe("every showdown's intro (blind review)", () => {
+  it("S24-AC4: every showdown has a one-line how-to-play and says what happens if a team runs out of time", async () => {
+    const { showdownFor, showdownTypes } = await import("../registry");
+    for (const type of showdownTypes()) {
+      const game = showdownFor(type);
+      expect(game?.demo.length).toBeGreaterThan(20);
+      expect(game?.timeout).toMatch(/^Out of time\?/);
+    }
+  });
+});

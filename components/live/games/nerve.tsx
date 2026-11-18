@@ -61,7 +61,7 @@ function NumbersLeft({ view, left }: { view: ActiveLiveView; left: Record<string
                       "grid h-[4.4vh] place-items-center rounded-[4px] font-gm-display text-[clamp(1rem,2.6vh,2rem)] font-bold tabular-nums",
                       has
                         ? "bg-gm-tile-present text-gm-tile-present-ink"
-                        : "bg-gm-tile-absent text-gm-tile-absent-ink line-through",
+                        : "bg-gm-tile-absent text-gm-tile-absent-ink line-through opacity-40",
                     )}
                   >
                     {n}
@@ -160,7 +160,7 @@ function AuctionController({ view, game, serverNow, revealed, send, busy }: Live
               }}
               className={cx(
                 "grid min-h-16 place-items-center rounded-gm font-gm-display text-3xl font-bold",
-                !has && "bg-gm-tile-absent text-gm-tile-absent-ink line-through",
+                !has && "bg-gm-tile-absent text-gm-tile-absent-ink line-through opacity-40",
                 has && pick !== n && "bg-gm-tile-present text-gm-tile-present-ink shadow-md",
                 pick === n &&
                   "bg-gm-tile-correct text-gm-tile-correct-ink shadow-md ring-4 ring-gm-tile-correct",
@@ -427,7 +427,8 @@ function SnatchSide({
         className={cx(
           "font-gm-display text-[clamp(2rem,6vh,4.6rem)] leading-none font-bold",
           choice === "snatch" && "text-gm-accent-ink",
-          choice === "share" && "text-gm-tile-correct",
+          choice === "share" && pts > 0 && "text-gm-tile-correct",
+          choice === "share" && pts === 0 && "text-gm-text-muted",
           !choice && "text-gm-text-muted",
         )}
       >
@@ -487,7 +488,8 @@ function SnatchController({ view, game, serverNow, revealed, send, busy }: LiveC
         Both choices show on the TV at once.
       </PhoneNote>
     );
-  if (now < g.startsAt) return <PhoneNote title="Get ready…">Your matchup is on the TV.</PhoneNote>;
+  if (now < g.startsAt)
+    return <PhoneNote title="Get ready…">Your matchup comes up in a moment.</PhoneNote>;
   if (now > g.closesAt) return <PhoneNote title="Time's up">No choice counts as Share.</PhoneNote>;
   return (
     <section aria-label="Share or snatch" className="grid gap-4">

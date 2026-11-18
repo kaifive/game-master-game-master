@@ -30,7 +30,8 @@ function view(s: LastState, _c: unknown, { role, revealed }: ViewCtx) {
 
 const game: ShowdownGame<C, LastState> = {
   content: Content,
-  demo: "Stop the countdown as late as you dare. The latest stop wins, but hit zero and you get nothing.",
+  demo: "Stop the countdown as close to zero as you dare. Closest scores most, but if it hits zero first you get nothing.",
+  timeout: "Out of time? Hit zero and you get nothing.",
   rounds: (c) => c.rounds,
   deal: (c, { startsAt, teams }) => ({
     startsAt,

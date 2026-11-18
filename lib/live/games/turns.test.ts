@@ -50,6 +50,8 @@ describe("Snowball to 21", () => {
     const g = rig<To21State>(to21);
     expect(to21.rounds(g.c, 4)).toBe(4);
     expect([1, 2, 3].map((r) => g.deal(r).order[0])).toEqual(["t1", "t2", "t3"]);
+    // Nobody's turn during the count before the start: no live buttons (blind review).
+    expect(g.view(g.deal(), cap("t1"), T0 - 500)).toMatchObject({ turn: null, myTurn: false });
     let s = g.deal();
     expect(g.move(s, "t2", { add: 1 }, T0 + 10)).toMatchObject({
       ok: false,
@@ -88,6 +90,11 @@ describe("Memory Path", () => {
         const b: Square = p[i] ?? [0, 0];
         const step = [b[0] - a[0], b[1] - a[1]].join();
         expect(["0,-1", "1,0", "-1,0"]).toContain(step);
+        // One clean line: no square touches an earlier one but the square before it.
+        for (let j = 0; j < i - 1; j++) {
+          const e = p[j] ?? [0, 0];
+          expect(Math.abs(e[0] - b[0]) + Math.abs(e[1] - b[1])).toBeGreaterThan(1);
+        }
       }
     }
   });
@@ -194,13 +201,13 @@ describe("Land Mass", () => {
     expect(cover(s, [[0, 0]], 0, s.rows, 0)).toBeNull();
   });
 
-  it("S27-AC4: turns time out after 20 s; the lead moves one team on each time round", () => {
+  it("S27-AC4: turns time out after 30 s; the lead moves one team on each time round", () => {
     const g = rig<LandState>(landmass);
     let s = g.deal();
     const turns: string[] = [];
     for (let i = 0; i < 9; i++) {
-      turns.push(g.turn(s, T0 + i * 20_001)?.teamId ?? "");
-      s = g.tick(s, T0 + (i + 1) * 20_001);
+      turns.push(g.turn(s, T0 + i * 30_001)?.teamId ?? "");
+      s = g.tick(s, T0 + (i + 1) * 30_001);
     }
     expect(turns).toEqual([...leadOrder(teams, 0), ...leadOrder(teams, 1), ...leadOrder(teams, 2)]);
   });
@@ -210,7 +217,7 @@ describe("Land Mass", () => {
     let s = g.deal();
     // Fill the board but one lone square: no piece of 3 or more can fit.
     s = { ...s, board: s.board.map((_, i) => (i === 0 ? null : i % 2 ? "t1" : "t2")) };
-    s = g.tick(s, T0 + 20_001);
+    s = g.tick(s, T0 + 30_001);
     expect(s.ended).toBe(true);
     expect(s.swaps).toBe(1);
     const pts = g.score({ ...s, board: s.board.map((o, i) => (i < 3 ? "t3" : o)) });
@@ -391,8 +398,8 @@ describe("spec 27 play tests (S24-AC8, S24-AC6)", () => {
           {
             teams: n,
             seed: n * 23 + shift,
-            stepMs: 2000,
-            roundCapMs: 6_000_000,
+            stepMs: 3000,
+            roundCapMs: 9_000_000,
             bots: line.bots,
             dropOutFrom: line.dropOutFrom,
           },

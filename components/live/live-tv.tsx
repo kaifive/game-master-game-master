@@ -50,16 +50,25 @@ export function LiveTv({
       <header className="flex items-baseline justify-between gap-4">
         <h2 className="m-0 font-gm-display text-[clamp(2rem,5vmin,4.5rem)] font-bold">{title}</h2>
         {round > 0 && step !== "final" && (
-          <p className="m-0 font-gm-display text-[clamp(1.2rem,3vmin,2.6rem)] font-bold text-gm-text-muted">
+          <p className="m-0 font-gm-display text-[clamp(1.4rem,3.6vmin,3rem)] font-bold">
             Round {round} of {rounds}
           </p>
         )}
       </header>
-      {step === "intro" && <DemoFrame renderer={renderer} line={view.demo} />}
+      {step === "intro" && (
+        <DemoFrame renderer={renderer} line={view.demo} timeout={view.timeout} />
+      )}
       {(step === "play" || step === "results") && renderer && (
         <renderer.Tv view={view} game={view.game} serverNow={serverNow} revealed={revealed} />
       )}
-      {step === "final" && <StandingsUpdate rows={standingsRows(view, totals)} />}
+      {step === "final" && (
+        <>
+          <p className="m-0 font-gm-display text-[clamp(1.6rem,4vh,3rem)] font-bold">
+            Team standings for the whole party
+          </p>
+          <StandingsUpdate rows={standingsRows(view, totals)} />
+        </>
+      )}
     </section>
   );
 }

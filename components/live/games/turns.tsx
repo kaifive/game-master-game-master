@@ -223,21 +223,21 @@ const has = (list: Square[], c: number, r: number) => list.some((q) => q[0] === 
 /** The path grid: shown, lit, right-so-far and missed squares, bottom row first to cross. */
 function PathGrid({
   g,
-  view,
   onTap,
   size,
 }: {
   g: PathView;
-  view: ActiveLiveView;
   onTap?: (square: Square) => void;
-  size: "tv" | "phone";
+  size: "tv" | "small" | "phone";
 }) {
-  const crossingColor = colorOf(view, g.crossing);
   return (
     <div
       role={onTap ? "group" : "img"}
       aria-label={onTap ? "The path grid" : `The path: ${String(g.lit.length)} squares lit`}
-      className={cx("mx-auto grid gap-[3px]", size === "tv" ? "h-[60vh]" : "w-full")}
+      className={cx(
+        "mx-auto grid gap-[3px]",
+        size === "tv" ? "h-[72vh]" : size === "small" ? "h-[22vh]" : "w-full",
+      )}
       style={{
         gridTemplateColumns: `repeat(${String(g.cols)}, 1fr)`,
         aspectRatio: `${String(g.cols)} / ${String(g.rows)}`,
@@ -253,13 +253,14 @@ function PathGrid({
           const look = cx(
             "relative grid place-items-center rounded-[4px] font-gm-display font-bold",
             mine
-              ? ""
+              ? "bg-gm-tile-present text-gm-tile-present-ink"
               : shown || lit
                 ? "bg-gm-tile-correct text-gm-tile-correct-ink"
                 : "bg-gm-tile-absent",
             miss && "bg-gm-accent text-gm-text-on-accent",
           );
-          const style = mine ? { background: team(crossingColor) } : undefined;
+          // Right so far: white with a check, never a team color that could pass for the gold path.
+          const style = undefined;
 
           return onTap ? (
             <button
@@ -296,8 +297,13 @@ function PathTv({ view, game, serverNow, revealed }: LiveTvProps) {
     return <GetReady startsAt={g.startsAt} now={now} line="Watch the path!" />;
   const showing = now < g.showEndsAt && !revealed;
   return (
-    <div className="grid grid-cols-[auto_1fr] items-center gap-[3vw]">
-      <PathGrid g={g} view={view} size="tv" />
+    <div
+      className={cx(
+        "grid items-center gap-[3vh_3vw]",
+        revealed ? "grid-cols-1" : "grid-cols-[auto_1fr]",
+      )}
+    >
+      <PathGrid g={g} size={revealed ? "small" : "tv"} />
       <div className="grid content-center gap-[2.4vh]">
         {revealed ? (
           <>
@@ -330,8 +336,13 @@ function PathTv({ view, game, serverNow, revealed }: LiveTvProps) {
               doing="is crossing"
             />
             <p className="m-0 text-center font-gm-display text-[clamp(1.4rem,4vh,3rem)] font-bold text-gm-text-muted">
-              {g.progress.length} of {g.length} squares
+              {g.progress.length} of {g.length} squares · 5 seconds a step
             </p>
+            {g.lit.length > 0 && (
+              <p className="m-0 text-center text-[clamp(1rem,2.6vh,2rem)] text-gm-text-muted">
+                Gold: squares an earlier team got right. White: right so far.
+              </p>
+            )}
           </>
         )}
         {!revealed && (
@@ -376,9 +387,13 @@ function PathController({ view, game, serverNow, revealed, send, busy }: LiveCon
       <p className="m-0 text-center text-xl font-bold">
         Your turn! Start on the bottom row. {g.progress.length} of {g.length}
       </p>
+      <p className="m-0 text-center text-gm-text-muted">
+        Tap the next square within 5 seconds.
+        {g.lit.length > 0 ? " Gold squares are what an earlier team got right." : ""}
+      </p>
       <TimeLeft closesAt={g.stepEndsAt} now={now} total={g.stepMs} />
       <div className={cx(busy && "pointer-events-none opacity-80")}>
-        <PathGrid g={g} view={view} size="phone" onTap={(square) => void send({ square })} />
+        <PathGrid g={g} size="phone" onTap={(square) => void send({ square })} />
       </div>
     </section>
   );
@@ -451,7 +466,17 @@ function positions(g: ShuffleView, now: number) {
 }
 
 /** The presents on the TV, laid out on a grid of slots. */
-function PresentBoard({ g, view, now }: { g: ShuffleView; view: ActiveLiveView; now: number }) {
+function PresentBoard({
+  g,
+  view,
+  now,
+  small = false,
+}: {
+  g: ShuffleView;
+  view: ActiveLiveView;
+  now: number;
+  small?: boolean;
+}) {
   const n = g.count;
   const cols = gridCols(n);
   const rows = Math.ceil(n / cols);
@@ -465,7 +490,7 @@ function PresentBoard({ g, view, now }: { g: ShuffleView; view: ActiveLiveView; 
     <div
       aria-label="The presents"
       role="img"
-      className="relative mx-auto h-[58vh]"
+      className={cx("relative mx-auto", small ? "h-[22vh]" : "h-[58vh]")}
       style={{ aspectRatio: `${String(cols)} / ${String(rows)}` }}
     >
       {settled
@@ -553,20 +578,21 @@ function ShuffleTv({ view, game, serverNow, revealed }: LiveTvProps) {
   const now = useServerTime(serverNow, !revealed);
   if (!g) return null;
   if (now < g.startsAt && !revealed)
-    return <GetReady startsAt={g.startsAt} now={now} line="Watch the big ones!" />;
+    return <GetReady startsAt={g.startsAt} now={now} line="Find the 100-point present!" />;
   return (
-    <div className="grid grid-cols-[auto_1fr] items-center gap-[3vw]">
-      <PresentBoard g={g} view={view} now={now} />
+    <div
+      className={cx(
+        "grid items-center gap-[3vh_3vw]",
+        revealed ? "grid-cols-1" : "grid-cols-[auto_1fr]",
+      )}
+    >
+      <PresentBoard g={g} view={view} now={now} small={revealed} />
       <div className="grid content-center gap-[2.4vh]">
         {revealed ? (
-          <Reveal
-            view={view}
-            answer={(t) => (g.picks[t] ? String(g.picks[t].value) : null)}
-            note={(t) => (g.picks[t] === null ? "Too slow" : null)}
-          />
+          <Reveal view={view} note={(t) => (g.picks[t] === null ? "Too slow" : null)} />
         ) : now < g.showEndsAt ? (
           <p className="m-0 font-gm-display text-[clamp(2rem,6vh,4.5rem)] font-bold">
-            Remember where they are…
+            Find the 100-point present…
           </p>
         ) : now < g.shuffleEndsAt ? (
           <p className="m-0 font-gm-display text-[clamp(2rem,6vh,4.5rem)] font-bold">
@@ -637,9 +663,12 @@ function ShuffleController({ view, game, serverNow, revealed, send, busy }: Live
                 value !== undefined ? `Taken: ${String(value)}` : `Present ${String(slot + 1)}`
               }
               onClick={() => void send({ slot })}
-              className="relative aspect-square disabled:opacity-40"
+              className="relative aspect-square"
             >
-              <Present i={slot} className="h-full w-full" />
+              <Present
+                i={slot}
+                className={cx("h-full w-full", value !== undefined && "opacity-30")}
+              />
               {value !== undefined && (
                 <span className="absolute inset-[20%] grid place-items-center rounded-gm bg-gm-tile-present font-gm-display text-2xl font-bold text-gm-tile-present-ink">
                   {value}
@@ -700,7 +729,7 @@ function LandBoard({
   ghost?: Set<number>;
   ghostFits?: boolean;
   onTap?: (row: number, col: number) => void;
-  size: "tv" | "phone";
+  size: "tv" | "small" | "phone";
 }) {
   return (
     <div
@@ -708,7 +737,7 @@ function LandBoard({
       aria-label={onTap ? "The board: tap where the piece goes" : "The board"}
       className={cx(
         "mx-auto grid gap-px rounded-[4px] bg-gm-border p-px",
-        size === "tv" ? "h-[62vh]" : "w-full",
+        size === "tv" ? "h-[62vh]" : size === "small" ? "h-[22vh]" : "w-full",
       )}
       style={{
         gridTemplateColumns: `repeat(${String(g.cols)}, 1fr)`,
@@ -721,7 +750,7 @@ function LandBoard({
         const look = cx(
           "block",
           !owner && "bg-gm-bg",
-          inGhost && (ghostFits ? "bg-gm-tile-correct" : "bg-gm-accent"),
+          inGhost && (ghostFits ? "bg-gm-tile-present" : "bg-gm-accent"),
         );
         return onTap ? (
           <button
@@ -780,8 +809,13 @@ function LandTv({ view, game, serverNow, revealed }: LiveTvProps) {
   if (now < g.startsAt && !revealed)
     return <GetReady startsAt={g.startsAt} now={now} line="Claim the most land!" />;
   return (
-    <div className="grid grid-cols-[auto_1fr] items-center gap-[3vw]">
-      <LandBoard g={g} view={view} size="tv" />
+    <div
+      className={cx(
+        "grid items-center gap-[3vh_3vw]",
+        revealed ? "grid-cols-1" : "grid-cols-[auto_1fr]",
+      )}
+    >
+      <LandBoard g={g} view={view} size={revealed ? "small" : "tv"} />
       <div className="grid content-center gap-[2.4vh]">
         {revealed ? (
           <Reveal view={view} answer={(t) => String(g.squares[t] ?? 0)} note={() => "squares"} />
@@ -852,9 +886,12 @@ function LandController({ view, game, serverNow, revealed, send, busy }: LiveCon
   const myColor = team(colorOf(view, view.you?.teamId ?? null));
   return (
     <section aria-label="Your turn" className="grid gap-3">
-      <p className="m-0 text-center text-xl font-bold">
-        Your turn! Pick a piece, then tap where it goes.
-      </p>
+      <p className="m-0 text-center text-xl font-bold">Your turn!</p>
+      <ol className="m-0 flex list-none justify-center gap-3 p-0 text-sm font-bold text-gm-text-muted">
+        <li>1. Pick a piece</li>
+        <li>2. Tap the board</li>
+        <li>3. Place it</li>
+      </ol>
       <TimeLeft closesAt={g.turnEndsAt} now={now} total={g.turnMs} />
       <div role="group" aria-label="The tray" className="flex items-end justify-center gap-3">
         {g.tray.map((p, i) => (
@@ -892,6 +929,36 @@ function LandController({ view, game, serverNow, revealed, send, busy }: LiveCon
           setAt([r, c]);
         }}
       />
+      {at && (
+        <div role="group" aria-label="Move the piece" className="grid grid-cols-4 gap-2">
+          {(
+            [
+              ["Left", 0, -1, "←"],
+              ["Up", -1, 0, "↑"],
+              ["Down", 1, 0, "↓"],
+              ["Right", 0, 1, "→"],
+            ] as const
+          ).map(([label, dr, dc, arrow]) => (
+            <button
+              key={label}
+              type="button"
+              aria-label={`Move ${label.toLowerCase()}`}
+              onClick={() => {
+                setAt(
+                  (p) =>
+                    p && [
+                      Math.min(g.rows - 1, Math.max(0, p[0] + dr)),
+                      Math.min(g.cols - 1, Math.max(0, p[1] + dc)),
+                    ],
+                );
+              }}
+              className="min-h-12 rounded-gm bg-gm-surface font-gm-display text-2xl font-bold ring-1 ring-gm-border"
+            >
+              <span aria-hidden="true">{arrow}</span>
+            </button>
+          ))}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"

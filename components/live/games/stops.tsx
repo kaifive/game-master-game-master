@@ -50,9 +50,9 @@ function BlindTv({ view, game, serverNow, revealed }: LiveTvProps) {
           note={(t) => {
             const ms = g.stops?.[t];
             if (ms === undefined) return null;
-            if (exact(ms, g.targetMs)) return "Exactly! +50";
+            if (exact(ms, g.targetMs)) return "Exactly! 100 + 50 bonus";
             const off = ms - g.targetMs;
-            return `${off > 0 ? "+" : "−"}${fmtSeconds(Math.abs(off))} off`;
+            return `${fmtSeconds(Math.abs(off))} ${off > 0 ? "late" : "early"}`;
           }}
         />
       </div>
@@ -145,14 +145,16 @@ function LastTv({ view, game, serverNow, revealed }: LiveTvProps) {
     return (
       <div className="grid gap-[3vh]">
         <p className="m-0 text-center font-gm-display text-[clamp(2rem,6vh,4.5rem)] font-bold">
-          Latest stop wins
+          Closest to zero scores most
         </p>
         <Reveal
           view={view}
           answer={(t) =>
-            g.stops?.[t] === undefined ? "Bust" : `${fmtSeconds(g.countdownMs - g.stops[t])} left`
+            g.stops?.[t] === undefined
+              ? "Too late"
+              : `${fmtSeconds(g.countdownMs - g.stops[t])} left`
           }
-          note={(t) => (g.stops?.[t] === undefined ? "Didn't stop in time" : null)}
+          note={(t) => (g.stops?.[t] === undefined ? "Hit zero before stopping" : null)}
         />
       </div>
     );
@@ -192,14 +194,17 @@ function LastController({ view, game, serverNow, revealed, send }: LiveControlle
     );
   const left = Math.max(0, g.countdownMs - (now - g.startsAt));
   if (now >= g.startsAt && left === 0)
-    return <PhoneNote title="Bust!">The countdown hit zero.</PhoneNote>;
+    return <PhoneNote title="Too late!">The countdown hit zero first.</PhoneNote>;
   return (
     <div className="grid gap-6 py-2">
       <p className="m-0 text-center font-gm-display text-5xl font-bold tabular-nums">
         {now < g.startsAt ? fmtSeconds(g.countdownMs) : fmtSeconds(left)}
       </p>
       {now < g.startsAt ? (
-        <PhoneNote title="Get ready…">Stop as late as you dare. Zero is a bust.</PhoneNote>
+        <PhoneNote title="Get ready…">
+          Stop as close to zero as you dare. Hit zero and you get nothing. Your tap counts, timed on
+          this phone.
+        </PhoneNote>
       ) : (
         <StopButton startsAt={g.startsAt} serverNow={serverNow} send={send} />
       )}

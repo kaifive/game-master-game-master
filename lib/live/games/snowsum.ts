@@ -88,7 +88,8 @@ function view(s: SnowState, _c: unknown, { role, revealed }: ViewCtx) {
 
 const game: ShowdownGame<C, SnowState> = {
   content: Content,
-  demo: "Add up the snowflakes as they fall, starting from 0. Exactly right scores 100, one off scores 50.",
+  demo: "Start at 0 and do each snowflake in order: + adds, − takes away, ×2 doubles. Exactly right scores 100, one off scores 50.",
+  timeout: "Out of time? No answer scores 0.",
   rounds: (c) => c.rounds.length,
   deal(c, { seed, round, startsAt, teams }) {
     const r = c.rounds[round - 1] ?? c.rounds[c.rounds.length - 1] ?? SNOW_ROUNDS[0];

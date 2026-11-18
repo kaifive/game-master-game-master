@@ -14,7 +14,7 @@ const Content = z.object({
   cols: z.number().int().min(6).max(16).default(12),
   rows: z.number().int().min(6).max(14).default(10),
   tray: z.number().int().min(2).max(6).default(4),
-  turnMs: z.number().int().min(5000).max(60_000).default(20_000),
+  turnMs: z.number().int().min(5000).max(60_000).default(30_000),
 });
 
 export const LAND_LADDER = [150, 100, 70, 50, 30] as const;
@@ -152,7 +152,8 @@ function view(s: LandState, _c: unknown, { role, now }: ViewCtx) {
 
 const game: ShowdownGame<C, LandState> = {
   content: Content,
-  demo: "Take turns placing pieces anywhere they fit. Claim the most land for your team!",
+  demo: "On your turn: pick a piece, turn it, tap where it goes, then place it. Pieces go anywhere they fit. Most squares wins!",
+  timeout: "Out of time? 30 seconds, or your turn passes.",
   rounds: () => 1,
   deal(c, { seed, teams, startsAt }) {
     const base: LandState = {

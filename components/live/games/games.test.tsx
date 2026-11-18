@@ -202,11 +202,11 @@ describe("stop showdowns on the phone and TV (spec 25)", () => {
     expect(screen.getByText("2.00")).toBeInTheDocument();
   });
 
-  test("S25-AC5: the Last Second reveal shows time left and busts", () => {
+  test("S25-AC5: the Last Second reveal shows time left and too-late teams", () => {
     const r = round("lastsecond", [["t1", { elapsedMs: 9_500 }, T0 + 9_550]]);
     onTv("lastsecond", r.view(tv, T0 + 20_000, true, r.score()), T0 + 20_000);
     const answers = screen.getByRole("list", { name: "Answers" });
     expect(within(answers).getByText("0.50 left")).toBeInTheDocument();
-    expect(within(answers).getByText("Bust")).toBeInTheDocument();
+    expect(within(answers).getByText("Too late")).toBeInTheDocument();
   });
 });

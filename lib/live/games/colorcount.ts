@@ -73,7 +73,8 @@ function view(s: ColorState, _c: unknown, { role, revealed, now }: ViewCtx) {
 
 const game: ShowdownGame<C, ColorState> = {
   content: Content,
-  demo: "Watch the ornaments. At the end you'll be asked how many of one color there were.",
+  demo: "Count every color of ornament. At the end you'll be asked how many of one color there were. Closest team scores most.",
+  timeout: "Out of time? No answer scores 0.",
   rounds: (c) => c.rounds.length,
   deal(c, { seed, round, startsAt, teams }) {
     const r = c.rounds[round - 1] ?? c.rounds[c.rounds.length - 1] ?? COLOR_ROUNDS[0];

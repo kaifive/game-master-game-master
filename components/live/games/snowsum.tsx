@@ -80,7 +80,7 @@ function Tv({ view, game, serverNow, revealed }: LiveTvProps) {
           {steps.map((s, i) => (
             <li key={i} className="flex items-baseline gap-[0.3em]">
               <span className="text-gm-accent-ink">{s.label}</span>
-              <span className="text-[0.6em] text-gm-text-muted">= {s.total}</span>
+              <span className="text-[0.8em] text-gm-text">= {s.total}</span>
             </li>
           ))}
         </ol>

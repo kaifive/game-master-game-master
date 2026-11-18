@@ -65,6 +65,8 @@ export type ShowdownGame<C = unknown, S = unknown> = {
   content: z.ZodType<C>;
   /** One line under the TV demo, and on phones during the intro (S24-AC4). */
   demo: string;
+  /** What happens to a team that runs out of time, said on the intro (blind review). */
+  timeout?: string;
   /** How many rounds, for this many teams (fair leads: often one per team, S24-AC6). */
   rounds: (c: C, teams: number) => number;
   /** Fewest teams it can be played with (S24-AC11); 1 when left out. */

@@ -60,7 +60,12 @@ export function LivePanel({
     <Panel label={title}>
       <div className="grid gap-4">
         <p className="m-0 font-bold text-gm-text-muted">
-          {round > 0 && step !== "final" ? `Round ${String(round)} of ${String(rounds)}` : title}
+          {[
+            view.teams.find((t) => t.id === view.you?.teamId)?.name,
+            round > 0 && step !== "final" ? `Round ${String(round)} of ${String(rounds)}` : title,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
         </p>
         {error && (
           <p role="alert" className="m-0 font-bold text-gm-danger">
@@ -71,6 +76,7 @@ export function LivePanel({
           <div className="grid gap-2 text-center">
             <p className="m-0 font-gm-display text-2xl font-bold">You&apos;re the controller</p>
             <p className="m-0 text-lg">{view.demo}</p>
+            {view.timeout && <p className="m-0 font-bold text-gm-tile-correct">{view.timeout}</p>}
             <p className="m-0 text-gm-text-muted">Hand this phone to whoever plays each round.</p>
           </div>
         )}

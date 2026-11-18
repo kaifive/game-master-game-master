@@ -320,7 +320,7 @@ export function ShowdownPhoneFrame({
   const captain = as ?? (moment === "answer" ? "t4" : "t1");
   const view = liveView(frozen.m, frozen.s, { kind: "captain", teamId: captain }, frozen.now);
   return (
-    <main className="mx-auto grid w-full max-w-xl gap-5 px-4 py-5">
+    <main className="mx-auto grid min-h-dvh w-full max-w-xl content-start gap-5 bg-gm-bg px-4 py-5">
       <LivePanel
         view={view}
         serverNow={() => frozen.now}

@@ -95,7 +95,8 @@ function view(s: ShuffleState, _c: unknown, { role, revealed, now }: ViewCtx) {
 
 const game: ShowdownGame<C, ShuffleState> = {
   content: Content,
-  demo: "Watch where the big present goes. Teams take turns picking, so follow it closely!",
+  demo: "Watch the points on the presents, then follow the 100-point one as they shuffle. Teams take turns picking one each.",
+  timeout: "Out of time? 15 seconds to pick, or you get no present.",
   rounds: (_c, teams) => Math.max(1, teams),
   deal(c, { seed, round, teams, startsAt }) {
     const random = seededRandom(seed);

@@ -1,6 +1,6 @@
 # 24: Team showdowns (the framework)
 
-**Status:** Building (framework done; the games are specs 25 to 27)
+**Status:** Done (blind-reviewed 2026-11-18: `docs/reviews/showdowns.md`)
 **Backlog:** M3
 **Depends on:** 03, 11. The games themselves are specs 25 (count and stop), 26 (nerve) and 27 (turns).
 
@@ -91,17 +91,17 @@ Team games played on the big screen, with each team's captain's phone as the con
 
 ## Acceptance criteria
 
-- [ ] AC-1: A showdown steps intro → play → results per round, then final standings, only on the host's Next, and can be ended early with points kept.
-- [ ] AC-2: Controls' Who's played lists each team's joined players plus people the host adds by name, marks who has played in the team's color when tapped (tap again to unmark), counts them, offers Start over once everyone has played, and keeps it across every showdown in the event.
-- [ ] AC-3: Only a team's captain can pick and answer for it; other phones show Watch the TV and their team's status.
-- [ ] AC-4: Each showdown's TV intro plays a looping animated demo with one line of text (a still frame under reduced motion).
-- [ ] AC-5: All showdown points go to teams through the ledger, once per team per round.
-- [ ] AC-6: Every game where going or picking first helps rotates who leads so each team leads equally often over a whole game (Memory Path, Present Shuffle, Snowball to 21, Land Mass), and Share or Snatch gives every team the same number of matchups.
-- [ ] AC-7: Round starts are server times, and every device and the server time stops and answer windows against the server clock; secret answers and anything that gives an answer away never reach a phone or the TV before the reveal.
-- [ ] AC-8: Every showdown has a mock play-test suite (1, 2, 3, 4, 5 and 6 teams; perfect, random, cautious, reckless, silent, late and dropped-out teams; ties) in which every game ends, scores stay within limits and are paid once, nothing secret leaks, and leading is shared.
-- [ ] AC-9: The showdown is a TV screen the host switches to and from like the leaderboard; starting a showdown switches to it, and with none running it shows the team standings.
-- [ ] AC-10: On the final step the TV shows the team standings before the showdown, then rolls the showdown's points onto each total and moves teams to their new places, marking rank changes; under reduced motion it shows the result at once.
-- [ ] AC-11: A showdown runs with any number of teams from 1 to 6; a game that needs more teams than are playing can't be started, and Controls says why.
+- [x] AC-1: A showdown steps intro → play → results per round, then final standings, only on the host's Next, and can be ended early with points kept.
+- [x] AC-2: Controls' Who's played lists each team's joined players plus people the host adds by name, marks who has played in the team's color when tapped (tap again to unmark), counts them, offers Start over once everyone has played, and keeps it across every showdown in the event.
+- [x] AC-3: Only a team's captain can pick and answer for it; other phones show Watch the TV and their team's status.
+- [x] AC-4: Each showdown's TV intro plays a looping animated demo with one line of text (a still frame under reduced motion).
+- [x] AC-5: All showdown points go to teams through the ledger, once per team per round.
+- [x] AC-6: Every game where going or picking first helps rotates who leads so each team leads equally often over a whole game (Memory Path, Present Shuffle, Snowball to 21, Land Mass), and Share or Snatch gives every team the same number of matchups.
+- [x] AC-7: Round starts are server times, and every device and the server time stops and answer windows against the server clock; secret answers and anything that gives an answer away never reach a phone or the TV before the reveal.
+- [x] AC-8: Every showdown has a mock play-test suite (1, 2, 3, 4, 5 and 6 teams; perfect, random, cautious, reckless, silent, late and dropped-out teams; ties) in which every game ends, scores stay within limits and are paid once, nothing secret leaks, and leading is shared.
+- [x] AC-9: The showdown is a TV screen the host switches to and from like the leaderboard; starting a showdown switches to it, and with none running it shows the team standings.
+- [x] AC-10: On the final step the TV shows the team standings before the showdown, then rolls the showdown's points onto each total and moves teams to their new places, marking rank changes; under reduced motion it shows the result at once.
+- [x] AC-11: A showdown runs with any number of teams from 1 to 6; a game that needs more teams than are playing can't be started, and Controls says why.
 
 ## Tests
 

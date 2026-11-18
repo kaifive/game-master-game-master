@@ -113,7 +113,8 @@ function view(s: StockingState, _c: unknown, { role }: ViewCtx) {
 
 const game: ShowdownGame<C, StockingState> = {
   content: Content.refine((c) => c.min <= c.max, "min must not be above max"),
-  demo: "Open another stocking for more points, or bank what you've got. Coal loses the lot!",
+  demo: "Each team opens its own stocking for points, or banks what it has. 1 in 6 stockings is coal, and coal loses this round's pot!",
+  timeout: "Out of time? You bank what you have.",
   rounds: (c) => c.rounds,
   deal: (c, { seed, startsAt, teams }) => ({
     seed,

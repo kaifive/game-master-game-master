@@ -55,10 +55,10 @@ A feature item needs its spec at `Ready` before it starts.
 - [x] Spec 11, live session engine: server-owned sessions, polled views on a shared clock, host steps (ADR-037)
 - [ ] Spec 12, buzzer and Jeopardy board
 - [x] Spec 24, showdown framework: Who's played, the Showdown screen, TV demos, fair leads and clocks, bot play tests
-- [ ] Spec 25, showdowns: Fly-by Count, Snow Sum, Color Count, Blind Stop, Last Second (built; blind review next)
-- [ ] Spec 26, showdowns: Auction, Stocking Stuffer, Share or Snatch (built; blind review next)
-- [ ] Spec 27, showdowns: Memory Path, Present Shuffle, Snowball to 21, Land Mass (built; blind review next)
-- [ ] Blind review of every showdown (docs/reviews/showdowns.md)
+- [x] Spec 25, showdowns: Fly-by Count, Snow Sum, Color Count, Blind Stop, Last Second
+- [x] Spec 26, showdowns: Auction, Stocking Stuffer, Share or Snatch
+- [x] Spec 27, showdowns: Memory Path, Present Shuffle, Snowball to 21, Land Mass
+- [x] Blind review of every showdown (docs/reviews/showdowns.md)
 
 ## M4: Party ready (Dec 14–18)
 
