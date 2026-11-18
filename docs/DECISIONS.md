@@ -733,3 +733,20 @@ switches to it. Showdowns support 1 to 10 teams.
 results straight to the next round's countdown. Fair turns rely on the host
 and the room, helped by the colors. The TV screen choice is server state, so
 a reloaded TV comes back on the right screen.
+
+---
+
+## ADR-039: At most six teams per event
+
+**Status:** accepted (specs 03 and 24, Khai 2026-11-18). Narrows ADR-038's 1 to 10 teams.
+
+Fair showdowns play one round per team where going first helps (spec 24,
+6a), so 10 teams would make some games run 20 minutes or more.
+
+**Decision:** an event has at most 6 teams. Making a seventh captain is
+refused, and showdowns are built and play-tested for 1 to 6 teams. One
+constant, `MAX_TEAMS` in `lib/teams/model.ts`, holds the limit for both.
+
+**Consequences:** the TV only has to lay out 6 teams. A bigger party gets
+bigger teams, not more of them.
+

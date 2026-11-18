@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useId, useState } from "react";
 import type { EventStatus } from "@/lib/events";
 import { LiveControls } from "@/components/live/live-controls";
+import { MAX_TEAMS } from "@/lib/teams";
 import { AdminButton, Card, field, StatusBadge } from "./ui";
 
 type Player = {
@@ -612,12 +613,14 @@ function PlayerTools({
         {teams && !player.teamId && (
           <AdminButton
             tone="secondary"
-            disabled={busy}
+            disabled={busy || teams.teams.length >= MAX_TEAMS}
             onClick={() => {
               run({ action: "captain", playerId: player.id });
             }}
           >
-            Make captain
+            {teams.teams.length >= MAX_TEAMS
+              ? `${String(MAX_TEAMS)} teams is the most`
+              : "Make captain"}
           </AdminButton>
         )}
         {teams && others.length > 0 && (

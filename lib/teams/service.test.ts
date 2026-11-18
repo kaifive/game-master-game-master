@@ -69,6 +69,21 @@ describe("teams", () => {
     ).toBe(400);
   });
 
+  it("S03-AC10: an event has at most six teams; a seventh captain is refused", async () => {
+    for (let i = 0; i < 6; i++) {
+      const extra = await deps.players.join(SLUG, `phoneX${String(i)}`, {
+        nickname: `Extra${String(i)}`,
+        key: `extra${String(i)}`,
+      });
+      await makeCaptain(deps, event, extra.id);
+    }
+    expect(await failure(makeCaptain(deps, event, id("Mai")))).toEqual({
+      status: 409,
+      message: "There can be at most 6 teams.",
+    });
+    expect((await teamsView(deps, event, null)).teams).toHaveLength(6);
+  });
+
   it("S03-AC2: a captain gets a team in the next color and names it", async () => {
     await makeCaptain(deps, event, id("Mai"));
     await makeCaptain(deps, event, id("Bao"));

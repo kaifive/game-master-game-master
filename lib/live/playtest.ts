@@ -50,7 +50,7 @@ export type PlaytestResult = {
 };
 
 /** The team counts every showdown's play tests run with (S24-AC8, AC11). */
-export const PLAYTEST_TEAM_COUNTS = [1, 2, 3, 5, 8, 10] as const;
+export const PLAYTEST_TEAM_COUNTS = [1, 2, 3, 4, 5, 6] as const;
 
 export const playtestTeams = (n: number, size = 3): LiveTeam[] =>
   Array.from({ length: n }, (_, i) => {

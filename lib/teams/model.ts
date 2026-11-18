@@ -12,6 +12,8 @@ export type Team = {
 
 export const TEAM_NAME_MAX = 20;
 export const TEAM_COLORS = 8;
+/** Most teams an event can have, so every showdown fits (Khai, 2026-11-18). */
+export const MAX_TEAMS = 6;
 
 /** What phones see about a team. */
 export type TeamView = {

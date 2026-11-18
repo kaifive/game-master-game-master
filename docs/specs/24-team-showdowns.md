@@ -6,7 +6,7 @@
 
 ## Summary
 
-Team games played on the big screen, with each team's captain's phone as the controller (Khai, 2026-11-17). The solo games train players for them: a showdown is like a solo game, but not exactly the same, so a team has to choose who is best for it. Each round, a team sends one player up to play on the captain's phone, and nobody goes again until everyone on their team has had a turn; the host keeps track in Controls, since not everyone has a phone (Khai, 2026-11-17). The host runs the pace from Controls, and the showdown is its own TV screen, swapped to like the leaderboard. Anywhere from 1 to 10 teams can play; most parties will have 4 or 5. Before each game the TV plays a short animated demo of how it works, not just text. Twelve games:
+Team games played on the big screen, with each team's captain's phone as the controller (Khai, 2026-11-17). The solo games train players for them: a showdown is like a solo game, but not exactly the same, so a team has to choose who is best for it. Each round, a team sends one player up to play on the captain's phone, and nobody goes again until everyone on their team has had a turn; the host keeps track in Controls, since not everyone has a phone (Khai, 2026-11-17). The host runs the pace from Controls, and the showdown is its own TV screen, swapped to like the leaderboard. Anywhere from 1 to 6 teams can play, the most an event can have (Khai, 2026-11-18); most parties will have 4 or 5. Before each game the TV plays a short animated demo of how it works, not just text. Twelve games:
 
 - **Fly-by Count:** a grid of presents flies across the TV; teams count them. Like Mario Party's "Goomba Spotting". Trained by Rapid Recall.
 - **Memory Path:** a long winding path lights up across a grid and then hides; teams take turns crossing it from memory, and a wrong or slow step knocks them out. Like MrBeast's memorize-the-path challenge. Trained by Pathfinder.
@@ -39,7 +39,7 @@ Team games played on the big screen, with each team's captain's phone as the con
 2. **Steps, driven by the host's Next in Controls:** intro (the animated demo) → play → results → (next round: play again) → final standings → end. Between rounds the room sends up its next players while results show; Next starts the round on a shared countdown. Controls shows which step is live and what Next will do. The host can also end a showdown early; points already given stay.
 3. **Who's played (host tracker).** Not everyone on a team has a phone, so the app doesn't pick players (Khai, 2026-11-17). Controls has a Who's played list for every team: the team's joined players, plus people the host adds by name (and can remove). Tapping a name marks them played, in their team's color; tapping again unmarks them. Each team shows how many have played, and once everyone has, a Start over button clears that team. The list is kept for the whole event, across every showdown, and works whether or not a showdown is running. The player who's up plays on the captain's phone.
 3a. **The Showdown screen.** The TV has two screens, the leaderboard and the showdown; the host switches between them in Controls at any time. Starting a showdown switches the TV to it. With no showdown running, the Showdown screen shows the team standings and "Next showdown coming up".
-3b. **1 to 10 teams.** Every showdown works for any number of teams from 1 to 10 and lays out for 10 on the TV. A game that needs more teams says so (Share or Snatch needs 2) and Controls won't start it.
+3b. **1 to 6 teams.** Every showdown works for any number of teams from 1 to 6, the most an event can have (spec 03), and lays out for 6 on the TV. A game that needs more teams says so (Share or Snatch needs 2) and Controls won't start it.
 3c. **The standings update.** On the final step, the TV shows the team leaderboard as it was before the showdown, then rolls each team's showdown points onto its total ("+150") and slides teams into their new places, marking who moved up. Under reduced motion it shows the new standings straight away.
 4. **Points** go to the team through the ledger (ADR-006, ADR-030), each game by its own rule (below). Results show each team's answer or progress and the points.
 5. **A captain's phone that drops out** mid-round counts as no answer for that round (Fly-by: 0; Blind Stop: last place; Memory Path: out when its turn comes). Reloading rejoins at the current step. A team without a captain sits the showdown out.
@@ -57,7 +57,7 @@ Team games played on the big screen, with each team's captain's phone as the con
 
 ### Play-tested and blind-reviewed
 
-6e. **Mock play tests.** Every showdown has a scripted play-test suite that runs whole games with bot teams in many scenarios: 1, 2, 3, 5, 8 and 10 teams; perfect, random, cautious and reckless players; teams that never answer, answer late, or drop out mid-game; and ties. Each run checks the game always ends, every score is within the game's limits and paid once, secrets never leak to phones, and leading is shared (6a).
+6e. **Mock play tests.** Every showdown has a scripted play-test suite that runs whole games with bot teams in many scenarios: 1, 2, 3, 4, 5 and 6 teams; perfect, random, cautious and reckless players; teams that never answer, answer late, or drop out mid-game; and ties. Each run checks the game always ends, every score is within the game's limits and paid once, secrets never leak to phones, and leading is shared (6a).
 6f. **Blind review.** Before a showdown ships, reviewers who see only what players see (the demo line, the instructions, the TV and phone screens and their words), never the spec or code, play it through in their heads and say what they'd find confusing or unfair. Their findings and the fixes are written up in `docs/reviews/showdowns.md`.
 
 ## Data
@@ -76,7 +76,7 @@ Team games played on the big screen, with each team's captain's phone as the con
 
 ## UI
 
-- **TV:** the main show, on the Showdown screen. The demo, the game itself, results with points, and the animated standings update. Read from across the room, with up to 10 teams.
+- **TV:** the main show, on the Showdown screen. The demo, the game itself, results with points, and the animated standings update. Read from across the room, with up to 6 teams.
 - **Captain phone:** the controller: a big single-purpose control: a number pad (Fly-by), the path grid (Memory Path) or one huge Stop button (Blind Stop). Locked and waiting states are clear.
 - **Other phones:** "Watch the TV" and their team's points.
 - **Controls:** the TV screen switch (Leaderboard or Showdown), the current step, the Next button with what it'll do, End early, each team's points, and Who's played.
@@ -98,10 +98,10 @@ Team games played on the big screen, with each team's captain's phone as the con
 - [ ] AC-5: All showdown points go to teams through the ledger, once per team per round.
 - [ ] AC-6: Every game where going or picking first helps rotates who leads so each team leads equally often over a whole game (Memory Path, Present Shuffle, Snowball to 21, Land Mass), and Share or Snatch gives every team the same number of matchups.
 - [ ] AC-7: Round starts are server times, and every device and the server time stops and answer windows against the server clock; secret answers and anything that gives an answer away never reach a phone or the TV before the reveal.
-- [ ] AC-8: Every showdown has a mock play-test suite (1, 2, 3, 5, 8 and 10 teams; perfect, random, cautious, reckless, silent, late and dropped-out teams; ties) in which every game ends, scores stay within limits and are paid once, nothing secret leaks, and leading is shared.
+- [ ] AC-8: Every showdown has a mock play-test suite (1, 2, 3, 4, 5 and 6 teams; perfect, random, cautious, reckless, silent, late and dropped-out teams; ties) in which every game ends, scores stay within limits and are paid once, nothing secret leaks, and leading is shared.
 - [ ] AC-9: The showdown is a TV screen the host switches to and from like the leaderboard; starting a showdown switches to it, and with none running it shows the team standings.
 - [ ] AC-10: On the final step the TV shows the team standings before the showdown, then rolls the showdown's points onto each total and moves teams to their new places, marking rank changes; under reduced motion it shows the result at once.
-- [ ] AC-11: A showdown runs with any number of teams from 1 to 10; a game that needs more teams than are playing can't be started, and Controls says why.
+- [ ] AC-11: A showdown runs with any number of teams from 1 to 6; a game that needs more teams than are playing can't be started, and Controls says why.
 
 ## Tests
 

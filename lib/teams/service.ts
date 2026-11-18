@@ -8,7 +8,13 @@ import {
 } from "@/lib/events";
 import type { PlayerRepo, PlayerSummary } from "@/lib/players";
 import { donate, type PointsDeps } from "@/lib/points";
-import { BOARD_SHOWN, type BoardVisibility, type TeamsSummary, type TeamView } from "./model";
+import {
+  BOARD_SHOWN,
+  MAX_TEAMS,
+  type BoardVisibility,
+  type TeamsSummary,
+  type TeamView,
+} from "./model";
 import type { TeamRepo, TeamSummaryRepo } from "./repo";
 import { checkTeamName, nextColor, viewTeam } from "./rules";
 
@@ -118,7 +124,10 @@ export async function makeCaptain(deps: TeamDeps, event: EventConfig, playerId: 
   if (event.scoring === "individual") throw noTeams();
   if (!(await deps.players.list(event.slug)).some((p) => p.id === playerId))
     throw new AppError("NOT_FOUND", "That player isn't in this event.");
-  await deps.teams.create(event.slug, playerId, nextColor(await deps.teams.list(event.slug)));
+  const teams = await deps.teams.list(event.slug);
+  if (teams.length >= MAX_TEAMS)
+    throw new AppError("CONFLICT", `There can be at most ${String(MAX_TEAMS)} teams.`);
+  await deps.teams.create(event.slug, playerId, nextColor(teams));
   await publishTeams(deps, event);
 }
 

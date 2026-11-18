@@ -10,7 +10,7 @@ Three showdowns about nerve and reading the room: bid numbers you can only use o
 
 ## Behavior
 
-Every game here follows spec 24: the host's steps, Who's played, the TV demo, 1 to 10 teams, fair play (shared leads, shared clock starts, secret answers), points to teams through the ledger, a mock play-test suite and a blind review.
+Every game here follows spec 24: the host's steps, Who's played, the TV demo, 1 to 6 teams, fair play (shared leads, shared clock starts, secret answers), points to teams through the ledger, a mock play-test suite and a blind review.
 
 ### Auction (`auction`)
 
@@ -50,7 +50,7 @@ Each game's content is validated in the event file and its round state lives in 
 ## Tests
 
 - Unit: each game's dealing and scoring from a seed, and its edge rules.
-- Play tests: `lib/live/<type>/playtest.test.ts` on spec 24's bot harness: 1, 2, 3, 5, 8 and 10 teams; perfect, random, cautious, reckless, silent, late and dropped-out teams; ties. Scenarios include all teams bidding the same, everyone snatching, and everyone banking at once.
+- Play tests: `lib/live/<type>/playtest.test.ts` on spec 24's bot harness: 1, 2, 3, 4, 5 and 6 teams; perfect, random, cautious, reckless, silent, late and dropped-out teams; ties. Scenarios include all teams bidding the same, everyone snatching, and everyone banking at once.
 - Component: the TV view and the phone controller for each game.
 - E2E: one game of each type with two captain phones, the TV and Controls.
 - Blind review: findings and fixes in `docs/reviews/showdowns.md`.
