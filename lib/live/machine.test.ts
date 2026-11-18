@@ -157,7 +157,7 @@ describe("mock play tests (S24-AC8)", () => {
     return g && !g.tapped && ctx.now >= g.startsAt + delay ? "tap" : null;
   };
 
-  it("S24-AC8 S24-AC11: whole games end, score within limits, leak nothing, with 1 to 10 teams and silent or dropped teams", () => {
+  it("S24-AC8 S24-AC11: whole games end, score within limits, leak nothing, with 1 to 6 teams and silent or dropped teams", () => {
     for (const n of PLAYTEST_TEAM_COUNTS) {
       const result = playtest(
         tapShowdown,
@@ -190,7 +190,7 @@ describe("mock play tests (S24-AC8)", () => {
   });
 
   it("S24-AC8 S24-AC6: a turn game run by bots leads each team once over a whole game", () => {
-    for (const n of [4, 10]) {
+    for (const n of [4, 6]) {
       const result = playtest(
         passShowdown,
         {},

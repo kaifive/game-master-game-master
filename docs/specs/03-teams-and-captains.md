@@ -18,7 +18,7 @@ Two competitions in one event (ADR-030): **individual** (solo games on your own 
 
 ### Teams and captains
 
-4. In Controls the host makes a player a **captain**. That creates their team with the next team color, and the captain is its first member.
+4. In Controls the host makes a player a **captain**. That creates their team with the next team color, and the captain is its first member. An event has **at most 6 teams** (Khai, 2026-11-18), so every showdown fits; a seventh captain is refused, and Controls says so.
 5. The captain's phone asks them to **name the team**: 2–20 characters, the same characters and name filter as nicknames (spec 02), unique per event. Until named, it shows as "Team <captain's name>".
 6. The host sets a **maximum team size** in Controls (suggested: active players ÷ teams, rounded up). Once a team is full, nobody else can join it.
 7. Teams live on the **Team** tab (`/[event]/team`); the games list nudges there when teams open or a new captain needs to name their team. In the team phase, a player who isn't on a team sees **Pick your team** on the Team tab: every team with its name, color, captain, members and room left. Joining takes one tap and a confirm ("You can't switch later"). Players can't leave or switch; the host can **move** them.
@@ -71,6 +71,7 @@ Two competitions in one event (ADR-030): **individual** (solo games on your own 
 - [x] AC-7: Starting over voids the player's donations from teams.
 - [x] AC-8: Team score is team awards plus donations, and the phone and TV show team standings in the team phase.
 - [x] AC-9: The memory and Firebase team repos pass the same contract, including two players racing for a team's last spot.
+- [x] AC-10: An event has at most 6 teams: making a seventh captain is refused with a reason.
 
 ## Tests
 

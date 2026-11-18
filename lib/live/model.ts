@@ -11,8 +11,8 @@ export type Step = "intro" | "play" | "results" | "final";
 /** What the TV shows: the leaderboard, or the showdown (S24-AC9, ADR-038). */
 export type Screen = "leaderboard" | "showdown";
 
-/** Most and fewest teams a showdown is built for (S24-AC11). */
-export const MAX_TEAMS = 10;
+/** Most teams a showdown is built for: the event's team cap (S24-AC11). */
+export { MAX_TEAMS } from "@/lib/teams";
 
 /** A team taking part, as it was when the session started. */
 export type LiveTeam = {

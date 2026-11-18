@@ -315,10 +315,10 @@ describe("showdown screen and Who's played (spec 24)", () => {
     expect(
       (await failure(adminLiveAction(deps, event, { action: "start", gameId: "pairs" }))).message,
     ).toBe("This game needs at least 3 teams.");
-    // Only teams with a captain play; more than 10 is refused.
+    // Only teams with a captain play; more than 6 is refused.
     const many: TeamsSummary = {
       ...summary,
-      teams: Array.from({ length: 11 }, (_, i) => ({
+      teams: Array.from({ length: 7 }, (_, i) => ({
         ...summary.teams[1],
         id: `t${String(i)}`,
         name: `T${String(i)}`,
@@ -332,6 +332,6 @@ describe("showdown screen and Who's played (spec 24)", () => {
     deps.teams = () => Promise.resolve(many);
     expect(
       (await failure(adminLiveAction(deps, event, { action: "start", gameId: "tap-off" }))).message,
-    ).toBe("Showdowns are built for up to 10 teams.");
+    ).toBe("Showdowns are built for up to 6 teams.");
   });
 });
