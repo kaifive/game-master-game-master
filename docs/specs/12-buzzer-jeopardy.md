@@ -36,22 +36,30 @@ the same pieces.
 ### One question
 
 3. **Show.** Khai taps Show question: the TV shows the question big (and its picture).
-   Captains' phones show a grey, locked buzzer reading "Wait for it…"; pressing it
-   does nothing (Khai, 2026-11-19: buzzers open when the host opens them).
-4. **Open buzzers.** Khai reads the question, then taps Open buzzers. The TV says
-   "Buzz now!" and the phones' buzzers turn live (the pack's `buzzer` color). Each
-   captain can buzz once per question.
-5. **Fair order.** A buzz is timed on the phone at the moment of the press, on the
+   Captains' buzzers are **red** with a drawn lock and "Wait…" (Khai, 2026-11-19:
+   buzzers open when the host opens them, and go red to green).
+4. **Open buzzers.** Khai reads the question, then taps Open buzzers. The TV and
+   every buzzer turn **green**, reading "BUZZ!", with a pulse. Each captain can
+   buzz once per question. Red and green are never the only signal: the lock and
+   "Wait…" or "BUZZ!" always say it too (PRODUCT.md, for color-blind players).
+5. **Too early.** As on Jeopardy, pressing a red buzzer locks that phone out for a
+   moment: the buzzer shakes, says "Too early!", and can't buzz for 0.25 s from that
+   press, even if the buzzers open meanwhile. It costs no points. Mashing early only
+   keeps restarting the lockout, so it pays to wait for green. The server keeps each
+   team's latest early press and refuses a buzz inside its lockout, so a phone can't
+   get round it. The lockout can be changed per event (`earlyLockoutMs`, 0 to 2000,
+   default 250).
+6. **Fair order.** A buzz is timed on the phone at the moment of the press, on the
    shared server clock (spec 11, S11-AC5), like the Stop games (spec 25), and the
    server checks it's possible by its own clock. The order is by that time, so
-   a slower connection doesn't lose a race it won. A buzz before Open buzzers is
-   refused.
-6. **Who's first.** Controls lists every team that buzzed, in order, with how long
+   a slower connection doesn't lose a race it won. A press before Open buzzers
+   isn't a buzz: it's a too-early press (behavior 5).
+7. **Who's first.** Controls lists every team that buzzed, in order, with how long
    after the open they pressed ("+0.42 s"), the first one highlighted. The TV shows
    the first team big ("Snow Dragons!") with the rest in order under it, in their
    colors; each captain's phone shows where their team came in ("You're 1st!",
    "You're 3rd").
-7. **Judging.** Khai calls on the highlighted team and hears their answer out loud.
+8. **Judging.** Khai calls on the highlighted team and hears their answer out loud.
    - **Right:** the team gets the question's points (an award in the ledger,
      spec 04), the TV shows the answer and the points going to the team, and the
      question is done.
@@ -61,28 +69,29 @@ the same pieces.
    - When every team that buzzed has been judged wrong, Khai can **Reopen buzzers**
      for the teams that haven't buzzed yet, or **Reveal the answer** and move on.
    - Nobody buzzes: Khai taps Reveal the answer.
-8. **Undo.** Khai can undo the last Right or Wrong (taking an awarded point back),
+9. **Undo.** Khai can undo the last Right or Wrong (taking an awarded point back),
    in case of a mis-tap.
-9. **Next.** Next question goes on; after the last one, the round ends and the TV
+10. **Next.** Next question goes on; after the last one, the round ends and the TV
    goes back to the board. Khai can also skip a question, or end the round early.
 
 ### The answer
 
-10. Controls always shows the current question's answer, beside the question,
+11. Controls always shows the current question's answer, beside the question,
     from the moment it's shown. Phones and the TV never get it until it's revealed
     (Right, or Reveal the answer).
 
 ### Phones
 
-11. Only captains buzz (ADR-014). Other members see "Your captain buzzes" with
+12. Only captains buzz (ADR-014). Other members see "Your captain buzzes" with
     their team's place once it has buzzed, and the result.
-12. The buzzer is one huge round button (20rem across, like the Stop button,
-    spec 25) that fires on press, not release, and vibrates where phones allow.
-    No sound on phones (PRODUCT.md).
+13. The buzzer is one huge round button (20rem across, like the Stop button,
+    spec 25) that fires on press, not release, and vibrates where phones allow:
+    red and locked, green and live, then the team's place. No sound on phones
+    (PRODUCT.md).
 
 ## Jeopardy later (same pieces)
 
-13. Jeopardy (`jeopardy`, still off in the party's event file) will add a board:
+14. Jeopardy (`jeopardy`, still off in the party's event file) will add a board:
     categories across the top and values down, picked by Khai (or by the team
     that last answered right). A picked clue then runs exactly as one question
     above: show, open buzzers, the order, Right or Wrong, the answer on Controls.
@@ -91,10 +100,11 @@ the same pieces.
 
 ## Data
 
-- Content: `questions: { id, prompt, answer, points?, picture? }[]` (1 to 50),
-  validated in the event file (spec 01).
+- Content: `questions: { id, prompt, answer, points?, picture? }[]` (1 to 50) and
+  `earlyLockoutMs` (default 250), validated in the event file (spec 01).
 - Live state (spec 11): the question index; its step (`shown`, `open`, `judging`,
-  `done`); when buzzers opened; the buzzes (team, pressed at); each team's result
+  `done`); when buzzers opened; each team's latest too-early press; the buzzes (team,
+  pressed at); each team's result
   for the question (`right` / `wrong`); the awards made, for undo.
 - Awards go through the ledger as team awards with the game and question in their
   reason (spec 04), so the board and toasts pick them up.
@@ -110,8 +120,8 @@ the same pieces.
 
 ## UI
 
-- **TV:** the question in large type (with its picture), "Wait for it…", then
-  "Buzz now!", then the buzz order: the first team's name big in its color, the
+- **TV:** the question in large type (with its picture), a red "Wait…" bar, then
+  a green "Buzz now!" bar, then the buzz order: the first team's name big in its color, the
   others in a row under it, wrong ones struck through with a drawn cross; at Right,
   the answer and the team's points held up on a score card.
 - **Controls:** the question with its answer under it in a highlighted box; one big
@@ -119,7 +129,10 @@ the same pieces.
   order as rows (place, team swatch and name, +time) with Right and Wrong on the
   highlighted one; Reopen buzzers, Reveal the answer, Undo, Skip, End round below.
   Works on a phone held in one hand.
-- **Captain's phone:** the buzzer, locked or live, then "You're 2nd!" and the result.
+- **Captain's phone:** the buzzer fills the screen's width: red with a drawn lock and
+  "Wait…"; a shake and "Too early!" when pressed red; green, pulsing, "BUZZ!" when
+  open; then the team's color with "You're 2nd!" and the result. Red and green are
+  `danger` and `success`, both core tokens, so every pack can set them.
 
 ## Edge cases
 
@@ -131,7 +144,8 @@ the same pieces.
 
 ## Acceptance criteria
 
-- [ ] AC-1: Khai steps each question: show it on the TV, open the buzzers, judge, and go to the next; buzzes before opening are refused.
+- [ ] AC-1: Khai steps each question: show it on the TV, open the buzzers, judge, and go to the next. Buzzers are red with a lock and "Wait…" until opened, then green with "BUZZ!", on the phones and the TV.
+- [ ] AC-7: A press while red locks that team out for `earlyLockoutMs` (default 0.25 s) from the press, shown as "Too early!", enforced by the server, and costs no points.
 - [ ] AC-2: Buzzes are ordered by the press time on the shared clock, checked by the server; each team buzzes once per question; Controls, the TV and the captain's phone show the order.
 - [ ] AC-3: Right awards the question's points to the team through the ledger and reveals the answer; Wrong takes no points and passes to the next team that buzzed; when none are left Khai can reopen for teams that haven't buzzed or reveal the answer.
 - [ ] AC-4: Controls always shows the current answer; the TV and phones never get it before it's revealed.
@@ -140,14 +154,14 @@ the same pieces.
 
 ## Tests
 
-- Unit: the round's state machine (every step, wrong passes on, reopen, undo, skip); fair ordering with late arrivals; views never leak the answer.
+- Unit: the round's state machine (every step, wrong passes on, reopen, undo, skip); fair ordering with late arrivals; the early-press lockout, including a press just before opening; views never leak the answer.
 - Play tests: spec 24's harness with 1 to 6 teams buzzing at random times, including late and silent teams.
-- Component: the buzzer's locked, live and placed states; Controls' question, answer and order with Right and Wrong; the TV at each step.
+- Component: the buzzer's red, too-early, green and placed states; Controls' question, answer and order with Right and Wrong; the TV at each step.
 - E2E: Khai shows a question, opens buzzers, two captains buzz, Khai marks the first Wrong and the second Right, and the board shows the points.
 
 ## Out of scope
 
-- The Jeopardy board itself (behavior 13), Final Jeopardy and wagers.
+- The Jeopardy board itself (behavior 14), Final Jeopardy and wagers.
 - Typed answers on phones; answers are spoken.
 - A timer to answer; Khai runs the pace.
 
