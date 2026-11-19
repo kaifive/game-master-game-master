@@ -38,7 +38,7 @@ export function Present({ i, className }: { i: number; className?: string }) {
   );
 }
 
-type Fly = NonNullable<FlybyView["fly"]>;
+export type Fly = NonNullable<FlybyView["fly"]>;
 
 /** The presents in their gappy grid; rows shift by half a square so they don't line up. */
 function Formation({ fly, numbered = false }: { fly: Fly; numbered?: boolean }) {
@@ -77,6 +77,38 @@ function Formation({ fly, numbered = false }: { fly: Fly; numbered?: boolean }) 
   );
 }
 
+/**
+ * The presents flying in from the right and out to the left over `fly.ms`,
+ * on whichever clock is given: the TV's shared one, or a solo phone's (spec 30).
+ */
+export function FlyingPresents({
+  fly,
+  elapsed,
+  className,
+}: {
+  fly: Fly;
+  elapsed: number;
+  className?: string;
+}) {
+  const p = Math.min(1, Math.max(0, elapsed / fly.ms));
+  return (
+    <div
+      role="img"
+      aria-label="Presents flying past"
+      className={cx("[container-type:inline-size] relative overflow-hidden", className)}
+    >
+      <div
+        className="absolute top-1/2 left-0 w-max will-change-transform"
+        style={{
+          transform: `translate(calc(100cqw - ${String(p * 100)}cqw - ${String(p * 100)}%), -50%)`,
+        }}
+      >
+        <Formation fly={fly} />
+      </div>
+    </div>
+  );
+}
+
 function Tv({ view, game, serverNow, revealed }: LiveTvProps) {
   const g = game as FlybyView | null;
   const now = useServerTime(serverNow, !revealed);
@@ -105,22 +137,12 @@ function Tv({ view, game, serverNow, revealed }: LiveTvProps) {
   if (now < g.startsAt)
     return <GetReady startsAt={g.startsAt} now={now} line="Count the presents!" />;
   if (now < g.showEndsAt && g.fly) {
-    // Flies in from the right and out to the left, on the shared clock.
-    const p = Math.min(1, (now - g.startsAt) / g.fly.ms);
     return (
-      <div
-        aria-label="Presents flying past"
-        className="relative h-[62vh] overflow-hidden text-[clamp(2rem,7vh,5rem)]"
-      >
-        <div
-          className="absolute top-1/2 left-0 w-max will-change-transform"
-          style={{
-            transform: `translate(calc(100vw - ${String(p * 100)}vw - ${String(p * 100)}%), -50%)`,
-          }}
-        >
-          <Formation fly={g.fly} />
-        </div>
-      </div>
+      <FlyingPresents
+        fly={g.fly}
+        elapsed={now - g.startsAt}
+        className="h-[62vh] text-[clamp(2rem,7vh,5rem)]"
+      />
     );
   }
   return (

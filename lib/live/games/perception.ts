@@ -91,7 +91,8 @@ export function perceptionShowdown<T, A>(core: PerceptionCore<T, A>): AnyShowdow
     score: (s, _c, teams) =>
       rankedPoints(teams, (t) => {
         const a = s.answers[t];
-        return a === undefined ? null : 1 - core.closeness(s.task, a);
+        if (a === undefined) return null;
+        return core.distance ? core.distance(s.task, a) : 1 - core.closeness(s.task, a);
       }),
     view,
   };

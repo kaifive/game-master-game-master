@@ -60,7 +60,7 @@ A feature item needs its spec at `Ready` before it starts.
 - [x] Spec 27, showdowns: Memory Path, Present Shuffle, Snowball to 21, Land Mass
 - [x] Blind review of every showdown (docs/reviews/showdowns.md)
 - [x] Spec 28, perception games, solo and showdown: Snow Pile, Staff Angle, Sleigh Run, Lion Drum, Cut the Ribbon
-- [ ] Other modes where they play better (ADR-041): Color Matcher as a showdown; Fly-by Count, Snow Sum and Color Count as solo
+- [x] Spec 30, second modes (ADR-041): Color Matcher as a showdown; Fly-by Count, Snow Sum and Color Count as solo
 
 ## M4: Party ready (Dec 14–18)
 

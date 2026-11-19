@@ -41,6 +41,8 @@ export type PerceptionCore<T, A> = {
    * start, the answer claims; the server refuses it if that hasn't happened yet.
    */
   claims?: (answer: A) => number;
+  /** For ranking a showdown, lower is better; by default 1 minus closeness (Color Matcher ranks by its raw distance). */
+  distance?: (task: T, answer: A) => number;
 };
 
 export const clamp01 = (n: number) => Math.max(0, Math.min(1, n));

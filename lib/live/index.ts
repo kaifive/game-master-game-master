@@ -7,7 +7,7 @@ export * from "./view";
 export type { LiveRepo, LiveState } from "./repo";
 export { EMPTY_LIVE } from "./repo";
 export { MemoryLiveRepo } from "./repo.memory";
-export { showdownFor, showdownTypes } from "./registry";
+export { showdownContentErrors, showdownFor, showdownTypes } from "./registry";
 export * from "./service";
 export { liveApi, adminLiveApi, type AdminLiveAct, type AdminLiveView } from "./client";
 export * from "./games";

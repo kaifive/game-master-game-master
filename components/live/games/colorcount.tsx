@@ -1,5 +1,6 @@
 "use client";
 
+import type { Flash } from "@/lib/games";
 import { ORNAMENT_COLORS, type ColorView } from "@/lib/live";
 import { cx } from "@/lib/ui";
 import type { LiveControllerProps, LiveRenderer, LiveTvProps } from "../types";
@@ -114,8 +115,47 @@ export function Ornament({
   );
 }
 
+/**
+ * The ornaments flashing a few at a time over `showMs`, on whichever clock is
+ * given: the TV's or a solo phone's (spec 30).
+ */
+export function OrnamentFlashes({
+  flashes,
+  elapsed,
+  showMs,
+  className,
+  ornament,
+}: {
+  flashes: readonly Flash[];
+  elapsed: number;
+  showMs: number;
+  className?: string;
+  /** The size of each ornament. */
+  ornament: string;
+}) {
+  const i = Math.min(
+    flashes.length - 1,
+    Math.floor((Math.max(0, elapsed) / showMs) * flashes.length),
+  );
+  return (
+    <div aria-label="Ornaments flashing" className={cx("relative", className)}>
+      {(flashes[i] ?? []).map((o, j) => (
+        <Ornament
+          key={`${String(i)}-${String(j)}`}
+          color={o.color}
+          className={cx(
+            "absolute motion-safe:animate-[gm-pop_var(--gm-motion-fast)_var(--gm-ease-out)]",
+            ornament,
+          )}
+          style={{ left: `${String(o.x * 85)}%`, top: `${String(o.y * 70)}%` }}
+        />
+      ))}
+    </div>
+  );
+}
+
 /** "How many red?", with the ornament beside the word. */
-function Ask({ color, size }: { color: number; size: "tv" | "phone" }) {
+export function Ask({ color, size }: { color: number; size: "tv" | "phone" }) {
   return (
     <span className="inline-flex items-center gap-[0.3em]">
       How many
@@ -149,24 +189,16 @@ function Tv({ view, game, serverNow, revealed }: LiveTvProps) {
     );
   if (now < g.startsAt)
     return <GetReady startsAt={g.startsAt} now={now} line="Keep track of every color!" />;
-  if (now < g.showEndsAt && g.flashes) {
-    const i = Math.min(
-      g.flashes.length - 1,
-      Math.floor(((now - g.startsAt) / (g.showEndsAt - g.startsAt)) * g.flashes.length),
-    );
+  if (now < g.showEndsAt && g.flashes)
     return (
-      <div aria-label="Ornaments flashing" className="relative h-[62vh]">
-        {(g.flashes[i] ?? []).map((o, j) => (
-          <Ornament
-            key={`${String(i)}-${String(j)}`}
-            color={o.color}
-            className="absolute size-[20vh] motion-safe:animate-[gm-pop_var(--gm-motion-fast)_var(--gm-ease-out)]"
-            style={{ left: `${String(o.x * 85)}%`, top: `${String(o.y * 70)}%` }}
-          />
-        ))}
-      </div>
+      <OrnamentFlashes
+        flashes={g.flashes}
+        elapsed={now - g.startsAt}
+        showMs={g.showEndsAt - g.startsAt}
+        className="h-[62vh]"
+        ornament="size-[20vh]"
+      />
     );
-  }
   return (
     <div className="grid gap-[3vh]">
       <p className="m-0 text-center font-gm-display text-[clamp(2.4rem,8vh,6rem)] font-bold">

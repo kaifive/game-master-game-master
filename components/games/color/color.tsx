@@ -2,19 +2,13 @@
 
 import { useId, useState } from "react";
 import { useSlots } from "@/components/slots/registry";
-import { toHex, type ColorView } from "@/lib/games";
+import { hsvToRgb, toHex, type ColorView } from "@/lib/games";
 import type { GameRendererProps } from "../types";
 
 type Hsv = { h: number; s: number; v: number };
 
-/** Hue (0–360), saturation and brightness (0–1) to red, green and blue. */
-export function hsvToRgb({ h, s, v }: Hsv): [number, number, number] {
-  const f = (n: number) => {
-    const k = (n + h / 60) % 6;
-    return Math.round(255 * (v - v * s * Math.max(0, Math.min(k, 4 - k, 1))));
-  };
-  return [f(5), f(3), f(1)];
-}
+/** Hue to RGB lives with the game logic, so dealing colors can use it (spec 30). */
+export { hsvToRgb };
 
 /** Where a touch on the wheel lands: the angle picks the hue, the distance from the middle how strong. */
 export function wheelPick(x: number, y: number): { h: number; s: number } {
@@ -27,14 +21,15 @@ export function wheelPick(x: number, y: number): { h: number; s: number } {
 const WHEEL =
   "radial-gradient(closest-side, #fff, rgba(255,255,255,0)), conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)";
 
-/** Color Matcher (spec 18): a color wheel and a brightness slider; lock in the swatch. */
-export function ColorGame({ view: raw, onMove, busy }: GameRendererProps) {
+/**
+ * The color wheel, brightness slider and swatch, with Lock in: solo Color
+ * Matcher (spec 18) and the captain's phone in its showdown (spec 30).
+ */
+export function ColorWheel({ busy, onLock }: { busy: boolean; onLock: (hex: string) => void }) {
   const { Button } = useSlots();
-  const view = raw as ColorView;
   const id = useId();
   const [hsv, setHsv] = useState<Hsv>({ h: 0, s: 0, v: 0.75 });
   const [dragging, setDragging] = useState(false);
-  if (view.kind === "done") return null;
   const hex = toHex(hsvToRgb(hsv));
   const pick = (e: React.PointerEvent<HTMLDivElement>) => {
     const box = e.currentTarget.getBoundingClientRect();
@@ -47,10 +42,8 @@ export function ColorGame({ view: raw, onMove, busy }: GameRendererProps) {
     left: `${String(50 + Math.sin(angle) * hsv.s * 50)}%`,
     top: `${String(50 - Math.cos(angle) * hsv.s * 50)}%`,
   };
-
   return (
-    <section aria-label="Color Matcher" className="grid gap-4 py-2">
-      <p className="m-0 font-gm-display text-2xl font-bold">{view.prompt}</p>
+    <div className="grid gap-4">
       <div className="flex items-center gap-4">
         <div
           aria-hidden="true"
@@ -130,11 +123,28 @@ export function ColorGame({ view: raw, onMove, busy }: GameRendererProps) {
         size="lg"
         disabled={busy}
         onClick={() => {
-          onMove({ type: "pick", color: hex });
+          onLock(hex);
         }}
       >
         Lock in this color
       </Button>
+    </div>
+  );
+}
+
+/** Color Matcher (spec 18): a color wheel and a brightness slider; lock in the swatch. */
+export function ColorGame({ view: raw, onMove, busy }: GameRendererProps) {
+  const view = raw as ColorView;
+  if (view.kind === "done") return null;
+  return (
+    <section aria-label="Color Matcher" className="grid gap-4 py-2">
+      <p className="m-0 font-gm-display text-2xl font-bold">{view.prompt}</p>
+      <ColorWheel
+        busy={busy}
+        onLock={(hex) => {
+          onMove({ type: "pick", color: hex });
+        }}
+      />
     </section>
   );
 }

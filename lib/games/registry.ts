@@ -13,6 +13,7 @@ import { timer } from "./timer/logic";
 import { trail } from "./trail/logic";
 import { trivia } from "./trivia/logic";
 import { word } from "./word/logic";
+import { SOLO_ONLY_CORES } from "./perception/counts";
 import { PERCEPTION_CORES } from "./perception/games";
 import { perceptionSolo } from "./perception/solo";
 
@@ -35,9 +36,12 @@ const LOGIC: Readonly<Record<string, AnyGameLogic>> = {
   "photo-challenge": defineGame(photo),
   slide: defineGame(slideGame),
   blocks: defineGame(blocks),
-  // Perception games (spec 28): solo versions; their showdown versions are in lib/live.
+  // Perception games (spec 28) and the solo counting games (spec 30), from their cores.
   ...Object.fromEntries(
-    PERCEPTION_CORES.map((core) => [core.type, defineGame(perceptionSolo(core as never))]),
+    [...PERCEPTION_CORES, ...SOLO_ONLY_CORES].map((core) => [
+      core.type,
+      defineGame(perceptionSolo(core as never)),
+    ]),
   ),
 };
 
