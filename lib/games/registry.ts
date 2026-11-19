@@ -13,6 +13,8 @@ import { timer } from "./timer/logic";
 import { trail } from "./trail/logic";
 import { trivia } from "./trivia/logic";
 import { word } from "./word/logic";
+import { PERCEPTION_CORES } from "./perception/games";
+import { perceptionSolo } from "./perception/solo";
 
 /**
  * Game types with server-run logic (spec 08). Types without an entry (photo
@@ -33,6 +35,10 @@ const LOGIC: Readonly<Record<string, AnyGameLogic>> = {
   "photo-challenge": defineGame(photo),
   slide: defineGame(slideGame),
   blocks: defineGame(blocks),
+  // Perception games (spec 28): solo versions; their showdown versions are in lib/live.
+  ...Object.fromEntries(
+    PERCEPTION_CORES.map((core) => [core.type, defineGame(perceptionSolo(core as never))]),
+  ),
 };
 
 export const gameLogic = (type: string): AnyGameLogic | undefined => LOGIC[type];

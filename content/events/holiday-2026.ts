@@ -292,6 +292,39 @@ export const holiday2026: EventConfig = {
       content: {},
       scoring: { awardTo: "team" as const },
     })),
+    // Perception games (spec 28): each can run solo or as a showdown (ADR-040). The
+    // showdowns are ready to start from Controls; the solo versions are off until Khai
+    // chooses which to put on the menu.
+    ...(
+      [
+        ["snowpile", "Snow Pile"],
+        ["staffangle", "Staff Angle"],
+        ["sleighrun", "Sleigh Run"],
+        ["liondrum", "Lion Drum"],
+        ["ribbon", "Cut the Ribbon"],
+      ] as const
+    ).flatMap(([type, title]) => [
+      {
+        id: type,
+        type,
+        title,
+        mode: "live" as const,
+        phase: "team" as const,
+        visibility: "hidden" as const,
+        content: {},
+        scoring: { awardTo: "team" as const },
+      },
+      {
+        id: `${type}-solo`,
+        type,
+        title,
+        mode: "solo" as const,
+        phase: "individual" as const,
+        visibility: "off" as const,
+        content: {},
+        scoring: { awardTo: "player" as const },
+      },
+    ]),
     {
       id: "jeopardy",
       type: "jeopardy",

@@ -15,7 +15,7 @@ Statuses are explained in `../conventions/docs.md`.
 | 08 | [Game framework](08-game-framework.md) | M2 | Done |
 | 09 | [Style packs and theming](09-theming.md) | M0 | Done |
 | 10 | [Trivia](10-trivia.md) | M2 | Done |
-| 11 | [Live session engine](11-live-sessions.md) | M3 | Draft (agreed) |
+| 11 | [Live session engine](11-live-sessions.md) | M3 | Done |
 | 12 | [Buzzer and Jeopardy](12-buzzer-jeopardy.md) | M3 | Draft |
 | 13 | [Photos, triage, votes and recap](13-photos-and-recap.md) | M2 | Draft |
 | 14 | [Motion and celebrations](14-motion-and-celebrations.md) | M0 | Done |
@@ -28,7 +28,8 @@ Statuses are explained in `../conventions/docs.md`.
 | 21 | [Number Slide](21-number-slide.md) | M2 | Done |
 | 22 | [Block Fit](22-block-fit.md) | M2 | Done |
 | 23 | [Game library](23-game-library.md) | M2 | Done |
-| 24 | [Team showdowns: the framework](24-team-showdowns.md) | M3 | Draft (agreed) |
-| 25 | [Showdowns: count and stop games](25-showdowns-count-and-stop.md) | M3 | Draft (agreed) |
-| 26 | [Showdowns: nerve games](26-showdowns-nerve.md) | M3 | Draft (agreed) |
-| 27 | [Showdowns: turn games](27-showdowns-turns.md) | M3 | Draft (agreed) |
+| 24 | [Team showdowns: the framework](24-team-showdowns.md) | M3 | Done |
+| 25 | [Showdowns: count and stop games](25-showdowns-count-and-stop.md) | M3 | Done |
+| 26 | [Showdowns: nerve games](26-showdowns-nerve.md) | M3 | Done |
+| 27 | [Showdowns: turn games](27-showdowns-turns.md) | M3 | Done |
+| 28 | [Perception games](28-perception-games.md) | M3 | Done |

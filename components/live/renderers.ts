@@ -1,6 +1,13 @@
 import { colorcountRenderer } from "./games/colorcount";
 import { flybyRenderer } from "./games/flyby";
 import { auctionRenderer, snatchRenderer, stockingsRenderer } from "./games/nerve";
+import {
+  liondrumRenderer,
+  ribbonRenderer,
+  sleighrunRenderer,
+  snowpileRenderer,
+  staffangleRenderer,
+} from "./games/perception";
 import { snowsumRenderer } from "./games/snowsum";
 import { blindstopRenderer, lastsecondRenderer } from "./games/stops";
 import { landmassRenderer, pathRenderer, shuffleRenderer, to21Renderer } from "./games/turns";
@@ -20,4 +27,9 @@ export const LIVE_RENDERERS: Readonly<Record<string, LiveRenderer>> = {
   shuffle: shuffleRenderer,
   to21: to21Renderer,
   landmass: landmassRenderer,
+  snowpile: snowpileRenderer,
+  staffangle: staffangleRenderer,
+  sleighrun: sleighrunRenderer,
+  liondrum: liondrumRenderer,
+  ribbon: ribbonRenderer,
 };
