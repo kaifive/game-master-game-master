@@ -16,6 +16,7 @@ Move answered ones to the bottom with the answer.
 | Q23 | Pathfinder: what counts as skipping a number (red)? | Spec 16 | Reaching a later number before an earlier one turns the missed ones red; after that nothing turns green until the trail is undone past the skip. The number reached early stays grey. |
 | Q24 | T-Timer: "stop in the range of 1 sec 20ms or 1 sec 25ms": is the window 1.20 to 1.25 s? (A literal 1.020 to 1.025 s is 5 ms, shorter than one screen frame.) And how fast should points fall off outside it? | Spec 16 | 1.20 to 1.25 s; full points inside, falling to 0 at 0.5 s outside |
 | Q27 | Tap Masher film: which part of the video, and how many frames? | Spec 16 | Khai (2026-11-14): play like video (skip at most one frame) using the form's first 11.5 s, and 50 taps is all the points (the video is styling). So 172 frames, every other frame, at 256 × 192 to keep the sheet to 1.3 MB; nobody reaches the end in 5 s. |
+| Q34 | Team selfies: who puts the stickers on, the host in Controls or the captain on their phone? | Spec 31 | The host, in Controls, so the finale is a surprise (Khai first said "from the admin side") |
 | Q35 | Buzzer round: what questions, how many, and how many points each? | Spec 12 | Build with a short sample set marked hidden; Khai writes the real ones in the event file (10 to 15 questions, 100 points each) |
 
 ## Answered
