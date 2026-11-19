@@ -26,6 +26,7 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Scoring mode** | Whether an event is `individual`, `team` or `both`. | `scoring` |
 | **Phase** | In a `both` event, whether it is in the `individual` or `team` phase. Admin switches it. | `event.phase` |
 | **Team** | A group of players. The host makes a captain, which creates the team; players join it in the team phase. | `Team` |
+| **Buzzer round** | A host-run quiz on the TV: the host opens the buzzers, captains buzz on their phones, and the host judges each team's spoken answer in buzz order (spec 12). | `buzzer` |
 | **Captain** | A player the admin promotes to lead a team. Also called team leader. Names the team, plays its team games and buzzes for it. | `team.captainId` |
 | **Team game** | A game with `phase: "team"`: the captain plays it on their phone for the team, and its points go to the team (ADR-030). | `game.phase` |
 | **Team score** | Team awards + donations to the team. Members' own points don't count (ADR-030). | `team.points` |
