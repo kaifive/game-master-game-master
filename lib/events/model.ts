@@ -35,6 +35,12 @@ export const GAME_TYPES = [
   "shuffle",
   "to21",
   "landmass",
+  // Perception games (spec 28): solo or showdown, chosen per event (ADR-040).
+  "snowpile",
+  "staffangle",
+  "sleighrun",
+  "liondrum",
+  "ribbon",
 ] as const;
 
 /** Game types that make a drawing, so they may keep it (ADR-032). */

@@ -26,7 +26,12 @@ export function GameLibrary({ games }: { games: CatalogEntry[] }) {
             <li key={g.type} className="grid gap-0.5 rounded-gm border border-gm-border px-3 py-2">
               <span className="flex flex-wrap items-baseline justify-between gap-2">
                 <span className="font-bold">{g.name}</span>
-                <code className="text-sm text-gm-text-muted">{g.type}</code>
+                <span className="flex items-baseline gap-2 text-sm text-gm-text-muted">
+                  <span>
+                    {g.modes.map((m) => (m === "solo" ? "Solo" : "Showdown")).join(" or ")}
+                  </span>
+                  <code>{g.type}</code>
+                </span>
               </span>
               <span>{g.pitch}</span>
             </li>

@@ -750,3 +750,22 @@ constant, `MAX_TEAMS` in `lib/teams/model.ts`, holds the limit for both.
 **Consequences:** the TV only has to lay out 6 teams. A bigger party gets
 bigger teams, not more of them.
 
+---
+
+## ADR-040: Every game can run solo or as a showdown, chosen per event
+
+**Status:** accepted (Khai, 2026-11-18). Extends ADR-036 and spec 24.
+
+Khai wants to decide per event whether a game is played on everyone's phone or
+as a team showdown on the TV.
+
+**Decision:** a game type may have a solo version (in `lib/games`), a showdown
+version (in `lib/live`), or both, under the same type id. An event's game
+entry picks one with `mode` (`solo` or `live`). New games are built in both
+modes, sharing one core for dealing and scoring (the perception games, spec 28,
+are the first). The existing games are converted over time (backlog).
+
+**Consequences:** the game library lists each type once with the modes it has.
+Content for a type is checked against whichever version the event uses. A game
+built in only one mode can still only be used in that mode until it's converted.
+

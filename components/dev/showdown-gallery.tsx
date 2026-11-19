@@ -5,7 +5,14 @@ import { LiveTv } from "@/components/live/live-tv";
 import type { ActiveLiveView } from "@/components/live/types";
 import { useSlots } from "@/components/slots/registry";
 import type { GalleryMoment } from "./showdown-moments";
-import type { Cell } from "@/lib/games";
+import {
+  exitY,
+  keepBeats,
+  PERCEPTION_CORES,
+  type Cell,
+  type DrumTask,
+  type SleighTask,
+} from "@/lib/games";
 import {
   cover,
   liveView,
@@ -55,7 +62,52 @@ type Script = (
   drive?: (state: unknown, turn: string, i: number) => unknown;
 };
 
+/**
+ * The perception games (spec 28): team 1 near enough exact, team 2 a little
+ * off, team 3 further off, a moment after the show.
+ */
+function perceptionScript(type: string): Script {
+  return (state) => {
+    const p = state as { task: unknown; startsAt: number; showEndsAt: number };
+    const show = p.showEndsAt - p.startsAt;
+    if (type === "liondrum") {
+      const beats = keepBeats(p.task as DrumTask);
+      const last = beats.at(-1) ?? 0;
+      return {
+        moves: [
+          ["t1", { answer: beats.map((b) => b + 20) }, last + 500],
+          ["t2", { answer: beats.map((b, i) => b + (i % 2 ? 90 : -60)) }, last + 600],
+          ["t3", { answer: beats.slice(0, -1).map((b) => b + 160) }, last + 700],
+        ],
+        show: Math.round(show * 0.4),
+        answer: show + 400,
+      };
+    }
+    const right =
+      type === "snowpile"
+        ? (p.task as { count: number }).count
+        : type === "staffangle"
+          ? (p.task as { target: number }).target
+          : type === "sleighrun"
+            ? exitY(p.task as SleighTask)
+            : (p.task as { at: number }).at;
+    const off = type === "snowpile" ? [1, -4] : type === "staffangle" ? [6, -14] : [0.04, -0.09];
+    const fix = (n: number) => (type === "snowpile" || type === "staffangle" ? Math.round(n) : n);
+    const at = show + 1500;
+    return {
+      moves: [
+        ["t1", { answer: right }, at],
+        ["t2", { answer: fix(right + (off[0] ?? 0)) }, at + 400],
+        ["t3", { answer: fix(Math.max(0, right + (off[1] ?? 0))) }, at + 800],
+      ],
+      show: Math.max(0, Math.round(show * 0.5)),
+      answer: at + 600,
+    };
+  };
+}
+
 const SCRIPTS: Record<string, Script> = {
+  ...Object.fromEntries(PERCEPTION_CORES.map((c) => [c.type, perceptionScript(c.type)])),
   auction: () => ({
     moves: [
       ["t1", { bid: 10 }, 800],
@@ -269,6 +321,11 @@ export const TITLES: Record<string, string> = {
   shuffle: "Present Shuffle",
   to21: "Snowball to 21",
   landmass: "Land Mass",
+  snowpile: "Snow Pile",
+  staffangle: "Staff Angle",
+  sleighrun: "Sleigh Run",
+  liondrum: "Lion Drum",
+  ribbon: "Cut the Ribbon",
 };
 
 /** The TV at a moment, as the display shows it. */

@@ -59,6 +59,8 @@ A feature item needs its spec at `Ready` before it starts.
 - [x] Spec 26, showdowns: Auction, Stocking Stuffer, Share or Snatch
 - [x] Spec 27, showdowns: Memory Path, Present Shuffle, Snowball to 21, Land Mass
 - [x] Blind review of every showdown (docs/reviews/showdowns.md)
+- [x] Spec 28, perception games, solo and showdown: Snow Pile, Staff Angle, Sleigh Run, Lion Drum, Cut the Ribbon
+- [ ] Both modes for the existing games (ADR-040): showdown versions of the solo games, solo versions of the showdowns
 
 ## M4: Party ready (Dec 14–18)
 

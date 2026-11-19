@@ -13,3 +13,4 @@ export { runningTotals, snowsum, type Flake, type SnowView } from "./snowsum";
 export { ANSWER_MS, type WindowView } from "./answer";
 export { fmtSeconds, hundredths } from "./stop";
 export { LADDER, REST } from "./scoring";
+export { perceptionShowdown, type PerceptionState, type PerceptionView } from "./perception";

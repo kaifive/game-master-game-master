@@ -12,6 +12,8 @@ import {
   stockings,
   to21,
 } from "./games";
+import { PERCEPTION_CORES } from "@/lib/games";
+import { perceptionShowdown } from "./games/perception";
 import type { AnyShowdown } from "./model";
 
 /**
@@ -31,6 +33,10 @@ const SHOWDOWNS: Record<string, AnyShowdown> = {
   shuffle,
   to21,
   landmass,
+  // Perception games (spec 28): showdown versions; their solo versions are in lib/games.
+  ...Object.fromEntries(
+    PERCEPTION_CORES.map((core) => [core.type, perceptionShowdown(core as never)]),
+  ),
 };
 
 export const showdownFor = (type: string): AnyShowdown | undefined => SHOWDOWNS[type];
