@@ -115,3 +115,33 @@ describe("perception showdowns on the phone and TV (spec 28)", () => {
       expect(LIVE_RENDERERS[type]?.Demo).toBeDefined();
   });
 });
+
+describe("Color Matcher as a showdown on the phone and TV (spec 30)", () => {
+  test("S30-AC1: the TV holds the color up during the show while the phone says to watch; then the phone's wheel locks in a color", async () => {
+    const user = userEvent.setup();
+    const r = round("color");
+    const s = timing(r.state);
+    show("color", r.view(tv, T0 + 300), T0 + 300, "tv");
+    expect(screen.getByText("Remember this color!")).toBeInTheDocument();
+    show("color", r.view(cap("t1"), T0 + 300), T0 + 300);
+    expect(screen.getByText("Watch the TV!")).toBeInTheDocument();
+    const at = s.showEndsAt + 500;
+    const send = show("color", r.view(cap("t2"), at), at);
+    expect(screen.getByText("Match the color!")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Lock in this color" }));
+    const [[sent]] = send.mock.calls as unknown as [[{ answer: string }]];
+    expect(sent.answer).toMatch(/^#[0-9A-F]{6}$/);
+  });
+
+  test("S30-AC1: the reveal shows the color beside each team's, named, with how well it matched", () => {
+    const r0 = round("color");
+    const s = timing(r0.state);
+    const target = (s.task as { target: string }).target;
+    const at = s.showEndsAt + 500;
+    const r = round("color", [["t1", { answer: target }, at]]);
+    show("color", r.view(tv, at + 100, true), at + 100, "tv");
+    expect(screen.getByRole("img", { name: "The color" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Picked by Reds" })).toBeInTheDocument();
+    expect(screen.getAllByText("100% match").length).toBeGreaterThan(0);
+  });
+});

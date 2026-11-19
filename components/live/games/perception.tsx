@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { askFor, getReadyLine, PerceptionStage } from "@/components/games/perception/stage";
 import {
   LionDrum,
@@ -25,6 +26,7 @@ import {
   PhoneNote,
   PhoneResult,
   Reveal,
+  Swatch,
   TimeLeft,
   useServerTime,
 } from "./shared";
@@ -51,8 +53,50 @@ function marks(view: ActiveLiveView, g: PerceptionView): Mark[] {
   });
 }
 
+/** A color held up on a white card, like a judge's paint chip, with a name under it when given. */
+function Chip({
+  color,
+  label,
+  name = "The color",
+  size,
+}: {
+  color: string;
+  label?: ReactNode;
+  /** What a screen reader calls it. */
+  name?: string;
+  size: string;
+}) {
+  return (
+    <figure className="m-0 grid justify-items-center gap-[1vh]">
+      <span
+        role="img"
+        aria-label={name}
+        className={cx(
+          "block rounded-[4px] border-[1.2vh] border-gm-tile-present shadow-md ring-1 ring-gm-border",
+          size,
+        )}
+        style={{ background: color }}
+      />
+      {label && (
+        <figcaption className="flex items-center gap-2 text-[clamp(1rem,2.6vh,1.9rem)] font-bold">
+          {label}
+        </figcaption>
+      )}
+    </figure>
+  );
+}
+
 /** The scene while it's shown, as big as the TV allows. */
 function ShowScene({ type, scene, elapsed }: { type: string; scene: unknown; elapsed: number }) {
+  if (type === "color")
+    return (
+      <div className="grid justify-items-center gap-[3vh]">
+        <p className="m-0 font-gm-display text-[clamp(1.8rem,5vh,3.8rem)] font-bold">
+          Remember this color!
+        </p>
+        <Chip color={(scene as { color: string }).color} size="h-[46vh] w-[62vh]" />
+      </div>
+    );
   if (type === "snowpile")
     return (
       <Frame width="99vh">
@@ -114,6 +158,35 @@ function AnswerScene({
 function TruthScene({ view, g, type }: { view: ActiveLiveView; g: PerceptionView; type: string }) {
   const scene = g.scene;
   if (!scene) return null;
+  if (type === "color")
+    return (
+      <div className="flex flex-wrap items-end justify-center gap-[3vh]">
+        <Chip
+          color={(scene as { color: string }).color}
+          size="h-[16vh] w-[22vh]"
+          label="The color"
+        />
+        {view.teams.flatMap((t) => {
+          const hex = g.answers?.[t.id];
+          return typeof hex === "string"
+            ? [
+                <Chip
+                  key={t.id}
+                  color={hex}
+                  name={`Picked by ${t.name}`}
+                  size="h-[11vh] w-[15vh]"
+                  label={
+                    <>
+                      <Swatch color={t.color} />
+                      {t.name}
+                    </>
+                  }
+                />,
+              ]
+            : [];
+        })}
+      </div>
+    );
   if (type === "snowpile")
     return (
       <Frame width="32vh">
@@ -152,16 +225,19 @@ function tv(type: string) {
     if (revealed)
       return (
         <div className="grid gap-[2vh]">
-          <p className="m-0 text-center font-gm-display text-[clamp(2rem,6vh,4.5rem)] font-bold">
-            It was <span className="text-gm-tile-correct">{g.truth}</span>
-          </p>
+          {type !== "color" && (
+            <p className="m-0 text-center font-gm-display text-[clamp(2rem,6vh,4.5rem)] font-bold">
+              It was <span className="text-gm-tile-correct">{g.truth}</span>
+            </p>
+          )}
           <TruthScene view={view} g={g} type={type} />
           <Reveal
             view={view}
             answer={(t) => g.said?.[t] ?? null}
             note={(t) => {
               const c = g.closeness?.[t];
-              return c === undefined ? null : percent(c);
+              // Color Matcher's answer already says how well it matched.
+              return c === undefined || type === "color" ? null : percent(c);
             }}
           />
         </div>
@@ -249,6 +325,14 @@ function demo(type: string) {
             </LionDrum>
           )}
           {type === "ribbon" && <RibbonStrip cut={t > 1500 ? 0.34 : null} />}
+          {type === "color" &&
+            (t < 2200 ? (
+              <Chip color="var(--gm-team-5)" size="mx-auto h-[24vh] w-[32vh]" />
+            ) : (
+              <p className="m-0 text-center font-gm-display text-[clamp(2rem,7vh,5rem)] font-bold">
+                Match the color!
+              </p>
+            ))}
         </div>
       </div>
     );
@@ -266,3 +350,4 @@ export const staffangleRenderer = renderer("staffangle");
 export const sleighrunRenderer = renderer("sleighrun");
 export const liondrumRenderer = renderer("liondrum");
 export const ribbonRenderer = renderer("ribbon");
+export const colorRenderer = renderer("color");

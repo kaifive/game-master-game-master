@@ -34,6 +34,13 @@ function HowClose({ last }: { last: NonNullable<PerceptionSoloView["last"]> }) {
   );
 }
 
+/**
+ * Games whose question comes only once the show is over (Color Count asks which
+ * color then), so the phone fetches it. Others carry on locally: a refetch would
+ * reset Lion Drum's taps as the dark beats begin.
+ */
+const ASKS_AFTER_SHOW = new Set(["colorcount"]);
+
 /** One view from the server, run on this phone's clock from the moment it came. */
 function Task({
   view,
@@ -49,9 +56,16 @@ function Task({
   const end = view.showMs + view.answerMs;
   const asked = useRef(false);
   const [answered, setAnswered] = useState(false);
-  // The next task's scene, or the timed-out view, comes from the server.
+  // The server sends what's next: Color Count's question once the show ends, the
+  // next task, or the timed-out view.
   const due =
-    !view.done && !answered && (view.phase === "between" ? elapsed >= 0 : elapsed > end + 150);
+    !view.done &&
+    !answered &&
+    (view.phase === "between"
+      ? elapsed >= 0
+      : view.phase === "show" && ASKS_AFTER_SHOW.has(type)
+        ? elapsed >= view.showMs
+        : elapsed > end + 150);
   useEffect(() => {
     if (!due || asked.current) return;
     asked.current = true;

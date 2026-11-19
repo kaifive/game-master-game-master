@@ -1,4 +1,4 @@
-import { PERCEPTION_CORES } from "@/lib/games";
+import { PERCEPTION_CORES, SOLO_ONLY_CORES } from "@/lib/games";
 import { BlocksGame, blocksSummary, BLOCKS_HOLD_MS } from "./blocks/blocks";
 import { CacheGame, cacheSummary } from "./cache/cache";
 import { ColorGame, colorSummary } from "./color/color";
@@ -37,8 +37,13 @@ const RENDERERS: Readonly<Record<string, GameRenderer>> = {
     holdResultMs: BLOCKS_HOLD_MS,
     countdown: true,
   },
-  // Perception games (spec 28), all built the same way.
-  ...Object.fromEntries(PERCEPTION_CORES.map((core) => [core.type, perceptionRenderer(core.type)])),
+  // Perception games (spec 28) and the solo counting games (spec 30), all built the same way.
+  ...Object.fromEntries(
+    [...PERCEPTION_CORES, ...SOLO_ONLY_CORES].map((core) => [
+      core.type,
+      perceptionRenderer(core.type),
+    ]),
+  ),
 };
 
 export const rendererFor = (type: string): GameRenderer | undefined => RENDERERS[type];

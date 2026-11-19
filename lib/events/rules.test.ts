@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { EVENTS } from "@/content/events";
 import { holiday2026 } from "@/content/events/holiday-2026";
+import { showdownContentErrors } from "@/lib/live";
 import type { EventConfig } from "./model";
 import {
   eventStatus,
@@ -13,6 +14,8 @@ import {
   toPublicEvent,
   validateEvent,
 } from "./rules";
+
+const checks = { showdown: showdownContentErrors };
 
 const valid: EventConfig = {
   slug: "test-party",
@@ -51,7 +54,7 @@ const valid: EventConfig = {
 
 describe("S01-AC1: event files are validated", () => {
   test.each(Object.entries(EVENTS))("content/events/%s.ts is valid", (file, config) => {
-    expect(validateEvent(file, config)).toEqual([]);
+    expect(validateEvent(file, config, checks)).toEqual([]);
   });
 
   test("a valid config passes", () => {
@@ -105,6 +108,33 @@ describe("S01-AC1: event files are validated", () => {
         /^content\/events\/test-party\.ts: games\.quiz\.content\.questions\.0\.answer: /,
       ),
     ]);
+  });
+
+  test("S30-AC4: a game's content is checked against the version it runs, solo or showdown", () => {
+    const base = { title: "Colors", visibility: "listed" as const, content: {} };
+    const showdown = {
+      ...base,
+      id: "c1",
+      type: "color",
+      mode: "live" as const,
+      scoring: { awardTo: "team" as const },
+    };
+    const solo = {
+      ...base,
+      id: "c2",
+      type: "color",
+      mode: "solo" as const,
+      scoring: { awardTo: "player" as const },
+    };
+    // The showdown deals its own colors; solo needs the color to match.
+    expect(validateEvent("test-party", { ...valid, games: [showdown] }, checks)).toEqual([]);
+    expect(validateEvent("test-party", { ...valid, games: [solo] }, checks).join()).toMatch(
+      /games\.c2\.content\.target/,
+    );
+    const flyby = { ...showdown, id: "f", type: "flyby", content: { rounds: [] } };
+    expect(validateEvent("test-party", { ...valid, games: [flyby] }, checks).join()).toMatch(
+      /games\.f\.content\.rounds/,
+    );
   });
 
   test("S08-AC10: solo games share soloGamePoints and can't set their own", () => {

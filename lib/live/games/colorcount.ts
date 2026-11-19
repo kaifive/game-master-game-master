@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { seededRandom, shuffled } from "@/lib/games";
+import { COLOR_ROUNDS, dealFlashes, ORNAMENT_COLORS, type Flash } from "@/lib/games";
 import { defineShowdown, type Role, type ShowdownGame } from "../model";
 import { answerWindow, answered, lockIn, windowView, type AnswerWindow } from "./answer";
 import { rankedPoints } from "./scoring";
@@ -9,11 +9,8 @@ import { rankedPoints } from "./scoring";
  * only at the end does it ask how many of one color there were. Ranked by
  * closeness: 100, 70, 50, 30, then 10.
  */
-export const ORNAMENT_COLORS = ["red", "green", "blue", "gold", "purple"] as const;
-export type OrnamentColor = (typeof ORNAMENT_COLORS)[number];
-
-/** One flash: a few ornaments, each with its color and spot on the TV (0 to 1 each way). */
-export type Flash = { color: number; x: number; y: number }[];
+export { COLOR_ROUNDS, dealFlashes, ORNAMENT_COLORS } from "@/lib/games";
+export type { Flash, OrnamentColor } from "@/lib/games";
 
 const Round = z.object({
   colors: z.number().int().min(2).max(ORNAMENT_COLORS.length),
@@ -21,40 +18,9 @@ const Round = z.object({
   ms: z.number().int().min(1500).max(15_000),
 });
 
-export const COLOR_ROUNDS = [
-  { colors: 3, count: 12, ms: 4000 },
-  { colors: 4, count: 18, ms: 3500 },
-  { colors: 5, count: 24, ms: 3000 },
-];
-
 const Content = z.object({ rounds: z.array(Round).min(1).max(10).default(COLOR_ROUNDS) });
 
 export type ColorState = AnswerWindow & { flashes: Flash[]; ask: number; truth: number };
-
-/** The flashes for one round: every color shows at least once, 2 or 3 ornaments at a time. */
-export function dealFlashes(seed: number, colors: number, count: number) {
-  const random = seededRandom(seed);
-  const picks = Array.from({ length: count }, (_, i) =>
-    i < colors ? i : Math.floor(random() * colors),
-  );
-  const order = shuffled(picks, random);
-  const flashes: Flash[] = [];
-  for (let i = 0; i < order.length;) {
-    const size = Math.min(order.length - i, 2 + Math.floor(random() * 2));
-    // Spots spread across the screen, apart from each other.
-    const slots = shuffled([0, 1, 2, 3, 4, 5], random).slice(0, size);
-    flashes.push(
-      order.slice(i, i + size).map((color, j) => ({
-        color,
-        x: ((slots[j] ?? 0) % 3) / 3 + 0.08 + random() * 0.17,
-        y: Math.floor((slots[j] ?? 0) / 3) / 2 + 0.08 + random() * 0.25,
-      })),
-    );
-    i += size;
-  }
-  const ask = Math.floor(random() * colors);
-  return { flashes, ask, truth: order.filter((c) => c === ask).length };
-}
 
 type C = z.infer<typeof Content>;
 

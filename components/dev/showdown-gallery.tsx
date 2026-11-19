@@ -9,6 +9,7 @@ import {
   exitY,
   keepBeats,
   PERCEPTION_CORES,
+  SHOWDOWN_ONLY_CORES,
   type Cell,
   type DrumTask,
   type SleighTask,
@@ -83,6 +84,29 @@ function perceptionScript(type: string): Script {
         answer: show + 400,
       };
     }
+    if (type === "color") {
+      // Team 1 spot on, team 2 a touch dark, team 3 off toward blue.
+      const hex = (p.task as { target: string }).target;
+      const ch = (i: number) => parseInt(hex.slice(i, i + 2), 16);
+      const mix = (d: [number, number, number]) =>
+        `#${[1, 3, 5]
+          .map((i, k) =>
+            Math.max(0, Math.min(255, ch(i) + (d[k] ?? 0)))
+              .toString(16)
+              .padStart(2, "0"),
+          )
+          .join("")}`.toUpperCase();
+      const at = show + 1500;
+      return {
+        moves: [
+          ["t1", { answer: hex }, at],
+          ["t2", { answer: mix([-30, -30, -30]) }, at + 400],
+          ["t3", { answer: mix([-60, -20, 90]) }, at + 800],
+        ],
+        show: Math.round(show * 0.5),
+        answer: at + 600,
+      };
+    }
     const right =
       type === "snowpile"
         ? (p.task as { count: number }).count
@@ -107,7 +131,9 @@ function perceptionScript(type: string): Script {
 }
 
 const SCRIPTS: Record<string, Script> = {
-  ...Object.fromEntries(PERCEPTION_CORES.map((c) => [c.type, perceptionScript(c.type)])),
+  ...Object.fromEntries(
+    [...PERCEPTION_CORES, ...SHOWDOWN_ONLY_CORES].map((c) => [c.type, perceptionScript(c.type)]),
+  ),
   auction: () => ({
     moves: [
       ["t1", { bid: 10 }, 800],
@@ -326,6 +352,7 @@ export const TITLES: Record<string, string> = {
   sleighrun: "Sleigh Run",
   liondrum: "Lion Drum",
   ribbon: "Cut the Ribbon",
+  color: "Color Matcher",
 };
 
 /** The TV at a moment, as the display shows it. */

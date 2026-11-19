@@ -14,7 +14,7 @@ export type { RecallView } from "./recall/logic";
 export type { TrailView } from "./trail/logic";
 export { jarShare, type JarState, type JarView } from "./jar/logic";
 export type { CacheView } from "./cache/logic";
-export { toHex, type ColorView } from "./color/logic";
+export { colorDistance, colorShare, hsvToRgb, toHex, type ColorView } from "./color/logic";
 export type { DrawView } from "./draw/logic";
 export type { Mark, WordView } from "./word/logic";
 export { isSolved, slide, type SlideView } from "./slide/logic";
@@ -54,4 +54,38 @@ export {
   type SleighTask,
   type SnowPileTask,
 } from "./perception/games";
+export {
+  colorCore,
+  colorcountCore,
+  flybyCore,
+  nearCloseness,
+  SHOWDOWN_ONLY_CORES,
+  snowsumCore,
+  SOLO_ONLY_CORES,
+  type ColorCountTask,
+  type ColorTask,
+  type FlybyTask,
+  type SnowSumTask,
+} from "./perception/counts";
 export { FEEDBACK_MS, type SoloView as PerceptionSoloView } from "./perception/solo";
+export {
+  apply,
+  COLOR_ROUNDS,
+  dealFlakes,
+  dealFlashes,
+  dealFormation,
+  FLYBY_ROUNDS,
+  ORNAMENT_COLORS,
+  runningTotals,
+  SNOW_MAX,
+  SNOW_MIN,
+  SNOW_OPS,
+  SNOW_ROUNDS,
+  sum,
+  type Flake,
+  type Flash,
+  type FlybyRound,
+  type Formation,
+  type OrnamentColor,
+  type SnowOp,
+} from "./counts";
