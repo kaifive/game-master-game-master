@@ -116,4 +116,4 @@ rounds live in the live session (spec 11).
 
 ## Out of scope
 
-- Converting the other games to both modes: logged in the backlog (ADR-040).
+- Other modes for the existing games: only where they play better (ADR-041, backlog).

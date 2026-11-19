@@ -16,8 +16,6 @@ Move answered ones to the bottom with the answer.
 | Q23 | Pathfinder: what counts as skipping a number (red)? | Spec 16 | Reaching a later number before an earlier one turns the missed ones red; after that nothing turns green until the trail is undone past the skip. The number reached early stays grey. |
 | Q24 | T-Timer: "stop in the range of 1 sec 20ms or 1 sec 25ms": is the window 1.20 to 1.25 s? (A literal 1.020 to 1.025 s is 5 ms, shorter than one screen frame.) And how fast should points fall off outside it? | Spec 16 | 1.20 to 1.25 s; full points inside, falling to 0 at 0.5 s outside |
 | Q27 | Tap Masher film: which part of the video, and how many frames? | Spec 16 | Khai (2026-11-14): play like video (skip at most one frame) using the form's first 11.5 s, and 50 taps is all the points (the video is styling). So 172 frames, every other frame, at 256 × 192 to keep the sheet to 1.3 MB; nobody reaches the end in 5 s. |
-| Q32 | Which existing games should get their other mode first (ADR-040)? | Backlog | Showdown versions of the quick solo games that already score by closeness (T-Timer, Color Matcher, Rapid Recall), then solo versions of the count showdowns (Fly-by Count, Snow Sum, Color Count) |
-| Q33 | Team colors: can the captain change the color after naming the team, or is it fixed once saved? | Spec 29 | The captain can change it from the Team tab to any free color, but not while a showdown runs; the host can always fix it in Controls |
 
 ## Answered
 
@@ -81,3 +79,5 @@ Move answered ones to the bottom with the answer.
 | A56 | Share or Snatch: a penalty when both snatch? (was Q30) | Khai (2026-11-18): yes, both lose 20 game points. Game points only set the order; the final order pays the showdown points (150/100/70/50/30, then 10). |
 | A57 | Land Mass: ranked points or per square? (was Q31) | Khai (2026-11-18): points per square (5 each), and more irregular pieces (4 to 6 squares, no lines or rectangles). |
 | A58 | Perceptle-style games? | Khai (2026-11-18): yes, five separate games (quantity, angle, movement, rhythm, proportion), each solo or showdown per event (spec 28, ADR-040). |
+| A59 | Team colors: can a team change its color after naming? (was Q33) | Khai (2026-11-19): no. One color, picked when the team is named, fixed for the event (spec 29). |
+| A60 | Which existing games get their other mode? (was Q32) | Khai (2026-11-19): only where it plays better that way (ADR-041): Color Matcher as a showdown; Fly-by Count, Snow Sum and Color Count as solo. Last Second and Tap Masher stay as they are. Nothing else. |
