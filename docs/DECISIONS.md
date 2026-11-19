@@ -754,7 +754,9 @@ bigger teams, not more of them.
 
 ## ADR-040: Every game can run solo or as a showdown, chosen per event
 
-**Status:** accepted (Khai, 2026-11-18). Extends ADR-036 and spec 24.
+**Status:** superseded by ADR-041 (only "New games are built in both modes"
+and converting every existing game). Accepted (Khai, 2026-11-18). Extends
+ADR-036 and spec 24.
 
 Khai wants to decide per event whether a game is played on everyone's phone or
 as a team showdown on the TV.
@@ -769,3 +771,31 @@ are the first). The existing games are converted over time (backlog).
 Content for a type is checked against whichever version the event uses. A game
 built in only one mode can still only be used in that mode until it's converted.
 
+## ADR-041: A game gets a mode only where it plays well that way
+
+**Status:** accepted (Khai, 2026-11-19). Supersedes part of ADR-040.
+
+A showdown plays on one captain's phone while the room watches, so a round
+scores a few people where a solo game scores everyone. A second mode is only
+worth building when the game is better in it, not to fill a grid.
+
+**Decision:** ADR-040's mechanism stays: one type id, a solo version, a
+showdown version or both, and the event's `mode` picks. But a game gets a
+mode only where it plays well that way:
+
+- A showdown needs a short task every team does at once, that the room
+  enjoys watching and a team can help with (shouting a count, arguing an angle).
+- A solo version needs the game to still make sense with no other team to
+  read or take turns against.
+
+Agreed conversions: Color Matcher as a showdown; Fly-by Count, Snow Sum and
+Color Count as solo. Everything else stays in the mode it has: the long
+puzzles, room and judged games (Secret Word, Picture Slide, Block Fit,
+Pathfinder, Stack Attack, Geocache, Guessing Jar, Photo Challenge, Quick
+Draw) stay solo; T-Timer, Rapid Recall and Trivia stay solo because Blind
+Stop, Memory Path and the buzzer round already cover them as team games; the
+nerve and turn showdowns stay showdowns; Last Second and Tap Masher stay as
+they are.
+
+**Consequences:** new games are designed for the mode that fits, and get the
+other only if it passes the same test.
