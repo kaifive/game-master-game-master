@@ -67,8 +67,9 @@ export const CATALOG: readonly CatalogEntry[] = [
   {
     type: "color",
     name: "Color Matcher",
-    pitch: "Pick a color from memory on a color wheel; the closer, the more points.",
-    modes: SOLO,
+    pitch:
+      "Match a color on a color wheel: one from memory solo, or one flashed on the TV as a showdown.",
+    modes: BOTH,
   },
   {
     type: "draw",
@@ -110,20 +111,20 @@ export const CATALOG: readonly CatalogEntry[] = [
   {
     type: "flyby",
     name: "Fly-by Count",
-    pitch: "presents fly across the TV and teams count them; exact scores 100.",
-    modes: SHOWDOWN,
+    pitch: "Presents fly past; count them. Exactly right scores full points, one off half.",
+    modes: BOTH,
   },
   {
     type: "snowsum",
     name: "Snow Sum",
-    pitch: "snowflakes marked +3, -2 or x2 fall one at a time; teams keep the total.",
-    modes: SHOWDOWN,
+    pitch: "Snowflakes marked +3, -2 or x2 fall one at a time; keep the running total.",
+    modes: BOTH,
   },
   {
     type: "colorcount",
     name: "Color Count",
-    pitch: "ornaments flash on the TV, then it asks how many of one color there were.",
-    modes: SHOWDOWN,
+    pitch: "Ornaments flash up, then it asks how many of one color there were.",
+    modes: BOTH,
   },
   {
     type: "blindstop",

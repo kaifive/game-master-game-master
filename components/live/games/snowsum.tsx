@@ -62,6 +62,58 @@ export function Snowflake({
   );
 }
 
+/**
+ * The snowflakes falling one at a time, each over the first part of its turn
+ * and then holding, on whichever clock is given: the TV's or a solo phone's
+ * (spec 30).
+ */
+export function FallingFlakes({
+  flakes,
+  flakeMs,
+  elapsed,
+  size,
+}: {
+  flakes: readonly Flake[];
+  flakeMs: number;
+  elapsed: number;
+  size: "tv" | "phone";
+}) {
+  const at = Math.max(0, elapsed);
+  const i = Math.min(flakes.length - 1, Math.floor(at / flakeMs));
+  const flake = flakes[i];
+  const p = Math.min(1, (at % flakeMs) / (flakeMs * 0.45));
+  const tv = size === "tv";
+  return (
+    <div className={cx("grid justify-items-center", tv ? "gap-[2vh]" : "gap-2")}>
+      <p
+        className={cx(
+          "m-0 font-gm-display font-bold text-gm-text-muted",
+          tv ? "text-[clamp(1.4rem,4vh,3rem)]" : "text-xl",
+        )}
+      >
+        Snowflake {i + 1} of {flakes.length}
+      </p>
+      <div className={cx("grid place-items-center", tv ? "h-[56vh]" : "h-72")}>
+        {flake && (
+          <Snowflake
+            key={i}
+            label={flakeLabel(flake)}
+            className={cx(
+              "will-change-transform",
+              tv ? "size-[42vh] text-[clamp(2.4rem,10vh,7rem)]" : "size-56 text-5xl",
+            )}
+            style={{
+              transform: `translateY(${String((1 - p) * -14)}${tv ? "vh" : "%"})`,
+              opacity: 0.4 + p * 0.6,
+            }}
+            spin={(1 - p) * -40}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Tv({ view, game, serverNow, revealed }: LiveTvProps) {
   const g = game as SnowView | null;
   const now = useServerTime(serverNow, !revealed);
@@ -107,33 +159,10 @@ function Tv({ view, game, serverNow, revealed }: LiveTvProps) {
     return (
       <GetReady startsAt={g.startsAt} now={now} line="Start at 0 and add up the snowflakes!" />
     );
-  if (now < g.showEndsAt && g.flakes) {
-    const i = Math.min(g.flakes.length - 1, Math.floor((now - g.startsAt) / g.flakeMs));
-    const flake = g.flakes[i];
-    // Each flake falls in over the first part of its turn, then holds.
-    const p = Math.min(1, ((now - g.startsAt) % g.flakeMs) / (g.flakeMs * 0.45));
+  if (now < g.showEndsAt && g.flakes)
     return (
-      <div className="grid justify-items-center gap-[2vh]">
-        <p className="m-0 font-gm-display text-[clamp(1.4rem,4vh,3rem)] font-bold text-gm-text-muted">
-          Snowflake {i + 1} of {g.flakes.length}
-        </p>
-        <div className="grid h-[56vh] place-items-center">
-          {flake && (
-            <Snowflake
-              key={i}
-              label={flakeLabel(flake)}
-              className="size-[42vh] text-[clamp(2.4rem,10vh,7rem)] will-change-transform"
-              style={{
-                transform: `translateY(${String((1 - p) * -14)}vh)`,
-                opacity: 0.4 + p * 0.6,
-              }}
-              spin={(1 - p) * -40}
-            />
-          )}
-        </div>
-      </div>
+      <FallingFlakes flakes={g.flakes} flakeMs={g.flakeMs} elapsed={now - g.startsAt} size="tv" />
     );
-  }
   return (
     <div className="grid gap-[3vh]">
       <p className="m-0 text-center font-gm-display text-[clamp(2.4rem,8vh,6rem)] font-bold">

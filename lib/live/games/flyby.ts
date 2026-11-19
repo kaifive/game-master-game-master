@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { seededRandom, shuffled } from "@/lib/games";
+import { dealFormation, FLYBY_ROUNDS } from "@/lib/games";
 import { defineShowdown, type Role, type ShowdownGame } from "../model";
 import { answered, answerWindow, lockIn, windowView, type AnswerWindow } from "./answer";
 import { nearPoints } from "./scoring";
@@ -19,11 +19,7 @@ const Round = z
   .refine((r) => r.min <= r.max, "min must not be above max")
   .refine((r) => r.cols * r.rows >= r.max, "the grid needs a square for every present");
 
-export const FLYBY_ROUNDS = [
-  { min: 6, max: 12, ms: 4000, cols: 6, rows: 3 },
-  { min: 10, max: 18, ms: 3500, cols: 8, rows: 3 },
-  { min: 15, max: 25, ms: 3000, cols: 10, rows: 4 },
-];
+export { FLYBY_ROUNDS };
 
 const Content = z.object({ rounds: z.array(Round).min(1).max(10).default(FLYBY_ROUNDS) });
 
@@ -60,20 +56,12 @@ const game: ShowdownGame<z.infer<typeof Content>, FlybyState> = {
   deal(c, { seed, round, startsAt, teams }) {
     const r = c.rounds[round - 1] ?? c.rounds[c.rounds.length - 1] ?? FLYBY_ROUNDS[0];
     if (!r) throw new Error("no rounds");
-    const random = seededRandom(seed);
-    const count = r.min + Math.floor(random() * (r.max - r.min + 1));
-    const all: [number, number][] = [];
-    for (let row = 0; row < r.rows; row++)
-      for (let col = 0; col < r.cols; col++) all.push([row, col]);
-    const cells = shuffled(all, random)
-      .slice(0, count)
-      .sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-    const offsets = Array.from({ length: r.rows }, () => (random() < 0.5 ? 0 : 0.5));
+    const { count, cols, rows, cells, offsets } = dealFormation(seed, r);
     return {
       ...answerWindow(startsAt, r.ms, teams),
       count,
-      cols: r.cols,
-      rows: r.rows,
+      cols,
+      rows,
       cells,
       offsets,
       flyMs: r.ms,

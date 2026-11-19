@@ -325,6 +325,34 @@ export const holiday2026: EventConfig = {
         scoring: { awardTo: "player" as const },
       },
     ]),
+    // Second modes (spec 30, ADR-041): the counting showdowns as solo games and
+    // Color Matcher as a showdown. Off and hidden until Khai puts them on the menu.
+    ...(
+      [
+        ["flyby", "Fly-by Count"],
+        ["snowsum", "Snow Sum"],
+        ["colorcount", "Color Count"],
+      ] as const
+    ).map(([type, title]) => ({
+      id: `${type}-solo`,
+      type,
+      title,
+      mode: "solo" as const,
+      phase: "individual" as const,
+      visibility: "off" as const,
+      content: {},
+      scoring: { awardTo: "player" as const },
+    })),
+    {
+      id: "color-showdown",
+      type: "color",
+      title: "Color Matcher",
+      mode: "live",
+      phase: "team",
+      visibility: "hidden",
+      content: {},
+      scoring: { awardTo: "team" },
+    },
     {
       id: "jeopardy",
       type: "jeopardy",

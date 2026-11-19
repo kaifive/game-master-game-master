@@ -20,6 +20,15 @@ export const ZERO_AT = 0.5;
 
 type Rgb = [number, number, number];
 
+/** Hue (0–360), saturation and brightness (0–1) to red, green and blue. */
+export function hsvToRgb({ h, s, v }: { h: number; s: number; v: number }): Rgb {
+  const f = (n: number) => {
+    const k = (n + h / 60) % 6;
+    return Math.round(255 * (v - v * s * Math.max(0, Math.min(k, 4 - k, 1))));
+  };
+  return [f(5), f(3), f(1)];
+}
+
 export const toHex = ([r, g, b]: Rgb) =>
   `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`.toUpperCase();
 const fromHex = (hex: string): Rgb =>

@@ -12,10 +12,10 @@ captains' phones (`mode: "live"`). A game with both can run either way (ADR-040)
 | Auction | `auction` | showdown | bid your numbers 1 to 10, each once a game; tied bids cancel, highest wins. |
 | Blind Stop | `blindstop` | showdown | stop a clock at exactly 10.00 after it hides behind a question mark. |
 | Block Fit | `blocks` | solo | Drag and turn pieces to fill a board exactly; can rebuild a photo. |
-| Color Count | `colorcount` | showdown | ornaments flash on the TV, then it asks how many of one color there were. |
-| Color Matcher | `color` | solo | Pick a color from memory on a color wheel; the closer, the more points. |
+| Color Count | `colorcount` | solo, showdown | Ornaments flash up, then it asks how many of one color there were. |
+| Color Matcher | `color` | solo, showdown | Match a color on a color wheel: one from memory solo, or one flashed on the TV as a showdown. |
 | Cut the Ribbon | `ribbon` | solo, showdown | Tap where to cut a ribbon, like one third of the way along, with no marks to help. |
-| Fly-by Count | `flyby` | showdown | presents fly across the TV and teams count them; exact scores 100. |
+| Fly-by Count | `flyby` | solo, showdown | Presents fly past; count them. Exactly right scores full points, one off half. |
 | Geocache | `cache` | solo | Find codes hidden around the venue and type them in for points. |
 | Guessing Jar | `jar` | solo | One guess at how many things are in a real jar; the host reveals the count. |
 | Land Mass | `landmass` | showdown | teams take turns placing block pieces on one board; the most land wins. |
@@ -32,7 +32,7 @@ captains' phones (`mode: "live"`). A game with both can run either way (ADR-040)
 | Share or Snatch | `snatch` | showdown | two teams, one pot; both share and split it, one snatches and takes it all. |
 | Sleigh Run | `sleighrun` | solo, showdown | A sleigh flies into a cloud; tap where it will come out the other side. |
 | Snow Pile | `snowpile` | solo, showdown | Snowflakes flash up for a moment; say how many. The closer, the more points. |
-| Snow Sum | `snowsum` | showdown | snowflakes marked +3, -2 or x2 fall one at a time; teams keep the total. |
+| Snow Sum | `snowsum` | solo, showdown | Snowflakes marked +3, -2 or x2 fall one at a time; keep the running total. |
 | Snowball to 21 | `to21` | showdown | teams take turns adding 1, 2 or 3; whoever makes exactly 21 wins. |
 | Stack Attack | `stacker` | solo | Tap to drop a sliding row and stack it as high as you can; overhangs get chopped. |
 | Staff Angle | `staffangle` | solo, showdown | Turn a wushu staff to an angle like 35 degrees by eye, with no number to read. |

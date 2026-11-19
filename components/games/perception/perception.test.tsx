@@ -114,3 +114,35 @@ describe("Lion Drum on the phone (spec 28)", () => {
     expect(onAnswer).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("the counting games solo on the phone (spec 30)", () => {
+  test("S30-AC2: Fly-by Count flies the presents across the phone, then takes a number", async () => {
+    const user = userEvent.setup();
+    play("flyby", soloView("flyby", T0 + 500).view);
+    expect(screen.getByRole("img", { name: "Presents flying past" })).toBeInTheDocument();
+    const later = play("flyby", soloView("flyby", T0 + 4500).view);
+    await user.click(screen.getByRole("button", { name: "7" }));
+    await user.click(screen.getByRole("button", { name: "Lock in 7" }));
+    expect(later.onMove).toHaveBeenCalledWith({ answer: 7 });
+  });
+
+  test("S30-AC2: Snow Sum drops the snowflakes one at a time, and its pad can go below zero", () => {
+    play("snowsum", soloView("snowsum", T0 + 200).view);
+    expect(screen.getByText("Snowflake 1 of 5")).toBeInTheDocument();
+    play("snowsum", soloView("snowsum", T0 + 7500).view);
+    expect(screen.getByRole("button", { name: "Minus" })).toBeInTheDocument();
+  });
+
+  test("S30-AC3: Color Count flashes the ornaments without the question, and asks the server for it once they're gone", () => {
+    const { onTimeUp } = play("colorcount", soloView("colorcount", T0 + 200).view);
+    expect(screen.getByLabelText("Ornaments flashing")).toBeInTheDocument();
+    expect(screen.queryByText(/How many/)).toBeNull();
+    expect(onTimeUp).not.toHaveBeenCalled();
+    const shown = soloView("colorcount", T0 + 200).view;
+    const after = play("colorcount", { ...shown, elapsed: shown.showMs + 50 });
+    expect(after.onTimeUp).toHaveBeenCalledTimes(1);
+    play("colorcount", soloView("colorcount", T0 + 4500).view);
+    expect(screen.getByRole("button", { name: "Lock in" })).toBeInTheDocument();
+    expect(screen.getAllByText(/ornaments\?/).length).toBeGreaterThan(0);
+  });
+});

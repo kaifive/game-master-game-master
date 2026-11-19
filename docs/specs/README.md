@@ -34,4 +34,5 @@ Statuses are explained in `../conventions/docs.md`.
 | 27 | [Showdowns: turn games](27-showdowns-turns.md) | M3 | Done |
 | 28 | [Perception games](28-perception-games.md) | M3 | Done |
 | 29 | [Team colors chosen by the captain](29-team-colors.md) | M4 | Draft (agreed) |
+| 30 | [Second modes: Color Matcher showdown, solo counting games](30-more-modes.md) | M3 | Done |
 | 31 | [Team selfies dressed up with stickers](31-team-selfies.md) | M4 | Draft (agreed) |

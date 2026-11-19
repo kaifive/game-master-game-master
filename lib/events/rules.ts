@@ -15,7 +15,17 @@ import type { FinalStandings, Standing } from "./repo";
 export const RESERVED_SLUGS = ["admin", "api", "_next", "join", "dev"] as const;
 
 /** Every problem with one event file, each naming the file and field (S01-AC1). */
-export function validateEvent(file: string, value: unknown): string[] {
+/**
+ * Checks a showdown game's content (lib/live's registry). Passed in, since
+ * lib/live depends on lib/events and can't be imported here.
+ */
+export type ShowdownContentCheck = (type: string, content: unknown) => string[];
+
+export function validateEvent(
+  file: string,
+  value: unknown,
+  checks: { showdown?: ShowdownContentCheck } = {},
+): string[] {
   const at = `content/events/${file}.ts`;
   const parsed = EventConfig.safeParse(value);
   if (!parsed.success) {
@@ -39,7 +49,12 @@ export function validateEvent(file: string, value: unknown): string[] {
       add(`games.${g.id}.scoring.points`, "solo games all use soloGamePoints; remove this.");
     if (g.keepDrawings && !DRAWING_TYPES.includes(g.type))
       add(`games.${g.id}.keepDrawings`, `a ${g.type} game makes no drawing to keep.`);
-    for (const problem of contentErrors(g.type, g.content))
+    // Content is checked against the version the entry runs: solo or showdown (ADR-040).
+    const problems =
+      g.mode === "live"
+        ? (checks.showdown?.(g.type, g.content) ?? [])
+        : contentErrors(g.type, g.content);
+    for (const problem of problems)
       add(
         `games.${g.id}.content.${problem.split(": ")[0] ?? ""}`,
         problem.split(": ").slice(1).join(": "),

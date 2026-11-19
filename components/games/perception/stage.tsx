@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Ask as OrnamentAsk, OrnamentFlashes } from "@/components/live/games/colorcount";
+import { FlyingPresents, type Fly } from "@/components/live/games/flyby";
+import { FallingFlakes } from "@/components/live/games/snowsum";
+import type { Flake, Flash } from "@/lib/games";
+import { ColorWheel } from "../color/color";
 import { NumberEntry } from "../number-entry";
 import {
   BeatPips,
@@ -45,6 +50,10 @@ export function askFor(type: string, scene: unknown): string {
   if (type === "staffangle") return `Set the staff at ${String((scene as AngleScene).target)}°`;
   if (type === "sleighrun") return "Where does the sleigh come out?";
   if (type === "liondrum") return "Keep the beat!";
+  if (type === "flyby") return "How many presents?";
+  if (type === "snowsum") return "What's the total?";
+  if (type === "colorcount") return "How many?";
+  if (type === "color") return "Match the color!";
   return `Cut it ${(scene as RibbonScene).label} along`;
 }
 
@@ -54,6 +63,7 @@ export function getReadyLine(type: string): string {
   if (type === "staffangle") return "Get your eye in!";
   if (type === "sleighrun") return "Watch the sleigh!";
   if (type === "liondrum") return "Feel the beat!";
+  if (type === "color") return "Remember the color!";
   return "Scissors ready!";
 }
 
@@ -236,6 +246,57 @@ function DrumInput({
   );
 }
 
+/** What the room watches on the TV, said on a captain's phone meanwhile. */
+const WATCH: Record<string, string> = {
+  snowpile: "Count the snowflakes.",
+  sleighrun: "Watch where the sleigh is heading.",
+  color: "Remember the color.",
+};
+
+/** The counting games' shows, on a solo phone (spec 30). */
+function CountShow({
+  type,
+  scene,
+  elapsed,
+  showMs,
+}: {
+  type: string;
+  scene: unknown;
+  elapsed: number;
+  showMs: number;
+}) {
+  if (type === "flyby")
+    return (
+      <section aria-label="Count them" className="grid gap-4">
+        <Ask>Count the presents!</Ask>
+        <FlyingPresents fly={scene as Fly} elapsed={elapsed} className="h-64 text-2xl" />
+      </section>
+    );
+  if (type === "snowsum") {
+    const s = scene as { flakes: Flake[]; flakeMs: number };
+    return (
+      <section aria-label="Add them up" className="grid gap-2">
+        <Ask>Start at 0 and keep the total!</Ask>
+        <FallingFlakes flakes={s.flakes} flakeMs={s.flakeMs} elapsed={elapsed} size="phone" />
+      </section>
+    );
+  }
+  return (
+    <section aria-label="Count every color" className="grid gap-4">
+      <Ask>Count every color!</Ask>
+      <OrnamentFlashes
+        flashes={(scene as { flashes: Flash[] }).flashes}
+        elapsed={elapsed}
+        showMs={showMs}
+        className="h-80"
+        ornament="size-24"
+      />
+    </section>
+  );
+}
+
+const COUNTS = ["flyby", "snowsum", "colorcount"];
+
 /** A note in place of the show, when the room watches it on the TV. */
 function WatchTv({ title, line }: { title: string; line: string }) {
   return (
@@ -255,14 +316,9 @@ export function PerceptionStage(props: StageProps) {
     );
   if (showing) {
     if (showOn === "tv")
-      return (
-        <WatchTv
-          title="Watch the TV!"
-          line={
-            type === "snowpile" ? "Count the snowflakes." : "Watch where the sleigh is heading."
-          }
-        />
-      );
+      return <WatchTv title="Watch the TV!" line={WATCH[type] ?? "Watch closely."} />;
+    if (COUNTS.includes(type) && scene)
+      return <CountShow type={type} scene={scene} elapsed={elapsed} showMs={showMs} />;
     if (type === "snowpile" && scene)
       return (
         <section aria-label="Count them" className="grid gap-4">
@@ -279,19 +335,41 @@ export function PerceptionStage(props: StageProps) {
       );
     return null;
   }
-  if (type === "snowpile")
+  if (type === "snowpile" || type === "flyby" || type === "snowsum")
     return (
       <NumberEntry
         prompt={askFor(type, scene)}
         timer={timer}
         busy={busy}
-        max={999}
+        max={type === "snowpile" ? 999 : type === "snowsum" ? 200 : 99}
+        negative={type === "snowsum"}
         onLock={(n) => {
           onAnswer(n);
         }}
       />
     );
+  if (type === "color")
+    return (
+      <section aria-label="Your answer" className="grid gap-4">
+        <Ask>{askFor(type, scene)}</Ask>
+        {timer}
+        <ColorWheel busy={busy} onLock={onAnswer} />
+      </section>
+    );
   if (!scene) return null;
+  if (type === "colorcount" && (scene as { ask: number | null }).ask === null)
+    return <WatchTv title="Get ready…" line="Here comes the question." />;
+  if (type === "colorcount")
+    return (
+      <NumberEntry
+        prompt={<OrnamentAsk color={(scene as { ask: number }).ask} size="phone" />}
+        timer={timer}
+        busy={busy}
+        onLock={(n) => {
+          onAnswer(n);
+        }}
+      />
+    );
   if (type === "staffangle")
     return <AngleInput scene={scene as AngleScene} timer={timer} busy={busy} onAnswer={onAnswer} />;
   if (type === "sleighrun")
