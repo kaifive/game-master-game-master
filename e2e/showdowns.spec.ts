@@ -16,7 +16,7 @@ async function joinOnPhone(browser: Browser, name: string, baseURL: string): Pro
   return phone;
 }
 
-test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1 S26-AC2: Fly-by Count and Stocking Stuffer showdowns from Controls, on the TV and two captains' phones", async ({
+test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1 S26-AC2 S12-AC1 S12-AC3: Fly-by Count, Stocking Stuffer and the buzzer round from Controls, on the TV and two captains' phones", async ({
   page,
   browser,
 }, info) => {
@@ -111,6 +111,33 @@ test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1 S26-AC2: Fly-by Co
   await expect(tv.getByRole("list", { name: "Teams" })).toContainText("Chosen");
   await page.getByRole("button", { name: "Show results" }).click();
   await expect(tv.getByText("Banked this round")).toBeVisible();
+  await page.getByRole("button", { name: "End early" }).click();
+  await expect(tv.getByRole("heading", { name: "Next showdown coming up" })).toBeVisible();
+
+  // The buzzer round: red until opened, then two captains buzz; the first is wrong, the second right (spec 12).
+  await page.getByLabel("Showdown to start").selectOption({ label: "Buzzer Round" });
+  await page.getByRole("button", { name: "Start on the TV" }).click();
+  await page.getByRole("button", { name: "Show question 1" }).click();
+  await expect(tv.getByText("What is the wushu straight sword called?")).toBeVisible();
+  await expect(page.getByText("Jian")).toBeVisible();
+  await expect(tv.getByText("Jian")).toBeHidden();
+  await capA.reload();
+  await capB.reload();
+  await expect(capA.getByRole("button", { name: "Wait for green" })).toBeVisible();
+  await page.getByRole("button", { name: "Open buzzers" }).click();
+  await capB.getByRole("button", { name: "Buzz" }).click();
+  await expect(capB.getByText("You're 1st! Answer out loud.")).toBeVisible();
+  await capA.getByRole("button", { name: "Buzz" }).click();
+  await expect(capA.getByText("You're 2nd!")).toBeVisible();
+  const order = page.getByRole("list", { name: "Buzz order" });
+  await expect(order.getByRole("listitem").first()).toContainText(names[1] ?? "");
+  await page.getByRole("button", { name: "Wrong" }).click();
+  await expect(
+    order.getByRole("listitem").nth(1).getByRole("button", { name: "Right" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Right" }).click();
+  await expect(tv.getByText("Jian")).toBeVisible();
+  await expect(capA.getByText("Right! The points are yours.")).toBeVisible();
   await page.getByRole("button", { name: "End early" }).click();
   await expect(tv.getByRole("heading", { name: "Next showdown coming up" })).toBeVisible();
   await page.getByRole("button", { name: "Leaderboard" }).click();

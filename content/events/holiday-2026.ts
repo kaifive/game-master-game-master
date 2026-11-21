@@ -353,6 +353,34 @@ export const holiday2026: EventConfig = {
       content: {},
       scoring: { awardTo: "team" },
     },
+    // Spec 12: the host's buzzer round. Sample questions until Khai writes the
+    // party's own (Q35); hidden, so it's only started from Controls.
+    {
+      id: "buzzer-round",
+      type: "buzzer",
+      title: "Buzzer Round",
+      mode: "live",
+      phase: "team",
+      visibility: "hidden",
+      content: {
+        questions: [
+          { id: "jian", prompt: "What is the wushu straight sword called?", answer: "Jian" },
+          { id: "dao", prompt: "What is the wushu broadsword called?", answer: "Dao" },
+          { id: "gun", prompt: "What is the wushu staff called?", answer: "Gun" },
+          {
+            id: "taolu",
+            prompt: "What is a wushu routine, a set sequence of moves, called?",
+            answer: "Taolu",
+          },
+          {
+            id: "reindeer",
+            prompt: "How many reindeer pull Santa's sleigh, counting Rudolph?",
+            answer: "Nine",
+          },
+        ],
+      },
+      scoring: { awardTo: "team" },
+    },
     {
       id: "jeopardy",
       type: "jeopardy",

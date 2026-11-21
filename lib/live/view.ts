@@ -88,7 +88,11 @@ export function liveView(
 }
 
 /** Controls' view of the session: the TV's, plus what Next will do. */
-export type ControlsSessionView = LiveView & { next: string | null };
+export type ControlsSessionView = LiveView & {
+  next: string | null;
+  /** The game's view for the host, with what only Controls sees (spec 12: the answer). */
+  host: unknown;
+};
 
 export const controlsView = (
   m: Machine | null,
@@ -97,5 +101,12 @@ export const controlsView = (
   screen: Screen,
 ): ControlsSessionView =>
   m && s
-    ? { ...liveView(m, s, { kind: "tv" }, now, screen), next: nextLabel(m, s) }
-    : { active: false, serverNow: now, screen, next: null };
+    ? {
+        ...liveView(m, s, { kind: "tv" }, now, screen),
+        next: nextLabel(m, s),
+        host:
+          s.step === "play" && m.game.hostView
+            ? m.game.hostView(s.state, m.content, { now, teams: s.teams.map((t) => t.id) })
+            : null,
+      }
+    : { active: false, serverNow: now, screen, next: null, host: null };

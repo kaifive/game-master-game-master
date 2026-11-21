@@ -7,6 +7,7 @@ import type { TeamsSummary } from "@/lib/teams";
 import {
   move as machineMove,
   minTeams,
+  hostAct,
   next as machineNext,
   startSession,
   tick as machineTick,
@@ -151,6 +152,8 @@ export const AdminLiveAction = z.discriminatedUnion("action", [
   z.object({ action: z.literal("start"), gameId: Id }),
   z.object({ action: z.literal("next") }),
   z.object({ action: z.literal("end") }),
+  /** The game's own host step, such as opening the buzzers (spec 12). */
+  z.object({ action: z.literal("host"), act: z.unknown() }),
   z.object({ action: z.literal("screen"), screen: z.enum(["leaderboard", "showdown"]) }),
   z.object({ action: z.literal("played"), teamId: Id, personId: Id, played: z.boolean() }),
   z.object({ action: z.literal("add"), teamId: Id, name: z.string().max(80) }),
@@ -275,6 +278,9 @@ export async function adminLiveAction(
       throw new AppError("CONFLICT", "A live game is already running. End it first.");
   } else if (body.action === "next") {
     await transition(deps, event, (m, s, now) => machineNext(m, s, now));
+  } else if (body.action === "host") {
+    const act = body.act;
+    await transition(deps, event, (m, s, now) => hostAct(m, s, act, now));
   } else if (body.action === "end") {
     // Ending keeps Who's played and the screen: turns are tracked all night (ADR-038).
     await deps.live.update(event.slug, (cur) => ({ ...cur, session: null }));

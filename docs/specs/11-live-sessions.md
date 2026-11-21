@@ -23,8 +23,9 @@ The engine for games the host runs for the whole room at once, on the TV, with c
 5. **Following along.** The TV, Controls and phones poll the view about every 700 ms while a session runs and every 4 s otherwise, and pause while their tab is hidden. A reload picks up the current state.
 6. **Shared clock.** Each device estimates its offset from the server's clock from the view replies (the time sent, received and the server's time; keeping the reply with the shortest round trip), and shows timers against that clock. A round starts at `startsAt`, a moment about 2 s ahead, so every device has the start in hand before it happens.
 7. **Moves.** `POST /api/events/[slug]/live` with the player and a move. The server checks the player is their team's captain, that the step and round match, and that the move arrived inside its window by the server's clock; then applies it through the state machine. A move for an old round changes nothing.
-8. **Points** for a round are paid when its results step is reached, to teams through the ledger, with ids made from the session, round and team so a repeated step can't pay twice.
-9. **Storage.** The session lives at `live/{slug}` in Realtime Database (written only by the server; phones never read it directly), with an in-memory store of the same contract for dev and tests.
+8. **Host steps.** A game can also take the host's own steps inside a round from Controls (`POST /api/admin/events/[slug]/live` with `action: "host"`), give Controls a view of its own (which may hold the answer), and skip the results step, so Next pays the round and starts the next (spec 12's buzzer round).
+9. **Points** for a round are paid when its results step is reached (or, in a game that skips it, when Next closes the round), to teams through the ledger, with ids made from the session, round and team so a repeated step can't pay twice.
+10. **Storage.** The session lives at `live/{slug}` in Realtime Database (written only by the server; phones never read it directly), with an in-memory store of the same contract for dev and tests.
 
 ## Data
 

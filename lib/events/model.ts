@@ -22,6 +22,7 @@ export const GAME_TYPES = [
   "blocks",
   "photo-challenge",
   "jeopardy",
+  "buzzer",
   // Showdowns (specs 24 to 27).
   "flyby",
   "snowsum",
