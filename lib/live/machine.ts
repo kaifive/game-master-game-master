@@ -95,10 +95,16 @@ function closeRound(m: Machine, s: Session, now: number): Outcome {
 }
 
 /** What the host's Next does from each step, for Controls' button (S11-AC1). */
-export function nextLabel(_m: Machine, s: Session): string {
+export function nextLabel(m: Machine, s: Session): string {
+  const own = m.game.labels;
+  const last = s.round >= s.rounds;
   const labels: Record<Step, string> = {
-    intro: "Start round 1",
-    play: "Show results",
+    intro: own ? own.start(1) : "Start round 1",
+    play: m.game.skipResults
+      ? last
+        ? "Final standings"
+        : (own?.next ?? "Next round")
+      : "Show results",
     results: s.round >= s.rounds ? "Final standings" : `Start round ${String(s.round + 1)}`,
     final: "End the game",
   };
@@ -110,8 +116,17 @@ export function next(m: Machine, s: Session, now: number): Outcome {
   switch (s.step) {
     case "intro":
       return done(startPlay(m, s, 1, now));
-    case "play":
-      return closeRound(m, s, now);
+    case "play": {
+      const closed = closeRound(m, s, now);
+      if (!m.game.skipResults || !closed.ok || !closed.session) return closed;
+      // Straight on, with the closed round's points still paid (spec 12).
+      const after = closed.session;
+      const on =
+        after.round >= after.rounds
+          ? bump(after, { step: "final", state: null })
+          : startPlay(m, after, after.round + 1, now);
+      return { ok: true, session: on, award: closed.award };
+    }
     case "results":
       if (s.round >= s.rounds) return done(bump(s, { step: "final", state: null }));
       return done(startPlay(m, s, s.round + 1, now));
@@ -126,6 +141,14 @@ export function move(m: Machine, s: Session, teamId: string, input: unknown, now
   if (!s.teams.some((t) => t.id === teamId)) return fail("Your team isn't in this game.");
   const ticked = m.game.tick(s.state, m.content, now);
   const result = m.game.move(ticked, m.content, { teamId, move: input, now });
+  if (!result.ok) return fail(result.message);
+  return done(bump(s, { state: result.state }));
+}
+
+/** The host's own step inside a round, from Controls (spec 12). */
+export function hostAct(m: Machine, s: Session, action: unknown, now: number): Outcome {
+  if (s.step !== "play" || !m.game.host) return fail("There's nothing to do right now.");
+  const result = m.game.host(m.game.tick(s.state, m.content, now), m.content, { action, now });
   if (!result.ok) return fail(result.message);
   return done(bump(s, { state: result.state }));
 }

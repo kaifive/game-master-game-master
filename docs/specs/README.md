@@ -16,7 +16,7 @@ Statuses are explained in `../conventions/docs.md`.
 | 09 | [Style packs and theming](09-theming.md) | M0 | Done |
 | 10 | [Trivia](10-trivia.md) | M2 | Done |
 | 11 | [Live session engine](11-live-sessions.md) | M3 | Done |
-| 12 | [Buzzer round (and Jeopardy on it)](12-buzzer-jeopardy.md) | M3 | Draft (agreed) |
+| 12 | [Buzzer round (and Jeopardy on it)](12-buzzer-jeopardy.md) | M3 | Done |
 | 13 | [Photos, triage, votes and recap](13-photos-and-recap.md) | M2 | Draft |
 | 14 | [Motion and celebrations](14-motion-and-celebrations.md) | M0 | Done |
 | 15 | [Game codes and hidden games](15-game-codes.md) | Later | Draft |

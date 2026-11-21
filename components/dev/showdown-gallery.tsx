@@ -16,6 +16,7 @@ import {
 } from "@/lib/games";
 import {
   cover,
+  hostAct,
   liveView,
   move,
   next,
@@ -59,6 +60,8 @@ type Script = (
   moves: [string, unknown, number][];
   show: number;
   answer: number;
+  /** Host-stepped games: the host's steps and when, after the shared start (spec 12). */
+  host?: [unknown, number][];
   /** Turn games: the move the team whose turn it is makes now, from the state as it stands. */
   drive?: (state: unknown, turn: string, i: number) => unknown;
 };
@@ -130,7 +133,37 @@ function perceptionScript(type: string): Script {
   };
 }
 
+/** Content for games that can't run without some (the buzzer's questions). */
+const CONTENT: Record<string, unknown> = {
+  buzzer: {
+    questions: [
+      {
+        id: "q1",
+        prompt: "In wushu, what is the straight sword called?",
+        answer: "Jian",
+        points: 200,
+      },
+      { id: "q2", prompt: "How many sections does a three-section staff have?", answer: "Three" },
+    ],
+  },
+};
+
 const SCRIPTS: Record<string, Script> = {
+  // The host opens; Jade Tigers buzz first and miss; Snow Dragons get it.
+  buzzer: () => ({
+    moves: [
+      ["t1", { at: 0 }, 1800],
+      ["t2", { at: 0 }, 1700],
+      ["t3", { at: 0 }, 1900],
+    ],
+    host: [
+      ["open", 1500],
+      ["wrong", 2500],
+      ["right", 3500],
+    ],
+    show: 1000,
+    answer: 3000,
+  }),
   ...Object.fromEntries(
     [...PERCEPTION_CORES, ...SHOWDOWN_ONLY_CORES].map((c) => [c.type, perceptionScript(c.type)]),
   ),
@@ -219,7 +252,7 @@ const SCRIPTS: Record<string, Script> = {
 function freeze(type: string, moment: GalleryMoment, n: number) {
   const game = showdownFor(type);
   if (!game) return null;
-  const m: Machine = { game, content: game.content.parse({}) };
+  const m: Machine = { game, content: game.content.parse(CONTENT[type] ?? {}) };
   const T0 = 1_000_000;
   const ok = (s: Session | null) => {
     if (!s) throw new Error("ended");
@@ -252,9 +285,16 @@ function freeze(type: string, moment: GalleryMoment, n: number) {
           : moment === "answer"
             ? script.answer
             : 60_000;
-    for (const [teamId, mv, at] of script.moves) {
-      if (at > until) break;
-      const out = move(m, s, teamId, mv, startsAt + at);
+    // Team moves and host steps, in time order; a buzz claims the moment it's sent.
+    const events = [
+      ...script.moves.map(([teamId, mv, at]) => ({ at, teamId, mv })),
+      ...(script.host ?? []).map(([act, at]) => ({ at, teamId: null, mv: act })),
+    ].sort((a, b) => a.at - b.at);
+    for (const e of events) {
+      if (e.at > until) break;
+      const now = startsAt + e.at;
+      const mv = e.teamId !== null && (e.mv as { at?: number }).at === 0 ? { at: now } : e.mv;
+      const out = e.teamId === null ? hostAct(m, s, mv, now) : move(m, s, e.teamId, mv, now);
       if (out.ok && out.session) s = out.session;
     }
     // Turn games: whoever's turn it is moves every 0.7 s, from the state as it stands.
@@ -275,7 +315,9 @@ function freeze(type: string, moment: GalleryMoment, n: number) {
     let now = startsAt + Math.min(until, 30_000);
     const t = tick(m, s, now);
     if (t.ok && t.session) s = t.session;
-    if (moment === "results" || moment === "final") s = step(s, (now += 1000));
+    // A game with no results step shows its result in the round itself (spec 12).
+    if (moment === "final" || (moment === "results" && !m.game.skipResults))
+      s = step(s, (now += 1000));
     if (moment === "final") while (s.step !== "final") s = step(s, now);
     return { m, s, now };
   }
@@ -347,6 +389,7 @@ export const TITLES: Record<string, string> = {
   shuffle: "Present Shuffle",
   to21: "Snowball to 21",
   landmass: "Land Mass",
+  buzzer: "Buzzer Round",
   snowpile: "Snow Pile",
   staffangle: "Staff Angle",
   sleighrun: "Sleigh Run",

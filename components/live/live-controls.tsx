@@ -5,6 +5,7 @@ import { AdminButton, Card, field } from "@/components/admin/ui";
 import { CheckIcon } from "@/components/icons/game";
 import { adminLiveApi, type AdminLiveAct, type AdminLiveView, type Roster } from "@/lib/live";
 import { cx } from "@/lib/ui";
+import { LIVE_RENDERERS } from "./renderers";
 import { useLive } from "./use-live";
 
 const STEP_NAME: Record<string, string> = {
@@ -238,6 +239,12 @@ export function LiveCard({ view, act, busy }: { view: AdminLiveView; act: Act; b
                 view.session.step !== "final" &&
                 ` · round ${String(view.session.round)} of ${String(view.session.rounds)}`}
             </p>
+            {(() => {
+              const Host = LIVE_RENDERERS[view.session.type]?.Host;
+              return Host && view.host ? (
+                <Host view={view} host={view.host} act={act} busy={busy} />
+              ) : null;
+            })()}
             <div className="flex flex-wrap gap-3">
               {view.next && (
                 <AdminButton

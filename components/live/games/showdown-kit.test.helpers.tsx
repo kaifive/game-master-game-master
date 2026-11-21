@@ -12,14 +12,27 @@ export const T0 = 1_000_000;
 const TEAMS = ["t1", "t2", "t3"];
 export const NAMES: Record<string, string> = { t1: "Reds", t2: "Blues", t3: "Golds" };
 
-/** A real round of a showdown, with moves played, and a view of it. */
-export function round(type: string, moves: [string, unknown, number][] = [], prev: unknown = null) {
+/**
+ * A real round of a showdown, with moves played, and a view of it. A move by
+ * `HOST` is the host's own step (spec 12).
+ */
+export const HOST = "host";
+
+export function round(
+  type: string,
+  moves: [string, unknown, number][] = [],
+  prev: unknown = null,
+  content: unknown = {},
+) {
   const game = showdownFor(type);
   if (!game) throw new Error(type);
-  const c = game.content.parse({});
+  const c = game.content.parse(content);
   let state = game.deal(c, { seed: 4, round: prev ? 2 : 1, teams: TEAMS, startsAt: T0, prev });
   for (const [teamId, move, at] of moves) {
-    const r = game.move(state, c, { teamId, move, now: at });
+    const r =
+      teamId === HOST && game.host
+        ? game.host(state, c, { action: move, now: at })
+        : game.move(state, c, { teamId, move, now: at });
     if (!r.ok) throw new Error(r.message);
     state = r.state;
   }

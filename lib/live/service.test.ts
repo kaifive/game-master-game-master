@@ -13,6 +13,7 @@ import {
   playerLiveAction,
   type LiveDeps,
 } from "./service";
+import { buzzer } from "./games/buzzer";
 import { passShowdown, tapShowdown } from "./testing";
 
 const event: EventConfig = {
@@ -37,6 +38,16 @@ const event: EventConfig = {
       phase: "team",
       visibility: "listed",
       content: {},
+      scoring: { awardTo: "team" },
+    },
+    {
+      id: "quiz",
+      type: "buzzer",
+      title: "Quiz",
+      mode: "live",
+      phase: "team",
+      visibility: "listed",
+      content: { questions: [{ id: "q1", prompt: "Name the staff", answer: "Gun" }] },
       scoring: { awardTo: "team" },
     },
     {
@@ -108,7 +119,9 @@ beforeEach(() => {
           ? passShowdown
           : type === "cache"
             ? pairsShowdown
-            : undefined,
+            : type === "buzzer"
+              ? buzzer
+              : undefined,
     now: () => clock,
     id: () => "sess1",
     seed: () => 42,
@@ -125,7 +138,13 @@ describe("live service (spec 11)", () => {
   it("S11-AC1: the host starts a live game, a second start is refused, and End stops it", async () => {
     const view = await adminLiveView(deps, event);
     expect(view.active).toBe(false);
-    expect(view.games.map((g) => g.id)).toEqual(["tap-off", "pairs", "pass-on"]);
+    expect(view.games.map((g) => g.id)).toEqual([
+      "buzzer-round",
+      "tap-off",
+      "pairs",
+      "quiz",
+      "pass-on",
+    ]);
     const started = await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
     expect(started).toMatchObject({ active: true, next: "Start round 1" });
     expect(
@@ -333,5 +352,30 @@ describe("showdown screen and Who's played (spec 24)", () => {
     expect(
       (await failure(adminLiveAction(deps, event, { action: "start", gameId: "tap-off" }))).message,
     ).toBe("Showdowns are built for up to 6 teams.");
+  });
+});
+
+describe("buzzer round through the service (spec 12)", () => {
+  it("S12-AC1 S12-AC3: the host opens, a captain buzzes, the host marks it right, and Next pays the team", async () => {
+    await adminLiveAction(deps, event, { action: "start", gameId: "quiz" });
+    let view = await adminLiveAction(deps, event, { action: "next" });
+    expect(view.host).toMatchObject({ answer: "Gun", phase: "shown" });
+    view = await adminLiveAction(deps, event, { action: "host", act: "open" });
+    clock += 300;
+    await playerLiveAction(deps, event, "dev-c2", {
+      action: "move",
+      playerId: "c2",
+      round: 1,
+      move: { at: clock - 40 },
+    });
+    view = await adminLiveAction(deps, event, { action: "host", act: "right" });
+    expect(view.host).toMatchObject({ winner: "t2" });
+    expect(
+      (await failure(adminLiveAction(deps, event, { action: "host", act: "open" }))).status,
+    ).toBe(409);
+    view = await adminLiveAction(deps, event, { action: "next" });
+    expect(view.active && view.session.step).toBe("final");
+    const ledger = await points.entries(event.slug);
+    expect(ledger.map((e) => [e.points, e.to])).toEqual([[100, { kind: "team", id: "t2" }]]);
   });
 });

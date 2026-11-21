@@ -21,6 +21,7 @@ export type AdminLiveAct =
   | { action: "start"; gameId: string }
   | { action: "next" }
   | { action: "end" }
+  | { action: "host"; act: unknown }
   | { action: "screen"; screen: Screen }
   | { action: "played"; teamId: string; personId: string; played: boolean }
   | { action: "add"; teamId: string; name: string }

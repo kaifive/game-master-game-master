@@ -95,6 +95,21 @@ export type ShowdownGame<C = unknown, S = unknown> = {
   score: (s: S, c: C, teams: string[]) => Record<string, number>;
   /** Whose turn it is, in a turn game. */
   turn?: (s: S, c: C, now: number) => TurnInfo;
+  /**
+   * The host's own steps inside a round, from Controls (spec 12's buzzer:
+   * open, right, wrong, undo). Games without them only have Next.
+   */
+  host?: (s: S, c: C, ctx: { action: unknown; now: number }) => MoveResult<S>;
+  /** What Controls sees of a round, which may include its answer (spec 12). The TV's view when left out. */
+  hostView?: (s: S, c: C, ctx: { now: number; teams: string[] }) => unknown;
+  /**
+   * Next from a round pays its points and goes straight on to the next round
+   * (or the final standings), with no results step between (spec 12: the
+   * round shows its own result as it's judged).
+   */
+  skipResults?: boolean;
+  /** Controls' words for Next: starting a round ("Show question 1") and moving on ("Next question"). */
+  labels?: { start: (round: number) => string; next: string };
   /** What a role may see. `revealed` is true on the results step. Never a secret before then (S24-AC7). */
   view: (
     s: S,

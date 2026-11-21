@@ -1,6 +1,6 @@
 # 12: Buzzer round (and Jeopardy on the same buzzer)
 
-**Status:** Draft (agreed with Khai 2026-11-19; marked Ready in the PR that builds it, since check:ac makes Ready mean its tests exist)
+**Status:** Done (agreed with Khai 2026-11-19)
 **Backlog:** M3
 **Depends on:** 04, 07, 11, 24
 
@@ -29,13 +29,14 @@ the same pieces.
 1. A buzzer round is a live game (spec 11) of type `buzzer` (`mode: "live"`,
    `phase: "team"`), started from Controls like a showdown and shown on the TV's
    Showdown screen (spec 24). Its content is a list of **questions**, each with the
-   question text, the answer, and optionally its own points (default: the game's
-   `scoring.points`, or 100) and a picture.
+   question text, the answer, and optionally its own points (default: the
+   content's `points`, 100) and a picture.
 2. The questions go in the order written. Controls shows "Question 3 of 12".
 
 ### One question
 
-3. **Show.** Khai taps Show question: the TV shows the question big (and its picture).
+3. **Show.** Khai taps Show question 1 (later questions show when he taps Next
+   question): the TV shows the question big (and its picture).
    Captains' phones show a grey, locked buzzer reading "Wait for it…"; pressing it
    does nothing (Khai, 2026-11-19: buzzers open when the host opens them).
 4. **Open buzzers.** Khai reads the question, then taps Open buzzers. The TV says
@@ -52,19 +53,21 @@ the same pieces.
    colors; each captain's phone shows where their team came in ("You're 1st!",
    "You're 3rd").
 7. **Judging.** Khai calls on the highlighted team and hears their answer out loud.
-   - **Right:** the team gets the question's points (an award in the ledger,
-     spec 04), the TV shows the answer and the points going to the team, and the
-     question is done.
+   - **Right:** the TV shows the answer and the team's points on a gold card, and
+     the question is done. The points go to the team (an award in the ledger,
+     spec 04) when Khai taps Next question, so Undo can still take them back.
    - **Wrong:** no points are lost (Khai, 2026-11-19). The team is marked wrong on
      Controls and the TV, and the next team in the buzz order is highlighted
      (Khai, 2026-11-19: next in buzz order).
    - When every team that buzzed has been judged wrong, Khai can **Reopen buzzers**
      for the teams that haven't buzzed yet, or **Reveal the answer** and move on.
    - Nobody buzzes: Khai taps Reveal the answer.
-8. **Undo.** Khai can undo the last Right or Wrong (taking an awarded point back),
-   in case of a mis-tap.
-9. **Next.** Next question goes on; after the last one, the round ends and the TV
-   goes back to the board. Khai can also skip a question, or end the round early.
+8. **Undo.** Until Next question, Khai can undo his last step, one at a time: a
+   Right or Wrong (so its points aren't paid), a reveal, a reopen, or opening the
+   buzzers by mistake.
+9. **Next.** Next question pays the points and shows the next question straight
+   away, with no separate results screen; after the last one it's Final standings.
+   Khai can also skip a question (Next question without judging), or end early.
 
 ### The answer
 
@@ -125,18 +128,18 @@ the same pieces.
 
 - Two buzzes at the same millisecond: the server's arrival order breaks the tie.
 - A captain reloads or loses signal: their buzz, if sent, stands; they can't buzz twice.
-- Khai opens buzzers by mistake before reading: Undo returns to "shown" if nobody has buzzed.
+- Khai opens buzzers by mistake before reading: Undo returns to "shown".
 - A team with no captain can't buzz (spec 03).
 - A question with no answer text is refused by the event file check.
 
 ## Acceptance criteria
 
-- [ ] AC-1: Khai steps each question: show it on the TV, open the buzzers, judge, and go to the next; buzzes before opening are refused.
-- [ ] AC-2: Buzzes are ordered by the press time on the shared clock, checked by the server; each team buzzes once per question; Controls, the TV and the captain's phone show the order.
-- [ ] AC-3: Right awards the question's points to the team through the ledger and reveals the answer; Wrong takes no points and passes to the next team that buzzed; when none are left Khai can reopen for teams that haven't buzzed or reveal the answer.
-- [ ] AC-4: Controls always shows the current answer; the TV and phones never get it before it's revealed.
-- [ ] AC-5: Khai can undo the last Right or Wrong (taking back its points), skip a question and end the round.
-- [ ] AC-6: The buzzer, the order and judging are built as pieces Jeopardy can reuse for a picked clue.
+- [x] AC-1: Khai steps each question: show it on the TV, open the buzzers, judge, and go to the next; buzzes before opening are refused.
+- [x] AC-2: Buzzes are ordered by the press time on the shared clock, checked by the server; each team buzzes once per question; Controls, the TV and the captain's phone show the order.
+- [x] AC-3: Right awards the question's points to the team through the ledger and reveals the answer; Wrong takes no points and passes to the next team that buzzed; when none are left Khai can reopen for teams that haven't buzzed or reveal the answer.
+- [x] AC-4: Controls always shows the current answer; the TV and phones never get it before it's revealed.
+- [x] AC-5: Khai can undo the last Right or Wrong (taking back its points), skip a question and end the round.
+- [x] AC-6: The buzzer, the order and judging are built as pieces Jeopardy can reuse for a picked clue.
 
 ## Tests
 

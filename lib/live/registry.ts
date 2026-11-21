@@ -4,6 +4,7 @@ import {
   colorcount,
   flyby,
   landmass,
+  buzzer,
   lastsecond,
   path,
   shuffle,
@@ -33,6 +34,7 @@ const SHOWDOWNS: Record<string, AnyShowdown> = {
   shuffle,
   to21,
   landmass,
+  buzzer,
   // Perception games (spec 28): showdown versions; their solo versions are in lib/games.
   ...Object.fromEntries(
     [...PERCEPTION_CORES, ...SHOWDOWN_ONLY_CORES].map((core) => [

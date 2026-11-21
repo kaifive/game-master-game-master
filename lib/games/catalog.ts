@@ -180,6 +180,13 @@ export const CATALOG: readonly CatalogEntry[] = [
     pitch: "teams take turns placing block pieces on one board; the most land wins.",
     modes: SHOWDOWN,
   },
+  {
+    type: "buzzer",
+    name: "Buzzer Round",
+    pitch:
+      "The host reads a question; captains buzz when it goes green, and answer out loud in buzz order.",
+    modes: SHOWDOWN,
+  },
   // Perception games (spec 28): built in both modes.
   {
     type: "snowpile",
