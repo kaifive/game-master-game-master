@@ -24,6 +24,18 @@ export function drawingRepoContract(make: () => Promise<DrawingRepo>) {
     expect(await repo.list("other-party")).toEqual([]);
   });
 
+  test("ADR-012: archiving marks the listed drawings, keeping their records", async () => {
+    const repo = await make();
+    await repo.add(SLUG, drawing("d1", 1000));
+    await repo.add(SLUG, drawing("d2", 2000));
+    const archived = { at: 5000, backup: "Drive: Game Master/holiday-2026" };
+    await repo.archive(SLUG, ["d1"], archived);
+    expect(await repo.list(SLUG)).toEqual([
+      drawing("d2", 2000),
+      { ...drawing("d1", 1000), archived },
+    ]);
+  });
+
   test("S18-AC8: clearing an event deletes its drawings only", async () => {
     const repo = await make();
     await repo.add(SLUG, drawing("d1", 1000));

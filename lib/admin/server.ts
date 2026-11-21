@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { AppError } from "@/lib/errors";
 import { requireEvent } from "@/lib/events/server";
+import { backupManifest, pruneFiles } from "./backup";
 import { drawingDeps } from "@/lib/drawings/server";
 import { playRepo } from "@/lib/games/server";
 import {
@@ -249,3 +250,16 @@ export async function runAction(slug: Slug, body: ControlsAction) {
     photos: body.action === "photos" || body.action === "ratePhoto",
   });
 }
+
+/** POST /api/admin/events/[slug]/backup: where the backup is, and how many files it holds. */
+export const PruneBody = z.object({
+  backup: z.string().min(1).max(200),
+  count: z.number().int().min(0),
+});
+
+/** GET /api/admin/events/[slug]/backup: every photo and drawing still in Blob (ADR-012). */
+export const backupFor = (slug: Slug) => backupManifest(deps(), requireEvent(slug));
+
+/** POST /api/admin/events/[slug]/backup: deletes them from Blob once backed up (ADR-012). */
+export const pruneFor = (slug: Slug, body: z.infer<typeof PruneBody>) =>
+  pruneFiles(deps(), requireEvent(slug), body);

@@ -10,6 +10,8 @@ export type DrawingRecord = {
   /** The SVG in Blob (a data URL in the memory backend). */
   url: string;
   createdAt: number;
+  /** Once backed up and its file deleted (ADR-012): when, and where the backup is. */
+  archived?: { at: number; backup: string };
 };
 
 /** A stroke: points as shares of the canvas, 0 to 1. */

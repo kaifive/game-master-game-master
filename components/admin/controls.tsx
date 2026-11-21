@@ -45,6 +45,8 @@ type PhotoGame = {
     photoId: string;
     url: string;
     rating: number | null;
+    /** Where it was backed up, once its file is deleted (ADR-012). */
+    backup?: string | null;
   }[];
 };
 type Game = { id: string; title: string; type?: string; keepDrawings?: boolean };
@@ -355,15 +357,22 @@ function RatePhoto({
   const changed = photo.rating === null || rating !== photo.rating;
   return (
     <li className="grid gap-2 rounded-gm border border-gm-border p-2">
-      <a href={photo.url} target="_blank" rel="noreferrer">
-        {/* eslint-disable-next-line @next/next/no-img-element -- a player's upload from Blob */}
-        <img
-          src={photo.url}
-          alt={`Photo by ${photo.nickname}`}
-          loading="lazy"
-          className="aspect-square w-full rounded-gm bg-gm-surface object-cover"
-        />
-      </a>
+      {photo.backup ? (
+        // The file is gone from Blob after the event; the backup has it (ADR-012).
+        <p className="m-0 grid aspect-square w-full place-items-center rounded-gm bg-gm-surface p-3 text-center text-sm text-gm-text-muted">
+          Backed up to {photo.backup}
+        </p>
+      ) : (
+        <a href={photo.url} target="_blank" rel="noreferrer">
+          {/* eslint-disable-next-line @next/next/no-img-element -- a player's upload from Blob */}
+          <img
+            src={photo.url}
+            alt={`Photo by ${photo.nickname}`}
+            loading="lazy"
+            className="aspect-square w-full rounded-gm bg-gm-surface object-cover"
+          />
+        </a>
+      )}
       <p className="m-0 text-sm">
         <strong>{photo.nickname}</strong> ·{" "}
         {photo.rating === null ? "Not rated yet" : `Rated ${String(photo.rating)}`}
