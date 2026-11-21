@@ -5,7 +5,7 @@
  */
 
 export type BackupFile = {
-  kind: "photo" | "drawing";
+  kind: "photo" | "drawing" | "selfie";
   id: string;
   gameId: string;
   game: string;

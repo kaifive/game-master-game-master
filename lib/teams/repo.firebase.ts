@@ -1,7 +1,7 @@
 import { FieldValue, Timestamp, type DocumentSnapshot } from "firebase-admin/firestore";
 import { firebaseAdmin, type FirebaseAdmin } from "@/lib/firebase/admin";
 import { fs, rtdb } from "@/lib/firebase/paths";
-import type { Team, TeamsSummary } from "./model";
+import type { Selfie, Sticker, Team, TeamsSummary } from "./model";
 import type { TeamRepo, TeamSummaryRepo } from "./repo";
 import { teamErrors } from "./repo.errors";
 
@@ -19,6 +19,8 @@ function toTeam(d: DocumentSnapshot): Team {
       ? members.filter((m): m is string => typeof m === "string")
       : [],
     createdAt: created instanceof Timestamp ? created.toMillis() : 0,
+    selfie: (d.get("selfie") as Selfie | null | undefined) ?? null,
+    stickers: (d.get("stickers") as Sticker[] | undefined) ?? [],
   };
 }
 
@@ -81,6 +83,22 @@ export class FirebaseTeamRepo implements TeamRepo {
         tx.delete(this.db.doc(fs.teamName(slug, oldKey)));
       tx.set(nameRef, { teamId });
       tx.update(teamRef, { name, nameKey: key, ...(color !== undefined ? { color } : {}) });
+    });
+  }
+
+  async setSelfie(slug: string, teamId: string, selfie: Selfie | null) {
+    const ref = this.db.doc(fs.team(slug, teamId));
+    await this.db.runTransaction(async (tx) => {
+      if (!(await tx.get(ref)).exists) throw teamErrors.noTeam();
+      tx.update(ref, { selfie });
+    });
+  }
+
+  async setStickers(slug: string, teamId: string, stickers: Sticker[]) {
+    const ref = this.db.doc(fs.team(slug, teamId));
+    await this.db.runTransaction(async (tx) => {
+      if (!(await tx.get(ref)).exists) throw teamErrors.noTeam();
+      tx.update(ref, { stickers });
     });
   }
 

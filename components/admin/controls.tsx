@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useId, useState } from "react";
 import type { EventStatus } from "@/lib/events";
+import { TeamSelfiesCard } from "./team-selfies";
 import { LiveControls } from "@/components/live/live-controls";
 import { MAX_TEAMS } from "@/lib/teams";
 import { AdminButton, Card, field, StatusBadge } from "./ui";
@@ -965,6 +966,7 @@ export function Controls({
       {view.teams && (
         <>
           <TeamsCard teams={view.teams} players={view.players.length} run={run} busy={busy} />
+          <TeamSelfiesCard slug={slug} />
           <DonationsCard donations={donations} run={run} busy={busy} />
         </>
       )}

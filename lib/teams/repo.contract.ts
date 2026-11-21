@@ -54,6 +54,27 @@ export function teamRepoContract(make: () => Promise<TeamRepo>) {
     expect(colors).toContain(6);
   });
 
+  test("S31-AC2: a team keeps its selfie and the host's stickers", async () => {
+    const repo = await make();
+    const a = await repo.create(SLUG, "p1", 1);
+    const selfie = { url: "https://blob.test/team-a.jpg", width: 1200, height: 900 };
+    await repo.setSelfie(SLUG, a.id, selfie);
+    const sticker = {
+      id: "s1",
+      kind: "santa-hat" as const,
+      x: 0.4,
+      y: 0.2,
+      size: 0.3,
+      angle: -12,
+      flip: false,
+    };
+    await repo.setStickers(SLUG, a.id, [sticker]);
+    expect((await repo.list(SLUG))[0]).toMatchObject({ selfie, stickers: [sticker] });
+    await repo.setSelfie(SLUG, a.id, null);
+    expect((await repo.list(SLUG))[0]?.selfie).toBeNull();
+    expect(await failure(repo.setStickers(SLUG, "nope", []))).toBe("no-team");
+  });
+
   test("S03-AC3: players join a team with room, once; full teams refuse", async () => {
     const repo = await make();
     const a = await repo.create(SLUG, "p1", 1);

@@ -17,7 +17,7 @@ async function joinOnPhone(browser: Browser, name: string, baseURL: string): Pro
   return phone;
 }
 
-test("S03-AC1 S03-AC2 S03-AC3 S03-AC6 S03-AC8: teams from captain to TV", async ({
+test("S03-AC1 S03-AC2 S03-AC3 S03-AC6 S03-AC8 S29-AC1 S31-AC1: teams from captain to TV", async ({
   page,
   browser,
 }, info) => {
@@ -51,6 +51,12 @@ test("S03-AC1 S03-AC2 S03-AC3 S03-AC6 S03-AC8: teams from captain to TV", async 
   await cap.getByRole("link", { name: /Name your team/ }).click();
   await expect(cap).toHaveURL(/\/holiday-2026\/team$/);
   await cap.getByRole("textbox", { name: /Name your team/ }).fill(team);
+  // Naming waits for the team selfie (spec 31); the captain picks the color too (spec 29).
+  await cap.getByRole("button", { name: "Name the team" }).click();
+  await expect(cap.getByText("Take the team selfie first.")).toBeVisible();
+  await cap.getByRole("button", { name: "Teal", exact: true }).click();
+  await cap.getByLabel("Take the team selfie").setInputFiles("public/events/nova-wushu-logo.png");
+  await expect(cap.getByText("Got it! Tap the photo to retake it.")).toBeVisible();
   await cap.getByRole("button", { name: "Name the team" }).click();
   await expect(cap.getByText(`You're on ${team}`)).toBeVisible();
 

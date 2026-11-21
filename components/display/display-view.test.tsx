@@ -93,6 +93,28 @@ describe("DisplayView", () => {
     expect(await screen.findByRole("region", { name: "Join the party" })).toBeInTheDocument();
   });
 
+  test("S31-AC3: once the event ends, the TV shows the winning team's selfie with its stickers; a tie shows each", async () => {
+    const team = (id: string, name: string) => ({
+      teamId: id,
+      name,
+      color: 2,
+      selfie: { url: `https://blob.test/${id}.jpg`, width: 1200, height: 900 },
+      stickers: [{ id: "s1", kind: "santa-hat", x: 0.5, y: 0.2, size: 0.3, angle: 0, flip: false }],
+    });
+    serve({
+      phase: "team",
+      players: [],
+      recent: [],
+      teams: [{ id: "t1", rank: 1, name: "Reds", color: 2, points: 300 }],
+      finale: { points: 300, teams: [team("t1", "Reds"), team("t2", "Blues")] },
+    });
+    show();
+    const champions = await screen.findByRole("region", { name: "Champions" });
+    expect(within(champions).getByRole("img", { name: "Reds, dressed up" })).toBeInTheDocument();
+    expect(within(champions).getByRole("img", { name: "Blues, dressed up" })).toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Team standings" })).toBeNull();
+  });
+
   test("S05-AC3: shows the QR code, the short URL and the join code", () => {
     serve({ players: [], recent: [] });
     show();

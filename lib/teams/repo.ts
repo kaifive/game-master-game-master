@@ -1,4 +1,4 @@
-import type { Team, TeamsSummary } from "./model";
+import type { Selfie, Sticker, Team, TeamsSummary } from "./model";
 
 /**
  * Teams for one event (spec 03). Every write is atomic and throws AppError
@@ -13,6 +13,10 @@ export interface TeamRepo {
    * too, refusing one another team holds, even two captains at once (S29-AC2).
    */
   rename(slug: string, teamId: string, name: string, key: string, color?: number): Promise<void>;
+  /** Sets or clears a team's selfie (spec 31). */
+  setSelfie(slug: string, teamId: string, selfie: Selfie | null): Promise<void>;
+  /** Replaces a team's stickers (spec 31). */
+  setStickers(slug: string, teamId: string, stickers: Sticker[]): Promise<void>;
   /** A player joins a team with room; players can't switch (S03-AC3). */
   join(slug: string, teamId: string, playerId: string, maxSize: number): Promise<void>;
   /** The host moves a player, even onto a full team (S03-AC4). */

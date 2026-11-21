@@ -1,4 +1,4 @@
-import type { Team, TeamsSummary } from "./model";
+import type { Selfie, Sticker, Team, TeamsSummary } from "./model";
 import type { TeamRepo, TeamSummaryRepo } from "./repo";
 import { teamErrors } from "./repo.errors";
 
@@ -61,6 +61,22 @@ export class MemoryTeamRepo implements TeamRepo {
     for (const [k, id] of d.names) if (id === teamId) d.names.delete(k);
     d.names.set(key, teamId);
     d.teams.set(teamId, { ...team, name, ...(color !== undefined ? { color } : {}) });
+    return Promise.resolve();
+  }
+
+  setSelfie(slug: string, teamId: string, selfie: Selfie | null) {
+    const d = this.data(slug);
+    const team = d.teams.get(teamId);
+    if (!team) return Promise.reject(teamErrors.noTeam());
+    d.teams.set(teamId, { ...team, selfie: selfie ? structuredClone(selfie) : null });
+    return Promise.resolve();
+  }
+
+  setStickers(slug: string, teamId: string, stickers: Sticker[]) {
+    const d = this.data(slug);
+    const team = d.teams.get(teamId);
+    if (!team) return Promise.reject(teamErrors.noTeam());
+    d.teams.set(teamId, { ...team, stickers: structuredClone(stickers) });
     return Promise.resolve();
   }
 

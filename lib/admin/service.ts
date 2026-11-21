@@ -23,6 +23,7 @@ import {
   clearTeams,
   currentTeams,
   dropFromTeam,
+  publishTeams,
   teamsView,
   type TeamDeps,
   type BoardVisibility,
@@ -183,6 +184,8 @@ export async function changeStatus(deps: AdminDeps, event: EventConfig, action: 
       `The event is ${now}, so it can't ${action === "reopen" ? "reopen" : action}.`,
     );
   await deps.events.setStatus(event.slug, to);
+  // The summary says when the event has ended, so the TV knows to show the finale (spec 31).
+  if (event.scoring !== "individual") await publishTeams(deps, event);
 }
 
 async function findPlayer(
@@ -295,6 +298,7 @@ export async function clearTestData(deps: AdminDeps, event: EventConfig, confirm
     throw new AppError("BAD_REQUEST", `Type ${CLEAR_CONFIRM} to confirm.`);
   // Photo files first: their URLs live in the plays (S20-AC5).
   await clearPhotoFiles(deps, event);
+  await clearSelfieFiles(deps, event);
   await Promise.all([
     deps.players.clear(event.slug),
     deps.plays.clear(event.slug),
@@ -414,6 +418,16 @@ export async function scoreJar(
 }
 
 const photoGames = (event: EventConfig) => event.games.filter((g) => g.type === "photo-challenge");
+
+/** Team selfies' files, before their teams go (S31-AC5). */
+async function clearSelfieFiles(deps: AdminDeps, event: EventConfig) {
+  const files = deps.files ?? deps.drawings?.files;
+  if (!files) return;
+  const urls = (await deps.teams.list(event.slug)).flatMap((t) =>
+    t.selfie && !t.selfie.archived ? [t.selfie.url] : [],
+  );
+  if (urls.length > 0) await files.remove(urls).catch(() => undefined);
+}
 
 async function clearPhotoFiles(deps: AdminDeps, event: EventConfig) {
   const files = deps.drawings?.files;

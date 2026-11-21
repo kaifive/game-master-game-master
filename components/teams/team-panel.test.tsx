@@ -14,6 +14,10 @@ const device = vi.hoisted(() => ({
   },
 }));
 vi.mock("@/components/players/device", () => ({ useOptionalDevice: () => device.state }));
+// jsdom can't decode photos: shrinking hands back the file as it is (spec 31's selfie).
+vi.mock("@/components/games/photo/shrink", () => ({
+  shrinkPhoto: (f: Blob) => Promise.resolve(f),
+}));
 
 const team = (id: string, name: string, extra: Record<string, unknown> = {}) => ({
   id,
@@ -133,6 +137,48 @@ describe("TeamPanel", () => {
     expect(screen.getByRole("button", { name: "Purple" })).toHaveAttribute("aria-pressed", "true");
     await user.click(screen.getByRole("button", { name: "Name the team" }));
     expect(posts).toEqual([{ action: "name", playerId: "p3", name: "Lanterns", color: 5 }]);
+  });
+
+  test("S31-AC1: the captain takes the team selfie on the naming screen; it's sent at once with its size", async () => {
+    const unnamed = team("t1", "Team Lan", {
+      named: false,
+      captain: { id: "p3", nickname: "Lan" },
+    });
+    const view = {
+      phase: "individual",
+      maxTeamSize: 4,
+      teams: [unnamed],
+      mine: { teamId: "t1", isCaptain: true, named: false },
+    };
+    const sent: FormData[] = [];
+    vi.stubGlobal(
+      "createImageBitmap",
+      vi.fn(() => Promise.resolve({ width: 1200, height: 900, close: vi.fn() })),
+    );
+    vi.stubGlobal(
+      "URL",
+      Object.assign(URL, { createObjectURL: () => "blob:x", revokeObjectURL: vi.fn() }),
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string, init?: RequestInit) => {
+        if (url.endsWith("/teams/selfie")) {
+          sent.push(init?.body as FormData);
+          return Promise.resolve(Response.json({ selfie: true }));
+        }
+        return Promise.resolve(Response.json(view));
+      }),
+    );
+    panel();
+    const user = userEvent.setup();
+    await screen.findByLabelText(/Name your team/);
+    const photo = new File([new Uint8Array(10)], "me.jpg", { type: "image/jpeg" });
+    await user.upload(screen.getByLabelText("Take the team selfie"), photo);
+    expect(await screen.findByText("Got it! Tap the photo to retake it.")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Your team selfie" })).toBeInTheDocument();
+    expect(sent[0]?.get("playerId")).toBe("p3");
+    expect(sent[0]?.get("width")).toBe("1200");
+    expect(sent[0]?.get("height")).toBe("900");
   });
 
   test("S03-AC6: a player gives some of their points to any team, with a confirm", async () => {
