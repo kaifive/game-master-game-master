@@ -17,7 +17,14 @@ export type PhotoContent = z.infer<typeof PhotoContent>;
 /** One photo by default: one chance, so make it count (Khai, 2026-11-13). */
 export const maxPhotos = (c: PhotoContent) => c.maxPhotos ?? 1;
 
-export type Photo = { id: string; url: string; rating: number | null; at: number };
+export type Photo = {
+  id: string;
+  url: string;
+  rating: number | null;
+  at: number;
+  /** Once backed up and its file deleted (ADR-012): when, and where the backup is. */
+  archived?: { at: number; backup: string };
+};
 export type PhotoState = { photos: Photo[]; max: number; step: number };
 export type PhotoView = {
   kind: "snapping" | "done";

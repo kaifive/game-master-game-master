@@ -16,6 +16,15 @@ export class MemoryDrawingRepo implements DrawingRepo {
     return Promise.resolve([...(this.rows.get(slug) ?? [])].sort(newestFirst));
   }
 
+  archive(slug: string, ids: string[], archived: { at: number; backup: string }) {
+    const set = new Set(ids);
+    this.rows.set(
+      slug,
+      (this.rows.get(slug) ?? []).map((d) => (set.has(d.id) ? { ...d, archived } : d)),
+    );
+    return Promise.resolve();
+  }
+
   clear(slug: string) {
     this.rows.delete(slug);
     return Promise.resolve();

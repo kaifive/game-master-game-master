@@ -26,8 +26,26 @@ export class FirebaseDrawingRepo implements DrawingRepo {
         points: Number(v.points ?? 0),
         url: String(v.url),
         createdAt: Number(v.createdAt ?? 0),
+        ...(v.archived
+          ? {
+              archived: {
+                at: (v.archived as { at?: number }).at ?? 0,
+                backup: (v.archived as { backup?: string }).backup ?? "",
+              },
+            }
+          : {}),
       };
     });
+  }
+
+  async archive(slug: string, ids: string[], archived: { at: number; backup: string }) {
+    // Batches of 400, under Firestore's 500 writes per batch.
+    for (let i = 0; i < ids.length; i += 400) {
+      const batch = this.admin.firestore.batch();
+      for (const id of ids.slice(i, i + 400))
+        batch.update(this.admin.firestore.doc(fs.drawing(slug, id)), { archived });
+      await batch.commit();
+    }
   }
 
   async clear(slug: string) {

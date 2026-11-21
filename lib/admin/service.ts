@@ -76,6 +76,8 @@ export type ControlsPhotoGame = {
     photoId: string;
     url: string;
     rating: number | null;
+    /** Where it was backed up, once its file is deleted (ADR-012). */
+    backup: string | null;
   }[];
 };
 
@@ -450,6 +452,7 @@ export async function photoResults(
           url: x.url,
           rating: x.rating,
           at: x.at,
+          backup: x.archived?.backup ?? null,
         })),
       )
       .sort((a, b) => Number(a.rating !== null) - Number(b.rating !== null) || b.at - a.at)
@@ -459,6 +462,7 @@ export async function photoResults(
         photoId: x.photoId,
         url: x.url,
         rating: x.rating,
+        backup: x.backup,
       })),
   }));
 }

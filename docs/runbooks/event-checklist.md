@@ -38,10 +38,15 @@ list whenever a new event file is added.
 ## After (within a week)
 
 - [ ] Set the event to `ended`.
-- [ ] Export photos: `npm run photos:export -- <slug>` makes a zip of every
-      photo (approved and not) with a CSV of who, when, prompt, status.
-- [ ] Save the zip to the backup location (Google Drive folder
-      `Game Master/<slug>`) and check the photo count matches.
-- [ ] Clear photos: `npm run photos:prune -- <slug>` deletes the files from
-      Blob and marks each record `archived` with the backup location.
+- [ ] Export photos and kept drawings, from your laptop in the repo (ADR-042):
+      `ADMIN_PASSPHRASE=<passphrase> npm run photos:export -- <slug> --site https://<site>`.
+      It saves every file to `backups/<slug>/` (`photos/`, `drawings/`) with
+      `files.csv` (who, when, which game, rating or points) and prints how many.
+- [ ] Upload the `backups/<slug>` folder to the backup location (Google Drive
+      folder `Game Master/<slug>`) and check Drive shows the same count.
+- [ ] Clear them (only once the event is `ended`, and only with the exported
+      count, so nothing unsaved is deleted):
+      `ADMIN_PASSPHRASE=<passphrase> npm run photos:prune -- <slug> --site https://<site> --backup "Drive: Game Master/<slug>" --count <N>`.
+      It deletes the files from Blob and marks each record archived with the
+      backup location; Controls then shows "Backed up to …" in their place.
 - [ ] Confirm Blob usage dropped.

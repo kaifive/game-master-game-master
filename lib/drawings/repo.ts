@@ -5,6 +5,8 @@ export interface DrawingRepo {
   add(slug: string, drawing: DrawingRecord): Promise<void>;
   /** Every kept drawing in the event, newest first. */
   list(slug: string): Promise<DrawingRecord[]>;
+  /** Marks every listed drawing archived, its file gone and backed up (ADR-012). */
+  archive(slug: string, ids: string[], archived: { at: number; backup: string }): Promise<void>;
   /** Deletes every record in the event (clear test data). */
   clear(slug: string): Promise<void>;
 }

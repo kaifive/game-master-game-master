@@ -799,3 +799,21 @@ they are.
 
 **Consequences:** new games are designed for the mode that fits, and get the
 other only if it passes the same test.
+
+## ADR-042: Photo backups are a folder and a CSV, cleared through the site
+
+**Status:** accepted (2026-11-21). Refines ADR-012 (the zip).
+
+**Decision:** `npm run photos:export` saves every photo (spec 20) and kept
+drawing (spec 18) still in Blob to `backups/<slug>/` with `files.csv`, rather
+than a zip: a folder uploads to Drive as it is and needs no zip library.
+`npm run photos:prune` deletes them. Both scripts sign in with the admin
+passphrase and call the site's own admin endpoint
+(`/api/admin/events/[slug]/backup`), so the laptop needs no Firebase or Blob
+keys. The prune refuses until the event has ended, and unless the count
+given matches what's in Blob, so nothing that wasn't exported is deleted.
+Records stay, marked `archived` with the backup location (ADR-012).
+
+**Consequences:** the backup is only as good as the upload and count check
+in the runbook. Team selfies (spec 31) join the same export when they're built.
+
