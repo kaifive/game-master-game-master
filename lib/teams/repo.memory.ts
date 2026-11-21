@@ -47,15 +47,20 @@ export class MemoryTeamRepo implements TeamRepo {
     return Promise.resolve(team);
   }
 
-  rename(slug: string, teamId: string, name: string, key: string) {
+  rename(slug: string, teamId: string, name: string, key: string, color?: number) {
     const d = this.data(slug);
     const team = d.teams.get(teamId);
     if (!team) return Promise.reject(teamErrors.noTeam());
     const owner = d.names.get(key);
     if (owner && owner !== teamId) return Promise.reject(teamErrors.nameTaken());
+    if (
+      color !== undefined &&
+      [...d.teams.values()].some((t) => t.id !== teamId && t.color === color)
+    )
+      return Promise.reject(teamErrors.colorTaken());
     for (const [k, id] of d.names) if (id === teamId) d.names.delete(k);
     d.names.set(key, teamId);
-    d.teams.set(teamId, { ...team, name });
+    d.teams.set(teamId, { ...team, name, ...(color !== undefined ? { color } : {}) });
     return Promise.resolve();
   }
 

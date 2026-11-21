@@ -35,6 +35,25 @@ export function teamRepoContract(make: () => Promise<TeamRepo>) {
     expect(await failure(repo.rename(SLUG, "nope", "X", "x"))).toBe("no-team");
   });
 
+  test("S29-AC2: naming a team can set its color, but never one another team holds, even two at once", async () => {
+    const repo = await make();
+    const a = await repo.create(SLUG, "p1", 1);
+    const b = await repo.create(SLUG, "p2", 2);
+    const c = await repo.create(SLUG, "p3", 3);
+    await repo.rename(SLUG, a.id, "Dragons", "dragons", 6);
+    expect(await failure(repo.rename(SLUG, b.id, "Tigers", "tigers", 6))).toBe("color-taken");
+    expect(await failure(repo.rename(SLUG, b.id, "Tigers", "tigers", 3))).toBe("color-taken");
+    // Two captains racing for Teal (7): exactly one gets it.
+    const race = await Promise.allSettled([
+      repo.rename(SLUG, b.id, "Tigers", "tigers", 7),
+      repo.rename(SLUG, c.id, "Cranes", "cranes", 7),
+    ]);
+    expect(race.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    const colors = (await repo.list(SLUG)).map((t) => t.color);
+    expect(new Set(colors).size).toBe(3);
+    expect(colors).toContain(6);
+  });
+
   test("S03-AC3: players join a team with room, once; full teams refuse", async () => {
     const repo = await make();
     const a = await repo.create(SLUG, "p1", 1);

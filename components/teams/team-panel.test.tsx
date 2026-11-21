@@ -104,9 +104,35 @@ describe("TeamPanel", () => {
     await user.clear(box);
     await user.type(box, "Lanterns");
     await user.click(screen.getByRole("button", { name: "Name the team" }));
-    expect(posts).toEqual([{ action: "name", playerId: "p3", name: "Lanterns" }]);
+    // The team's own color goes with the name (S29-AC1).
+    expect(posts).toEqual([{ action: "name", playerId: "p3", name: "Lanterns", color: 1 }]);
     expect(await screen.findByText("Lanterns")).toBeInTheDocument();
     expect(screen.queryByLabelText(/Name your team/)).toBeNull();
+  });
+
+  test("S29-AC1: the captain picks a named color when naming the team; colors other teams hold are taken", async () => {
+    const unnamed = team("t1", "Team Lan", {
+      named: false,
+      color: 3,
+      captain: { id: "p3", nickname: "Lan" },
+    });
+    const view = {
+      phase: "individual",
+      maxTeamSize: 4,
+      teams: [unnamed, team("t2", "Dragons", { color: 6 })],
+      mine: { teamId: "t1", isCaptain: true, named: false },
+    };
+    serve(view, { ...view, mine: { ...view.mine, named: true } });
+    panel();
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText(/Name your team/), "Lanterns");
+    // The team's color to begin with, and Teal held by Dragons.
+    expect(screen.getByRole("button", { name: "Gold" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Teal, taken by Dragons" })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "Purple" }));
+    expect(screen.getByRole("button", { name: "Purple" })).toHaveAttribute("aria-pressed", "true");
+    await user.click(screen.getByRole("button", { name: "Name the team" }));
+    expect(posts).toEqual([{ action: "name", playerId: "p3", name: "Lanterns", color: 5 }]);
   });
 
   test("S03-AC6: a player gives some of their points to any team, with a confirm", async () => {

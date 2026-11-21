@@ -3,6 +3,7 @@
 import { useMemo, type ReactNode } from "react";
 import { SlotsProvider } from "@/components/slots/registry";
 import {
+  ADMIN_TEAM_COLOR_NAMES,
   ADMIN_THEME,
   PACKS,
   resolveTheme,
@@ -71,6 +72,7 @@ export function AdminRoot({
       tokens: ADMIN_THEME[colorMode],
       icons: {},
       decorations: [],
+      teamColorNames: ADMIN_TEAM_COLOR_NAMES,
     }),
     [colorMode],
   );

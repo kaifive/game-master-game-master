@@ -11,6 +11,7 @@ import { donate, type PointsDeps } from "@/lib/points";
 import {
   BOARD_SHOWN,
   MAX_TEAMS,
+  TEAM_COLORS,
   type BoardVisibility,
   type TeamsSummary,
   type TeamView,
@@ -131,20 +132,29 @@ export async function makeCaptain(deps: TeamDeps, event: EventConfig, playerId: 
   await publishTeams(deps, event);
 }
 
-/** The captain names their team: filtered, unique, 2–20 characters (S03-AC2). */
+/**
+ * The captain names their team, filtered, unique, 2–20 characters (S03-AC2),
+ * and picks its color: one no other team holds, fixed once saved (S29-AC1 to AC3).
+ */
 export async function nameTeam(
   deps: TeamDeps,
   event: EventConfig,
   uid: string,
   playerId: string,
   raw: string,
+  color?: number,
 ) {
   await ownPlayer(deps, event, uid, playerId);
   const team = (await deps.teams.list(event.slug)).find((t) => t.captainId === playerId);
   if (!team) throw new AppError("FORBIDDEN", "Only a captain can name their team.");
   const name = checkTeamName(raw, event.blockedNames);
   if (!name.ok) throw new AppError("BAD_REQUEST", name.message);
-  await deps.teams.rename(event.slug, team.id, name.nickname, name.key);
+  if (color !== undefined && (!Number.isInteger(color) || color < 1 || color > TEAM_COLORS))
+    throw new AppError("BAD_REQUEST", "Pick one of the team colors.");
+  // A team's color is fixed once it's named (Khai, 2026-11-19).
+  if (color !== undefined && team.name !== null && color !== team.color)
+    throw new AppError("CONFLICT", "Your team's color is set for the party.");
+  await deps.teams.rename(event.slug, team.id, name.nickname, name.key, color);
   await publishTeams(deps, event);
 }
 

@@ -118,6 +118,51 @@ describe("teams", () => {
     ).toBe(400);
   });
 
+  it("S29-AC1 S29-AC3 S29-AC4: the captain picks a free color when naming the team, and it's fixed after", async () => {
+    await makeCaptain(deps, event, id("Mai"));
+    await makeCaptain(deps, event, id("Bao"));
+    await nameTeam(deps, event, phone("Mai"), id("Mai"), "Dragons", 6);
+    expect(await failure(nameTeam(deps, event, phone("Bao"), id("Bao"), "Tigers", 6))).toEqual({
+      status: 409,
+      message: "Another team just took that color. Pick another.",
+    });
+    expect(
+      (await failure(nameTeam(deps, event, phone("Bao"), id("Bao"), "Tigers", 9))).status,
+    ).toBe(400);
+    await nameTeam(deps, event, phone("Bao"), id("Bao"), "Tigers", 2);
+    expect((await teamsView(deps, event, null)).teams.map((t) => [t.name, t.color])).toEqual([
+      ["Dragons", 6],
+      ["Tigers", 2],
+    ]);
+    // The board the TV and showdowns read has each team in its color, beside its name (S29-AC4).
+    expect((await deps.points.board.read(event.slug)).teams.map((t) => [t.name, t.color])).toEqual(
+      expect.arrayContaining([
+        ["Dragons", 6],
+        ["Tigers", 2],
+      ]),
+    );
+    // Fixed once named.
+    expect(await failure(nameTeam(deps, event, phone("Mai"), id("Mai"), "Dragons", 7))).toEqual({
+      status: 409,
+      message: "Your team's color is set for the party.",
+    });
+    // A new team gets the first color nobody holds: 1, since Dragons moved to 6.
+    await makeCaptain(deps, event, id("Lan"));
+    expect((await teamsView(deps, event, null)).teams.map((t) => t.color)).toEqual([6, 2, 1]);
+  });
+
+  it("S29-AC2: two captains picking the same color at once: one gets it, the other is told", async () => {
+    await makeCaptain(deps, event, id("Mai"));
+    await makeCaptain(deps, event, id("Bao"));
+    const race = await Promise.allSettled([
+      nameTeam(deps, event, phone("Mai"), id("Mai"), "Dragons", 7),
+      nameTeam(deps, event, phone("Bao"), id("Bao"), "Tigers", 7),
+    ]);
+    expect(race.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    const colors = (await teamsView(deps, event, null)).teams.map((t) => t.color);
+    expect(colors.filter((c) => c === 7)).toHaveLength(1);
+  });
+
   it("S03-AC3: in the team phase players join a team with room, once", async () => {
     await makeCaptain(deps, event, id("Mai"));
     await makeCaptain(deps, event, id("Bao"));

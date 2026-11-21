@@ -1,6 +1,6 @@
 # 29: Team colors chosen by the captain
 
-**Status:** Draft (agreed with Khai 2026-11-19; marked Ready in the PR that builds it, since check:ac makes Ready mean its tests exist)
+**Status:** Done (agreed with Khai 2026-11-19)
 **Backlog:** M4
 **Depends on:** 03, 09, 24
 
@@ -45,8 +45,8 @@ Once built, spec 03 changes to match.
 - `events/{slug}/teams/{teamId}.color` stays 1 to 8; the captain's pick replaces
   the one given at creation, once, when the team is named. A transaction keeps
   colors unique per event.
-- Each theme names its eight team colors (`teamColorNames`, spec 09), checked by
-  the theme contract test.
+- Each style pack names its eight team colors (`teamColorNames`, spec 09); the
+  pack schema requires all eight. The admin theme names them too.
 
 ## Routes and real-time
 
@@ -57,8 +57,8 @@ Once built, spec 03 changes to match.
 ## UI
 
 - **Captain's phone (name the team):** the name field, then a 4 × 2 grid of color
-  swatches (at least 56 px, the color's name under each, a check on the picked
-  one, taken ones frosted with the holder's name), then Save.
+  swatches (at least 64 px tall, the color's name under each, a check and a ring on
+  the picked one, taken ones faded with the holding team's name), then Name the team.
 - **Team tab and Controls:** the team's swatch and color name, not editable.
 
 ## Edge cases
@@ -69,10 +69,10 @@ Once built, spec 03 changes to match.
 
 ## Acceptance criteria
 
-- [ ] AC-1: Naming a team takes a color from the theme's eight, offered with names; colors other teams hold are shown taken and can't be picked; the next free color is picked to begin with.
-- [ ] AC-2: No two teams in an event share a color, even when two captains pick at once.
-- [ ] AC-3: Once saved, a team's color can't be changed.
-- [ ] AC-4: Every surface and every showdown shows the team in its chosen color, always beside its name.
+- [x] AC-1: Naming a team takes a color from the theme's eight, offered with names; colors other teams hold are shown taken and can't be picked; the next free color is picked to begin with.
+- [x] AC-2: No two teams in an event share a color, even when two captains pick at once.
+- [x] AC-3: Once saved, a team's color can't be changed.
+- [x] AC-4: Every surface and every showdown shows the team in its chosen color, always beside its name.
 
 ## Tests
 

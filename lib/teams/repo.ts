@@ -8,8 +8,11 @@ export interface TeamRepo {
   list(slug: string): Promise<Team[]>;
   /** A new team led by `captainId`, who becomes its first member (S03-AC2). */
   create(slug: string, captainId: string, color: number): Promise<Team>;
-  /** Names a team; names are unique per event (S03-AC2). */
-  rename(slug: string, teamId: string, name: string, key: string): Promise<void>;
+  /**
+   * Names a team; names are unique per event (S03-AC2). With a color, sets it
+   * too, refusing one another team holds, even two captains at once (S29-AC2).
+   */
+  rename(slug: string, teamId: string, name: string, key: string, color?: number): Promise<void>;
   /** A player joins a team with room; players can't switch (S03-AC3). */
   join(slug: string, teamId: string, playerId: string, maxSize: number): Promise<void>;
   /** The host moves a player, even onto a full team (S03-AC4). */

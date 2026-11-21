@@ -16,6 +16,7 @@ const fonts = {
 export const judgesTable: PackDefinition = {
   id: "judges-table",
   name: "Judges' Table",
+  teamColorNames: ["Red", "Blue", "Gold", "Green", "Purple", "Teal", "Orange", "Slate"],
   tokens: {
     light: {
       bg: "#f6f6f4",

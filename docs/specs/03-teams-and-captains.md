@@ -18,8 +18,8 @@ Two competitions in one event (ADR-030): **individual** (solo games on your own 
 
 ### Teams and captains
 
-4. In Controls the host makes a player a **captain**. That creates their team with the next team color, and the captain is its first member. An event has **at most 6 teams** (Khai, 2026-11-18), so every showdown fits; a seventh captain is refused, and Controls says so.
-5. The captain's phone asks them to **name the team**: 2–20 characters, the same characters and name filter as nicknames (spec 02), unique per event. Until named, it shows as "Team <captain's name>".
+4. In Controls the host makes a player a **captain**. That creates their team in the first team color no other team holds, and the captain is its first member. An event has **at most 6 teams** (Khai, 2026-11-18), so every showdown fits; a seventh captain is refused, and Controls says so.
+5. The captain's phone asks them to **name the team**: 2–20 characters, the same characters and name filter as nicknames (spec 02), unique per event, and to pick its color, fixed after that (spec 29). Until named, it shows as "Team <captain's name>".
 6. The host sets a **maximum team size** in Controls (suggested: active players ÷ teams, rounded up). Once a team is full, nobody else can join it.
 7. Teams live on the **Team** tab (`/[event]/team`); the games list nudges there when teams open or a new captain needs to name their team. In the team phase, a player who isn't on a team sees **Pick your team** on the Team tab: every team with its name, color, captain, members and room left. Joining takes one tap and a confirm ("You can't switch later"). Players can't leave or switch; the host can **move** them.
 8. The host can **change a team's captain** to another member, for example if the captain leaves. A team with no captain (its captain was removed) can't play team games until it has one.
@@ -63,7 +63,7 @@ Two competitions in one event (ADR-030): **individual** (solo games on your own 
 ## Acceptance criteria
 
 - [x] AC-1: A `both` event starts in the individual phase; the host can switch to the team phase and back, with a confirm, and phones follow.
-- [x] AC-2: Making a player a captain creates their team with the next color; the captain names it (filtered, unique, 2–20 characters).
+- [x] AC-2: Making a player a captain creates their team in the first free color; the captain names it (filtered, unique, 2–20 characters) and picks its color (spec 29).
 - [x] AC-3: In the team phase, a player without a team sees every team and joins one in a tap with a confirm; full teams can't be joined, and players can't switch.
 - [x] AC-4: The host sets the maximum team size, moves players between teams, and changes a team's captain.
 - [x] AC-5: Only a captain can play a team game, for their team, and its points go to the team, never to a player.

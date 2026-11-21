@@ -58,6 +58,7 @@ export function resolveTheme(
     tokens: { ...pack.tokens[mode], ...(v?.tokens?.[mode] ?? {}) },
     icons: { ...(v?.icons ?? {}) },
     decorations: [...(pack.decorations ?? []), ...(v?.decorations ?? [])],
+    teamColorNames: [...pack.teamColorNames],
   };
 }
 
