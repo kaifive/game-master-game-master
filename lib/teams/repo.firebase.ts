@@ -62,7 +62,7 @@ export class FirebaseTeamRepo implements TeamRepo {
     });
   }
 
-  async rename(slug: string, teamId: string, name: string, key: string) {
+  async rename(slug: string, teamId: string, name: string, key: string, color?: number) {
     const teamRef = this.db.doc(fs.team(slug, teamId));
     const nameRef = this.db.doc(fs.teamName(slug, key));
     await this.db.runTransaction(async (tx) => {
@@ -70,11 +70,17 @@ export class FirebaseTeamRepo implements TeamRepo {
       if (!team?.exists) throw teamErrors.noTeam();
       const owner: unknown = taken?.get("teamId");
       if (taken?.exists && owner !== teamId) throw teamErrors.nameTaken();
+      if (color !== undefined) {
+        // Read in the transaction, so two captains picking one color at once can't both win.
+        const all = await tx.get(this.db.collection(fs.teams(slug)));
+        if (all.docs.some((d) => d.id !== teamId && d.get("color") === color))
+          throw teamErrors.colorTaken();
+      }
       const oldKey: unknown = team.get("nameKey");
       if (typeof oldKey === "string" && oldKey !== key)
         tx.delete(this.db.doc(fs.teamName(slug, oldKey)));
       tx.set(nameRef, { teamId });
-      tx.update(teamRef, { name, nameKey: key });
+      tx.update(teamRef, { name, nameKey: key, ...(color !== undefined ? { color } : {}) });
     });
   }
 

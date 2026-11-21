@@ -65,7 +65,7 @@ A feature item needs its spec at `Ready` before it starts.
 
 ## M4: Party ready (Dec 14–18)
 
-- [ ] Spec 29, team colors: the captain picks the team's color when naming it, used in every game
+- [x] Spec 29, team colors: the captain picks the team's color when naming it, used in every game
 - [ ] Spec 31, team selfies: taken when naming the team; the host adds stickers; the winners' selfie at the finale
 - [ ] Load test: 60 simulated players, display and controls; check free-tier usage
 - [ ] Holiday party event file: games, content, holiday theme

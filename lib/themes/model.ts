@@ -108,6 +108,8 @@ export const PackDefinition = z
     tokens: z.object({ light: TokenSet, dark: TokenSet }).strict(),
     decorations: z.array(z.string()).optional(),
     contrastPairs: z.array(ContrastPair).optional(),
+    /** What each of `team-1` to `team-8` is called, for picking a team's color (spec 29). */
+    teamColorNames: z.array(z.string().min(1)).length(8),
     variants: z.record(z.string(), VariantDefinition),
   })
   .strict();
@@ -129,4 +131,6 @@ export type Theme = {
   tokens: TokenSet;
   icons: Record<string, string>;
   decorations: string[];
+  /** What each team color is called, `team-1` first (spec 29). */
+  teamColorNames: string[];
 };

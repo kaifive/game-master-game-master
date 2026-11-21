@@ -6,9 +6,12 @@ import { ArrowIcon } from "@/components/icons/nav";
 import { useCallback, useId, useState, type ReactNode } from "react";
 import { usePoll } from "@/components/leaderboard/use-poll";
 import { useOptionalDevice } from "@/components/players/device";
+import { CheckIcon } from "@/components/icons/game";
 import { useSlots } from "@/components/slots/registry";
+import { useTheme } from "@/components/theme/context";
 import { standingsApi } from "@/lib/points";
 import { checkTeamName, teamsApi, type TeamsView, type TeamView } from "@/lib/teams";
+import { cx } from "@/lib/ui";
 
 export const TEAMS_POLL_MS = 15_000;
 
@@ -20,9 +23,73 @@ const Swatch = ({ color }: { color: number }) => (
   />
 );
 
-function NameTeam({ onName }: { onName: (name: string) => Promise<string | null> }) {
+/** Every team color as a named swatch; ones other teams hold are taken (S29-AC1). */
+function ColorPicker({
+  color,
+  onColor,
+  teams,
+  mine,
+}: {
+  color: number;
+  onColor: (color: number) => void;
+  teams: readonly TeamView[];
+  mine: string;
+}) {
+  const names = useTheme()?.teamColorNames ?? [];
+  return (
+    <fieldset className="m-0 grid gap-2 border-0 p-0">
+      <legend className="mb-2 text-sm font-bold text-gm-text-muted">
+        Pick your team&apos;s color. It&apos;s yours for the whole party.
+      </legend>
+      <div className="grid grid-cols-4 gap-2">
+        {Array.from({ length: 8 }, (_, i) => i + 1).map((c) => {
+          const holder = teams.find((t) => t.id !== mine && t.color === c);
+          const label = names[c - 1] ?? `Color ${String(c)}`;
+          const picked = c === color;
+          return (
+            <button
+              key={c}
+              type="button"
+              disabled={holder !== undefined}
+              aria-pressed={picked}
+              aria-label={holder ? `${label}, taken by ${holder.name}` : label}
+              onClick={() => {
+                onColor(c);
+              }}
+              className={cx(
+                "grid min-h-16 content-center justify-items-center gap-1 rounded-gm p-1 text-xs font-bold ring-1 ring-gm-border",
+                picked && "ring-4 ring-gm-text",
+                holder && "opacity-40",
+              )}
+            >
+              <span
+                aria-hidden="true"
+                className="grid size-8 place-items-center rounded-full text-white"
+                style={{ background: `var(--gm-team-${String(c)})` }}
+              >
+                {picked && <CheckIcon size={18} />}
+              </span>
+              <span className="max-w-full truncate">{holder ? holder.name : label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
+function NameTeam({
+  onName,
+  teams,
+  mine,
+}: {
+  onName: (name: string, color: number) => Promise<string | null>;
+  teams: readonly TeamView[];
+  mine: TeamView;
+}) {
   const { Button } = useSlots();
   const id = useId();
+  const [color, setColor] = useState(mine.color);
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -37,7 +104,7 @@ function NameTeam({ onName }: { onName: (name: string) => Promise<string | null>
           return;
         }
         setBusy(true);
-        void onName(check.nickname).then((failed) => {
+        void onName(check.nickname, color).then((failed) => {
           setBusy(false);
           setError(failed);
         });
@@ -57,6 +124,7 @@ function NameTeam({ onName }: { onName: (name: string) => Promise<string | null>
         }}
         className="min-h-11 w-full min-w-0 rounded-gm border-2 border-gm-border bg-gm-surface px-3 text-lg text-gm-text"
       />
+      <ColorPicker color={color} onColor={setColor} teams={teams} mine={mine.id} />
       {(error ?? (check && !check.ok ? check.message : null)) && (
         <p role="alert" className="m-0 text-sm font-bold text-gm-danger">
           {error ?? (check && !check.ok ? check.message : "")}
@@ -317,8 +385,10 @@ export function TeamPanel({ slug, fallback = null }: { slug: string; fallback?: 
           </p>
           {isCaptain && !named && (
             <NameTeam
-              onName={async (name) => {
-                const res = await teamsApi.name(slug, await device.token(), playerId, name);
+              teams={data.teams}
+              mine={mineTeam}
+              onName={async (name, color) => {
+                const res = await teamsApi.name(slug, await device.token(), playerId, name, color);
                 if (!res.ok) return res.message;
                 setView(res.data);
                 return null;

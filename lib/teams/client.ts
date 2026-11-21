@@ -21,11 +21,11 @@ export const teamsApi = {
       token,
       post({ action: "join", playerId, teamId }),
     ),
-  name: (slug: string, token: string, playerId: string, name: string) =>
+  name: (slug: string, token: string, playerId: string, name: string, color?: number) =>
     apiCall<TeamsView>(
       `/api/events/${slug}/teams`,
       token,
-      post({ action: "name", playerId, name }),
+      post({ action: "name", playerId, name, ...(color !== undefined ? { color } : {}) }),
     ),
   donate: (slug: string, token: string, playerId: string, teamId: string, points: number) =>
     apiCall<TeamsView>(

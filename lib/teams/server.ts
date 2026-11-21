@@ -36,7 +36,12 @@ const Id = z.string().min(1).max(64);
 
 export const TeamAction = z.discriminatedUnion("action", [
   z.object({ action: z.literal("join"), playerId: Id, teamId: Id }),
-  z.object({ action: z.literal("name"), playerId: Id, name: z.string().max(64) }),
+  z.object({
+    action: z.literal("name"),
+    playerId: Id,
+    name: z.string().max(64),
+    color: z.number().int().min(1).max(8).optional(),
+  }),
   z.object({
     action: z.literal("donate"),
     playerId: Id,
@@ -50,7 +55,8 @@ export async function teamAction(slug: Slug, uid: string, body: z.infer<typeof T
   const event = requireEvent(slug);
   const deps = teamDeps();
   if (body.action === "join") await joinTeam(deps, event, uid, body.playerId, body.teamId);
-  else if (body.action === "name") await nameTeam(deps, event, uid, body.playerId, body.name);
+  else if (body.action === "name")
+    await nameTeam(deps, event, uid, body.playerId, body.name, body.color);
   else {
     // The new totals ride along, so the phone can hold up the team's card at once.
     const donated = await donateToTeam(deps, event, uid, body.playerId, body.teamId, body.points);

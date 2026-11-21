@@ -10,6 +10,10 @@ export const teamErrors = {
     new AppError("CONFLICT", "Another team has that name. Pick another.", {
       details: { reason: "name-taken" },
     }),
+  colorTaken: () =>
+    new AppError("CONFLICT", "Another team just took that color. Pick another.", {
+      details: { reason: "color-taken" },
+    }),
   noTeam: () =>
     new AppError("NOT_FOUND", "We couldn't find that team.", { details: { reason: "no-team" } }),
   notMember: () =>
