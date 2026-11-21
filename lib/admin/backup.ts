@@ -11,7 +11,7 @@ import type { AdminDeps } from "./service";
  */
 
 export type BackupFile = {
-  kind: "photo" | "drawing";
+  kind: "photo" | "drawing" | "selfie";
   /** The record's id: the photo's, or the drawing's. */
   id: string;
   gameId: string;
@@ -35,10 +35,11 @@ export async function backupManifest(deps: AdminDeps, event: EventConfig): Promi
   const photoGames = new Set(
     event.games.filter((g) => g.type === "photo-challenge").map((g) => g.id),
   );
-  const [plays, players, drawings] = await Promise.all([
+  const [plays, players, drawings, teams] = await Promise.all([
     deps.plays.all(event.slug),
     deps.players.list(event.slug),
     deps.drawings ? deps.drawings.drawings.list(event.slug) : Promise.resolve([]),
+    deps.teams.list(event.slug),
   ]);
   const nickname = new Map(players.map((p) => [p.id, p.nickname]));
   const photos = plays.flatMap((p) =>
@@ -71,7 +72,27 @@ export async function backupManifest(deps: AdminDeps, event: EventConfig): Promi
       score: d.points,
       url: d.url,
     }));
-  const files = [...photos, ...kept].sort((a, b) => a.at - b.at || a.id.localeCompare(b.id));
+  // Team selfies (spec 31): by team, not player.
+  const selfies = teams.flatMap((t) =>
+    t.selfie && !t.selfie.archived && t.selfie.url.startsWith("https://")
+      ? [
+          {
+            kind: "selfie" as const,
+            id: t.id,
+            gameId: "team-selfie",
+            game: "Team selfie",
+            playerId: t.captainId ?? "",
+            nickname: t.name ?? "New team",
+            at: t.createdAt,
+            score: null,
+            url: t.selfie.url,
+          },
+        ]
+      : [],
+  );
+  const files = [...photos, ...kept, ...selfies].sort(
+    (a, b) => a.at - b.at || a.id.localeCompare(b.id),
+  );
   return { slug: event.slug, count: files.length, files };
 }
 
@@ -98,6 +119,7 @@ export async function pruneFiles(
       `The backup has ${files(body.count)}, but there ${manifest.count === 1 ? "is" : "are"} ${files(manifest.count)} now. Export again first.`,
     );
   if (manifest.count === 0) return { deleted: 0 };
+  const teams = await deps.teams.list(event.slug);
   await store.remove(manifest.files.map((f) => f.url));
   const archived = { at: deps.points.now(), backup };
   // Photos: marked in their plays, one play at a time.
@@ -119,6 +141,10 @@ export async function pruneFiles(
         },
       };
     });
+  }
+  for (const f of manifest.files.filter((x) => x.kind === "selfie")) {
+    const team = teams.find((t) => t.id === f.id);
+    if (team?.selfie) await deps.teams.setSelfie(event.slug, team.id, { ...team.selfie, archived });
   }
   const drawingIds = manifest.files.filter((x) => x.kind === "drawing").map((x) => x.id);
   if (deps.drawings && drawingIds.length > 0)

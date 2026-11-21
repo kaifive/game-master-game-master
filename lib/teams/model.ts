@@ -8,7 +8,52 @@ export type Team = {
   captainId: string | null;
   memberIds: string[];
   createdAt: number;
+  /** The team selfie (spec 31), or null until taken. Never sent to phones. */
+  selfie?: Selfie | null;
+  /** The host's stickers on the selfie, back to front (spec 31). */
+  stickers?: Sticker[];
 };
+
+/** A team selfie in Blob (spec 31): its size, for laying stickers on it. */
+export type Selfie = {
+  url: string;
+  width: number;
+  height: number;
+  /** Once backed up and its file deleted (ADR-012, ADR-042). */
+  archived?: { at: number; backup: string };
+};
+
+/** The stickers the host can put on a selfie (spec 31). */
+export const STICKER_KINDS = [
+  "santa-hat",
+  "elf-hat",
+  "crown",
+  "antlers",
+  "mustache",
+  "beard",
+  "glasses",
+  "bow-tie",
+  "red-nose",
+  "holly",
+] as const;
+export type StickerKind = (typeof STICKER_KINDS)[number];
+
+/**
+ * One sticker on a selfie: its center as shares of the photo (0 to 1), its
+ * width as a share of the photo's width, its angle in degrees, and whether
+ * it's flipped (spec 31). Kept apart from the photo, so it can move later.
+ */
+export type Sticker = {
+  id: string;
+  kind: StickerKind;
+  x: number;
+  y: number;
+  size: number;
+  angle: number;
+  flip: boolean;
+};
+
+export const MAX_STICKERS = 30;
 
 export const TEAM_NAME_MAX = 20;
 export const TEAM_COLORS = 8;
@@ -36,6 +81,8 @@ export type TeamsSummary = {
   teams: TeamView[];
   /** Whether the standings show on phones and on the TV (S07-AC11). */
   board: BoardVisibility;
+  /** The event has ended, so the TV shows the finale (spec 31). */
+  ended?: boolean;
 };
 
 export type BoardVisibility = { phones: boolean; tv: boolean };

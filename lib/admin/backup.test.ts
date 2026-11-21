@@ -8,6 +8,7 @@ import { MemoryPlayerRepo } from "@/lib/players";
 import { MemoryBoardRepo, MemoryPointsRepo } from "@/lib/points";
 import { MemoryTeamRepo, MemoryTeamSummaryRepo } from "@/lib/teams";
 import { backupManifest, pruneFiles } from "./backup";
+import { clearTestData } from "./service";
 import type { AdminDeps } from "./service";
 
 const event = holiday2026;
@@ -106,5 +107,31 @@ describe("backing up and clearing files after an event (ADR-012)", () => {
     // Already archived: nothing left to back up or clear.
     expect((await backupManifest(deps, event)).count).toBe(0);
     expect(await pruneFiles(deps, event, { backup: BACKUP, count: 0 })).toEqual({ deleted: 0 });
+  });
+
+  it("S31-AC5: team selfies are backed up and cleared with the photos, and deleted with test data", async () => {
+    const team = await deps.teams.create(SLUG, mai.id, 1);
+    const selfie = { url: "https://blob.test/team.jpg", width: 800, height: 600 };
+    await deps.teams.setSelfie(SLUG, team.id, selfie);
+    const m = await backupManifest(deps, event);
+    expect(m.files.filter((f) => f.kind === "selfie")).toMatchObject([
+      { id: team.id, url: selfie.url, game: "Team selfie" },
+    ]);
+    await deps.events.setStatus(SLUG, "ended");
+    await pruneFiles(deps, event, { backup: BACKUP, count: m.count });
+    expect(files.removed).toContain(selfie.url);
+    expect((await deps.teams.list(SLUG))[0]?.selfie?.archived).toEqual({
+      at: 9000,
+      backup: BACKUP,
+    });
+    // Clearing test data before a party deletes a selfie's file too.
+    await deps.events.setStatus(SLUG, "upcoming");
+    await deps.teams.setSelfie(SLUG, team.id, {
+      url: "https://blob.test/again.jpg",
+      width: 1,
+      height: 1,
+    });
+    await clearTestData(deps, event, "CLEAR");
+    expect(files.removed).toContain("https://blob.test/again.jpg");
   });
 });

@@ -3,7 +3,8 @@
 import { SkeletonList } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { ArrowIcon } from "@/components/icons/nav";
-import { useCallback, useId, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useState, type ReactNode } from "react";
+import { shrinkPhoto } from "@/components/games/photo/shrink";
 import { usePoll } from "@/components/leaderboard/use-poll";
 import { useOptionalDevice } from "@/components/players/device";
 import { CheckIcon } from "@/components/icons/game";
@@ -78,12 +79,119 @@ function ColorPicker({
   );
 }
 
+/**
+ * The team selfie (spec 31): the phone's front camera, or a photo already
+ * taken, shrunk and sent at once; the captain can retake it until the team is
+ * named. It's for the finale, so it isn't shown anywhere else.
+ */
+function TeamSelfie({
+  color,
+  onSend,
+}: {
+  color: number;
+  onSend: (photo: Blob, size: { width: number; height: number }) => Promise<string | null>;
+}) {
+  const id = useId();
+  const [preview, setPreview] = useState<string | null>(null);
+  const [state, setState] = useState<"none" | "sending" | "sent">("none");
+  const [error, setError] = useState<string | null>(null);
+  useEffect(
+    () => () => {
+      if (preview) URL.revokeObjectURL(preview);
+    },
+    [preview],
+  );
+  const choose = async (file: File | undefined) => {
+    if (!file) return;
+    setError(null);
+    try {
+      const blob = await shrinkPhoto(file);
+      const bitmap = await createImageBitmap(blob);
+      const size = { width: bitmap.width, height: bitmap.height };
+      bitmap.close();
+      setPreview(URL.createObjectURL(blob));
+      setState("sending");
+      const failed = await onSend(blob, size);
+      setState(failed ? "none" : "sent");
+      setError(failed);
+    } catch {
+      setState("none");
+      setError("We couldn't open that photo. Try another one.");
+    }
+  };
+  return (
+    <div className="grid gap-2">
+      <p className="m-0 text-sm font-bold text-gm-text-muted">
+        Take a team selfie: everyone in! It&apos;s a surprise for the end of the party.
+      </p>
+      <label
+        htmlFor={id}
+        className="relative grid aspect-[4/3] w-full cursor-pointer place-items-center overflow-hidden rounded-gm border-4 border-dashed bg-gm-surface text-center font-gm-display text-xl font-bold"
+        style={{ borderColor: `var(--gm-team-${String(color)})` }}
+      >
+        {preview ? (
+          // eslint-disable-next-line @next/next/no-img-element -- the team's own photo, before it's sent
+          <img
+            src={preview}
+            alt="Your team selfie"
+            className="absolute inset-0 size-full object-cover"
+          />
+        ) : (
+          <span className="grid justify-items-center gap-2 px-4">
+            <CameraIcon />
+            Take the team selfie
+          </span>
+        )}
+        <input
+          id={id}
+          type="file"
+          accept="image/*"
+          capture="user"
+          className="sr-only"
+          onChange={(e) => {
+            void choose(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
+      </label>
+      <p className="m-0 text-sm text-gm-text-muted" aria-live="polite">
+        {state === "sending"
+          ? "Sending the selfie…"
+          : state === "sent"
+            ? "Got it! Tap the photo to retake it."
+            : null}
+      </p>
+      {error && (
+        <p role="alert" className="m-0 text-sm font-bold text-gm-danger">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function CameraIcon() {
+  return (
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M4 8h3l2-3h6l2 3h3v11H4Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="13" r="3.5" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
 function NameTeam({
   onName,
+  onSelfie,
   teams,
   mine,
 }: {
   onName: (name: string, color: number) => Promise<string | null>;
+  onSelfie: (photo: Blob, size: { width: number; height: number }) => Promise<string | null>;
   teams: readonly TeamView[];
   mine: TeamView;
 }) {
@@ -125,6 +233,7 @@ function NameTeam({
         className="min-h-11 w-full min-w-0 rounded-gm border-2 border-gm-border bg-gm-surface px-3 text-lg text-gm-text"
       />
       <ColorPicker color={color} onColor={setColor} teams={teams} mine={mine.id} />
+      <TeamSelfie color={color} onSend={onSelfie} />
       {(error ?? (check && !check.ok ? check.message : null)) && (
         <p role="alert" className="m-0 text-sm font-bold text-gm-danger">
           {error ?? (check && !check.ok ? check.message : "")}
@@ -387,6 +496,16 @@ export function TeamPanel({ slug, fallback = null }: { slug: string; fallback?: 
             <NameTeam
               teams={data.teams}
               mine={mineTeam}
+              onSelfie={async (photo, size) => {
+                const res = await teamsApi.selfie(
+                  slug,
+                  await device.token(),
+                  playerId,
+                  photo,
+                  size,
+                );
+                return res.ok ? null : res.message;
+              }}
               onName={async (name, color) => {
                 const res = await teamsApi.name(slug, await device.token(), playerId, name, color);
                 if (!res.ok) return res.message;

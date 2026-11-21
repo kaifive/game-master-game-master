@@ -31,6 +31,25 @@ export type DisplayStandings = {
   players: Ranked[];
   teams: RankedTeam[];
   recent: DisplayAward[];
+  /** Once the event has ended: the winning team or teams, dressed up (spec 31). */
+  finale?: {
+    points: number;
+    teams: {
+      teamId: string;
+      name: string;
+      color: number;
+      selfie: { url: string; width: number; height: number } | null;
+      stickers: {
+        id: string;
+        kind: string;
+        x: number;
+        y: number;
+        size: number;
+        angle: number;
+        flip: boolean;
+      }[];
+    }[];
+  };
 };
 
 export const standingsApi = {

@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { MomentsProvider, MomentsStage, ToastChainView, useCelebrate } from "@/components/motion";
 import { usePoll } from "@/components/leaderboard/use-poll";
+import { Finale } from "./finale";
 import { ShowdownScreen } from "@/components/live/live-tv";
 import type { LiveRenderer } from "@/components/live/types";
 import { useLive } from "@/components/live/use-live";
@@ -176,6 +177,8 @@ function Board({ data }: { data: DisplayStandings }) {
         <p className="m-0 text-3xl text-gm-text-muted">Keep playing. The judges will reveal all!</p>
       </div>
     );
+  // The event has ended: the winners, dressed up (spec 31).
+  if (data.finale && data.finale.teams.length > 0) return <Finale finale={data.finale} />;
   const players = data.players.map((p) => ({
     id: p.id,
     rank: p.rank,

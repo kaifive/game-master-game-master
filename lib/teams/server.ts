@@ -4,7 +4,17 @@ import { z } from "zod";
 import { eventRuntime, requireEvent } from "@/lib/events/server";
 import { playerRepo } from "@/lib/players/server";
 import { displayStandings, phoneStandings, pointsDeps } from "@/lib/points/server";
+import { AppError } from "@/lib/errors";
+import { drawingFiles } from "@/lib/drawings/server";
 import { teamRepo, teamSummary } from "./runtime";
+import {
+  captainSelfie,
+  finaleFor,
+  hostSelfie,
+  saveStickers,
+  selfiesFor,
+  type SelfieUpload,
+} from "./selfies";
 import {
   donateToTeam,
   dropFromTeam,
@@ -24,6 +34,7 @@ export const teamDeps = (): TeamDeps => ({
   summary: teamSummary(),
   points: pointsDeps(),
   id: () => randomUUID(),
+  files: drawingFiles(),
 });
 
 type Slug = string | string[] | undefined;
@@ -90,7 +101,13 @@ export async function displayFor(slug: Slug) {
   const view = await teamsView({ summary: teamSummary() }, event, null);
   if (!view.board.tv)
     return { hidden: true, phase: view.phase, players: [], teams: [], recent: [] };
-  return { hidden: false, ...(await displayStandings(pointsDeps(), event.slug, view.phase)) };
+  // The finale's selfies are read only once the event has ended (spec 31).
+  const finale = view.ended ? await finaleFor(teamDeps(), event) : null;
+  return {
+    hidden: false,
+    ...(await displayStandings(pointsDeps(), event.slug, view.phase)),
+    ...(finale ? { finale } : {}),
+  };
 }
 
 /** The player's team, from the summary, for team games (S03-AC5). */
@@ -104,3 +121,41 @@ export const dropPlayer = (slug: string, playerId: string) =>
 export const captainCheck = (slug: string, playerId: string) =>
   isCaptain({ teams: teamRepo() }, slug, playerId);
 export { teamRepo, teamSummary } from "./runtime";
+
+/** Reads a selfie upload's form: the file and its size in pixels (spec 31). */
+async function selfieForm(
+  request: Request,
+): Promise<{ playerId: string | null; upload: SelfieUpload }> {
+  const form = await request.formData().catch(() => null);
+  const file = form?.get("photo");
+  const playerId = form?.get("playerId");
+  const width = Number(form?.get("width"));
+  const height = Number(form?.get("height"));
+  if (!(file instanceof Blob)) throw new AppError("BAD_REQUEST", "Send a photo.");
+  return {
+    playerId: typeof playerId === "string" && playerId.length <= 64 ? playerId : null,
+    upload: { file, width, height },
+  };
+}
+
+/** POST /teams/selfie from the captain's phone, before naming the team (S31-AC1). */
+export async function captainSelfieFor(slug: Slug, uid: string, request: Request) {
+  const { playerId, upload } = await selfieForm(request);
+  if (!playerId) throw new AppError("BAD_REQUEST", "Send a photo.");
+  return captainSelfie(teamDeps(), requireEvent(slug), uid, playerId, upload);
+}
+
+/** GET /api/admin/events/[slug]/selfies: every team's selfie and stickers (S31-AC2). */
+export const selfiesList = (slug: Slug) => selfiesFor(teamDeps(), requireEvent(slug));
+
+/** POST /api/admin/events/[slug]/selfies?teamId=: the host adds or replaces a selfie (S31-AC1). */
+export async function hostSelfieFor(slug: Slug, teamId: string, request: Request) {
+  const { upload } = await selfieForm(request);
+  return hostSelfie(teamDeps(), requireEvent(slug), teamId, upload);
+}
+
+export const StickersBody = z.object({ teamId: Id, stickers: z.unknown() });
+
+/** PUT /api/admin/events/[slug]/selfies: the host's stickers on one team's selfie (S31-AC2). */
+export const stickersFor = (slug: Slug, body: z.infer<typeof StickersBody>) =>
+  saveStickers(teamDeps(), requireEvent(slug), body.teamId, body.stickers);

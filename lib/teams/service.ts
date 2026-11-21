@@ -6,6 +6,7 @@ import {
   type EventRuntimeRepo,
   type Phase,
 } from "@/lib/events";
+import type { DrawingFiles } from "@/lib/drawings";
 import type { PlayerRepo, PlayerSummary } from "@/lib/players";
 import { donate, type PointsDeps } from "@/lib/points";
 import {
@@ -27,6 +28,11 @@ export type TeamDeps = {
   points: PointsDeps;
   /** A fresh id, for donations. */
   id: () => string;
+  /**
+   * Where team selfies go (spec 31): Blob, or memory locally. Left out where no
+   * test needs it; with none, naming doesn't wait for a selfie.
+   */
+  files?: DrawingFiles | null;
 };
 
 export type TeamsView = TeamsSummary & {
@@ -40,10 +46,11 @@ const noTeams = () => new AppError("BAD_REQUEST", "This event has no teams.");
 
 /** The phase, the maximum team size (the host's, or players ÷ teams), and every team, from Firestore. */
 export async function currentTeams(deps: TeamDeps, event: EventConfig): Promise<TeamsSummary> {
-  const [settings, teams, players] = await Promise.all([
+  const [settings, teams, players, status] = await Promise.all([
     deps.events.settings(event.slug),
     deps.teams.list(event.slug),
     deps.players.list(event.slug),
+    deps.events.status(event.slug),
   ]);
   const nicknames = new Map(players.map((p) => [p.id, p.nickname]));
   const maxTeamSize = settings.maxTeamSize ?? suggestedTeamSize(players.length, teams.length);
@@ -52,6 +59,7 @@ export async function currentTeams(deps: TeamDeps, event: EventConfig): Promise<
     maxTeamSize,
     teams: teams.map((t) => viewTeam(t, (id) => nicknames.get(id), maxTeamSize)),
     board: { phones: !settings.boardHiddenOnPhones, tv: !settings.boardHiddenOnTv },
+    ...(status === "ended" ? { ended: true } : {}),
   };
 }
 
@@ -108,7 +116,7 @@ export async function teamOf(
   return { phase: view.phase, team, isCaptain: view.mine?.isCaptain === true };
 }
 
-async function ownPlayer(
+export async function ownPlayer(
   deps: TeamDeps,
   event: EventConfig,
   uid: string,
@@ -151,6 +159,8 @@ export async function nameTeam(
   if (!name.ok) throw new AppError("BAD_REQUEST", name.message);
   if (color !== undefined && (!Number.isInteger(color) || color < 1 || color > TEAM_COLORS))
     throw new AppError("BAD_REQUEST", "Pick one of the team colors.");
+  // The selfie is required, wherever there's somewhere to keep it (Khai, 2026-11-19).
+  if (deps.files && !team.selfie) throw new AppError("BAD_REQUEST", "Take the team selfie first.");
   // A team's color is fixed once it's named (Khai, 2026-11-19).
   if (color !== undefined && team.name !== null && color !== team.color)
     throw new AppError("CONFLICT", "Your team's color is set for the party.");

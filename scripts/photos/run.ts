@@ -72,8 +72,9 @@ async function main() {
   await mkdir(args.out, { recursive: true });
   await writeFile(join(args.out, "files.csv"), csv(files));
   const photos = files.filter((f) => f.kind === "photo").length;
+  const selfies = files.filter((f) => f.kind === "selfie").length;
   say(
-    `Saved ${String(saved)} of ${String(count)} files (${String(photos)} photos, ${String(saved - photos)} drawings) to ${args.out}.`,
+    `Saved ${String(saved)} of ${String(count)} files (${String(photos)} photos, ${String(selfies)} team selfies, ${String(saved - photos - selfies)} drawings) to ${args.out}.`,
   );
   say(
     `Back it up, check the count, then: npm run photos:prune -- ${args.slug} --site ${args.site} --backup "<where>" --count ${String(count)}`,

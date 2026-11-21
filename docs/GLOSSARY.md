@@ -30,6 +30,7 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Captain** | A player the admin promotes to lead a team. Also called team leader. Names the team, plays its team games and buzzes for it. | `team.captainId` |
 | **Team game** | A game with `phase: "team"`: the captain plays it on their phone for the team, and its points go to the team (ADR-030). | `game.phase` |
 | **Team score** | Team awards + donations to the team. Members' own points don't count (ADR-030). | `team.points` |
+| **Team selfie** | The photo a captain takes when naming the team; the host adds stickers to it, and the winners' shows on the TV at the finale (spec 31). | `selfie` |
 | **Donation** | A player giving some of their own points to any team, which lowers their own score. Two ledger entries in one transaction. | `source.kind: "donation"` |
 | **Game type** | A generic, reusable game, such as `trivia` or `jeopardy`. Code, not content. | `GameType` |
 | **Game** | An instance of a game type in one event: type + content + theme variant + scoring. | `Game` |
