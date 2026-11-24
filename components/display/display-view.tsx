@@ -1,16 +1,18 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { MomentsProvider, MomentsStage, ToastChainView, useCelebrate } from "@/components/motion";
 import { usePoll } from "@/components/leaderboard/use-poll";
 import { Finale } from "./finale";
+import { TvHostBar, type MenuGame, type TvHost } from "@/components/live/game-menu";
 import { ShowdownScreen } from "@/components/live/live-tv";
 import type { LiveRenderer } from "@/components/live/types";
 import { useLive } from "@/components/live/use-live";
 
 /** How often the TV checks which screen to show between showdowns, so a switch lands quickly. */
 export const SCREEN_POLL_MS = 1500;
-import { liveApi } from "@/lib/live";
+import { adminLiveApi, liveApi, type AdminLiveView, type LiveView } from "@/lib/live";
+import type { ApiResult } from "@/lib/players";
 import { useSlots } from "@/components/slots/registry";
 import { leadChange, newAwards, standingsApi, type DisplayStandings } from "@/lib/points";
 import { cx } from "@/lib/ui";
@@ -26,6 +28,8 @@ type Props = {
   joinCode: string;
   /** Live game screens; tests pass stand-ins. */
   renderers?: Readonly<Record<string, LiveRenderer>>;
+  /** The event's showdowns, for the TV's menu between them (Khai, 2026-11-24). */
+  showdowns?: readonly MenuGame[];
 };
 
 /** Spots what changed since the last update: new awards become toasts, a new leader a callout. */
@@ -214,7 +218,26 @@ function Board({ data }: { data: DisplayStandings }) {
   return <Results label="Leaderboard" rows={players} />;
 }
 
-function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers }: Props) {
+/**
+ * Whether this TV's browser is signed in as the host: then it follows the
+ * Controls view and shows the host's buttons too (Khai, 2026-11-24). Asked
+ * once; a TV that isn't signed in just shows the screens.
+ */
+function useTvHost(slug: string) {
+  const [host, setHost] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    void adminLiveApi.view(slug).then((res) => {
+      if (alive) setHost(res.ok);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [slug]);
+  return host;
+}
+
+function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers, showdowns = [] }: Props) {
   const { Banner } = useSlots();
   const announce = useAnnouncements();
   const load = useCallback(async () => {
@@ -222,9 +245,33 @@ function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers }: Props) {
     return res.ok ? res.data : null;
   }, [slug]);
   const data = usePoll(load, DISPLAY_POLL_MS, announce);
+  const signedIn = useTvHost(slug);
   // The host switches the TV between the leaderboard and the showdown (S24-AC9).
-  const loadLive = useCallback(() => liveApi.view(slug, "", null), [slug]);
-  const live = useLive(loadLive, { idleMs: SCREEN_POLL_MS });
+  const loadLive = useCallback(
+    (): Promise<ApiResult<LiveView | AdminLiveView>> =>
+      signedIn ? adminLiveApi.view(slug) : liveApi.view(slug, "", null),
+    [slug, signedIn],
+  );
+  const live = useLive<LiveView | AdminLiveView>(loadLive, { idleMs: SCREEN_POLL_MS });
+  const [busy, setBusy] = useState(false);
+  const admin = signedIn && live.view && "games" in live.view ? live.view : null;
+  const host: TvHost | null = admin
+    ? {
+        busy,
+        next: admin.next,
+        blocked: Object.fromEntries(admin.games.map((g) => [g.id, g.blocked])),
+        act: (a) => {
+          setBusy(true);
+          void adminLiveApi.act(slug, a).then((res) => {
+            setBusy(false);
+            if (res.ok) live.show(res.data);
+          });
+        },
+      }
+    : null;
+  const hostBar = host && live.view && (
+    <TvHostBar host={host} running={live.view.active} screen={live.view.screen} />
+  );
   if (live.view?.screen === "showdown")
     return (
       <div className="grid h-dvh grid-rows-[auto_1fr] overflow-hidden">
@@ -234,9 +281,12 @@ function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers }: Props) {
             view={live.view}
             serverNow={live.serverNow}
             totals={data && !data.hidden ? data.teams : []}
+            menu={showdowns}
+            host={host}
             {...(renderers ? { renderers } : {})}
           />
         </main>
+        {hostBar}
       </div>
     );
   return (
@@ -267,6 +317,7 @@ function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers }: Props) {
           {data && !data.hidden && <Latest recent={data.recent} />}
         </aside>
       </div>
+      {hostBar}
     </div>
   );
 }

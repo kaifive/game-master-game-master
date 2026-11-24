@@ -6,6 +6,7 @@ import { holiday2026 } from "@/content/events/holiday-2026";
 import type { AdminLiveView, LiveView } from "@/lib/live";
 import { setReducedMotion } from "@/tests/motion";
 import { DemoFrame } from "./demo-frame";
+import { GameMenu, TvHostBar } from "./game-menu";
 import { LiveCard, WhosPlayed } from "./live-controls";
 import { LivePanel } from "./live-phone";
 import { ShowdownScreen, standingsRows } from "./live-tv";
@@ -180,16 +181,30 @@ describe("the TV (spec 24)", () => {
     expect(screen.getByText("still frame")).toBeInTheDocument();
   });
 
-  test("S24-AC9: between showdowns the Showdown screen shows the team standings; during one, the game", () => {
+  test("S24-AC9: between showdowns the Showdown screen shows the menu of showdowns, each with its hint, and the team standings; during one, the game", () => {
     const totals = [
       { id: "t1", name: "Reds", color: 1, points: 300 },
       { id: "t2", name: "Blues", color: 2, points: 500 },
     ];
+    const menu = [
+      { id: "fly", title: "Fly-by Count", type: "flyby", teaser: "Like Rapid Recall" },
+      { id: "nerve", title: "Share or Snatch", type: "snatch", teaser: "Pure nerve" },
+    ];
     const { unmount } = wrap(
-      <ShowdownScreen view={idle} serverNow={() => 0} totals={totals} renderers={{ tap: stand }} />,
+      <ShowdownScreen
+        view={idle}
+        serverNow={() => 0}
+        totals={totals}
+        renderers={{ tap: stand }}
+        menu={menu}
+      />,
     );
-    expect(screen.getByRole("heading", { name: "Next showdown coming up" })).toBeInTheDocument();
-    expect(screen.getByRole("list", { name: "Team standings" })).toHaveTextContent(/Blues.*Reds/);
+    const showdowns = screen.getByRole("region", { name: "Showdowns" });
+    expect(showdowns).toHaveTextContent("Fly-by CountLike Rapid Recall");
+    expect(showdowns).toHaveTextContent("Share or SnatchPure nerve");
+    // Not signed in as the host: nothing to tap.
+    expect(screen.queryByRole("button", { name: /Start/ })).toBeNull();
+    expect(screen.getByRole("region", { name: "Team standings" })).toHaveTextContent(/Blues.*Reds/);
     unmount();
     wrap(
       <ShowdownScreen
@@ -200,6 +215,39 @@ describe("the TV (spec 24)", () => {
       />,
     );
     expect(screen.getByText("tv board")).toBeInTheDocument();
+  });
+
+  test("S24-AC9: a TV signed in as the host starts a showdown from the menu, and steps it with its own buttons", async () => {
+    const user = userEvent.setup();
+    const act = vi.fn();
+    const host = {
+      act,
+      busy: false,
+      next: "Start round 1",
+      blocked: { fly: null, path: "This game needs at least 2 teams." },
+    };
+    const menu = [
+      { id: "fly", title: "Fly-by Count", type: "flyby", teaser: "Like Rapid Recall" },
+      { id: "path", title: "Memory Path", type: "path", teaser: "Like Pathfinder" },
+    ];
+    const { unmount } = wrap(<GameMenu games={menu} totals={[]} host={host} />);
+    await user.click(screen.getByRole("button", { name: "Start Fly-by Count" }));
+    expect(act).toHaveBeenCalledWith({ action: "start", gameId: "fly" });
+    expect(screen.getByRole("button", { name: "Start Memory Path" })).toBeDisabled();
+    expect(screen.getByText("This game needs at least 2 teams.")).toBeInTheDocument();
+    unmount();
+    wrap(<TvHostBar host={host} running screen="showdown" />);
+    await user.click(screen.getByRole("button", { name: "Start round 1" }));
+    expect(act).toHaveBeenCalledWith({ action: "next" });
+    await user.click(screen.getByRole("button", { name: "End early" }));
+    expect(act).toHaveBeenCalledWith({ action: "end" });
+    await user.click(screen.getByRole("button", { name: "Leaderboard" }));
+    expect(act).toHaveBeenCalledWith({ action: "screen", screen: "leaderboard" });
+  });
+
+  test("S24-AC4: the demo shows the room in front of the TV, someone calling out an answer", () => {
+    wrap(<DemoFrame renderer={{ ...stand, say: "7!" }} line="Count them." />);
+    expect(screen.getByText("7!")).toBeInTheDocument();
   });
 
   const rows = standingsRows(
