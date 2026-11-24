@@ -8,7 +8,7 @@
 
 Team games played on the big screen, with each team's captain's phone as the controller (Khai, 2026-11-17). The solo games train players for them: a showdown is like a solo game, but not exactly the same, so a team has to choose who is best for it. Each round, a team sends one player up to play on the captain's phone, and nobody goes again until everyone on their team has had a turn; the host keeps track in Controls, since not everyone has a phone (Khai, 2026-11-17). The host runs the pace from Controls, and the showdown is its own TV screen, swapped to like the leaderboard. Anywhere from 1 to 6 teams can play, the most an event can have (Khai, 2026-11-18); most parties will have 4 or 5. Before each game the TV plays a short animated demo of how it works, not just text. Twelve games:
 
-- **Fly-by Count:** a grid of presents flies across the TV; teams count them. Like Mario Party's "Goomba Spotting". Trained by Rapid Recall.
+- **Fly-by Count:** a grid of presents flies across the TV; teams count them, and in later rounds count only the kind it names at the end. Like Mario Party's "Goomba Spotting". Trained by Rapid Recall.
 - **Memory Path:** a long winding path lights up across a grid and then hides; teams take turns crossing it from memory, and a wrong or slow step knocks them out. Like MrBeast's memorize-the-path challenge. Trained by Pathfinder.
 - **Blind Stop:** a clock starts on the TV, turns into a "?" after 3 seconds, and every team tries to stop it at exactly 10.00. Trained by T-Timer.
 - **Land Mass:** teams take turns dragging block pieces from a shared tray onto one board, claiming squares in their color; the most land wins. Like a mix of Tetris pieces and Blokus territory, with drafting: take the piece another team wanted. Trained by Block Fit.
@@ -19,7 +19,6 @@ Team games played on the big screen, with each team's captain's phone as the con
 - **Snow Sum:** snowflakes with +3, −2 or ×2 fall on the TV; keep a running total in your head. Trained by Rapid Recall.
 - **Share or Snatch:** two teams, one pot: each secretly picks Share or Snatch. Both share, they split it; one snatches, they take it all; both snatch, nobody gets it. Pure nerve and trust.
 - **Last Second:** a countdown runs on the TV; stop it as late as you dare. The last team to stop before zero wins; hit zero and you get nothing. Trained by T-Timer.
-- **Color Count:** ornaments of different colors flash on the TV; only at the end does it ask how many of one color there were, so teams don't know which to count. Trained by Rapid Recall.
 
 ## User stories
 
@@ -35,7 +34,7 @@ Team games played on the big screen, with each team's captain's phone as the con
 
 ### Showdowns in general
 
-1. A showdown is a team game (`phase: "team"`, `mode: "live"`) of type `flyby`, `path`, `blindstop`, `landmass`, `shuffle`, `auction`, `to21`, `stockings`, `snowsum`, `snatch`, `lastsecond` or `colorcount`, run as a live session (spec 11). One runs at a time. Only captains' phones control it (ADR-014). Other players' phones show "Watch the TV" and their team's status.
+1. A showdown is a team game (`phase: "team"`, `mode: "live"`) of type `flyby`, `path`, `blindstop`, `landmass`, `shuffle`, `auction`, `to21`, `stockings`, `snowsum`, `snatch`, `lastsecond`, `buzzer` or a perception game (spec 28), run as a live session (spec 11). One runs at a time. Only captains' phones control it (ADR-014). Other players' phones show "Watch the TV" and their team's status. When an answer timer runs out, a captain's phone sends whatever is on it (a typed number, a turned staff, a picked bid); a phone with nothing on it sends nothing (Khai, 2026-11-24).
 2. **Steps, driven by the host's Next in Controls:** intro (the animated demo) → play → results → (next round: play again) → final standings → end. Between rounds the room sends up its next players while results show; Next starts the round on a shared countdown. Controls shows which step is live and what Next will do. The host can also end a showdown early; points already given stay.
 3. **Who's played (host tracker).** Not everyone on a team has a phone, so the app doesn't pick players (Khai, 2026-11-17). Controls has a Who's played list for every team: the team's joined players, plus people the host adds by name (and can remove). Tapping a name marks them played, in their team's color; tapping again unmarks them. Each team shows how many have played, and once everyone has, a Start over button clears that team. The list is kept for the whole event, across every showdown, and works whether or not a showdown is running. The player who's up plays on the captain's phone.
 3a. **The Showdown screen.** The TV has two screens, the leaderboard and the showdown; the host switches between them in Controls at any time. Starting a showdown switches the TV to it. With no showdown running, the Showdown screen shows the team standings and "Next showdown coming up".

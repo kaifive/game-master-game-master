@@ -14,12 +14,13 @@ type Props = {
     on?: string;
     teams?: string;
     as?: string;
+    round?: string;
   }>;
 };
 
 /**
  * One showdown frozen at a moment, on the TV or a captain's phone, in the
- * party's look (dev only): ?game=flyby&moment=show&on=tv&teams=6.
+ * party's look (dev only): ?game=flyby&moment=show&on=tv&teams=6&round=3.
  */
 export default async function ShowdownGalleryPage({ searchParams }: Props) {
   if (process.env.VERCEL_ENV === "production") notFound();
@@ -29,13 +30,20 @@ export default async function ShowdownGalleryPage({ searchParams }: Props) {
     : "show";
   const type = q.game ?? "flyby";
   const teamCount = Math.min(6, Math.max(1, Number(q.teams ?? "4") || 4));
+  const round = Math.max(1, Math.min(10, Number(q.round ?? "1") || 1));
   const PackRoot = await loadPackRoot(holiday2026.style.pack);
   return (
     <PackRoot styleRef={holiday2026.style}>
       {q.on === "phone" ? (
-        <ShowdownPhoneFrame type={type} moment={moment} teamCount={teamCount} as={q.as} />
+        <ShowdownPhoneFrame
+          type={type}
+          moment={moment}
+          teamCount={teamCount}
+          as={q.as}
+          round={round}
+        />
       ) : (
-        <ShowdownTvFrame type={type} moment={moment} teamCount={teamCount} />
+        <ShowdownTvFrame type={type} moment={moment} teamCount={teamCount} round={round} />
       )}
     </PackRoot>
   );

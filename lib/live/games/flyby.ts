@@ -6,7 +6,10 @@ import { nearPoints } from "./scoring";
 
 /**
  * Fly-by Count (spec 25, S25-AC1): presents fly across the TV in a gappy
- * grid; teams count them and lock in a number. Exact 100, one off 50.
+ * grid; teams count them and lock in a number. Round 1 counts them all; later
+ * rounds mix red, white and green presents and ask about one kind only once
+ * they've flown past (Khai, 2026-11-24: Color Count merged in). Exact 100,
+ * one off 50.
  */
 const Round = z
   .object({
@@ -15,6 +18,8 @@ const Round = z
     ms: z.number().int().min(1000).max(15_000),
     cols: z.number().int().min(2).max(16),
     rows: z.number().int().min(1).max(6),
+    /** Kinds of present (1 to 3); with more than one, it asks about one kind. */
+    kinds: z.number().int().min(1).max(3).default(1),
   })
   .refine((r) => r.min <= r.max, "min must not be above max")
   .refine((r) => r.cols * r.rows >= r.max, "the grid needs a square for every present");
@@ -24,11 +29,14 @@ export { FLYBY_ROUNDS };
 const Content = z.object({ rounds: z.array(Round).min(1).max(10).default(FLYBY_ROUNDS) });
 
 export type FlybyState = AnswerWindow & {
+  /** The answer: how many presents, or how many of the kind asked about. */
   count: number;
+  /** The kind it asks about (an index into PRESENT_KINDS), or null for all of them. */
+  ask: number | null;
   cols: number;
   rows: number;
-  /** [row, col] of each present. */
-  cells: [number, number][];
+  /** [row, col, kind] of each present. */
+  cells: [number, number, number][];
   /** How far each row is shifted, in squares, so rows don't line up. */
   offsets: number[];
   flyMs: number;
@@ -36,7 +44,7 @@ export type FlybyState = AnswerWindow & {
 
 type ViewCtx = { role: Role; revealed: boolean; now: number };
 
-function view(s: FlybyState, _c: unknown, { role, revealed }: ViewCtx) {
+function view(s: FlybyState, _c: unknown, { role, revealed, now }: ViewCtx) {
   return {
     ...windowView(s, role, revealed),
     // Only the TV draws the presents; phones never get the layout (S24-AC7).
@@ -44,22 +52,28 @@ function view(s: FlybyState, _c: unknown, { role, revealed }: ViewCtx) {
       role.kind === "tv"
         ? { cols: s.cols, rows: s.rows, cells: s.cells, offsets: s.offsets, ms: s.flyMs }
         : null,
+    /** Whether it asks about one kind: known from the start, so teams know to watch the kinds. */
+    byKind: s.ask !== null,
+    // Which kind only once they've flown past, so teams can't count just that one.
+    ask: revealed || now >= s.showEndsAt ? s.ask : null,
     count: revealed ? s.count : null,
   };
 }
 
 const game: ShowdownGame<z.infer<typeof Content>, FlybyState> = {
   content: Content,
-  demo: "Count the presents as they fly past, then type how many. Exactly right scores 100, one off scores 50.",
+  demo: "Count the presents as they fly past. Round 1: all of them. Then red, white and green ones, and it asks which kind only after they've gone. Exactly right scores 100, one off 50.",
   timeout: "Out of time? No answer scores 0.",
   rounds: (c) => c.rounds.length,
-  deal(c, { seed, round, startsAt, teams }) {
+  deal(c, { seed, round, startsAt, teams, prev }) {
     const r = c.rounds[round - 1] ?? c.rounds[c.rounds.length - 1] ?? FLYBY_ROUNDS[0];
     if (!r) throw new Error("no rounds");
-    const { count, cols, rows, cells, offsets } = dealFormation(seed, r);
+    // Never the same answer as the round before (Khai, 2026-11-24).
+    const { count, ask, cols, rows, cells, offsets } = dealFormation(seed, r, prev?.count ?? null);
     return {
       ...answerWindow(startsAt, r.ms, teams),
       count,
+      ask,
       cols,
       rows,
       cells,

@@ -817,3 +817,19 @@ Records stay, marked `archived` with the backup location (ADR-012).
 **Consequences:** the backup is only as good as the upload and count check
 in the runbook. Team selfies (spec 31) join the same export when they're built.
 
+## ADR-043: Color Count is merged into Fly-by Count
+
+**Status:** accepted (Khai, 2026-11-24). Changes ADR-041's list of second modes.
+
+Khai's play-test: Fly-by Count should start by counting every present, then
+ask how many of one kind, only once they've flown past. That is Color Count's
+idea on Fly-by's presents, and two games playing the same way would feel like
+a repeat on the night.
+
+**Decision:** Fly-by Count's later rounds mix red, white and green presents
+and ask about one kind at the end (spec 25). Color Count, its showdown and its
+solo version (spec 30), is removed from the library and the party.
+
+**Consequences:** Fly-by Count teaches the "watch everything" trick in one
+game. Spec 25 now covers four showdowns.
+

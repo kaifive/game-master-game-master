@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Ask as OrnamentAsk, OrnamentFlashes } from "@/components/live/games/colorcount";
-import { FlyingPresents, type Fly } from "@/components/live/games/flyby";
+import { FlyingPresents, PresentAsk, type Fly } from "@/components/live/games/flyby";
 import { FallingFlakes } from "@/components/live/games/snowsum";
-import type { Flake, Flash } from "@/lib/games";
+import type { Flake } from "@/lib/games";
 import { ColorWheel } from "../color/color";
+import { useAutoSubmit } from "../auto-submit";
 import { NumberEntry } from "../number-entry";
 import {
   BeatPips,
@@ -52,7 +52,6 @@ export function askFor(type: string, scene: unknown): string {
   if (type === "liondrum") return "Keep the beat!";
   if (type === "flyby") return "How many presents?";
   if (type === "snowsum") return "What's the total?";
-  if (type === "colorcount") return "How many?";
   if (type === "color") return "Match the color!";
   return `Cut it ${(scene as RibbonScene).label} along`;
 }
@@ -89,17 +88,24 @@ function Ask({ children }: { children: ReactNode }) {
 const nudgeLook =
   "grid min-h-12 place-items-center rounded-gm bg-gm-tile-present font-gm-display text-xl font-bold text-gm-tile-present-ink shadow-md ring-1 ring-gm-border motion-safe:active:scale-[0.97]";
 
-function AngleInput({
-  scene,
-  timer,
-  busy,
-  onAnswer,
-}: Pick<StageProps, "timer" | "busy" | "onAnswer"> & { scene: AngleScene }) {
+/** What every input gets besides its scene: the time left, for sending as it runs out. */
+type InputProps = Pick<StageProps, "timer" | "busy" | "onAnswer"> & { left: number };
+
+function AngleInput({ scene, timer, busy, onAnswer, left }: InputProps & { scene: AngleScene }) {
   // The staff starts lying flat, so no angle is handed over for free.
-  const [angle, setAngle] = useState(0);
-  const nudge = (by: number) => {
-    setAngle((a) => Math.max(0, Math.min(180, a + by)));
+  const [angle, setAngleNow] = useState(0);
+  const [touched, setTouched] = useState(false);
+  const setAngle = (a: number) => {
+    setAngleNow(a);
+    setTouched(true);
   };
+  const nudge = (by: number) => {
+    setAngle(Math.max(0, Math.min(180, angle + by)));
+  };
+  // A staff that's been turned is sent as the time runs out (Khai, 2026-11-24).
+  useAutoSubmit(left, touched && !busy, () => {
+    onAnswer(angle);
+  });
   const NUDGES: [number, string, string][] = [
     [5, "↺ 5°", "Turn left 5 degrees"],
     [1, "↺ 1°", "Turn left 1 degree"],
@@ -142,8 +148,12 @@ function SleighInput({
   timer,
   busy,
   onAnswer,
-}: Pick<StageProps, "timer" | "busy" | "onAnswer" | "elapsed"> & { scene: SleighScene }) {
+  left,
+}: InputProps & Pick<StageProps, "elapsed"> & { scene: SleighScene }) {
   const [pick, setPick] = useState<number | null>(null);
+  useAutoSubmit(left, pick !== null && !busy, () => {
+    if (pick !== null) onAnswer(pick);
+  });
   return (
     <section aria-label="Your answer" className="grid gap-4">
       <Ask>{askFor("sleighrun", scene)}</Ask>
@@ -162,13 +172,11 @@ function SleighInput({
   );
 }
 
-function RibbonInput({
-  scene,
-  timer,
-  busy,
-  onAnswer,
-}: Pick<StageProps, "timer" | "busy" | "onAnswer"> & { scene: RibbonScene }) {
+function RibbonInput({ scene, timer, busy, onAnswer, left }: InputProps & { scene: RibbonScene }) {
   const [cut, setCut] = useState<number | null>(null);
+  useAutoSubmit(left, cut !== null && !busy, () => {
+    if (cut !== null) onAnswer(cut);
+  });
   return (
     <section aria-label="Your answer" className="grid gap-4">
       <Ask>{askFor("ribbon", scene)}</Ask>
@@ -254,17 +262,7 @@ const WATCH: Record<string, string> = {
 };
 
 /** The counting games' shows, on a solo phone (spec 30). */
-function CountShow({
-  type,
-  scene,
-  elapsed,
-  showMs,
-}: {
-  type: string;
-  scene: unknown;
-  elapsed: number;
-  showMs: number;
-}) {
+function CountShow({ type, scene, elapsed }: { type: string; scene: unknown; elapsed: number }) {
   if (type === "flyby")
     return (
       <section aria-label="Count them" className="grid gap-4">
@@ -281,21 +279,10 @@ function CountShow({
       </section>
     );
   }
-  return (
-    <section aria-label="Count every color" className="grid gap-4">
-      <Ask>Count every color!</Ask>
-      <OrnamentFlashes
-        flashes={(scene as { flashes: Flash[] }).flashes}
-        elapsed={elapsed}
-        showMs={showMs}
-        className="h-80"
-        ornament="size-24"
-      />
-    </section>
-  );
+  return null;
 }
 
-const COUNTS = ["flyby", "snowsum", "colorcount"];
+const COUNTS = ["flyby", "snowsum"];
 
 /** A note in place of the show, when the room watches it on the TV. */
 function WatchTv({ title, line }: { title: string; line: string }) {
@@ -308,8 +295,10 @@ function WatchTv({ title, line }: { title: string; line: string }) {
 }
 
 export function PerceptionStage(props: StageProps) {
-  const { type, scene, elapsed, clock, showMs, busy, onAnswer, timer, showOn } = props;
+  const { type, scene, elapsed, clock, showMs, answerMs, busy, onAnswer, timer, showOn } = props;
   const showing = elapsed < showMs;
+  // Time left to answer, so inputs send what they have as it runs out.
+  const left = showMs + answerMs - elapsed;
   if (type === "liondrum" && scene)
     return (
       <DrumInput scene={scene as DrumScene} elapsed={elapsed} clock={clock} onAnswer={onAnswer} />
@@ -318,7 +307,7 @@ export function PerceptionStage(props: StageProps) {
     if (showOn === "tv")
       return <WatchTv title="Watch the TV!" line={WATCH[type] ?? "Watch closely."} />;
     if (COUNTS.includes(type) && scene)
-      return <CountShow type={type} scene={scene} elapsed={elapsed} showMs={showMs} />;
+      return <CountShow type={type} scene={scene} elapsed={elapsed} />;
     if (type === "snowpile" && scene)
       return (
         <section aria-label="Count them" className="grid gap-4">
@@ -335,13 +324,30 @@ export function PerceptionStage(props: StageProps) {
       );
     return null;
   }
-  if (type === "snowpile" || type === "flyby" || type === "snowsum")
+  if (type === "flyby") {
+    // Which kind it asks about comes from the server once they've flown past.
+    if (typeof scene !== "object" || scene === null || !("ask" in scene))
+      return <WatchTv title="Get ready…" line="Here comes the question." />;
     return (
       <NumberEntry
+        closesIn={left}
+        prompt={<PresentAsk ask={(scene as { ask: number | null }).ask} size="phone" />}
+        timer={timer}
+        busy={busy}
+        onLock={(n) => {
+          onAnswer(n);
+        }}
+      />
+    );
+  }
+  if (type === "snowpile" || type === "snowsum")
+    return (
+      <NumberEntry
+        closesIn={left}
         prompt={askFor(type, scene)}
         timer={timer}
         busy={busy}
-        max={type === "snowpile" ? 999 : type === "snowsum" ? 200 : 99}
+        max={type === "snowpile" ? 999 : 200}
         negative={type === "snowsum"}
         onLock={(n) => {
           onAnswer(n);
@@ -353,25 +359,20 @@ export function PerceptionStage(props: StageProps) {
       <section aria-label="Your answer" className="grid gap-4">
         <Ask>{askFor(type, scene)}</Ask>
         {timer}
-        <ColorWheel busy={busy} onLock={onAnswer} />
+        <ColorWheel busy={busy} onLock={onAnswer} closesIn={left} />
       </section>
     );
   if (!scene) return null;
-  if (type === "colorcount" && (scene as { ask: number | null }).ask === null)
-    return <WatchTv title="Get ready…" line="Here comes the question." />;
-  if (type === "colorcount")
+  if (type === "staffangle")
     return (
-      <NumberEntry
-        prompt={<OrnamentAsk color={(scene as { ask: number }).ask} size="phone" />}
+      <AngleInput
+        scene={scene as AngleScene}
         timer={timer}
         busy={busy}
-        onLock={(n) => {
-          onAnswer(n);
-        }}
+        onAnswer={onAnswer}
+        left={left}
       />
     );
-  if (type === "staffangle")
-    return <AngleInput scene={scene as AngleScene} timer={timer} busy={busy} onAnswer={onAnswer} />;
   if (type === "sleighrun")
     return (
       <SleighInput
@@ -380,7 +381,16 @@ export function PerceptionStage(props: StageProps) {
         timer={timer}
         busy={busy}
         onAnswer={onAnswer}
+        left={left}
       />
     );
-  return <RibbonInput scene={scene as RibbonScene} timer={timer} busy={busy} onAnswer={onAnswer} />;
+  return (
+    <RibbonInput
+      scene={scene as RibbonScene}
+      timer={timer}
+      busy={busy}
+      onAnswer={onAnswer}
+      left={left}
+    />
+  );
 }

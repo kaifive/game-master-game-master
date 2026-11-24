@@ -26,7 +26,6 @@ export const GAME_TYPES = [
   // Showdowns (specs 24 to 27).
   "flyby",
   "snowsum",
-  "colorcount",
   "blindstop",
   "lastsecond",
   "auction",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAutoSubmit } from "@/components/games/auto-submit";
 import { useSlots } from "@/components/slots/registry";
 import {
   auctionWinner,
@@ -129,6 +130,14 @@ function AuctionController({ view, game, serverNow, revealed, send, busy }: Live
   const g = game as AuctionView | null;
   const now = useServerTime(serverNow, !revealed);
   const [pick, setPick] = useState<number | null>(null);
+  // A number picked but not yet bid is sent as the time runs out (Khai, 2026-11-24).
+  useAutoSubmit(
+    g && !revealed && g.mine === null ? g.closesAt - now : undefined,
+    pick !== null && !busy,
+    () => {
+      if (pick !== null) void send({ bid: pick });
+    },
+  );
   if (!g) return null;
   if (revealed) return <PhoneResult view={view} />;
   if (g.mine !== null)

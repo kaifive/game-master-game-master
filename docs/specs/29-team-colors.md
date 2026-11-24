@@ -37,7 +37,7 @@ Once built, spec 03 changes to match.
    on a scene (specs 24 to 28). No game assigns its own team colors.
 6. Color is never the only signal: the team's name is always beside its color
    (PRODUCT.md), so a color-blind player loses nothing.
-7. Game colors that aren't teams, such as Color Count's ornaments, keep their own
+7. Game colors that aren't teams, such as Fly-by Count's presents, keep their own
    patterns and names, so they never read as a team.
 
 ## Data

@@ -6,7 +6,6 @@ export { path, type PathView, type Square } from "./path";
 export { shuffle, type ShuffleView } from "./shuffle";
 export { to21, type To21View } from "./to21";
 export { REVEAL_MS, stockings, type Opened, type StockingView } from "./stockings";
-export { colorcount, ORNAMENT_COLORS, type ColorView } from "./colorcount";
 export { flyby, FLYBY_ROUNDS, type FlybyView } from "./flyby";
 export { lastsecond, type LastView } from "./lastsecond";
 export { runningTotals, snowsum, type Flake, type SnowView } from "./snowsum";

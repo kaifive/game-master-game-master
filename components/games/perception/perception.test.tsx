@@ -133,16 +133,15 @@ describe("the counting games solo on the phone (spec 30)", () => {
     expect(screen.getByRole("button", { name: "Minus" })).toBeInTheDocument();
   });
 
-  test("S30-AC3: Color Count flashes the ornaments without the question, and asks the server for it once they're gone", () => {
-    const { onTimeUp } = play("colorcount", soloView("colorcount", T0 + 200).view);
-    expect(screen.getByLabelText("Ornaments flashing")).toBeInTheDocument();
+  test("S30-AC3: Fly-by flies the presents without the question, and asks the server for it once they're gone", () => {
+    const { onTimeUp } = play("flyby", soloView("flyby", T0 + 200).view);
+    expect(screen.getByRole("img", { name: "Presents flying past" })).toBeInTheDocument();
     expect(screen.queryByText(/How many/)).toBeNull();
     expect(onTimeUp).not.toHaveBeenCalled();
-    const shown = soloView("colorcount", T0 + 200).view;
-    const after = play("colorcount", { ...shown, elapsed: shown.showMs + 50 });
+    const shown = soloView("flyby", T0 + 200).view;
+    const after = play("flyby", { ...shown, elapsed: shown.showMs + 50 });
     expect(after.onTimeUp).toHaveBeenCalledTimes(1);
-    play("colorcount", soloView("colorcount", T0 + 4500).view);
-    expect(screen.getByRole("button", { name: "Lock in" })).toBeInTheDocument();
-    expect(screen.getAllByText(/ornaments\?/).length).toBeGreaterThan(0);
+    play("flyby", soloView("flyby", T0 + 4500).view);
+    expect(screen.getAllByRole("button", { name: "Lock in" }).length).toBeGreaterThan(0);
   });
 });

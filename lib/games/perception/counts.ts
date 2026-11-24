@@ -1,26 +1,23 @@
 import { z } from "zod";
 import { colorDistance, colorShare, hsvToRgb, toHex } from "../color/logic";
 import {
-  COLOR_ROUNDS,
   dealFlakes,
-  dealFlashes,
   dealFormation,
   FLYBY_ROUNDS,
-  ORNAMENT_COLORS,
+  PRESENT_KINDS,
   SNOW_MAX,
   SNOW_MIN,
   SNOW_ROUNDS,
   sum,
   type Flake,
-  type Flash,
   type Formation,
 } from "../counts";
 import { seededRandom } from "../random";
-import { clamp01, type Level, type PerceptionCore } from "./core";
+import { type Level, type PerceptionCore } from "./core";
 
 /**
  * The second modes of spec 30 (ADR-041), built as perception cores: Fly-by
- * Count, Snow Sum and Color Count as solo games, Color Matcher as a showdown.
+ * Count and Snow Sum as solo games, Color Matcher as a showdown.
  */
 
 /** The counting showdowns' own rule: exact 1, one off a half, else 0 (spec 25). */
@@ -40,12 +37,12 @@ export type FlybyTask = Formation & { level: Level; ms: number };
 export const flybyCore: PerceptionCore<FlybyTask, number> = {
   type: "flyby",
   name: "Fly-by Count",
-  demo: "Count the presents as they fly past, then type how many. Exactly right scores full points, one off scores half.",
+  demo: "Count the presents as they fly past. First count them all; later it asks how many of one kind, only once they've gone.",
   timeout: "Out of time? No answer scores 0.",
   instructions: [
     "Presents fly across the screen.",
-    "Count them, then type how many there were.",
-    "Exactly right scores full points, one off scores half. Three flights, each bigger.",
+    "First count them all. Then there are red, white and green ones, and it only asks which kind once they've flown past.",
+    "Exactly right scores full points, one off scores half. Three flights, each harder.",
   ],
   deal(seed, level) {
     const r = roundFor(FLYBY_ROUNDS, level);
@@ -56,14 +53,17 @@ export const flybyCore: PerceptionCore<FlybyTask, number> = {
   answer: z.number().int(),
   valid: (_t, a) => a >= 0 && a <= 99,
   closeness: (t, a) => nearCloseness(a, t.count),
-  // The layout only while it flies; the count only at the reveal (S30-AC3).
+  // The layout only while it flies, which kind is asked about only after,
+  // and the count only at the reveal (S30-AC3).
   scene: (t, phase) =>
     phase === "show"
       ? { cols: t.cols, rows: t.rows, cells: t.cells, offsets: t.offsets, ms: t.ms }
-      : phase === "reveal"
-        ? { count: t.count }
-        : null,
-  truth: (t) => `${String(t.count)} presents`,
+      : phase === "answer"
+        ? { ask: t.ask }
+        : { count: t.count, ask: t.ask },
+  truth: (t) =>
+    `${String(t.count)}${t.ask === null ? "" : ` ${PRESENT_KINDS[t.ask] ?? ""}`} presents`,
+  answerKey: (t) => t.count,
   said: (_t, a) => String(a),
 };
 
@@ -101,46 +101,6 @@ export const snowsumCore: PerceptionCore<SnowSumTask, number> = {
         ? { total: t.total }
         : null,
   truth: (t) => `a total of ${String(t.total)}`,
-  said: (_t, a) => String(a),
-};
-
-// ---- Color Count
-
-export type ColorCountTask = {
-  level: Level;
-  flashes: Flash[];
-  ask: number;
-  truth: number;
-  ms: number;
-};
-
-export const colorcountCore: PerceptionCore<ColorCountTask, number> = {
-  type: "colorcount",
-  name: "Color Count",
-  demo: "Ornaments flash up a few at a time. Only at the end does it ask how many of one color there were.",
-  timeout: "Out of time? No answer scores 0.",
-  instructions: [
-    "Ornaments flash up a few at a time.",
-    "Count every color: at the end it asks about just one.",
-    "The closer your count, the more points. Three rounds, each with more colors.",
-  ],
-  deal(seed, level) {
-    const r = roundFor(COLOR_ROUNDS, level);
-    return { level, ms: r.ms, ...dealFlashes(seed, r.colors, r.count) };
-  },
-  showMs: (t) => t.ms,
-  answerMs: () => ANSWER_MS,
-  answer: z.number().int(),
-  valid: (_t, a) => a >= 0 && a <= 99,
-  closeness: (t, a) => clamp01(1 - Math.abs(a - t.truth) / t.truth),
-  // Which color it asks about only once the ornaments are gone (S30-AC3).
-  scene: (t, phase) =>
-    phase === "show"
-      ? { flashes: t.flashes, ask: null }
-      : phase === "answer"
-        ? { flashes: null, ask: t.ask }
-        : { flashes: t.flashes, ask: t.ask, truth: t.truth },
-  truth: (t) => `${String(t.truth)} ${ORNAMENT_COLORS[t.ask] ?? ""}`,
   said: (_t, a) => String(a),
 };
 
@@ -187,5 +147,5 @@ export const colorCore: PerceptionCore<ColorTask, string> = {
 };
 
 /** Every core that has a solo version, and every one that has a showdown (ADR-041). */
-export const SOLO_ONLY_CORES = [flybyCore, snowsumCore, colorcountCore] as const;
+export const SOLO_ONLY_CORES = [flybyCore, snowsumCore] as const;
 export const SHOWDOWN_ONLY_CORES = [colorCore] as const;

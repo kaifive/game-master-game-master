@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import type { AnyShowdown, MoveResult } from "../model";
 import { ANSWER_MS } from "./answer";
 import { blindstop, EXACT_BONUS } from "./blindstop";
-import { colorcount, dealFlashes } from "./colorcount";
 import { flyby, FLYBY_ROUNDS, type FlybyState } from "./flyby";
 import { lastsecond } from "./lastsecond";
 import { rankedPoints } from "./scoring";
@@ -120,31 +119,28 @@ describe("Snow Sum", () => {
   });
 });
 
-describe("Color Count", () => {
-  it("S25-AC3: flashes seeded ornaments with every color, asks the color only at the end, and ranks by closeness", () => {
-    const dealt = dealFlashes(5, 4, 18);
-    const all = dealt.flashes.flat();
-    expect(all).toHaveLength(18);
-    expect(new Set(all.map((o) => o.color)).size).toBe(4);
-    expect(dealt.flashes.every((f) => f.length >= 1 && f.length <= 3)).toBe(true);
-    expect(dealt.truth).toBe(all.filter((o) => o.color === dealt.ask).length);
-    const g = play<ReturnType<typeof dealFlashes> & { showEndsAt: number }>(colorcount, {});
-    // Nobody, not even the TV, learns which color until the flashes are done.
-    expect(g.view(g.state as never, tv, false, g.state.showEndsAt - 1)).toMatchObject({
-      ask: null,
-    });
-    expect(g.view(g.state as never, cap("t1"), false, g.state.showEndsAt)).toMatchObject({
-      ask: g.state.ask,
-      flashes: null,
-      truth: null,
-    });
-    const truth = g.state.truth;
-    const at = g.state.showEndsAt + 1;
-    let s = g.step(g.state, "t1", { answer: truth + 2 }, at);
-    s = g.step(s, "t2", { answer: truth }, at);
-    s = g.step(s, "t3", { answer: truth - 2 }, at);
-    s = g.step(s, "t4", { answer: truth + 5 }, at);
-    expect(g.score(s)).toEqual({ t2: 100, t1: 70, t3: 70, t4: 30, t5: 0, t6: 0 });
+describe("Fly-by Count by kind", () => {
+  it("S25-AC3: later rounds mix red, white and green presents and ask about one kind only once they've flown past; never the last round's answer", () => {
+    const c = flyby.content.parse({});
+    const deal = (round: number, prev: FlybyState | null, seed = 7) =>
+      flyby.deal(c, { seed, round, teams, startsAt: T0, prev }) as FlybyState;
+    const r1 = deal(1, null);
+    expect(r1.ask).toBeNull();
+    expect(new Set(r1.cells.map((x) => x[2]))).toEqual(new Set([0]));
+    const r3 = deal(3, r1);
+    expect(new Set(r3.cells.map((x) => x[2])).size).toBe(3);
+    expect(r3.ask).not.toBeNull();
+    expect(r3.count).toBe(r3.cells.filter((x) => x[2] === r3.ask).length);
+    // Nobody learns which kind until the presents have gone, though all know it's by kind.
+    const view = (role: Parameters<typeof flyby.view>[2]["role"], now: number) =>
+      flyby.view(r3, c, { role, revealed: false, now, teams }) as Record<string, unknown>;
+    expect(view(tv, r3.showEndsAt - 1)).toMatchObject({ byKind: true, ask: null });
+    expect(view(cap("t1"), r3.showEndsAt)).toMatchObject({ ask: r3.ask, fly: null, count: null });
+    // Never the same answer as the round before, whatever the seed.
+    for (let seed = 1; seed <= 200; seed++) {
+      const a = deal(1, null, seed);
+      expect(deal(2, a, seed).count).not.toBe(a.count);
+    }
   });
 });
 

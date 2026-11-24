@@ -241,6 +241,7 @@ export function NumberPad({
   return (
     <NumberEntry
       prompt={prompt}
+      closesIn={w.closesAt - now}
       timer={<TimeLeft closesAt={w.closesAt} now={now} total={w.closesAt - w.showEndsAt} />}
       busy={busy}
       negative={negative}

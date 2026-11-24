@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { BackspaceIcon } from "@/components/icons/game";
+import { useAutoSubmit } from "./auto-submit";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"] as const;
 
@@ -16,8 +17,11 @@ export function NumberEntry({
   onLock,
   negative = false,
   max = 99,
+  closesIn,
 }: {
   prompt: ReactNode;
+  /** Time left to answer, in ms: what's typed is sent as it runs out. */
+  closesIn?: number;
   /** The answer timer, under the prompt. */
   timer?: ReactNode;
   busy: boolean;
@@ -27,6 +31,9 @@ export function NumberEntry({
 }) {
   const [typed, setTyped] = useState("");
   const value = typed === "" || typed === "-" ? null : Number(typed);
+  useAutoSubmit(closesIn, value !== null && !busy, () => {
+    if (value !== null) onLock(value);
+  });
   const digits = String(max).length;
   const press = (k: string) => {
     if (k === "back") {

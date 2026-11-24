@@ -111,19 +111,13 @@ export const CATALOG: readonly CatalogEntry[] = [
   {
     type: "flyby",
     name: "Fly-by Count",
-    pitch: "Presents fly past; count them. Exactly right scores full points, one off half.",
+    pitch: "Presents fly past: count them all, then only one kind, asked after they've gone.",
     modes: BOTH,
   },
   {
     type: "snowsum",
     name: "Snow Sum",
     pitch: "Snowflakes marked +3, -2 or x2 fall one at a time; keep the running total.",
-    modes: BOTH,
-  },
-  {
-    type: "colorcount",
-    name: "Color Count",
-    pitch: "Ornaments flash up, then it asks how many of one color there were.",
     modes: BOTH,
   },
   {
