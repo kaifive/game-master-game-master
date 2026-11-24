@@ -16,14 +16,14 @@ Every game here follows spec 24: the host's steps, Who's played, the TV demo, 1 
 
 1. Content: `rounds`, each with a count range, how long the fly-by lasts, the grid size and how many kinds of present (1 to 3); defaults are 3 rounds that get harder (6 to 12 presents over 4 s, all one kind; 10 to 18 over 3.5 s in two kinds; 15 to 25 over 3 s in three kinds). The layout comes from the session's seed; the count is never sent to phones before the reveal. A round's answer is never the same as the round before's (Khai, 2026-11-24).
 2. Kinds: red with a gold bow, white with a red ribbon, and green with white stripes, so each has a mark besides its color. With one kind the question is "How many presents?". With more, everyone knows from the start it'll ask about one kind, but which one ("How many red presents?") shows only once they've flown past, so teams must count every kind (Khai, 2026-11-24, merging in Color Count).
-3. Play: the presents fly across the TV in rows and columns with gaps (some rows offset), sized so every row fits the screen. When they've passed, every team's player types a number on the captain's phone within 10 seconds; there's no Lock in: what's typed goes in as the time runs out (spec 24).
+3. Play: the presents fly across the TV in rows and columns with gaps (some rows offset), sized so every row fits the screen, under "Count the presents!" (or "Count every kind!"). When they've passed, every team's player types a number on the captain's phone within 10 seconds; there's no Lock in: what's typed goes in as the time runs out (spec 24).
 4. Results: the TV shows the count ("There were 7 red presents") and each team's number. **Points per round: a round's share of 150 (50 a round over three) times how close: exact scores it all, and it falls away evenly to nothing at a miss of half the true number (at least 5), so near misses still score (ADR-045).**
 
 ### Snow Sum (`snowsum`)
 
 1. Content: rounds (default 3), each with how many snowflakes and which operations, getting harder (5 flakes of + and −, 7 flakes, then 8 flakes with ×2), dealt from the seed. Totals stay between −50 and 200.
-2. Play: the snowflakes fall one at a time on the TV, starting from 0. A flake never takes away from 0 or less, so totals stay friendly for kids. When the last has fallen, every team types the total within 10 s and locks it in.
-3. Results: the TV replays the sum step by step. **Points per round: a round's share of 150 (50 a round over three) times how close: exact scores it all, and it falls away evenly to nothing at a miss of half the true number (at least 5), so near misses still score (ADR-045).**
+2. Play: the snowflakes fall one at a time on the TV, starting from 0, under "Do the math!". A flake never takes away from 0 or less, so totals stay friendly for kids. When the last has fallen, every team types the total within 10 s; it goes in as the time runs out.
+3. Results: the TV shows the total only, not the working (Khai, 2026-11-24), and every team's answer. **Points per round: a round's share of 150 (50 a round over three) times how close: exact scores it all, and it falls away evenly to nothing at a miss of half the true number (at least 5), so near misses still score (ADR-045).**
 
 ### Blind Stop (`blindstop`)
 

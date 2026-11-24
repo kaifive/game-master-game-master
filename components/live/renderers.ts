@@ -11,7 +11,7 @@ import type { LiveRenderer } from "./types";
 /** What someone in the room calls out in each game's demo, under the drawn TV (Khai, 2026-11-24). */
 const SAYS: Readonly<Record<string, string>> = {
   flyby: "5!",
-  snowsum: "12!",
+  snowsum: "10!",
   blindstop: "Stop!",
   lastsecond: "Not yet… now!",
   auction: "Bid 7!",

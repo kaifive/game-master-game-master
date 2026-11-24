@@ -402,18 +402,20 @@ function PathDemo({ still }: { still: boolean }) {
   return (
     <div className="grid h-full w-full place-items-center">
       <div className="grid h-[70%] grid-cols-5 gap-[4px]" style={{ aspectRatio: "5 / 3" }}>
+        {/* Every square stays put; the path lights over it in turn, so nothing blinks out (Khai, 2026-11-24). */}
         {Array.from({ length: 15 }, (_, i) => (
-          <span
-            key={i}
-            className={cx(
-              "rounded-[3px]",
-              lit.includes(i) ? "bg-gm-tile-correct" : "bg-gm-tile-absent",
-              lit.includes(i) && !still && "motion-safe:animate-[gm-demo-flash_5s_linear_infinite]",
+          <span key={i} className="relative rounded-[3px] bg-gm-tile-absent">
+            {lit.includes(i) && (
+              <span
+                className={cx(
+                  "absolute inset-0 rounded-[3px] bg-gm-tile-correct",
+                  !still &&
+                    "opacity-0 motion-safe:animate-[gm-demo-flash_5s_linear_infinite] motion-safe:[animation-fill-mode:backwards]",
+                )}
+                style={{ animationDelay: `${String(lit.indexOf(i) * 0.5)}s` }}
+              />
             )}
-            style={
-              lit.includes(i) ? { animationDelay: `${String(lit.indexOf(i) * 0.5)}s` } : undefined
-            }
-          />
+          </span>
         ))}
       </div>
     </div>

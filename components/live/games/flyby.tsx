@@ -173,12 +173,18 @@ function Tv({ view, game, serverNow, revealed }: LiveTvProps) {
       />
     );
   if (now < g.showEndsAt && g.fly) {
+    // The instruction stays up while they fly, so the room knows what to watch (Khai, 2026-11-24).
     return (
-      <FlyingPresents
-        fly={g.fly}
-        elapsed={now - g.startsAt}
-        className="h-[62vh] text-[clamp(2rem,7vh,5rem)]"
-      />
+      <div className="grid gap-[1vh]">
+        <p className="m-0 text-center font-gm-display text-[clamp(1.8rem,5vh,3.6rem)] font-bold">
+          {g.byKind ? "Count every kind!" : "Count the presents!"}
+        </p>
+        <FlyingPresents
+          fly={g.fly}
+          elapsed={now - g.startsAt}
+          className="h-[54vh] text-[clamp(2rem,7vh,5rem)]"
+        />
+      </div>
     );
   }
   return (

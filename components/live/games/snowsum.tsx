@@ -1,6 +1,6 @@
 "use client";
 
-import { runningTotals, type Flake, type SnowView } from "@/lib/live";
+import type { Flake, SnowView } from "@/lib/live";
 import { cx } from "@/lib/ui";
 import type { LiveControllerProps, LiveRenderer, LiveTvProps } from "../types";
 import {
@@ -91,7 +91,7 @@ export function FallingFlakes({
           tv ? "text-[clamp(1.4rem,4vh,3rem)]" : "text-xl",
         )}
       >
-        Snowflake {i + 1} of {flakes.length}
+        Do the math!
       </p>
       <div className={cx("grid place-items-center", tv ? "h-[56vh]" : "h-72")}>
         {flake && (
@@ -119,23 +119,9 @@ function Tv({ view, game, serverNow, revealed }: LiveTvProps) {
   const now = useServerTime(serverNow, !revealed);
   if (!g) return null;
   if (revealed) {
-    // The sum step by step, then every team's total.
-    const totals = runningTotals(g.flakes ?? []);
-    const steps = (g.flakes ?? []).map((f, k) => ({ label: flakeLabel(f), total: totals[k] ?? 0 }));
+    // Just the total, then every team's: no working shown (Khai, 2026-11-24).
     return (
       <div className="grid gap-[3vh]">
-        <ol
-          aria-label="The sum, step by step"
-          className="m-0 flex list-none flex-wrap items-center justify-center gap-[1.2vh] p-0 font-gm-display text-[clamp(1.4rem,4.4vh,3.2rem)] font-bold"
-        >
-          <li>0</li>
-          {steps.map((s, i) => (
-            <li key={i} className="flex items-baseline gap-[0.3em]">
-              <span className="text-gm-accent-ink">{s.label}</span>
-              <span className="text-[0.8em] text-gm-text">= {s.total}</span>
-            </li>
-          ))}
-        </ol>
         <p className="m-0 text-center font-gm-display text-[clamp(2rem,6vh,4.5rem)] font-bold">
           The total was <span className="text-gm-tile-correct">{g.total}</span>
         </p>
@@ -145,20 +131,13 @@ function Tv({ view, game, serverNow, revealed }: LiveTvProps) {
           note={(t) => {
             const a = g.answers?.[t];
             if (a === undefined || g.total === null) return null;
-            return a === g.total
-              ? "Exactly right!"
-              : Math.abs(a - g.total) === 1
-                ? "One off"
-                : null;
+            return a === g.total ? "Exactly right!" : null;
           }}
         />
       </div>
     );
   }
-  if (now < g.startsAt)
-    return (
-      <GetReady startsAt={g.startsAt} now={now} line="Start at 0 and add up the snowflakes!" />
-    );
+  if (now < g.startsAt) return <GetReady startsAt={g.startsAt} now={now} line="Do the math!" />;
   if (now < g.showEndsAt && g.flakes)
     return (
       <FallingFlakes flakes={g.flakes} flakeMs={g.flakeMs} elapsed={now - g.startsAt} size="tv" />
@@ -196,30 +175,22 @@ function Controller({ view, game, serverNow, revealed, send, busy }: LiveControl
   );
 }
 
-/** Three flakes fall in turn: +3, +2, ×2, then the total 10 (S24-AC4). */
+/** Three flakes fall in turn: +3, +2, ×2; someone in the room calls out 10 (S24-AC4). */
 function Demo({ still }: { still: boolean }) {
   const flakes = ["+3", "+2", "×2"];
   return (
-    <div className="relative grid h-full w-full grid-cols-4 place-items-center text-[clamp(1rem,4vh,2.4rem)]">
+    <div className="grid h-full w-full grid-cols-3 place-items-center px-[6%] text-[clamp(0.8rem,3vh,1.8rem)]">
       {flakes.map((f, i) => (
         <Snowflake
           key={f}
           label={f}
           className={cx(
-            "size-[5em]",
+            "size-[4.5em]",
             !still && "motion-safe:animate-[gm-demo-fall_6s_var(--gm-ease-out)_infinite]",
           )}
           style={{ animationDelay: `${String(i)}s` }}
         />
       ))}
-      <span
-        className={cx(
-          "rounded-gm bg-gm-tile-present px-[0.5em] font-gm-display text-[1.8em] font-bold text-gm-tile-present-ink shadow-md",
-          !still && "motion-safe:animate-[gm-demo-answer_6s_linear_infinite]",
-        )}
-      >
-        = 10
-      </span>
     </div>
   );
 }

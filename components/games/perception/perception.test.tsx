@@ -73,7 +73,7 @@ describe("the counting games solo on the phone (spec 30)", () => {
 
   test("S30-AC2: Snow Sum drops the snowflakes one at a time, and its pad can go below zero", () => {
     play("snowsum", soloView("snowsum", T0 + 200).view);
-    expect(screen.getByText("Snowflake 1 of 5")).toBeInTheDocument();
+    expect(screen.getByText("Do the math!")).toBeInTheDocument();
     play("snowsum", soloView("snowsum", T0 + 7500).view);
     expect(screen.getByRole("button", { name: "Minus" })).toBeInTheDocument();
   });

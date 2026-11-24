@@ -165,7 +165,6 @@ function CountShow({ type, scene, elapsed }: { type: string; scene: unknown; ela
   const s = scene as { flakes: Flake[]; flakeMs: number };
   return (
     <section aria-label="Add them up" className="grid gap-2">
-      <Ask>Do the math!</Ask>
       <FallingFlakes flakes={s.flakes} flakeMs={s.flakeMs} elapsed={elapsed} size="phone" />
     </section>
   );
