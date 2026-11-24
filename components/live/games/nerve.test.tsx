@@ -90,7 +90,8 @@ describe("Share or Snatch on the phone and TV (spec 26)", () => {
     ]);
     show("snatch", played.view(tv, T0 + 20_000, true), T0 + 20_000, "tv");
     const row = screen.getByRole("list", { name: "Matchups" });
-    expect(row).toHaveTextContent("Snatch · +100");
+    const pot = (r.state as { pot: number }).pot;
+    expect(row).toHaveTextContent(`Snatch · +${String(pot)}`);
     expect(row).toHaveTextContent("Share · +0");
   });
 });

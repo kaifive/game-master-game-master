@@ -173,12 +173,18 @@ function Tv({ view, game, serverNow, revealed }: LiveTvProps) {
       />
     );
   if (now < g.showEndsAt && g.fly) {
+    // The instruction stays up while they fly, so the room knows what to watch (Khai, 2026-11-24).
     return (
-      <FlyingPresents
-        fly={g.fly}
-        elapsed={now - g.startsAt}
-        className="h-[62vh] text-[clamp(2rem,7vh,5rem)]"
-      />
+      <div className="grid gap-[1vh]">
+        <p className="m-0 text-center font-gm-display text-[clamp(1.8rem,5vh,3.6rem)] font-bold">
+          {g.byKind ? "Count every kind!" : "Count the presents!"}
+        </p>
+        <FlyingPresents
+          fly={g.fly}
+          elapsed={now - g.startsAt}
+          className="h-[54vh] text-[clamp(2rem,7vh,5rem)]"
+        />
+      </div>
     );
   }
   return (
@@ -216,7 +222,7 @@ function Controller({ view, game, serverNow, revealed, send, busy }: LiveControl
   );
 }
 
-/** Five presents drift across, then the count pops up (S24-AC4). */
+/** Five presents drift across; someone in the room calls out the count (S24-AC4). */
 function Demo({ still }: { still: boolean }) {
   return (
     <div className="relative grid h-full w-full place-items-center overflow-hidden text-[clamp(1.6rem,6vh,4rem)]">
@@ -234,14 +240,6 @@ function Demo({ still }: { still: boolean }) {
           />
         ))}
       </div>
-      <span
-        className={cx(
-          "absolute right-[8%] bottom-[8%] rounded-gm bg-gm-tile-present px-[0.4em] font-gm-display font-bold text-gm-tile-present-ink shadow-md",
-          !still && "motion-safe:animate-[gm-demo-answer_5s_linear_infinite]",
-        )}
-      >
-        5
-      </span>
     </div>
   );
 }

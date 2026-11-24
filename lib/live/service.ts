@@ -24,7 +24,7 @@ import {
   resetTeam,
   roster,
 } from "./played";
-import type { LiveRepo, LiveState } from "./repo";
+import { withFinished, type LiveRepo, type LiveState } from "./repo";
 import { controlsView, liveView } from "./view";
 
 /** Everything the live service needs (spec 11). */
@@ -100,7 +100,7 @@ async function transition(
     box.before = current.session;
     box.outcome = run(m, current.session, deps.now());
     if (!box.outcome.ok) return null;
-    return { ...current, session: box.outcome.session };
+    return withFinished({ ...current, session: box.outcome.session }, box.outcome.session);
   });
   const outcome = box.outcome;
   if (!outcome.ok) throw new AppError("CONFLICT", outcome.message);
@@ -115,11 +115,22 @@ async function current(deps: LiveDeps, event: EventConfig): Promise<LiveState> {
   if (!m || !state.session || state.session.step !== "play") return state;
   const ticked = machineTick(m, state.session, deps.now());
   if (!ticked.ok || ticked.session === state.session) return state;
-  return deps.live.update(event.slug, (latest) => {
+  // What this read wrote, if it won: a round it closed pays its points, once.
+  const box: { before: Session | null; outcome: Outcome | null } = { before: null, outcome: null };
+  const after = await deps.live.update(event.slug, (latest) => {
+    box.before = null;
+    box.outcome = null;
     if (!latest.session || latest.session.revision !== state.session?.revision) return null;
     const again = machineTick(m, latest.session, deps.now());
-    return again.ok ? { ...latest, session: again.session } : null;
+    if (!again.ok) return null;
+    box.before = latest.session;
+    box.outcome = again;
+    return withFinished({ ...latest, session: again.session }, again.session);
   });
+  const { before, outcome } = box;
+  if (before && outcome?.ok && after.session?.revision === outcome.session?.revision)
+    await pay(deps, event.slug, before, outcome);
+  return after;
 }
 
 type SummaryTeam = TeamsSummary["teams"][number];
@@ -177,7 +188,7 @@ export async function adminLiveView(deps: LiveDeps, event: EventConfig) {
   const summary = await deps.teams(event.slug);
   const playing = teamsFrom(summary).length;
   return {
-    ...controlsView(m, state.session, deps.now(), state.screen),
+    ...controlsView(m, state.session, deps.now(), state.screen, state.finished),
     games: liveGames(deps, event).map((g) => {
       const showdown = deps.showdown(g.type);
       return {
@@ -283,7 +294,11 @@ export async function adminLiveAction(
     await transition(deps, event, (m, s, now) => hostAct(m, s, act, now));
   } else if (body.action === "end") {
     // Ending keeps Who's played and the screen: turns are tracked all night (ADR-038).
-    await deps.live.update(event.slug, (cur) => ({ ...cur, session: null }));
+    // A showdown that got as far as a round's results counts as played on the menu.
+    await deps.live.update(event.slug, (cur) => ({
+      ...withFinished(cur, cur.session),
+      session: null,
+    }));
   } else if (body.action === "screen") {
     const screen = body.screen;
     await deps.live.update(event.slug, (cur) => ({ ...cur, screen }));
@@ -331,9 +346,10 @@ export async function phoneLiveView(
 ) {
   const state = await current(deps, event);
   const m = machineFor(deps, event, state.session);
-  if (!m || !state.session) return liveView(null, null, { kind: "tv" }, deps.now(), state.screen);
+  if (!m || !state.session)
+    return liveView(null, null, { kind: "tv" }, deps.now(), state.screen, state.finished);
   const role = await roleOf(deps, event, state.session, playerId, uid);
-  return liveView(m, state.session, role, deps.now(), state.screen);
+  return liveView(m, state.session, role, deps.now(), state.screen, state.finished);
 }
 
 export const PlayerLiveAction = z.object({

@@ -1,4 +1,11 @@
-import { START_LEAD_MS, type AnyShowdown, type LiveTeam, type Session, type Step } from "./model";
+import {
+  LATE_MS,
+  START_LEAD_MS,
+  type AnyShowdown,
+  type LiveTeam,
+  type Session,
+  type Step,
+} from "./model";
 
 /**
  * The live session state machine (S11-AC2, S24-AC1): pure, so the server,
@@ -154,8 +161,17 @@ export function hostAct(m: Machine, s: Session, action: unknown, now: number): O
 }
 
 /** Time passing (S11-AC2): windows close and turns move on; the same session when nothing changed. */
+/**
+ * Time passing. Once a round has nothing left to wait for (everyone has
+ * answered, or the time is up and a late answer can't still arrive), it
+ * closes and shows its results without waiting for the host's Next (Khai,
+ * 2026-11-24), with its points to pay. Host-stepped games wait for the host.
+ */
 export function tick(m: Machine, s: Session, now: number): Outcome {
   if (s.step !== "play") return done(s);
   const state = m.game.tick(s.state, m.content, now);
-  return done(state === s.state ? s : bump(s, { state }));
+  const ticked = state === s.state ? s : bump(s, { state });
+  if (!m.game.skipResults && m.game.over(state, m.content, now - LATE_MS))
+    return closeRound(m, ticked, now);
+  return done(ticked);
 }

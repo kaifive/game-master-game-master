@@ -4,12 +4,35 @@ import { useReducedMotion } from "@/components/motion";
 import { cx } from "@/lib/ui";
 import type { LiveRenderer } from "./types";
 
-/** One person in the room, drawn simply: a head and shoulders in a team color. */
-function Person({ color }: { color: number }) {
+/**
+ * One person in the room, seen from behind the sofa: a round, friendly face
+ * and a sweater in a team color. The one calling out has an arm up.
+ */
+function Person({ color, cheering = false }: { color: number; cheering?: boolean }) {
+  const sweater = `var(--gm-team-${String(color)})`;
   return (
-    <svg viewBox="0 0 40 48" aria-hidden="true" className="h-full w-auto">
-      <circle cx="20" cy="13" r="10" fill="var(--gm-text-muted)" />
-      <path d="M2 48c0-12 8-20 18-20s18 8 18 20Z" fill={`var(--gm-team-${String(color)})`} />
+    <svg viewBox="0 0 48 56" aria-hidden="true" className="h-full w-auto overflow-visible">
+      {cheering && (
+        <path
+          d="M36 36 L44 18"
+          stroke={sweater}
+          strokeWidth="7"
+          strokeLinecap="round"
+          fill="none"
+        />
+      )}
+      <path d="M6 56c0-14 8-22 18-22s18 8 18 22Z" fill={sweater} />
+      <path d="M17 35l7 6 7-6" stroke="var(--gm-tile-present)" strokeWidth="2.5" fill="none" />
+      <circle cx="24" cy="19" r="12" fill="var(--gm-tile-present)" />
+      <circle cx="19.5" cy="18" r="1.8" fill="var(--gm-tile-present-ink)" />
+      <circle cx="28.5" cy="18" r="1.8" fill="var(--gm-tile-present-ink)" />
+      <path
+        d="M19 23.5q5 4.5 10 0"
+        stroke="var(--gm-tile-present-ink)"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        fill="none"
+      />
     </svg>
   );
 }
@@ -18,7 +41,7 @@ function Person({ color }: { color: number }) {
  * The room under the demo's TV (Khai, 2026-11-24): people, one saying what a
  * team would answer, so it's clear what's on the screen and what players do.
  */
-function Room({ say, size }: { say: string; size: "tv" | "phone" }) {
+function Room({ say, size, still }: { say: string; size: "tv" | "phone"; still: boolean }) {
   return (
     <div
       aria-hidden="true"
@@ -31,11 +54,13 @@ function Room({ say, size }: { say: string; size: "tv" | "phone" }) {
             "absolute bottom-[55%] left-[85%] rounded-gm bg-gm-tile-present px-[0.5em] py-[0.1em] font-gm-display font-bold whitespace-nowrap text-gm-tile-present-ink shadow-md",
             size === "tv" ? "text-[clamp(1.1rem,3vh,2.4rem)]" : "text-lg",
             "after:absolute after:top-[60%] after:right-full after:border-8 after:border-transparent after:border-r-gm-tile-present",
+            // The call-out pops in once the demo has shown what to answer, each loop.
+            !still && "motion-safe:animate-[gm-demo-answer_5s_linear_infinite]",
           )}
         >
           {say}
         </span>
-        <Person color={2} />
+        <Person color={2} cheering />
       </div>
       <Person color={4} />
     </div>
@@ -78,7 +103,7 @@ export function DemoFrame({
           >
             <Demo still={still} />
           </div>
-          {renderer.say && <Room say={renderer.say} size={size} />}
+          {renderer.say && <Room say={renderer.say} size={size} still={still} />}
         </div>
       )}
       <figcaption className="grid max-w-[56ch] gap-[1.2vh]">

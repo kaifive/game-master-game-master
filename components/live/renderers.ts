@@ -1,24 +1,17 @@
 import { buzzerRenderer } from "./games/buzzer";
 import { flybyRenderer } from "./games/flyby";
 import { auctionRenderer, snatchRenderer, stockingsRenderer } from "./games/nerve";
-import {
-  colorRenderer,
-  liondrumRenderer,
-  ribbonRenderer,
-  sleighrunRenderer,
-  snowpileRenderer,
-  staffangleRenderer,
-} from "./games/perception";
+import { ribbonRenderer, staffangleRenderer } from "./games/perception";
 import { snowsumRenderer } from "./games/snowsum";
 import { blindstopRenderer, lastsecondRenderer } from "./games/stops";
-import { landmassRenderer, pathRenderer, shuffleRenderer, to21Renderer } from "./games/turns";
+import { pathRenderer, shuffleRenderer, to21Renderer } from "./games/turns";
 import type { LiveRenderer } from "./types";
 
 /** Each showdown type's TV view, phone controller and demo (specs 25 to 27). */
 /** What someone in the room calls out in each game's demo, under the drawn TV (Khai, 2026-11-24). */
 const SAYS: Readonly<Record<string, string>> = {
-  flyby: "7!",
-  snowsum: "12!",
+  flyby: "5!",
+  snowsum: "10!",
   blindstop: "Stop!",
   lastsecond: "Not yet… now!",
   auction: "Bid 7!",
@@ -27,13 +20,8 @@ const SAYS: Readonly<Record<string, string>> = {
   path: "Left, then up!",
   shuffle: "That one!",
   to21: "Plus 3!",
-  landmass: "Put it there!",
-  snowpile: "About 30!",
   staffangle: "A bit more!",
-  sleighrun: "Right there!",
-  liondrum: "Boom, boom!",
   ribbon: "Cut here!",
-  color: "Darker!",
   buzzer: "Buzz!",
 };
 
@@ -48,13 +36,8 @@ const SCREENS: Readonly<Record<string, LiveRenderer>> = {
   path: pathRenderer,
   shuffle: shuffleRenderer,
   to21: to21Renderer,
-  landmass: landmassRenderer,
-  snowpile: snowpileRenderer,
   staffangle: staffangleRenderer,
-  sleighrun: sleighrunRenderer,
-  liondrum: liondrumRenderer,
   ribbon: ribbonRenderer,
-  color: colorRenderer,
   buzzer: buzzerRenderer,
 };
 

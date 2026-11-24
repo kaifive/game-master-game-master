@@ -213,7 +213,7 @@ export function PhoneResult({ view }: { view: ActiveLiveView }) {
 
 /**
  * The number pad for the counting showdowns: a white card shows the number
- * as it's typed; Lock in sends it, once. `negative` adds a minus key.
+ * as it's typed, and goes in as the time runs out. `negative` adds a minus key.
  */
 export function NumberPad({
   prompt,
@@ -246,6 +246,7 @@ export function NumberPad({
       busy={busy}
       negative={negative}
       max={max}
+      lockButton={false}
       onLock={(value) => void send({ answer: value })}
     />
   );

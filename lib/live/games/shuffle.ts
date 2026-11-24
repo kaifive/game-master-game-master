@@ -2,6 +2,7 @@ import { z } from "zod";
 import { seededRandom, shuffled } from "@/lib/games";
 import { leadOrder } from "../fairness";
 import { MAX_TEAMS, defineShowdown, type Role, type ShowdownGame, type TurnInfo } from "../model";
+import { roundShare } from "./scoring";
 
 /**
  * Present Shuffle (spec 27, S27-AC2): presents show their points, cover up
@@ -95,13 +96,17 @@ function view(s: ShuffleState, _c: unknown, { role, revealed, now }: ViewCtx) {
 
 const game: ShowdownGame<C, ShuffleState> = {
   content: Content,
-  demo: "Watch the points on the presents, then follow the 100-point one as they shuffle. Teams take turns picking one each.",
+  demo: "Follow the big present as they shuffle!",
   timeout: "Out of time? 15 seconds to pick, or you get no present.",
   rounds: (_c, teams) => Math.max(1, teams),
   deal(c, { seed, round, teams, startsAt }) {
     const random = seededRandom(seed);
-    const values = shuffled(c.values, random).slice(0, c.presents);
-    while (values.length < c.presents) values.push(c.values[values.length % c.values.length] ?? 10);
+    // The best present is worth the round's share of 150, the rest in step (ADR-045).
+    const top = Math.max(...c.values);
+    const share = roundShare(teams.length);
+    const scaled = c.values.map((v) => Math.max(1, Math.round((v / top) * share)));
+    const values = shuffled(scaled, random).slice(0, c.presents);
+    while (values.length < c.presents) values.push(scaled[values.length % scaled.length] ?? 1);
     const swaps: [number, number][] = Array.from({ length: c.swaps }, () => {
       const a = Math.floor(random() * c.presents);
       const b = (a + 1 + Math.floor(random() * (c.presents - 1))) % c.presents;

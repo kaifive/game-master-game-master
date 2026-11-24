@@ -10,12 +10,12 @@ import { defineShowdown, type Role, type ShowdownGame } from "../model";
 export const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 
 const Content = z.object({
-  rounds: z.number().int().min(1).max(10).default(10),
-  /** The prizes, dealt in a seeded order: one per round. */
-  prizes: z
-    .array(z.number().int().min(1).max(500))
-    .min(1)
-    .default([10, 20, 30, 40, 50, 60, 70, 80, 90, 100]),
+  rounds: z.number().int().min(1).max(10).default(5),
+  /**
+   * The prizes, dealt in a seeded order: one per round. They add up to the
+   * game's 150, so winning one round never decides the night (Khai, 2026-11-24).
+   */
+  prizes: z.array(z.number().int().min(1).max(500)).min(1).default([10, 20, 30, 40, 50]),
   bidMs: z.number().int().min(5000).max(60_000).default(15_000),
 });
 
@@ -65,7 +65,7 @@ function view(s: AuctionState, _c: unknown, { role, revealed }: ViewCtx) {
 
 const game: ShowdownGame<C, AuctionState> = {
   content: Content,
-  demo: "Bid one of your numbers from 1 to 10. The highest number nobody else picked wins the prize. Every number is used up once you play it, even in a tie.",
+  demo: "Bid 1 to 10. The highest number nobody else picked wins!",
   timeout: "Out of time? You spend your lowest number.",
   rounds: (c) => c.rounds,
   deal(c, { seed, startsAt, teams, prev }) {

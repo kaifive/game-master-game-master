@@ -28,7 +28,7 @@ export {
   type PhotoView,
 } from "./photo/logic";
 export { adjacent, checkPath, dotMarks, facing, turnToward, type DotMark } from "./trail/puzzle";
-export { CATALOG, catalogByName, gamesDoc, teaserFor, type CatalogEntry } from "./catalog";
+export { CATALOG, catalogByName, gamesDoc, type CatalogEntry } from "./catalog";
 export { seededRandom, shuffled } from "./random";
 export {
   clamp01,
@@ -39,29 +39,17 @@ export {
   type Phase,
 } from "./perception/core";
 export {
-  drumMisses,
-  exitY,
-  keepBeats,
-  liondrumCore,
   PERCEPTION_CORES,
   ribbonCore,
-  sleighrunCore,
-  snowpileCore,
   staffangleCore,
   type AngleTask,
-  type DrumTask,
   type RibbonTask,
-  type SleighTask,
-  type SnowPileTask,
 } from "./perception/games";
 export {
-  colorCore,
   flybyCore,
-  nearCloseness,
-  SHOWDOWN_ONLY_CORES,
+  countCloseness,
   snowsumCore,
   SOLO_ONLY_CORES,
-  type ColorTask,
   type FlybyTask,
   type SnowSumTask,
 } from "./perception/counts";

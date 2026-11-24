@@ -72,7 +72,13 @@ export function round(
 export const cap = (teamId: string): Role => ({ kind: "captain", teamId });
 export const tv: Role = { kind: "tv" };
 
-export function show(type: string, v: ActiveLiveView, now: number, on: "phone" | "tv" = "phone") {
+/** `now` may be a clock, read every frame, to let a phone's timer run (auto-submit). */
+export function show(
+  type: string,
+  v: ActiveLiveView,
+  now: number | (() => number),
+  on: "phone" | "tv" = "phone",
+) {
   const R = LIVE_RENDERERS[type];
   if (!R) throw new Error(type);
   const send = vi.fn(() => Promise.resolve());
@@ -83,13 +89,18 @@ export function show(type: string, v: ActiveLiveView, now: number, on: "phone" |
         <R.Controller
           view={v}
           game={v.game}
-          serverNow={() => now}
+          serverNow={typeof now === "number" ? () => now : now}
           revealed={revealed}
           send={send}
           busy={false}
         />
       ) : (
-        <R.Tv view={v} game={v.game} serverNow={() => now} revealed={revealed} />
+        <R.Tv
+          view={v}
+          game={v.game}
+          serverNow={typeof now === "number" ? () => now : now}
+          revealed={revealed}
+        />
       )}
     </PackRoot>,
   );

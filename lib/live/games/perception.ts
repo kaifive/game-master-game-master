@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { LEVELS, type Level, type Phase, type PerceptionCore } from "@/lib/games";
 import { defineShowdown, type AnyShowdown, type Role, type ShowdownGame } from "../model";
-import { rankedPoints } from "./scoring";
+import { closePoints } from "./scoring";
 
 /**
  * A perception game as a showdown (spec 28, S28-AC3): three rounds, levels 1
@@ -88,12 +88,17 @@ export function perceptionShowdown<T, A>(core: PerceptionCore<T, A>): AnyShowdow
     },
     tick: (s) => s,
     over: (s, _c, now) => now > s.closesAt || s.teams.every((t) => s.answers[t] !== undefined),
+    // How close each team got, whatever the others did (ADR-045).
     score: (s, _c, teams) =>
-      rankedPoints(teams, (t) => {
-        const a = s.answers[t];
-        if (a === undefined) return null;
-        return core.distance ? core.distance(s.task, a) : 1 - core.closeness(s.task, a);
-      }),
+      Object.fromEntries(
+        teams.map((t) => {
+          const a = s.answers[t];
+          return [
+            t,
+            closePoints(a === undefined ? null : core.closeness(s.task, a), LEVELS.length),
+          ];
+        }),
+      ),
     view,
   };
   return defineShowdown(game);

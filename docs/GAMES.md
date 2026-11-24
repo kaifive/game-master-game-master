@@ -13,14 +13,12 @@ captains' phones (`mode: "live"`). A game with both can run either way (ADR-040)
 | Blind Stop | `blindstop` | showdown | stop a clock at exactly 10.00 after it hides behind a question mark. |
 | Block Fit | `blocks` | solo | Drag and turn pieces to fill a board exactly; can rebuild a photo. |
 | Buzzer Round | `buzzer` | showdown | The host reads a question; captains buzz when it goes green, and answer out loud in buzz order. |
-| Color Matcher | `color` | solo, showdown | Match a color on a color wheel: one from memory solo, or one flashed on the TV as a showdown. |
+| Color Matcher | `color` | solo | Match a color from memory on a color wheel. |
 | Cut the Ribbon | `ribbon` | solo, showdown | Tap where to cut a ribbon, like one third of the way along, with no marks to help. |
 | Fly-by Count | `flyby` | solo, showdown | Presents fly past: count them all, then only one kind, asked after they've gone. |
 | Geocache | `cache` | solo | Find codes hidden around the venue and type them in for points. |
 | Guessing Jar | `jar` | solo | One guess at how many things are in a real jar; the host reveals the count. |
-| Land Mass | `landmass` | showdown | teams take turns placing block pieces on one board; the most land wins. |
 | Last Second | `lastsecond` | showdown | stop a countdown as late as you dare; hit zero and you get nothing. |
-| Lion Drum | `liondrum` | solo, showdown | A lion-dance drum flashes a beat, then goes dark; keep tapping in time. |
 | Memory Path | `path` | showdown | a path lights up and hides; teams take turns crossing it from memory. |
 | Pathfinder | `trail` | solo | Draw one path through every square, hitting the numbers in order; can have a runner picture. |
 | Photo Challenge | `photo-challenge` | solo | Take a photo to a prompt, like Spot and Snipe; the host rates it. |
@@ -30,8 +28,6 @@ captains' phones (`mode: "live"`). A game with both can run either way (ADR-040)
 | Rapid Recall | `recall` | solo | Remember which squares lit up, over rounds that get bigger. |
 | Secret Word | `word` | solo | Guess a hidden 5-letter word in 6 tries, with colored tiles as clues. |
 | Share or Snatch | `snatch` | showdown | two teams, one pot; both share and split it, one snatches and takes it all. |
-| Sleigh Run | `sleighrun` | solo, showdown | A sleigh flies into a cloud; tap where it will come out the other side. |
-| Snow Pile | `snowpile` | solo, showdown | Snowflakes flash up for a moment; say how many. The closer, the more points. |
 | Snow Sum | `snowsum` | solo, showdown | Snowflakes marked +3, -2 or x2 fall one at a time; keep the running total. |
 | Snowball to 21 | `to21` | showdown | teams take turns adding 1, 2 or 3; whoever makes exactly 21 wins. |
 | Stack Attack | `stacker` | solo | Tap to drop a sliding row and stack it as high as you can; overhangs get chopped. |

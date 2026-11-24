@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test, vi } from "vitest";
 import { PackRoot } from "@/components/packs/judges-table/root";
@@ -56,7 +56,7 @@ const tv = { kind: "tv" } as const;
 function phone(
   type: string,
   v: ActiveLiveView,
-  now: number,
+  now: number | (() => number),
   send = vi.fn(() => Promise.resolve()),
 ) {
   const R = LIVE_RENDERERS[type];
@@ -66,7 +66,7 @@ function phone(
       <R.Controller
         view={v}
         game={v.game}
-        serverNow={() => now}
+        serverNow={typeof now === "number" ? () => now : now}
         revealed={v.session.step === "results"}
         send={send}
         busy={false}
@@ -95,29 +95,35 @@ describe("count showdowns on the phone and TV (spec 25)", () => {
     expect(screen.queryByRole("button", { name: "1" })).toBeNull();
   });
 
-  test("S25-AC1: typing 1 then 2 and Lock in sends 12; rub out takes a digit back", async () => {
+  test("S25-AC1: typing 1 then 2 sends 12 as the time runs out, with no Lock in; rub out takes a digit back", async () => {
     const user = userEvent.setup();
     const r = round("flyby");
-    const at = (r.s.showEndsAt ?? 0) + 500;
-    const send = phone("flyby", r.view(cap, at), at);
+    let t = (r.s.showEndsAt ?? 0) + 500;
+    const send = phone("flyby", r.view(cap, t), () => t);
+    expect(screen.queryByRole("button", { name: /Lock in/ })).toBeNull();
     await user.click(screen.getByRole("button", { name: "1" }));
     await user.click(screen.getByRole("button", { name: "3" }));
     await user.click(screen.getByRole("button", { name: "Rub out" }));
     await user.click(screen.getByRole("button", { name: "2" }));
     expect(screen.getByRole("status", { name: "Your number" })).toHaveTextContent("12");
-    await user.click(screen.getByRole("button", { name: "Lock in 12" }));
-    expect(send).toHaveBeenCalledWith({ answer: 12 });
+    expect(send).not.toHaveBeenCalled();
+    t = (r.s.closesAt ?? 0) - 300;
+    await waitFor(() => {
+      expect(send).toHaveBeenCalledWith({ answer: 12 });
+    });
   });
 
   test("S25-AC2: Snow Sum's pad can type a negative total", async () => {
     const user = userEvent.setup();
     const r = round("snowsum");
-    const at = (r.s.showEndsAt ?? 0) + 500;
-    const send = phone("snowsum", r.view(cap, at), at);
+    let t = (r.s.showEndsAt ?? 0) + 500;
+    const send = phone("snowsum", r.view(cap, t), () => t);
     await user.click(screen.getByRole("button", { name: "4" }));
     await user.click(screen.getByRole("button", { name: "Minus" }));
-    await user.click(screen.getByRole("button", { name: "Lock in -4" }));
-    expect(send).toHaveBeenCalledWith({ answer: -4 });
+    t = (r.s.closesAt ?? 0) - 300;
+    await waitFor(() => {
+      expect(send).toHaveBeenCalledWith({ answer: -4 });
+    });
   });
 
   test("S25-AC1: once locked in, the phone says what it sent; the TV shows who's in but not what", () => {
@@ -146,7 +152,7 @@ describe("count showdowns on the phone and TV (spec 25)", () => {
     expect(within(answers).getByText("Exactly right!")).toBeInTheDocument();
     expect(within(answers).getByText("No answer")).toBeInTheDocument();
     expect(
-      within(answers).getByRole("img", { name: "Reds this round: 100 points" }),
+      within(answers).getByRole("img", { name: "Reds this round: 50 points" }),
     ).toBeInTheDocument();
   });
 

@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { clockOffset, keepBest, type ClockSample, type LiveView } from "@/lib/live";
+import { clockOffset, keepBest, wakeAt, type ClockSample, type LiveView } from "@/lib/live";
 
 /** How often the live view is fetched while a game runs, and otherwise (S11-AC4). */
 export const LIVE_POLL_MS = 700;
 export const IDLE_POLL_MS = 4000;
+/** How long after a round's boundary the extra fetch goes, so the server is past it too. */
+const WAKE_SLACK_MS = 40;
 
 type Result<T> = { ok: true; data: T } | { ok: false; message: string };
 
@@ -63,6 +65,22 @@ export function useLive<V extends { serverNow: number; active: boolean } = LiveV
       document.removeEventListener("visibilitychange", onShow);
     };
   }, [refresh, active, activeMs, idleMs]);
+
+  // Fetches again just after the round's next start, end of show or close, so a
+  // screen never draws a moment from a view fetched before it.
+  const due = view && "session" in view ? wakeAt(view as unknown as LiveView) : null;
+  useEffect(() => {
+    if (due === null) return;
+    const timer = setTimeout(
+      () => {
+        void refresh();
+      },
+      Math.max(0, due - (wallNow() + offset)) + WAKE_SLACK_MS,
+    );
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [due, offset, refresh]);
 
   // Replaces the view at once with a reply to this device's own action.
   const show = useCallback((next: V) => {

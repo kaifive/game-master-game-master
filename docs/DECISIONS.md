@@ -833,3 +833,44 @@ solo version (spec 30), is removed from the library and the party.
 **Consequences:** Fly-by Count teaches the "watch everything" trick in one
 game. Spec 25 now covers four showdowns.
 
+## ADR-044: Land Mass, Snow Pile, Sleigh Run, Lion Drum and the Color Matcher showdown are removed
+
+**Status:** accepted (Khai, 2026-11-24). Changes ADR-040's and ADR-041's lists of games.
+
+Khai's play-test of every showdown: Land Mass's controls were too hard on a
+phone; Snow Pile was too close to the counting games; Sleigh Run, Lion Drum
+and the Color Matcher showdown didn't earn their place on the night.
+
+**Decision:** Land Mass (spec 27), Snow Pile, Sleigh Run and Lion Drum (spec 28,
+both modes) and the Color Matcher showdown (spec 30) are removed from the
+library, the party and the code. Solo Color Matcher (spec 18) stays. Their
+acceptance criteria are marked retired in their specs.
+
+**Consequences:** the night has fewer, stronger showdowns, and the TV's menu
+fits one screen with room to spare. Bringing one back means building it again
+from git history and a new ADR.
+
+## ADR-045: Every showdown is worth 150, scored on how well a team did
+
+**Status:** accepted (Khai, 2026-11-24). Replaces the ranked ladders of specs 25,
+26 and 28 (100, 70, 50, 30, then 10) and Share or Snatch's ranked payout.
+
+Khai's play-test: "I got 8.75 s and still 100 points." Ranking against the other
+teams meant a poor answer could take full points, and the strategy games could
+hand one team far more than any other game.
+
+**Decision:** every showdown is worth up to 150 a game, split evenly over its
+rounds (50 a round over three). A team scores on its own result, never its rank:
+how close (counting, Blind Stop, Last Second, Staff Angle, Cut the Ribbon), or
+what it won (Auction's prizes adding to 150, Stocking Stuffer's banked pot up to
+the round's share, Share or Snatch's pot sized to 150, Present Shuffle's values
+scaled so the best is the round's share). Snowball to 21 pays the winner the
+round's share and every other team half; Memory Path pays a crossing all of it,
+some right squares 80%, nothing half. Points never go below zero. Games with one
+round per team split 150 over that many rounds. The buzzer round keeps its own
+points per question.
+
+**Consequences:** no one showdown decides the night; a near miss still scores;
+results can be read without comparing teams. The team totals on the TV grow
+more slowly than before, which suits a night of many games.
+

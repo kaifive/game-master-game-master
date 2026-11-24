@@ -1,7 +1,6 @@
 export { auction, auctionWinner, NUMBERS, type AuctionView } from "./auction";
-export { blindstop, EXACT_BONUS, exact, type BlindView } from "./blindstop";
+export { blindstop, exact, type BlindView } from "./blindstop";
 export { snatch, type Pair, type SnatchView } from "./snatch";
-export { cover, landmass, squaresOf, type LandView } from "./landmass";
 export { path, type PathView, type Square } from "./path";
 export { shuffle, type ShuffleView } from "./shuffle";
 export { to21, type To21View } from "./to21";
@@ -11,7 +10,7 @@ export { lastsecond, type LastView } from "./lastsecond";
 export { runningTotals, snowsum, type Flake, type SnowView } from "./snowsum";
 export { ANSWER_MS, type WindowView } from "./answer";
 export { fmtSeconds, hundredths } from "./stop";
-export { LADDER, REST } from "./scoring";
+export { closePoints, GAME_POINTS, roundShare, sharePoints } from "./scoring";
 export { perceptionShowdown, type PerceptionState, type PerceptionView } from "./perception";
 export {
   buzzer,

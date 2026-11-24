@@ -1,16 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { leadCounts, leadOrder } from "../fairness";
+import { leadCounts } from "../fairness";
 import type { AnyShowdown, MoveResult, Role } from "../model";
 import { PLAYTEST_TEAM_COUNTS, playtest, type Bot, type BotContext } from "../playtest";
-import {
-  cover,
-  dealPiece,
-  irregular,
-  landmass,
-  placements,
-  squaresOf,
-  type LandState,
-} from "./landmass";
 import { dealPath, path, type PathState, type Square } from "./path";
 import { afterSwaps, shuffle, type ShuffleState } from "./shuffle";
 import { to21, type To21State } from "./to21";
@@ -46,7 +37,7 @@ function rig<S>(game: AnyShowdown, content: unknown = {}) {
 }
 
 describe("Snowball to 21", () => {
-  it("S27-AC3: one round per team, each starting one; 1, 2 or 3 a turn, never past 21; 1 if too slow; 100 for making 21", () => {
+  it("S27-AC3: one round per team, each starting one; 1, 2 or 3 a turn, never past 21; 1 if too slow; making 21 scores the round's share of 150 and every other team half", () => {
     const g = rig<To21State>(to21);
     expect(to21.rounds(g.c, 4)).toBe(4);
     expect([1, 2, 3].map((r) => g.deal(r).order[0])).toEqual(["t1", "t2", "t3"]);
@@ -72,7 +63,7 @@ describe("Snowball to 21", () => {
     s = g.step(s, "t1", { add: 2 }, T0 + 10_030);
     expect(s.winner).toBe("t1");
     expect(g.over(s, T0)).toBe(true);
-    expect(g.score(s)).toEqual({ t1: 100, t2: 0, t3: 0 });
+    expect(g.score(s)).toEqual({ t1: 50, t2: 25, t3: 25 });
   });
 });
 
@@ -111,7 +102,7 @@ describe("Memory Path", () => {
     }
   });
 
-  it("S27-AC1: shows then hides the path, knocks a team out on a wrong or slow step, keeps its right squares lit, and pays only the crosser", () => {
+  it("S27-AC1: shows then hides the path, knocks a team out on a wrong or slow step, keeps its right squares lit, and pays the crosser most, part way less, and nothing done least", () => {
     const g = rig<PathState>(path);
     expect(path.rounds(g.c, 3)).toBe(3);
     expect([1, 2, 3].map((r) => g.deal(r).order[0])).toEqual(["t1", "t2", "t3"]);
@@ -139,7 +130,8 @@ describe("Memory Path", () => {
     for (let i = 0; i < s.path.length; i++)
       s = g.step(s, "t3", { square: s.path[i] }, after + 6000 + i);
     expect(s.winner).toBe("t3");
-    expect(g.score(s)).toEqual({ t1: 0, t2: 0, t3: 150 });
+    // Of three rounds' 50: across 50, some squares right 40, none 25 (Khai, 2026-11-24).
+    expect(g.score(s)).toEqual({ t1: s.results.t1?.reached ? 40 : 25, t2: 25, t3: 50 });
     expect((g.view(s, tv, after + 9000, true).shown as Square[]).length).toBe(s.path.length);
   });
 });
@@ -182,64 +174,6 @@ describe("Present Shuffle", () => {
     expect(g.over(s, at + 15_200)).toBe(true);
     const value = (slot: number) => s.values[s.slots[slot] ?? 0];
     expect(g.score(s)).toEqual({ t1: value(4), t2: 0, t3: value(0) });
-  });
-});
-
-describe("Land Mass", () => {
-  it("S27-AC4: deals irregular pieces of 4 to 6 squares; a piece goes anywhere it fits, takes the team's color, and is replaced in the tray", () => {
-    for (let seed = 1; seed < 100; seed++) {
-      const p = dealPiece(seed);
-      expect(p.length).toBeGreaterThanOrEqual(4);
-      expect(p.length).toBeLessThanOrEqual(6);
-      // Irregular: never a straight line, never a filled rectangle (Khai, 2026-11-18).
-      expect(irregular(p)).toBe(true);
-      const rows = new Set(p.map((c) => c[0])).size;
-      const cols = new Set(p.map((c) => c[1])).size;
-      expect(rows > 1 && cols > 1 && rows * cols !== p.length).toBe(true);
-    }
-    const g = rig<LandState>(landmass);
-    expect(landmass.rounds(g.c, 4)).toBe(1);
-    let s = g.deal();
-    expect(s.tray).toHaveLength(4);
-    const first = placements(s, s.tray[0] ?? []).next().value;
-    if (!first) throw new Error("no place");
-    const piece = s.tray[0] ?? [];
-    expect(g.move(s, "t2", { piece: 0, ...first }, T0 + 10)).toMatchObject({
-      ok: false,
-      message: "It isn't your turn.",
-    });
-    s = g.step(s, "t1", { piece: 0, ...first }, T0 + 10);
-    expect(squaresOf(s, "t1")).toBe(piece.length);
-    expect(s.tray[0]).not.toEqual(piece);
-    // No overlap, nothing off the board.
-    expect(
-      g.move(s, "t2", { piece: 1, turns: first.turns, row: first.row, col: first.col }, T0 + 20),
-    ).toMatchObject({ ok: false });
-    expect(cover(s, [[0, 0]], 0, s.rows, 0)).toBeNull();
-  });
-
-  it("S27-AC4: turns time out after 30 s; the lead moves one team on each time round", () => {
-    const g = rig<LandState>(landmass);
-    let s = g.deal();
-    const turns: string[] = [];
-    for (let i = 0; i < 9; i++) {
-      turns.push(g.turn(s, T0 + i * 30_001)?.teamId ?? "");
-      s = g.tick(s, T0 + (i + 1) * 30_001);
-    }
-    expect(turns).toEqual([...leadOrder(teams, 0), ...leadOrder(teams, 1), ...leadOrder(teams, 2)]);
-  });
-
-  it("S27-AC4: when nothing fits the tray swaps once, then the game ends; every square scores 5", () => {
-    const g = rig<LandState>(landmass, { cols: 6, rows: 6 });
-    let s = g.deal();
-    // Fill the board but one lone square: no piece of 4 or more can fit.
-    s = { ...s, board: s.board.map((_, i) => (i === 0 ? null : i % 2 ? "t1" : "t2")) };
-    s = g.tick(s, T0 + 30_001);
-    expect(s.ended).toBe(true);
-    expect(s.swaps).toBe(1);
-    const pts = g.score({ ...s, board: s.board.map((o, i) => (i < 3 ? "t3" : o)) });
-    expect(pts.t3).toBe(3 * 5);
-    expect(g.score({ ...s, board: s.board.map(() => null) })).toEqual({ t1: 0, t2: 0, t3: 0 });
   });
 });
 
@@ -308,26 +242,6 @@ const SHUFFLE: Record<string, Bot> = {
   late: () => null,
 };
 
-const landPlace = (ctx: BotContext, pickRandom: boolean) => {
-  if (!myTurn(ctx)) return null;
-  const s = ctx.peek as LandState;
-  for (const [i, piece] of s.tray.entries()) {
-    const spots = [...placements(s, piece)];
-    if (spots.length === 0) continue;
-    const spot = pickRandom ? spots[Math.floor(ctx.random() * spots.length)] : spots[0];
-    if (spot) return { piece: i, ...spot };
-  }
-  return null;
-};
-const LAND: Record<string, Bot> = {
-  perfect: (ctx) => landPlace(ctx, false),
-  random: (ctx) => landPlace(ctx, true),
-  cautious: (ctx) =>
-    myTurn(ctx) && since(ctx, "turnEndsAt") > -4000 ? landPlace(ctx, true) : null,
-  reckless: (ctx) => (myTurn(ctx) ? { piece: 0, turns: 0, row: -1, col: -1 } : null),
-  late: () => null,
-};
-
 function lineup(bots: Record<string, Bot>, n: number, shift: number) {
   const kinds = ["perfect", "random", "cautious", "reckless", "late", "silent", "dropout"];
   const mine = Array.from({ length: n }, (_, i) => kinds[(i + shift) % kinds.length] ?? "silent");
@@ -344,10 +258,18 @@ function lineup(bots: Record<string, Bot>, n: number, shift: number) {
   };
 }
 
-const roundGames: [string, AnyShowdown, Record<string, Bot>, number[]][] = [
-  ["Snowball to 21", to21, TO21, [0, 100]],
-  ["Memory Path", path, PATH, [0, 150]],
-  ["Present Shuffle", shuffle, SHUFFLE, [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]],
+/** The points a round can pay with n teams (one round each): its share of 150 (ADR-045). */
+const share = (n: number) => 150 / n;
+const roundGames: [string, AnyShowdown, Record<string, Bot>, (n: number) => number[] | null][] = [
+  [
+    "Snowball to 21",
+    to21,
+    TO21,
+    (n) => [Math.round(share(n)), Math.round(Math.round(share(n)) / 2)],
+  ],
+  ["Memory Path", path, PATH, (n) => [1, 0.8, 0.5].map((f) => Math.round(share(n) * f))],
+  // Any present's value, up to the round's share.
+  ["Present Shuffle", shuffle, SHUFFLE, () => null],
 ];
 
 describe("spec 27 play tests (S24-AC8, S24-AC6)", () => {
@@ -387,7 +309,12 @@ describe("spec 27 play tests (S24-AC8, S24-AC6)", () => {
           expect(r.leaks).toEqual([]);
           expect(r.rounds).toHaveLength(n);
           for (const round of r.rounds)
-            for (const p of Object.values(round)) expect(allowed).toContain(p);
+            for (const p of Object.values(round)) {
+              const ok = allowed(n);
+              if (ok) expect(ok).toContain(p);
+              else expect(p).toBeLessThanOrEqual(Math.ceil(share(n)));
+              expect(p).toBeGreaterThanOrEqual(0);
+            }
           // Every team leads exactly once over the game (S24-AC6).
           expect(leadCounts(r.turnOrders)).toEqual(
             Object.fromEntries(Array.from({ length: n }, (_, i) => [`t${String(i + 1)}`, 1])),
@@ -397,48 +324,12 @@ describe("spec 27 play tests (S24-AC8, S24-AC6)", () => {
             if (k !== "perfect" || game === to21) return;
             const id = `t${String(i + 1)}`;
             const led = r.turnOrders.findIndex((o) => o[0] === id);
-            if (game === path) expect(r.rounds[led]?.[id]).toBe(150);
+            if (game === path) expect(r.rounds[led]?.[id]).toBe(Math.round(share(n)));
           });
           // Snowball: someone always makes 21.
           if (game === to21)
-            for (const round of r.rounds) expect(Object.values(round)).toContain(100);
+            for (const round of r.rounds)
+              expect(Object.values(round)).toContain(Math.round(share(n)));
         }
     });
-
-  it("S24-AC8 S24-AC6: Land Mass plays to the end with 1 to 6 teams, leads rotating each lap, 5 points a square", () => {
-    for (const n of PLAYTEST_TEAM_COUNTS)
-      for (const shift of [0, 2, 4, 6]) {
-        const line = lineup(LAND, n, shift);
-        const r = playtest(
-          landmass,
-          { cols: 8, rows: 6 },
-          {
-            teams: n,
-            seed: n * 23 + shift,
-            stepMs: 3000,
-            roundCapMs: 9_000_000,
-            bots: line.bots,
-            dropOutFrom: line.dropOutFrom,
-          },
-        );
-        expect(r.ended).toBe(true);
-        const final = r.finals[0] as LandState;
-        expect(final.ended).toBe(true);
-        // The lead moves one team on each time round.
-        const order = r.turnOrders[0] ?? [];
-        const flat = final.history.map((h) => h.teamId);
-        for (let lap = 0; lap * n < flat.length; lap++)
-          expect(flat.slice(lap * n, lap * n + n)).toEqual(
-            leadOrder(
-              Array.from({ length: n }, (_, i) => `t${String(i + 1)}`),
-              lap,
-            ).slice(0, flat.slice(lap * n, lap * n + n).length),
-          );
-        expect(order.length).toBeGreaterThan(0);
-        for (const p of Object.values(r.rounds[0] ?? {})) expect(p % 5).toBe(0);
-        // Nobody owns a square twice: the board adds up.
-        const owned = final.board.filter((o) => o !== null).length;
-        expect(owned).toBe(Object.keys(r.scores).reduce((a, t) => a + squaresOf(final, t), 0));
-      }
-  });
 });

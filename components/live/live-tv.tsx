@@ -119,5 +119,5 @@ export function ShowdownScreen({
         {...(renderers ? { renderers } : {})}
       />
     );
-  return <GameMenu games={menu} totals={totals} host={host} />;
+  return <GameMenu games={menu} totals={totals} host={host} played={view.finished ?? []} />;
 }

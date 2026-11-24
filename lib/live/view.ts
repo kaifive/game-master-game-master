@@ -13,11 +13,13 @@ export type LiveTeamView = {
 };
 
 export type LiveView =
-  | { active: false; serverNow: number; screen: Screen }
+  | { active: false; serverNow: number; screen: Screen; finished?: string[] }
   | {
       active: true;
       serverNow: number;
       screen: Screen;
+      /** The showdowns already played tonight, by game id, for the TV's menu. */
+      finished?: string[];
       session: {
         id: string;
         gameId: string;
@@ -47,8 +49,9 @@ export function liveView(
   role: Role,
   now: number,
   screen: Screen = "showdown",
+  finished: readonly string[] = [],
 ): LiveView {
-  if (!m || !s) return { active: false, serverNow: now, screen };
+  if (!m || !s) return { active: false, serverNow: now, screen, finished: [...finished] };
   const revealed = s.step === "results" || s.step === "final";
   const teamIds = s.teams.map((t) => t.id);
   const game =
@@ -63,6 +66,7 @@ export function liveView(
     active: true,
     serverNow: now,
     screen,
+    finished: [...finished],
     session: {
       id: s.id,
       gameId: s.gameId,
@@ -99,14 +103,37 @@ export const controlsView = (
   s: Session | null,
   now: number,
   screen: Screen,
+  finished: readonly string[] = [],
 ): ControlsSessionView =>
   m && s
     ? {
-        ...liveView(m, s, { kind: "tv" }, now, screen),
+        ...liveView(m, s, { kind: "tv" }, now, screen, finished),
         next: nextLabel(m, s),
         host:
           s.step === "play" && m.game.hostView
             ? m.game.hostView(s.state, m.content, { now, teams: s.teams.map((t) => t.id) })
             : null,
       }
-    : { active: false, serverNow: now, screen, next: null, host: null };
+    : { active: false, serverNow: now, screen, finished: [...finished], next: null, host: null };
+
+/** The moments in a round's timeline where its view changes by itself. */
+const BOUNDARIES = ["startsAt", "showEndsAt", "closesAt"] as const;
+
+/**
+ * When a screen should fetch again without waiting for its next poll: the
+ * next start, end of the show or close in the game's view, so the TV and
+ * phones move on the moment the scene or question becomes theirs to show
+ * (Khai, 2026-11-24: the TV crashed showing the question from a view fetched
+ * before the start). Null when nothing is due.
+ */
+export function wakeAt(view: LiveView): number | null {
+  if (!view.active || view.session.step !== "play") return null;
+  const g = view.game as Record<string, unknown> | null;
+  if (!g || typeof g !== "object") return null;
+  let next: number | null = null;
+  for (const key of BOUNDARIES) {
+    const at = g[key];
+    if (typeof at === "number" && at > view.serverNow && (next === null || at < next)) next = at;
+  }
+  return next;
+}

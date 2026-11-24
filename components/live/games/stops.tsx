@@ -50,7 +50,7 @@ function BlindTv({ view, game, serverNow, revealed }: LiveTvProps) {
           note={(t) => {
             const ms = g.stops?.[t];
             if (ms === undefined) return null;
-            if (exact(ms, g.targetMs)) return "Exactly! 100 + 50 bonus";
+            if (exact(ms, g.targetMs)) return "Exactly!";
             const off = ms - g.targetMs;
             return `${fmtSeconds(Math.abs(off))} ${off > 0 ? "late" : "early"}`;
           }}

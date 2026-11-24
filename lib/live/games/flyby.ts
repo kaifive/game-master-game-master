@@ -2,7 +2,8 @@ import { z } from "zod";
 import { dealFormation, FLYBY_ROUNDS } from "@/lib/games";
 import { defineShowdown, type Role, type ShowdownGame } from "../model";
 import { answered, answerWindow, lockIn, windowView, type AnswerWindow } from "./answer";
-import { nearPoints } from "./scoring";
+import { countCloseness } from "@/lib/games";
+import { closePoints } from "./scoring";
 
 /**
  * Fly-by Count (spec 25, S25-AC1): presents fly across the TV in a gappy
@@ -62,8 +63,8 @@ function view(s: FlybyState, _c: unknown, { role, revealed, now }: ViewCtx) {
 
 const game: ShowdownGame<z.infer<typeof Content>, FlybyState> = {
   content: Content,
-  demo: "Count the presents as they fly past. Round 1: all of them. Then red, white and green ones, and it asks which kind only after they've gone. Exactly right scores 100, one off 50.",
-  timeout: "Out of time? No answer scores 0.",
+  demo: "Count the presents as they fly past!",
+  timeout: "Out of time? What's on your phone goes in.",
   rounds: (c) => c.rounds.length,
   deal(c, { seed, round, startsAt, teams, prev }) {
     const r = c.rounds[round - 1] ?? c.rounds[c.rounds.length - 1] ?? FLYBY_ROUNDS[0];
@@ -84,8 +85,16 @@ const game: ShowdownGame<z.infer<typeof Content>, FlybyState> = {
   move: (s, _c, { teamId, move, now }) => lockIn(s, teamId, move, now, { min: 0, max: 99 }),
   tick: (s) => s,
   over: (s, _c, now) => answered(s, now),
-  score: (s, _c, teams) =>
-    Object.fromEntries(teams.map((t) => [t, nearPoints(s.answers[t], s.count)])),
+  score: (s, c, teams) =>
+    Object.fromEntries(
+      teams.map((t) => {
+        const a = s.answers[t];
+        return [
+          t,
+          closePoints(a === undefined ? null : countCloseness(a, s.count), c.rounds.length),
+        ];
+      }),
+    ),
   view,
 };
 

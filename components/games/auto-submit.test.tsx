@@ -32,7 +32,6 @@ describe("sending what's on the controller as the timer runs out (Khai, 2026-11-
         type="staffangle"
         scene={{ target: 35 }}
         elapsed={elapsed}
-        clock={() => elapsed}
         showMs={0}
         answerMs={15_000}
         busy={false}
@@ -43,9 +42,12 @@ describe("sending what's on the controller as the timer runs out (Khai, 2026-11-
     );
     const onAnswer = vi.fn();
     const { rerender, unmount } = render(stage(1000, onAnswer));
-    await user.click(screen.getByRole("button", { name: "Turn left 5 degrees" }));
+    screen.getByRole("slider", { name: /staff/ }).focus();
+    await user.keyboard("{ArrowLeft}");
     rerender(stage(14_700, onAnswer));
-    expect(onAnswer).toHaveBeenCalledWith(5);
+    expect(onAnswer).toHaveBeenCalledWith(
+      Number(screen.getByRole("slider", { name: /staff/ }).getAttribute("aria-valuenow")),
+    );
     unmount();
     const untouched = vi.fn();
     const again = render(stage(1000, untouched));

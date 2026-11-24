@@ -4,7 +4,7 @@ import { isAppError } from "@/lib/errors";
 import type { EventConfig } from "@/lib/events";
 import { MemoryBoardRepo, MemoryPointsRepo } from "@/lib/points";
 import type { TeamsSummary } from "@/lib/teams";
-import { defineShowdown, START_LEAD_MS } from "./model";
+import { defineShowdown, LATE_MS, START_LEAD_MS } from "./model";
 import { MemoryLiveRepo } from "./repo.memory";
 import {
   adminLiveAction,
@@ -14,7 +14,7 @@ import {
   type LiveDeps,
 } from "./service";
 import { buzzer } from "./games/buzzer";
-import { passShowdown, tapShowdown } from "./testing";
+import { passShowdown, TAP_WINDOW_MS, tapShowdown } from "./testing";
 
 const event: EventConfig = {
   ...holiday2026,
@@ -224,6 +224,31 @@ describe("live service (spec 11)", () => {
     ).toBe("Time's up.");
   });
 
+  it("S24-AC1 S11-AC7: once a round's time is up the next read shows its results and pays them once, without the host's Next", async () => {
+    await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
+    await adminLiveAction(deps, event, { action: "next" });
+    clock += START_LEAD_MS + 50;
+    await playerLiveAction(deps, event, "dev-c2", {
+      action: "move",
+      playerId: "c2",
+      round: 1,
+      move: "tap",
+    });
+    // Time's up, but a late answer could still land: the round waits.
+    clock += TAP_WINDOW_MS;
+    expect(await phoneLiveView(deps, event, null, null)).toMatchObject({
+      session: { step: "play" },
+    });
+    clock += LATE_MS;
+    expect(await phoneLiveView(deps, event, null, null)).toMatchObject({
+      session: { step: "results" },
+    });
+    await phoneLiveView(deps, event, null, null);
+    expect((await points.entries(event.slug)).map((e) => [e.id, e.points])).toEqual([
+      ["live_sess1_1_t2", 20],
+    ]);
+  });
+
   it("S11-AC7 S24-AC5: round points go to teams through the ledger once, even if results are reached twice", async () => {
     await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
     await adminLiveAction(deps, event, { action: "next" });
@@ -271,6 +296,18 @@ describe("showdown screen and Who's played (spec 24)", () => {
     const back = await adminLiveAction(deps, event, { action: "screen", screen: "leaderboard" });
     expect(back).toMatchObject({ active: true, screen: "leaderboard" });
     expect((await phoneLiveView(deps, event, null, null)).screen).toBe("leaderboard");
+  });
+
+  it("S24-AC9: the menu marks a showdown played once it has shown a round's results, not when it's started and ended at once", async () => {
+    await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
+    let view = await adminLiveAction(deps, event, { action: "end" });
+    expect(view.finished).toEqual([]);
+    await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
+    await adminLiveAction(deps, event, { action: "next" });
+    await adminLiveAction(deps, event, { action: "next" });
+    view = await adminLiveAction(deps, event, { action: "end" });
+    expect(view.finished).toEqual(["tap-off"]);
+    expect((await phoneLiveView(deps, event, null, null)).finished).toEqual(["tap-off"]);
   });
 
   it("S24-AC2: Who's played lists joined players and added names per team, and keeps them across showdowns", async () => {

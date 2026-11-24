@@ -1,26 +1,33 @@
 import { z } from "zod";
 import { seededRandom, shuffled } from "@/lib/games";
 import { defineShowdown, type Role, type ShowdownGame } from "../model";
-import { rankedPoints } from "./scoring";
+import { GAME_POINTS } from "./scoring";
 
 /**
- * Share or Snatch (spec 26, S26-AC3): teams play in pairs for a pot of 100.
- * Each secretly picks Share or Snatch: both share, 50 each; one snatches, it
- * takes all; both snatch, both lose 20. Those are game points, kept only for
- * this game: at the end, the teams' order by game points sets the showdown
- * points, 150, 100, 70, 50, 30, then 10 (Khai, 2026-11-18).
+ * Share or Snatch (spec 26, S26-AC3): teams play in pairs for a pot. Each
+ * secretly picks Share or Snatch: both share, half each; one snatches, it
+ * takes all; both snatch, nobody gets it. What a team takes is what it
+ * scores (ADR-045).
  */
 const Content = z.object({
-  pot: z.number().int().min(2).max(1000).default(100),
+  /** The pot each round; left out, it's sized so a game is worth up to 150 (ADR-045). */
+  pot: z.number().int().min(2).max(1000).optional(),
   chooseMs: z.number().int().min(5000).max(60_000).default(15_000),
   /** Rounds with an even number of teams; an odd number plays one per team. */
   evenRounds: z.number().int().min(1).max(10).default(3),
-  /** Game points each team loses when both snatch. */
-  bothSnatch: z.number().int().min(0).max(1000).default(20),
+  /** Points each team loses when both snatch: none, as points never go negative (ADR-045). */
+  bothSnatch: z.number().int().min(0).max(0).default(0),
 });
 
-/** Showdown points by final order of game points; ties share a place. */
-export const SNATCH_LADDER = [150, 100, 70, 50, 30] as const;
+/**
+ * The pot a round, sized so a team that took it every round it played would
+ * have the game's 150: an odd number of teams sits each out once (ADR-045).
+ */
+export function potFor(teams: number, evenRounds: number): number {
+  const played = teams % 2 === 1 ? Math.max(1, teams - 1) : evenRounds;
+  const pot = Math.floor(GAME_POINTS / played);
+  return pot - (pot % 2);
+}
 
 export type Pair = [string, string];
 
@@ -73,15 +80,15 @@ export function pairUp(order: readonly string[], round: number) {
   return { pairs, sitOut };
 }
 
-/** Game points for one pair: 50/50, 100/0, or both lose `bothSnatch`. */
+/** Points for one pair: half each, all to the snatcher, or both lose `bothSnatch` (0). */
 export function pairPoints(
   a: "share" | "snatch",
   b: "share" | "snatch",
   pot: number,
-  bothSnatch = 20,
+  bothSnatch = 0,
 ): [number, number] {
   if (a === "share" && b === "share") return [pot / 2, pot / 2];
-  if (a === "snatch" && b === "snatch") return [-bothSnatch, -bothSnatch];
+  if (a === "snatch" && b === "snatch") return [0 - bothSnatch, 0 - bothSnatch];
   return a === "snatch" ? [pot, 0] : [0, pot];
 }
 
@@ -132,7 +139,7 @@ function view(s: SnatchState, _c: unknown, { role, revealed }: ViewCtx) {
 
 const game: ShowdownGame<C, SnatchState> = {
   content: Content,
-  demo: "Two teams, one pot of 100. Both Share: 50 each. One Snatches: they take it all. Both Snatch: both lose 20. Most game points at the end wins.",
+  demo: "Share the pot, or snatch it all?",
   timeout: "Out of time? You Share.",
   minTeams: 2,
   rounds: (c, teams) => (teams % 2 === 1 ? teams : c.evenRounds),
@@ -144,7 +151,7 @@ const game: ShowdownGame<C, SnatchState> = {
       startsAt,
       closesAt: startsAt + c.chooseMs,
       teams: [...teams],
-      pot: c.pot - (c.pot % 2),
+      pot: c.pot !== undefined ? c.pot - (c.pot % 2) : potFor(teams.length, c.evenRounds),
       pairs,
       sitOut,
       choices: {},
@@ -174,11 +181,10 @@ const game: ShowdownGame<C, SnatchState> = {
     return { ...s, choices };
   },
   over: (s, _c, now) => now > s.closesAt || s.pairs.flat().every((t) => s.choices[t]),
-  // Game points only set the order: showdown points are paid once, on the last round.
+  // What a team takes from the pot is what it scores, each round (ADR-045).
   score(s, _c, teams) {
-    if (!s.last) return Object.fromEntries(teams.map((t) => [t, 0]));
-    const totals = gameTotals(s);
-    return rankedPoints(teams, (t) => -(totals[t] ?? 0), SNATCH_LADDER, 10);
+    const won = roundGamePoints(s);
+    return Object.fromEntries(teams.map((t) => [t, Math.max(0, won[t] ?? 0)]));
   },
   view,
 };

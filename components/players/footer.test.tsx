@@ -113,6 +113,12 @@ describe("PlayerFooter", () => {
     expect(push).toHaveBeenCalledWith("/holiday-2026");
   });
 
+  test("never shown on the TV display, even in a browser that has joined", () => {
+    nav.path = "/holiday-2026/display";
+    const { container } = footer(true);
+    expect(container).toBeEmptyDOMElement();
+  });
+
   test("hidden until a player has joined", () => {
     if (device.state) device.state.active = null;
     const { container } = render(<PlayerFooter hasTeams={false} />);

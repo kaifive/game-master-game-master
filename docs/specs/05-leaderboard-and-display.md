@@ -29,7 +29,7 @@ A big-screen page for the room shows how to join and a live leaderboard. Players
 
 ## UI
 
-Display uses the event's style pack; the whole page scales with the screen width (rem-based) so a 1080p TV reads from across the room and the top 10 fits without scrolling. Tied players share a rank on the board. Phone uses the pack's `LeaderboardRow`.
+Display uses the event's style pack; the whole page scales with the screen width (rem-based) so a 1080p TV reads from across the room and the top 10 fits without scrolling. Tied players share a rank on the board. Phone uses the pack's `LeaderboardRow`. The display never shows the phones' tab bar (Games, Leaderboard, Team, You), even in a browser that has joined (Khai, 2026-11-24).
 
 ## Acceptance criteria
 

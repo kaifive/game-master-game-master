@@ -1,9 +1,9 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test, vi } from "vitest";
 import { PackRoot } from "@/components/packs/judges-table/root";
 import { holiday2026 } from "@/content/events/holiday-2026";
-import { cover, showdownFor, type Role } from "@/lib/live";
+import { showdownFor, type Role } from "@/lib/live";
 import { LIVE_RENDERERS } from "../renderers";
 import type { ActiveLiveView } from "../types";
 
@@ -167,36 +167,5 @@ describe("Present Shuffle (spec 27)", () => {
     show("shuffle", r.view(tv, at + 100, true), at + 100, "tv");
     const answers = screen.getByRole("list", { name: "Answers" });
     expect(answers).toHaveTextContent(String(r.state.picks.t1?.value));
-  });
-});
-
-describe("Land Mass (spec 27)", () => {
-  test("S27-AC4: a team picks a piece, taps where it goes, and places it", async () => {
-    const user = userEvent.setup();
-    const r = round<{
-      tray: [number, number][][];
-      cols: number;
-      rows: number;
-      board: (string | null)[];
-    }>("landmass");
-    const send = show("landmass", r.view(cap("t1"), T0 + 100), T0 + 100);
-    await user.click(screen.getByRole("button", { name: /^Piece 2,/ }));
-    expect(screen.getByRole("button", { name: "Place it" })).toBeDisabled();
-    await user.click(screen.getByRole("button", { name: "Row 1, column 1" }));
-    const fits = cover(r.state, r.state.tray[1] ?? [], 0, 0, 0) !== null;
-    if (fits) {
-      await user.click(screen.getByRole("button", { name: "Place it" }));
-      expect(send).toHaveBeenCalledWith({ piece: 1, turns: 0, row: 0, col: 0 });
-    }
-  });
-
-  test("S27-AC4: other phones wait; the TV counts each team's squares", () => {
-    const r = round("landmass");
-    show("landmass", r.view(cap("t2"), T0 + 100), T0 + 100);
-    expect(screen.getByText("Reds is up")).toBeInTheDocument();
-    show("landmass", r.view(tv, T0 + 100), T0 + 100, "tv");
-    expect(
-      within(screen.getByRole("list", { name: "Squares held" })).getAllByRole("listitem"),
-    ).toHaveLength(2);
   });
 });

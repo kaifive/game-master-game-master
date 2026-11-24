@@ -13,6 +13,7 @@ import {
   gameTotals,
   pairPoints,
   pairUp,
+  potFor,
   roundGamePoints,
   snatch,
   type SnatchState,
@@ -58,9 +59,10 @@ describe("Auction", () => {
 
   it("S26-AC1: each team has 1 to 10 once each; a missing bid spends the lowest left; prizes are paid to the winner", () => {
     const g = rig<AuctionState>(auction);
-    expect(auction.rounds(g.c, 4)).toBe(10);
+    expect(auction.rounds(g.c, 4)).toBe(5);
     let s = g.deal(1, null);
-    expect(new Set(s.prizes).size).toBe(10);
+    // Five prizes that add up to the game's 150 (ADR-045).
+    expect([...s.prizes].sort((x, y) => x - y)).toEqual([10, 20, 30, 40, 50]);
     expect(s.left.t1).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     s = g.step(s, "t1", { bid: 10 });
     s = g.step(s, "t2", { bid: 10 });
@@ -181,11 +183,15 @@ describe("Share or Snatch", () => {
     expect(new Set(seen).size).toBe(6);
   });
 
-  it("S26-AC3: one secret choice each (Share if none) scores game points 50/50, 100/0, or both lose 20", () => {
-    expect(pairPoints("share", "share", 100)).toEqual([50, 50]);
-    expect(pairPoints("snatch", "share", 100)).toEqual([100, 0]);
-    expect(pairPoints("share", "snatch", 100)).toEqual([0, 100]);
-    expect(pairPoints("snatch", "snatch", 100)).toEqual([-20, -20]);
+  it("S26-AC3: one secret choice each (Share if none): both share, half each; one snatches, all of it; both snatch, nothing", () => {
+    expect(pairPoints("share", "share", 50)).toEqual([25, 25]);
+    expect(pairPoints("snatch", "share", 50)).toEqual([50, 0]);
+    expect(pairPoints("share", "snatch", 50)).toEqual([0, 50]);
+    expect(pairPoints("snatch", "snatch", 50)).toEqual([0, 0]);
+    // The pot is sized so taking it every round played is the game's 150.
+    expect(potFor(4, 3)).toBe(50);
+    expect(potFor(3, 3)).toBe(74);
+    expect(potFor(5, 3)).toBe(36);
     const g = rig<SnatchState>(snatch);
     let s = g.deal(1, null);
     const [a, b] = s.pairs[0] ?? ["", ""];
@@ -193,13 +199,14 @@ describe("Share or Snatch", () => {
     expect(g.view(s, cap(b))).toMatchObject({ choices: null, mine: null, lockedIn: [a] });
     s = g.close(s);
     expect(s.choices[b]).toBe("share");
-    expect(roundGamePoints(s)[a]).toBe(100);
+    expect(roundGamePoints(s)[a]).toBe(50);
     expect(roundGamePoints(s)[b]).toBe(0);
-    // Game points only set the order: no showdown points until the last round.
-    expect(Object.values(g.score(s))).toEqual([0, 0, 0, 0]);
+    // What a team takes is what it scores, every round (ADR-045).
+    expect(g.score(s)[a]).toBe(50);
+    expect(g.score(s)[b]).toBe(0);
   });
 
-  it("S26-AC3: game points carry from round to round, and the last round pays by their order: 150, 100, 70, 50, 30, then 10", () => {
+  it("S26-AC3: points carry from round to round on the TV, and a team that snatches every time can reach 150 at most", () => {
     const g = rig<SnatchState>(snatch);
     let s = g.deal(1, null);
     const winner = s.pairs[0]?.[0] ?? "";
@@ -209,14 +216,13 @@ describe("Share or Snatch", () => {
     }
     s = g.close(s);
     const totals1 = gameTotals(s);
-    expect(totals1[winner]).toBe(100);
+    expect(totals1[winner]).toBe(50);
     const s2 = g.deal(2, s);
     expect(s2.before).toEqual(totals1);
     expect(s2.last).toBe(false);
     const s3 = g.close(g.deal(3, g.close(s2)));
     expect(s3.last).toBe(true);
-    const pts = g.score(s3);
-    expect(pts[winner]).toBe(150);
+    expect(Math.max(...Object.values(gameTotals(s3)))).toBeLessThanOrEqual(150);
   });
 });
 
@@ -327,7 +333,7 @@ describe("spec 26 play tests (S24-AC8)", () => {
         );
         expect(r.ended).toBe(true);
         expect(r.leaks).toEqual([]);
-        expect(r.rounds).toHaveLength(10);
+        expect(r.rounds).toHaveLength(5);
         const finals = r.finals as AuctionState[];
         for (const t of Object.keys(r.scores)) {
           const spent = finals.map((f) => f.bids[t]).filter((b) => b !== undefined);
@@ -338,8 +344,8 @@ describe("spec 26 play tests (S24-AC8)", () => {
           expect(winners.length).toBeLessThanOrEqual(1);
           if (winners[0] !== undefined) expect(winners[0]).toBe(finals[i]?.prize);
         });
-        // The prizes add up to no more than the whole pot of prizes.
-        expect(Object.values(r.scores).reduce((a, b) => a + b, 0)).toBeLessThanOrEqual(550);
+        // The prizes add up to the game's 150, so nobody can get more.
+        expect(Object.values(r.scores).reduce((a, b) => a + b, 0)).toBeLessThanOrEqual(150);
       }
   });
 
@@ -376,7 +382,10 @@ describe("spec 26 play tests (S24-AC8)", () => {
         finals.forEach((f, i) => {
           for (const t of Object.keys(f.status)) {
             expect(f.status[t]).not.toBe("in");
-            expect(r.rounds[i]?.[t]).toBe(f.status[t] === "banked" ? f.pots[t] : 0);
+            // A banked pot scores, up to the round's 30 (ADR-045).
+            expect(r.rounds[i]?.[t]).toBe(
+              f.status[t] === "banked" ? Math.min(30, f.pots[t] ?? 0) : 0,
+            );
           }
         });
         line.mine.forEach((k, i) => {
@@ -397,7 +406,7 @@ describe("spec 26 play tests (S24-AC8)", () => {
     expect(Object.values(r.scores)).toEqual([0, 0, 0, 0]);
   });
 
-  it("S24-AC8 S24-AC6: Share or Snatch gives every team the same number of matchups, pays only 0, 50 or 100, and nothing leaks", () => {
+  it("S24-AC8 S24-AC6: Share or Snatch gives every team the same number of matchups, pays only nothing, half the pot or all of it, at most 150 a game, and nothing leaks", () => {
     const kinds = ["sharer", "snatcher", "random", "late", "silent", "dropout"];
     for (const n of PLAYTEST_TEAM_COUNTS.filter((x) => x >= 2))
       for (const shift of [0, 1, 2, 3, 4, 5]) {
@@ -425,12 +434,11 @@ describe("spec 26 play tests (S24-AC8)", () => {
         }
         expect(new Set(Object.values(games)).size).toBe(1);
         if (n % 2 === 1) expect(Object.values(sat)).toEqual(Array(n).fill(1));
-        // Showdown points come only from the final order of game points.
-        r.rounds.slice(0, -1).forEach((round) => {
-          expect(Object.values(round).every((p) => p === 0)).toBe(true);
-        });
-        for (const p of Object.values(r.rounds.at(-1) ?? {}))
-          expect([10, 30, 50, 70, 100, 150]).toContain(p);
+        // Each round pays what a team took: nothing, half the pot, or all of it.
+        const pot = potFor(n, 3);
+        for (const round of r.rounds)
+          for (const p of Object.values(round)) expect([0, pot / 2, pot]).toContain(p);
+        for (const total of Object.values(r.scores)) expect(total).toBeLessThanOrEqual(150);
       }
   });
 

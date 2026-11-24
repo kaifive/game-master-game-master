@@ -58,15 +58,17 @@ A feature item needs its spec at `Ready` before it starts.
 - [x] Spec 24, showdown framework: Who's played, the Showdown screen, TV demos, fair leads and clocks, bot play tests
 - [x] Spec 25, showdowns: Fly-by Count, Snow Sum, Color Count, Blind Stop, Last Second
 - [x] Spec 26, showdowns: Auction, Stocking Stuffer, Share or Snatch
-- [x] Spec 27, showdowns: Memory Path, Present Shuffle, Snowball to 21, Land Mass
+- [x] Spec 27, showdowns: Memory Path, Present Shuffle, Snowball to 21 (Land Mass removed, ADR-044)
 - [x] Blind review of every showdown (docs/reviews/showdowns.md)
-- [x] Spec 28, perception games, solo and showdown: Snow Pile, Staff Angle, Sleigh Run, Lion Drum, Cut the Ribbon
-- [x] Spec 30, second modes (ADR-041): Color Matcher as a showdown; Fly-by Count, Snow Sum and Color Count as solo
+- [x] Spec 28, perception games, solo and showdown: Staff Angle, Cut the Ribbon (Snow Pile, Sleigh Run, Lion Drum removed, ADR-044)
+- [x] Spec 30, second modes (ADR-041): Fly-by Count and Snow Sum as solo (Color Matcher showdown removed, ADR-044)
 
 ## M4: Party ready (Dec 14–18)
 
 - [x] Spec 29, team colors: the captain picks the team's color when naming it, used in every game
 - [x] Spec 31, team selfies: taken when naming the team; the host adds stickers; the winners' selfie at the finale
+- [x] QA round D (Khai, 2026-11-24): TV crash fixes, removals (ADR-044), results as soon as a round is over, no Lock in on showdown phones, 150 points a game scored on how close, short demos
+- [ ] QA round E (Khai, 2026-11-24): per-game fixes (Snow Sum, Blind Stop, Auction, Stocking Stuffer, Memory Path, Present Shuffle, Snowball to 21, Staff Angle)
 - [ ] Load test: 60 simulated players, display and controls; check free-tier usage
 - [ ] Holiday party event file: games, content, holiday theme
 - [ ] Run the "two weeks before" and "week before" lists in `runbooks/event-checklist.md`

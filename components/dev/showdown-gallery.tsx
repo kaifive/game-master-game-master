@@ -5,17 +5,8 @@ import { LiveTv } from "@/components/live/live-tv";
 import type { ActiveLiveView } from "@/components/live/types";
 import { useSlots } from "@/components/slots/registry";
 import type { GalleryMoment } from "./showdown-moments";
+import { PERCEPTION_CORES } from "@/lib/games";
 import {
-  exitY,
-  keepBeats,
-  PERCEPTION_CORES,
-  SHOWDOWN_ONLY_CORES,
-  type Cell,
-  type DrumTask,
-  type SleighTask,
-} from "@/lib/games";
-import {
-  cover,
   hostAct,
   liveView,
   move,
@@ -74,52 +65,10 @@ function perceptionScript(type: string): Script {
   return (state) => {
     const p = state as { task: unknown; startsAt: number; showEndsAt: number };
     const show = p.showEndsAt - p.startsAt;
-    if (type === "liondrum") {
-      const beats = keepBeats(p.task as DrumTask);
-      const last = beats.at(-1) ?? 0;
-      return {
-        moves: [
-          ["t1", { answer: beats.map((b) => b + 20) }, last + 500],
-          ["t2", { answer: beats.map((b, i) => b + (i % 2 ? 90 : -60)) }, last + 600],
-          ["t3", { answer: beats.slice(0, -1).map((b) => b + 160) }, last + 700],
-        ],
-        show: Math.round(show * 0.4),
-        answer: show + 400,
-      };
-    }
-    if (type === "color") {
-      // Team 1 spot on, team 2 a touch dark, team 3 off toward blue.
-      const hex = (p.task as { target: string }).target;
-      const ch = (i: number) => parseInt(hex.slice(i, i + 2), 16);
-      const mix = (d: [number, number, number]) =>
-        `#${[1, 3, 5]
-          .map((i, k) =>
-            Math.max(0, Math.min(255, ch(i) + (d[k] ?? 0)))
-              .toString(16)
-              .padStart(2, "0"),
-          )
-          .join("")}`.toUpperCase();
-      const at = show + 1500;
-      return {
-        moves: [
-          ["t1", { answer: hex }, at],
-          ["t2", { answer: mix([-30, -30, -30]) }, at + 400],
-          ["t3", { answer: mix([-60, -20, 90]) }, at + 800],
-        ],
-        show: Math.round(show * 0.5),
-        answer: at + 600,
-      };
-    }
-    const right =
-      type === "snowpile"
-        ? (p.task as { count: number }).count
-        : type === "staffangle"
-          ? (p.task as { target: number }).target
-          : type === "sleighrun"
-            ? exitY(p.task as SleighTask)
-            : (p.task as { at: number }).at;
-    const off = type === "snowpile" ? [1, -4] : type === "staffangle" ? [6, -14] : [0.04, -0.09];
-    const fix = (n: number) => (type === "snowpile" || type === "staffangle" ? Math.round(n) : n);
+    const angle = type === "staffangle";
+    const right = angle ? (p.task as { target: number }).target : (p.task as { at: number }).at;
+    const off = angle ? [6, -14] : [0.04, -0.09];
+    const fix = (n: number) => (angle ? Math.round(n) : n);
     const at = show + 1500;
     return {
       moves: [
@@ -164,9 +113,7 @@ const SCRIPTS: Record<string, Script> = {
     show: 1000,
     answer: 3000,
   }),
-  ...Object.fromEntries(
-    [...PERCEPTION_CORES, ...SHOWDOWN_ONLY_CORES].map((c) => [c.type, perceptionScript(c.type)]),
-  ),
+  ...Object.fromEntries(PERCEPTION_CORES.map((c) => [c.type, perceptionScript(c.type)])),
   auction: () => ({
     moves: [
       ["t1", { bid: 10 }, 800],
@@ -220,21 +167,6 @@ const SCRIPTS: Record<string, Script> = {
       drive: (_s, _t, i) => ({ slot: (i * 4) % 9 }),
     };
   },
-  landmass: () => ({
-    moves: [],
-    show: 9000,
-    answer: 9000,
-    drive: (s, _t, i) => {
-      const st = s as Parameters<typeof cover>[0] & { tray: Cell[][] };
-      for (const [k, piece] of st.tray.entries()) {
-        for (let row = 0; row < st.rows; row++)
-          for (let col = (i * 3) % st.cols; col < st.cols; col++)
-            for (let turns = 0; turns < 4; turns++)
-              if (cover(st, piece, turns, row, col)) return { piece: k, turns, row, col };
-      }
-      return null;
-    },
-  }),
   snatch: (state) => {
     const pairs = (state as { pairs: [string, string][] }).pairs;
     return {
@@ -389,14 +321,9 @@ export const TITLES: Record<string, string> = {
   path: "Memory Path",
   shuffle: "Present Shuffle",
   to21: "Snowball to 21",
-  landmass: "Land Mass",
   buzzer: "Buzzer Round",
-  snowpile: "Snow Pile",
   staffangle: "Staff Angle",
-  sleighrun: "Sleigh Run",
-  liondrum: "Lion Drum",
   ribbon: "Cut the Ribbon",
-  color: "Color Matcher",
 };
 
 /** The TV at a moment, as the display shows it. */

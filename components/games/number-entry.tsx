@@ -4,11 +4,20 @@ import { useState, type ReactNode } from "react";
 import { BackspaceIcon } from "@/components/icons/game";
 import { useAutoSubmit } from "./auto-submit";
 
+/** Said where a Lock in would be, on a showdown phone. */
+export function SendsAtTheEnd() {
+  return (
+    <p className="m-0 text-center text-lg font-bold text-gm-text-muted">
+      Your answer goes in when time&apos;s up.
+    </p>
+  );
+}
+
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"] as const;
 
 /**
- * A white number card over a 3 x 3 pad of white keys and a full-width Lock in
- * that names the number (showdowns, spec 25; Snow Pile, spec 28).
+ * A white number card over a 3 x 3 pad of white keys and, solo, a full-width
+ * Lock in that names the number (showdowns, spec 25; solo counting, spec 30).
  */
 export function NumberEntry({
   prompt,
@@ -18,6 +27,7 @@ export function NumberEntry({
   negative = false,
   max = 99,
   closesIn,
+  lockButton = true,
 }: {
   prompt: ReactNode;
   /** Time left to answer, in ms: what's typed is sent as it runs out. */
@@ -28,6 +38,11 @@ export function NumberEntry({
   onLock: (value: number) => void;
   negative?: boolean;
   max?: number;
+  /**
+   * Solo has a Lock in; a showdown phone has none and sends what's typed as
+   * the timer runs out (Khai, 2026-11-24).
+   */
+  lockButton?: boolean;
 }) {
   const [typed, setTyped] = useState("");
   const value = typed === "" || typed === "-" ? null : Number(typed);
@@ -106,16 +121,20 @@ export function NumberEntry({
           <BackspaceIcon />
         </button>
       </div>
-      <button
-        type="button"
-        disabled={busy || value === null}
-        onClick={() => {
-          if (value !== null) onLock(value);
-        }}
-        className="min-h-14 w-full rounded-gm bg-gm-accent font-gm-display text-2xl font-bold text-gm-text-on-accent hover:bg-gm-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        Lock in{value !== null ? ` ${String(value)}` : ""}
-      </button>
+      {lockButton ? (
+        <button
+          type="button"
+          disabled={busy || value === null}
+          onClick={() => {
+            if (value !== null) onLock(value);
+          }}
+          className="min-h-14 w-full rounded-gm bg-gm-accent font-gm-display text-2xl font-bold text-gm-text-on-accent hover:bg-gm-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Lock in{value !== null ? ` ${String(value)}` : ""}
+        </button>
+      ) : (
+        <SendsAtTheEnd />
+      )}
     </section>
   );
 }
