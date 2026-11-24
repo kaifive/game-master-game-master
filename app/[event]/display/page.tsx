@@ -2,6 +2,8 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { DisplayView } from "@/components/display/display-view";
 import { getEvent } from "@/lib/events/server";
+import { teaserFor } from "@/lib/games";
+import { showdownFor } from "@/lib/live";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +21,10 @@ export default async function DisplayPage({ params }: { params: Promise<{ event:
       joinUrl={`${proto}://${host}/join?code=${config.joinCode}`}
       shortUrl={`${host}/join/${config.joinCode}`}
       joinCode={config.joinCode}
+      // The menu between showdowns: every live game that isn't off, hidden ones too (Khai, 2026-11-24).
+      showdowns={config.games
+        .filter((g) => g.mode === "live" && g.visibility !== "off" && showdownFor(g.type))
+        .map((g) => ({ id: g.id, title: g.title, type: g.type, teaser: teaserFor(g.type) }))}
     />
   );
 }

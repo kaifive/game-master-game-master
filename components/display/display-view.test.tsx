@@ -81,10 +81,8 @@ describe("DisplayView", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(SCREEN_POLL_MS);
     });
-    expect(
-      await screen.findByRole("heading", { name: "Next showdown coming up" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("list", { name: "Team standings" })).toHaveTextContent("Reds");
+    expect(await screen.findByRole("heading", { name: "Showdowns" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Team standings" })).toHaveTextContent("Reds");
     expect(screen.queryByRole("region", { name: "Join the party" })).toBeNull();
     liveScreen = "leaderboard";
     await act(async () => {

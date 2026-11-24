@@ -94,7 +94,7 @@ test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1 S26-AC2 S12-AC1 S1
   await expect(page.getByText("Phase: Team")).toBeVisible();
   // End early: the TV shows the standings between showdowns (S11-AC1, S24-AC9).
   await page.getByRole("button", { name: "End early" }).click();
-  await expect(tv.getByRole("heading", { name: "Next showdown coming up" })).toBeVisible();
+  await expect(tv.getByRole("heading", { name: "Showdowns" })).toBeVisible();
 
   // A nerve game: Stocking Stuffer, one team opens and one banks (S26-AC2).
   await page.getByLabel("Showdown to start").selectOption({ label: "Stocking Stuffer" });
@@ -111,7 +111,7 @@ test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1 S26-AC2 S12-AC1 S1
   await page.getByRole("button", { name: "Show results" }).click();
   await expect(tv.getByText("Banked this round")).toBeVisible();
   await page.getByRole("button", { name: "End early" }).click();
-  await expect(tv.getByRole("heading", { name: "Next showdown coming up" })).toBeVisible();
+  await expect(tv.getByRole("heading", { name: "Showdowns" })).toBeVisible();
 
   // The buzzer round: red until opened, then two captains buzz; the first is wrong, the second right (spec 12).
   await page.getByLabel("Showdown to start").selectOption({ label: "Buzzer Round" });
@@ -138,7 +138,7 @@ test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1 S26-AC2 S12-AC1 S1
   await expect(tv.getByText("Jian")).toBeVisible();
   await expect(capA.getByText("Right! The points are yours.")).toBeVisible();
   await page.getByRole("button", { name: "End early" }).click();
-  await expect(tv.getByRole("heading", { name: "Next showdown coming up" })).toBeVisible();
+  await expect(tv.getByRole("heading", { name: "Showdowns" })).toBeVisible();
   await page.getByRole("button", { name: "Leaderboard" }).click();
   await expect(tv.getByRole("region", { name: "Join the party" })).toBeVisible();
 

@@ -33,6 +33,8 @@ export type LiveRenderer = {
   Controller: (props: LiveControllerProps) => ReactNode;
   /** A short looping demo of how it plays, for the TV intro (S24-AC4). */
   Demo?: (props: { still: boolean }) => ReactNode;
+  /** What a player calls out in the demo, under the drawn TV ("7!"), to show what the room does. */
+  say?: string;
   /** Its own panel in Controls, for games the host steps through (spec 12). */
   Host?: (props: LiveHostProps) => ReactNode;
 };

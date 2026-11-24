@@ -1,8 +1,9 @@
 "use client";
 
-import { BarRace } from "@/components/motion";
 import type { LiveView } from "@/lib/live";
+import { cx } from "@/lib/ui";
 import { DemoFrame } from "./demo-frame";
+import { GameMenu, type MenuGame, type TvHost } from "./game-menu";
 import { LIVE_RENDERERS } from "./renderers";
 import { StandingsUpdate, type StandingsRow } from "./standings-update";
 import type { ActiveLiveView, LiveRenderer } from "./types";
@@ -47,8 +48,23 @@ export function LiveTv({
       aria-label={`${title} on the TV`}
       className="grid h-full content-start gap-[3vmin] p-[3vmin]"
     >
-      <header className="flex items-baseline justify-between gap-4">
-        <h2 className="m-0 font-gm-display text-[clamp(2rem,5vmin,4.5rem)] font-bold">{title}</h2>
+      <header
+        className={cx(
+          "flex items-baseline gap-4",
+          // On the intro the name sits centered over the demo (Khai, 2026-11-24).
+          step === "intro" ? "justify-center" : "justify-between",
+        )}
+      >
+        <h2
+          className={cx(
+            "m-0 font-gm-display font-bold",
+            step === "intro"
+              ? "text-[clamp(2.6rem,7vmin,6rem)]"
+              : "text-[clamp(2rem,5vmin,4.5rem)]",
+          )}
+        >
+          {title}
+        </h2>
         {round > 0 && step !== "final" && (
           <p className="m-0 font-gm-display text-[clamp(1.4rem,3.6vmin,3rem)] font-bold">
             Round {round} of {rounds}
@@ -75,18 +91,24 @@ export function LiveTv({
 
 /**
  * The TV's Showdown screen (S24-AC9): the showdown while one runs, and the
- * team standings in between.
+ * menu of showdowns with the team standings in between (Khai, 2026-11-24).
  */
 export function ShowdownScreen({
   view,
   serverNow,
   totals,
   renderers,
+  menu = [],
+  host = null,
 }: {
   view: LiveView;
   serverNow: () => number;
   totals: readonly TeamTotal[];
   renderers?: Readonly<Record<string, LiveRenderer>>;
+  /** The event's showdowns, for the menu between them. */
+  menu?: readonly MenuGame[];
+  /** The host's controls, when the TV is signed in as the host. */
+  host?: TvHost | null;
 }) {
   if (view.active)
     return (
@@ -97,28 +119,5 @@ export function ShowdownScreen({
         {...(renderers ? { renderers } : {})}
       />
     );
-  return (
-    <section aria-label="Showdown" className="grid h-full content-start gap-[3vmin] p-[3vmin]">
-      <h2 className="m-0 font-gm-display text-[clamp(2rem,5vmin,4.5rem)] font-bold">
-        Next showdown coming up
-      </h2>
-      {totals.length > 0 ? (
-        <div className="text-[clamp(1rem,2.4vh,1.8rem)]">
-          <BarRace
-            label="Team standings"
-            entries={totals.map((t) => ({
-              id: t.id,
-              name: t.name,
-              score: t.points,
-              team: t.color,
-            }))}
-          />
-        </div>
-      ) : (
-        <p className="m-0 text-[clamp(1.2rem,3vmin,2.4rem)] text-gm-text-muted">
-          Teams show here once they&apos;re made.
-        </p>
-      )}
-    </section>
-  );
+  return <GameMenu games={menu} totals={totals} host={host} />;
 }

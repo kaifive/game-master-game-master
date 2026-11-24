@@ -15,6 +15,35 @@ export type CatalogEntry = {
   modes: readonly Mode[];
 };
 
+/**
+ * The TV game menu's hint for each showdown: the solo game it's like, or what
+ * kind of game it is, so teams know roughly what's coming but not exactly
+ * (Khai, 2026-11-24; spec 24's "Trained by").
+ */
+const TEASERS: Record<string, string> = {
+  flyby: "Like Rapid Recall",
+  snowsum: "Like Rapid Recall, with sums",
+  blindstop: "Like T-Timer",
+  lastsecond: "Like T-Timer, as late as you dare",
+  path: "Like Pathfinder",
+  shuffle: "Like Rapid Recall",
+  landmass: "Like Block Fit",
+  auction: "Pure strategy",
+  to21: "Pure strategy",
+  stockings: "Push your luck",
+  snatch: "Pure nerve",
+  buzzer: "Like Trivia, out loud",
+  color: "Like Color Matcher",
+  snowpile: "Like Guessing Jar",
+  staffangle: "Trust your eye",
+  sleighrun: "Trust your eye",
+  liondrum: "Like Tap Masher, in time",
+  ribbon: "Trust your eye",
+};
+
+/** A showdown's hint for the TV menu, or null (spec 24). */
+export const teaserFor = (type: string): string | null => TEASERS[type] ?? null;
+
 export type Mode = "solo" | "showdown";
 const SOLO: readonly Mode[] = ["solo"];
 const SHOWDOWN: readonly Mode[] = ["showdown"];
