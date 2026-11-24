@@ -42,6 +42,7 @@ export {
   PERCEPTION_CORES,
   ribbonCore,
   staffangleCore,
+  STAFF_ANSWER_MS,
   type AngleTask,
   type RibbonTask,
 } from "./perception/games";

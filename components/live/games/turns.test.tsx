@@ -114,30 +114,29 @@ describe("Snowball to 21 (spec 27)", () => {
 });
 
 describe("Memory Path (spec 27)", () => {
-  test("S27-AC1: phones wait while the path shows; on its turn a team taps squares on the grid", async () => {
+  test("S27-AC1: phones wait while the path shows; on its turn a team steps with arrows, no grid to scroll", async () => {
     const user = userEvent.setup();
     const r = round<{ path: [number, number][]; showEndsAt: number; rows: number }>("path");
     show("path", r.view(cap("t1"), T0 + 1000), T0 + 1000);
     expect(screen.getByText("Watch the TV!")).toBeInTheDocument();
     const after = r.state.showEndsAt + 10;
     const send = show("path", r.view(cap("t1"), after), after);
-    const [col, row] = r.state.path[0] ?? [0, 0];
-    await user.click(
-      screen.getByRole("button", {
-        name: `Row ${String(r.state.rows - row)}, column ${String(col + 1)}`,
-      }),
-    );
-    expect(send).toHaveBeenCalledWith({ square: [col, row] });
+    expect(screen.queryByRole("group", { name: "The path grid" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Up" }));
+    expect(send).toHaveBeenCalledWith({ dir: "up" });
+    await user.click(screen.getByRole("button", { name: "Left" }));
+    expect(send).toHaveBeenCalledWith({ dir: "left" });
   });
 
   test("S27-AC1: a team that went out sees how far it got; the TV shows who crossed", () => {
     const r = round<{ path: [number, number][]; showEndsAt: number }>("path");
     const after = r.state.showEndsAt + 10;
-    r.play("t1", { square: r.state.path[0] }, after);
+    r.play("t1", { square: r.state.path[1] }, after);
     r.play("t1", { square: [-1, -1] }, after + 5);
     show("path", r.view(cap("t1"), after + 10), after + 10);
-    expect(screen.getByText("Out at 1")).toBeInTheDocument();
-    for (const [i, sq] of r.state.path.entries()) r.play("t2", { square: sq }, after + 20 + i);
+    expect(screen.getByText("Out at 2")).toBeInTheDocument();
+    for (const [i, sq] of r.state.path.slice(1).entries())
+      r.play("t2", { square: sq }, after + 20 + i);
     show("path", r.view(tv, after + 100, true), after + 100, "tv");
     expect(screen.getByText("Blues made it across!")).toBeInTheDocument();
   });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { leadCounts } from "../fairness";
+import { lapRounds, leadCounts } from "../fairness";
 import type { AnyShowdown, MoveResult, Role } from "../model";
 import { PLAYTEST_TEAM_COUNTS, playtest, type Bot, type BotContext } from "../playtest";
 import { dealPath, path, type PathState, type Square } from "./path";
@@ -104,7 +104,10 @@ describe("Memory Path", () => {
 
   it("S27-AC1: shows then hides the path, knocks a team out on a wrong or slow step, keeps its right squares lit, and pays the crosser most, part way less, and nothing done least", () => {
     const g = rig<PathState>(path);
+    // At least three rounds, in whole laps so every team leads equally often.
     expect(path.rounds(g.c, 3)).toBe(3);
+    expect(path.rounds(g.c, 2)).toBe(4);
+    expect(path.rounds(g.c, 5)).toBe(5);
     expect([1, 2, 3].map((r) => g.deal(r).order[0])).toEqual(["t1", "t2", "t3"]);
     let s = g.deal();
     const shownAt = (now: number, role: Role) => (g.view(s, role, now).shown as Square[]).length;
@@ -112,32 +115,38 @@ describe("Memory Path", () => {
     expect(shownAt(T0 + 3000, cap("t1"))).toBe(0);
     const after = s.showEndsAt + 10;
     expect(shownAt(after, tv)).toBe(0);
-    expect(g.move(s, "t1", { square: s.path[0] }, T0 + 100)).toMatchObject({
+    expect(g.move(s, "t1", { dir: "up" }, T0 + 100)).toMatchObject({
       ok: false,
       message: "Watch the path first!",
     });
-    // t1 gets 3 right, then taps a wrong square.
-    for (let i = 0; i < 3; i++) s = g.step(s, "t1", { square: s.path[i] }, after + i);
-    const wrong: Square = [((s.path[3]?.[0] ?? 0) + 1) % s.cols, s.path[3]?.[1] ?? 0];
-    const away = s.path.slice(4).some((q) => q[0] === wrong[0] && q[1] === wrong[1]);
-    s = g.step(s, "t1", { square: away ? [-1, -1] : wrong }, after + 10);
-    expect(s.results.t1).toEqual({ reached: 3, crossed: false });
-    expect((g.view(s, cap("t2"), after + 20).lit as Square[]).length).toBe(3);
+    // The phone sends arrows: the way from each square of the path to the next.
+    const dirTo = (i: number): "up" | "left" | "right" => {
+      const [ac, ar] = s.path[i - 1] ?? [0, 0];
+      const [bc, br] = s.path[i] ?? [0, 0];
+      return br < ar ? "up" : bc < ac ? "left" : "right";
+    };
+    // Each team starts on the first square, given; t1 gets 3 steps right, then a wrong one.
+    expect(g.view(s, tv, after).progress).toEqual([s.path[0]]);
+    for (let i = 1; i <= 3; i++) s = g.step(s, "t1", { dir: dirTo(i) }, after + i);
+    const wrong = (["up", "left", "right"] as const).find((d) => d !== dirTo(4)) ?? "up";
+    s = g.step(s, "t1", { dir: wrong }, after + 10);
+    expect(s.results.t1).toEqual({ reached: 4, crossed: false });
+    expect((g.view(s, cap("t2"), after + 20).lit as Square[]).length).toBe(4);
     // t2 is too slow on its first step.
     s = g.tick(s, after + 10 + 5001);
-    expect(s.results.t2).toEqual({ reached: 0, crossed: false });
+    expect(s.results.t2).toEqual({ reached: 1, crossed: false });
     // t3 crosses.
-    for (let i = 0; i < s.path.length; i++)
-      s = g.step(s, "t3", { square: s.path[i] }, after + 6000 + i);
+    for (let i = 1; i < s.path.length; i++)
+      s = g.step(s, "t3", { dir: dirTo(i) }, after + 6000 + i);
     expect(s.winner).toBe("t3");
     // Of three rounds' 50: across 50, some squares right 40, none 25 (Khai, 2026-11-24).
-    expect(g.score(s)).toEqual({ t1: s.results.t1?.reached ? 40 : 25, t2: 25, t3: 50 });
+    expect(g.score(s)).toEqual({ t1: 40, t2: 25, t3: 50 });
     expect((g.view(s, tv, after + 9000, true).shown as Square[]).length).toBe(s.path.length);
   });
 });
 
 describe("Present Shuffle", () => {
-  it("S27-AC2: shows seeded values, shuffles them, and the TV alone gets them while they're out", () => {
+  it("S27-AC2: shows seeded values, one more present each round, shuffles them, and the TV alone gets them while they're out", () => {
     expect(
       afterSwaps(3, [
         [0, 1],
@@ -146,8 +155,10 @@ describe("Present Shuffle", () => {
     ).toEqual([1, 2, 0]);
     const g = rig<ShuffleState>(shuffle);
     const s = g.deal();
-    expect(s.values).toHaveLength(9);
-    expect(new Set(s.values).size).toBe(9);
+    // One more present to follow each round (Khai, 2026-11-24), the best worth the round's 50.
+    expect([1, 2, 3].map((r) => g.deal(r).values.length)).toEqual([5, 6, 7]);
+    expect(new Set(s.values).size).toBe(5);
+    expect(Math.max(...g.deal(3).values)).toBeLessThanOrEqual(50);
     expect(g.view(s, tv, T0 + 1000).shown).toEqual(s.values);
     expect(g.view(s, cap("t1"), T0 + 1000)).toMatchObject({ shown: null, swaps: null });
     expect(g.view(s, tv, s.shuffleEndsAt + 1)).toMatchObject({
@@ -258,8 +269,8 @@ function lineup(bots: Record<string, Bot>, n: number, shift: number) {
   };
 }
 
-/** The points a round can pay with n teams (one round each): its share of 150 (ADR-045). */
-const share = (n: number) => 150 / n;
+/** The points a round can pay with n teams: its share of 150 over the game's rounds (ADR-045). */
+const share = (n: number) => 150 / lapRounds(n);
 const roundGames: [string, AnyShowdown, Record<string, Bot>, (n: number) => number[] | null][] = [
   [
     "Snowball to 21",
@@ -274,7 +285,7 @@ const roundGames: [string, AnyShowdown, Record<string, Bot>, (n: number) => numb
 
 describe("spec 27 play tests (S24-AC8, S24-AC6)", () => {
   for (const [name, game, bots, allowed] of roundGames)
-    it(`S24-AC8 S24-AC6: ${name} plays one round per team with 1 to 6 teams, each team leading one, scores in its rules, nothing leaks`, () => {
+    it(`S24-AC8 S24-AC6: ${name} plays at least three rounds in whole laps with 1 to 6 teams, each team leading equally often, scores in its rules, nothing leaks`, () => {
       for (const n of PLAYTEST_TEAM_COUNTS)
         for (const shift of [0, 1, 2, 3, 4, 5, 6]) {
           const line = lineup(bots, n, shift);
@@ -307,7 +318,8 @@ describe("spec 27 play tests (S24-AC8, S24-AC6)", () => {
           );
           expect(r.ended).toBe(true);
           expect(r.leaks).toEqual([]);
-          expect(r.rounds).toHaveLength(n);
+          // At least three rounds, in whole laps (Khai, 2026-11-24).
+          expect(r.rounds).toHaveLength(lapRounds(n));
           for (const round of r.rounds)
             for (const p of Object.values(round)) {
               const ok = allowed(n);
@@ -315,9 +327,11 @@ describe("spec 27 play tests (S24-AC8, S24-AC6)", () => {
               else expect(p).toBeLessThanOrEqual(Math.ceil(share(n)));
               expect(p).toBeGreaterThanOrEqual(0);
             }
-          // Every team leads exactly once over the game (S24-AC6).
+          // Every team leads equally often over the game (S24-AC6).
           expect(leadCounts(r.turnOrders)).toEqual(
-            Object.fromEntries(Array.from({ length: n }, (_, i) => [`t${String(i + 1)}`, 1])),
+            Object.fromEntries(
+              Array.from({ length: n }, (_, i) => [`t${String(i + 1)}`, lapRounds(n) / n]),
+            ),
           );
           // A perfect team never loses a round it leads.
           line.mine.forEach((k, i) => {

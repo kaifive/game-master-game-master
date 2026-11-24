@@ -69,6 +69,8 @@ function To21Tv({ view, game, serverNow, revealed }: LiveTvProps) {
   const g = game as To21View | null;
   const now = useServerTime(serverNow, !revealed);
   if (!g) return null;
+  const owners: string[] = [];
+  for (const h of g.history) for (let k = 0; k < h.add; k++) owners.push(h.teamId);
   if (now < g.startsAt && !revealed)
     return (
       <GetReady
@@ -129,20 +131,25 @@ function To21Tv({ view, game, serverNow, revealed }: LiveTvProps) {
           className="grid gap-[0.4vw]"
           style={{ gridTemplateColumns: `repeat(${String(g.target)}, 1fr)` }}
         >
-          {Array.from({ length: g.target }, (_, i) => (
-            <span
-              key={i}
-              className={cx(
-                "grid h-[4vh] place-items-center rounded-full font-gm-display text-[clamp(0.7rem,1.8vh,1.3rem)] font-bold",
-                i < g.count
-                  ? "bg-gm-tile-present text-gm-tile-present-ink"
-                  : "bg-gm-tile-absent text-gm-tile-absent-ink",
-                i === g.target - 1 && "ring-4 ring-gm-tile-correct",
-              )}
-            >
-              {i + 1}
-            </span>
-          ))}
+          {Array.from({ length: g.target }, (_, i) => {
+            // Each number fills in the color of the team that added it (Khai, 2026-11-24).
+            const by = owners[i];
+            return (
+              <span
+                key={i}
+                className={cx(
+                  "grid h-[4vh] place-items-center rounded-full font-gm-display text-[clamp(0.7rem,1.8vh,1.3rem)] font-bold",
+                  by !== undefined
+                    ? "text-gm-text-on-accent [text-shadow:0_1px_2px_rgb(0_0_0/0.5)]"
+                    : "bg-gm-tile-absent text-gm-tile-absent-ink",
+                  i === g.target - 1 && "ring-4 ring-gm-tile-correct",
+                )}
+                style={by !== undefined ? { background: team(colorOf(view, by)) } : undefined}
+              >
+                {i + 1}
+              </span>
+            );
+          })}
         </div>
       )}
       {revealed && <Reveal view={view} />}
@@ -294,33 +301,31 @@ function PathTv({ view, game, serverNow, revealed }: LiveTvProps) {
   if (now < g.startsAt && !revealed)
     return <GetReady startsAt={g.startsAt} now={now} line="Watch the path!" />;
   const showing = now < g.showEndsAt && !revealed;
+  if (revealed)
+    return (
+      <div className="grid justify-items-center gap-[3vh]">
+        <PathGrid g={g} size="small" />
+        <p className="m-0 font-gm-display text-[clamp(2rem,6vh,4.5rem)] font-bold">
+          {g.winner ? `${nameOf(view, g.winner)} made it across!` : "Nobody made it across"}
+        </p>
+        <Reveal
+          view={view}
+          note={(t) => {
+            const res = g.results[t];
+            if (!res) return "Didn't get a turn";
+            return res.crossed
+              ? "Crossed!"
+              : `${String(res.reached)} of ${String(g.length)} squares`;
+          }}
+        />
+      </div>
+    );
+  // The grid in the middle of the TV, what's happening on the left, the order on the right (Khai, 2026-11-24).
   return (
-    <div
-      className={cx(
-        "grid items-center gap-[3vh_3vw]",
-        revealed ? "grid-cols-1" : "grid-cols-[auto_1fr]",
-      )}
-    >
-      <PathGrid g={g} size={revealed ? "small" : "tv"} />
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-[3vw]">
       <div className="grid content-center gap-[2.4vh]">
-        {revealed ? (
-          <>
-            <p className="m-0 font-gm-display text-[clamp(2rem,6vh,4.5rem)] font-bold">
-              {g.winner ? `${nameOf(view, g.winner)} made it across!` : "Nobody made it across"}
-            </p>
-            <Reveal
-              view={view}
-              note={(t) => {
-                const res = g.results[t];
-                if (!res) return "Didn't get a turn";
-                return res.crossed
-                  ? "Crossed!"
-                  : `${String(res.reached)} of ${String(g.length)} squares`;
-              }}
-            />
-          </>
-        ) : showing ? (
-          <p className="m-0 font-gm-display text-[clamp(2rem,6vh,4.5rem)] font-bold">
+        {showing ? (
+          <p className="m-0 text-center font-gm-display text-[clamp(2rem,6vh,4.5rem)] font-bold">
             Remember the path…
           </p>
         ) : (
@@ -334,31 +339,32 @@ function PathTv({ view, game, serverNow, revealed }: LiveTvProps) {
               doing="is crossing"
             />
             <p className="m-0 text-center font-gm-display text-[clamp(1.4rem,4vh,3rem)] font-bold text-gm-text-muted">
-              {g.progress.length} of {g.length} squares · 5 seconds a step
+              {g.progress.length} of {g.length} squares
             </p>
-            {g.lit.length > 0 && (
-              <p className="m-0 text-center text-[clamp(1rem,2.6vh,2rem)] text-gm-text-muted">
-                Gold: squares an earlier team got right. White: right so far.
-              </p>
-            )}
           </>
         )}
-        {!revealed && (
-          <Order
-            view={view}
-            order={g.order}
-            current={showing ? null : g.crossing}
-            note={(id) => {
-              const res = g.results[id];
-              return res ? (res.crossed ? "across" : `out at ${String(res.reached)}`) : null;
-            }}
-          />
-        )}
       </div>
+      <PathGrid g={g} size="tv" />
+      <Order
+        view={view}
+        order={g.order}
+        current={showing ? null : g.crossing}
+        note={(id) => {
+          const res = g.results[id];
+          return res ? (res.crossed ? "across" : `out at ${String(res.reached)}`) : null;
+        }}
+      />
     </div>
   );
 }
 
+const ARROWS: ["left" | "up" | "right", string, string][] = [
+  ["left", "←", "Left"],
+  ["up", "↑", "Up"],
+  ["right", "→", "Right"],
+];
+
+/** The phone is just arrows: the path is on the TV, so nothing to scroll (Khai, 2026-11-24). */
 function PathController({ view, game, serverNow, revealed, send, busy }: LiveControllerProps) {
   const g = game as PathView | null;
   const now = useServerTime(serverNow, !revealed);
@@ -381,17 +387,31 @@ function PathController({ view, game, serverNow, revealed, send, busy }: LiveCon
       </PhoneNote>
     );
   return (
-    <section aria-label="Your crossing" className="grid gap-3">
-      <p className="m-0 text-center text-xl font-bold">
-        Your turn! Start on the bottom row. {g.progress.length} of {g.length}
+    <section aria-label="Your crossing" className="grid gap-4">
+      <p className="m-0 text-center font-gm-display text-2xl font-bold">
+        Your turn! {g.progress.length} of {g.length}
       </p>
-      <p className="m-0 text-center text-gm-text-muted">
-        Tap the next square within 5 seconds.
-        {g.lit.length > 0 ? " Gold squares are what an earlier team got right." : ""}
-      </p>
+      <p className="m-0 text-center text-gm-text-muted">Watch the TV and step along the path.</p>
       <TimeLeft closesAt={g.stepEndsAt} now={now} total={g.stepMs} />
-      <div className={cx(busy && "pointer-events-none opacity-80")}>
-        <PathGrid g={g} size="phone" onTap={(square) => void send({ square })} />
+      <div className="grid grid-cols-3 grid-rows-2 gap-3">
+        {ARROWS.map(([dir, arrow, label]) => (
+          <button
+            key={dir}
+            type="button"
+            aria-label={label}
+            disabled={busy}
+            onClick={() => void send({ dir })}
+            className={cx(
+              bigButton,
+              "grid min-h-24 place-items-center bg-gm-tile-present pb-[0.15em] text-6xl leading-none text-gm-tile-present-ink shadow-md ring-1 ring-gm-border",
+              dir === "up" ? "col-start-2 row-start-1" : "row-start-2",
+              dir === "left" && "col-start-1",
+              dir === "right" && "col-start-3",
+            )}
+          >
+            {arrow}
+          </button>
+        ))}
       </div>
     </section>
   );
@@ -490,7 +510,7 @@ function PresentBoard({
     <div
       aria-label="The presents"
       role="img"
-      className={cx("relative mx-auto", small ? "h-[22vh]" : "h-[58vh]")}
+      className={cx("relative mx-auto", small ? "h-[44vh]" : "h-[58vh]")}
       style={{ aspectRatio: `${String(cols)} / ${String(rows)}` }}
     >
       {settled
@@ -505,7 +525,6 @@ function PresentBoard({
                 y={Math.floor(slot / cols)}
                 cols={cols}
                 rows={rows}
-                i={slot}
                 value={value}
                 owner={pick ? colorOf(view, pick.t) : null}
               />
@@ -518,7 +537,6 @@ function PresentBoard({
               y={y ?? 0}
               cols={cols}
               rows={rows}
-              i={p}
               value={now < g.showEndsAt ? g.shown?.[p] : undefined}
               owner={null}
             />
@@ -532,7 +550,6 @@ function PresentAt({
   y,
   cols,
   rows,
-  i,
   value,
   owner,
 }: {
@@ -540,7 +557,6 @@ function PresentAt({
   y: number;
   cols: number;
   rows: number;
-  i: number;
   value: number | undefined;
   owner: number | null;
 }) {
@@ -556,7 +572,8 @@ function PresentAt({
       }}
     >
       <span className="relative block aspect-square h-full">
-        <Present i={i} className={cx("h-full", value !== undefined && "opacity-40")} />
+        {/* Every present looks the same, so only following it tells them apart (Khai, 2026-11-24). */}
+        <Present i={0} className={cx("h-full", value !== undefined && "opacity-40")} />
         {value !== undefined && (
           <span className="absolute inset-[18%] grid place-items-center rounded-gm bg-gm-tile-present font-gm-display text-[clamp(1.4rem,5vh,3.6rem)] font-bold text-gm-tile-present-ink shadow-md">
             {value}
@@ -578,13 +595,11 @@ function ShuffleTv({ view, game, serverNow, revealed }: LiveTvProps) {
   const now = useServerTime(serverNow, !revealed);
   if (!g) return null;
   if (now < g.startsAt && !revealed)
-    return <GetReady startsAt={g.startsAt} now={now} line="Find the 100-point present!" />;
+    return <GetReady startsAt={g.startsAt} now={now} line="Find the biggest present!" />;
   return (
     <div
-      className={cx(
-        "grid items-center gap-[3vh_3vw]",
-        revealed ? "grid-cols-1" : "grid-cols-[auto_1fr]",
-      )}
+      // Board beside the results, so neither is cut off (Khai, 2026-11-24).
+      className="grid grid-cols-[auto_1fr] items-center gap-[3vh_3vw]"
     >
       <PresentBoard g={g} view={view} now={now} small={revealed} />
       <div className="grid content-center gap-[2.4vh]">
@@ -592,7 +607,7 @@ function ShuffleTv({ view, game, serverNow, revealed }: LiveTvProps) {
           <Reveal view={view} note={(t) => (g.picks[t] === null ? "Too slow" : null)} />
         ) : now < g.showEndsAt ? (
           <p className="m-0 font-gm-display text-[clamp(2rem,6vh,4.5rem)] font-bold">
-            Find the 100-point present…
+            Find the biggest present…
           </p>
         ) : now < g.shuffleEndsAt ? (
           <p className="m-0 font-gm-display text-[clamp(2rem,6vh,4.5rem)] font-bold">
@@ -665,10 +680,7 @@ function ShuffleController({ view, game, serverNow, revealed, send, busy }: Live
               onClick={() => void send({ slot })}
               className="relative aspect-square"
             >
-              <Present
-                i={slot}
-                className={cx("h-full w-full", value !== undefined && "opacity-30")}
-              />
+              <Present i={0} className={cx("h-full w-full", value !== undefined && "opacity-30")} />
               {value !== undefined && (
                 <span className="absolute inset-[20%] grid place-items-center rounded-gm bg-gm-tile-present font-gm-display text-2xl font-bold text-gm-tile-present-ink">
                   {value}
@@ -695,10 +707,10 @@ function ShuffleDemo({ still }: { still: boolean }) {
               "motion-safe:animate-[gm-demo-fall_5s_var(--gm-ease-out)_infinite]",
           )}
         >
-          <Present i={i} />
+          <Present i={0} />
           {i === 1 && (
             <span className="absolute inset-[22%] grid place-items-center rounded-[4px] bg-gm-tile-present font-gm-display text-[0.5em] font-bold text-gm-tile-present-ink">
-              100
+              50
             </span>
           )}
         </span>

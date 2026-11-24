@@ -249,8 +249,9 @@ function freeze(type: string, moment: GalleryMoment, n: number, round = 1) {
     let now = startsAt + Math.min(until, 30_000);
     const t = tick(m, s, now);
     if (t.ok && t.session) s = t.session;
-    // A game with no results step shows its result in the round itself (spec 12).
-    if (moment === "final" || (moment === "results" && !m.game.skipResults))
+    // A game with no results step shows its result in the round itself (spec 12);
+    // a round that closed itself on the tick is on its results already (spec 24).
+    if ((moment === "final" || (moment === "results" && !m.game.skipResults)) && s.step === "play")
       s = step(s, (now += 1000));
     if (moment === "final") while (s.step !== "final") s = step(s, now);
     return { m, s, now };
@@ -302,7 +303,9 @@ function freeze(type: string, moment: GalleryMoment, n: number, round = 1) {
   }
   if (moment === "results" || moment === "final") {
     now += 30_000;
-    s = step(s, now);
+    const t = tick(m, s, now);
+    if (t.ok && t.session) s = t.session;
+    if (s.step === "play") s = step(s, now);
   }
   if (moment === "final") {
     while (s.step !== "final") s = step(s, now);

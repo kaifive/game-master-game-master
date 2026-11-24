@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { seededRandom, shuffled } from "@/lib/games";
-import { leadOrder } from "../fairness";
+import { lapRounds, leadOrder } from "../fairness";
 import { MAX_TEAMS, defineShowdown, type Role, type ShowdownGame, type TurnInfo } from "../model";
 import { roundShare } from "./scoring";
 
@@ -10,13 +10,11 @@ import { roundShare } from "./scoring";
  * rotating each round. A picked present is gone for everyone.
  */
 const Content = z.object({
-  /** At least one more than the most teams, so the last team still has a choice. */
-  presents: z
-    .number()
-    .int()
-    .min(MAX_TEAMS + 1)
-    .max(12)
-    .default(9),
+  /**
+   * Presents in round 1; each round adds one more to follow (Khai, 2026-11-24),
+   * and there's always one more than teams, so the last team still has a choice.
+   */
+  presents: z.number().int().min(3).max(12).default(5),
   values: z
     .array(z.number().int().min(1).max(500))
     .min(MAX_TEAMS + 1)
@@ -51,6 +49,10 @@ export function afterSwaps(count: number, swaps: readonly [number, number][]): n
   for (const [a, b] of swaps) [slots[a], slots[b]] = [slots[b] ?? 0, slots[a] ?? 0];
   return slots;
 }
+
+/** Presents in a round: one more each round, never fewer than teams + 1, at most 12. */
+export const presentsFor = (start: number, round: number, teams: number) =>
+  Math.min(12, Math.max(teams + 1, start + round - 1));
 
 const whose = (s: ShuffleState) => s.order[s.at] ?? null;
 const taken = (s: ShuffleState) =>
@@ -98,18 +100,21 @@ const game: ShowdownGame<C, ShuffleState> = {
   content: Content,
   demo: "Follow the big present as they shuffle!",
   timeout: "Out of time? 15 seconds to pick, or you get no present.",
-  rounds: (_c, teams) => Math.max(1, teams),
+  rounds: (_c, teams) => lapRounds(teams),
   deal(c, { seed, round, teams, startsAt }) {
     const random = seededRandom(seed);
     // The best present is worth the round's share of 150, the rest in step (ADR-045).
     const top = Math.max(...c.values);
-    const share = roundShare(teams.length);
+    const share = roundShare(lapRounds(teams.length));
     const scaled = c.values.map((v) => Math.max(1, Math.round((v / top) * share)));
-    const values = shuffled(scaled, random).slice(0, c.presents);
-    while (values.length < c.presents) values.push(scaled[values.length % scaled.length] ?? 1);
-    const swaps: [number, number][] = Array.from({ length: c.swaps }, () => {
-      const a = Math.floor(random() * c.presents);
-      const b = (a + 1 + Math.floor(random() * (c.presents - 1))) % c.presents;
+    const count = presentsFor(c.presents, round, teams.length);
+    const values = shuffled(scaled, random).slice(0, count);
+    while (values.length < count) values.push(scaled[values.length % scaled.length] ?? 1);
+    // More presents, more swaps: a harder follow each round.
+    const swapCount = c.swaps + (round - 1) * 2;
+    const swaps: [number, number][] = Array.from({ length: swapCount }, () => {
+      const a = Math.floor(random() * count);
+      const b = (a + 1 + Math.floor(random() * (count - 1))) % count;
       return [a, b];
     });
     const showEndsAt = startsAt + c.showMs;
@@ -117,7 +122,7 @@ const game: ShowdownGame<C, ShuffleState> = {
     return {
       values,
       swaps,
-      slots: afterSwaps(c.presents, swaps),
+      slots: afterSwaps(count, swaps),
       // Who picks first rotates so every team picks first once (S24-AC6).
       order: leadOrder(teams, round - 1),
       startsAt,

@@ -121,6 +121,20 @@ describe("Stocking Stuffer", () => {
     });
   });
 
+  it("S26-AC2: the first stocking is coal for one team at most, however the seed falls", () => {
+    const g = rig<StockingState>(stockings);
+    let tested = 0;
+    for (let seed = 1; seed <= 400; seed++) {
+      let s = g.deal(1, null, seed);
+      const coal = teams.filter((_, i) => stockingFor(s, i, 1).kind === "coal").length;
+      for (const t of teams) s = g.step(s, t, { choice: "open" });
+      expect(teams.filter((t) => s.status[t] === "coal").length).toBeLessThanOrEqual(1);
+      if (coal >= 2) tested++;
+    }
+    // The seeds did put two or more coals first, so the rule was tested.
+    expect(tested).toBeGreaterThan(0);
+  });
+
   it("S26-AC2: no choice in time counts as Bank; the round ends when all have banked or busted, paying what was banked", () => {
     const g = rig<StockingState>(stockings);
     let s = g.deal(1, null);

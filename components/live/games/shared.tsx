@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { NumberEntry } from "@/components/games/number-entry";
 import { CheckIcon } from "@/components/icons/game";
 import { useSlots } from "@/components/slots/registry";
-import type { WindowView } from "@/lib/live";
+import { fmtSeconds, type WindowView } from "@/lib/live";
 import { cx } from "@/lib/ui";
 import type { ActiveLiveView } from "../types";
 import { useFrame } from "../use-live";
@@ -261,32 +261,39 @@ export function StopButton({
   serverNow,
   send,
   label = "Stop",
+  showTime = false,
 }: {
   startsAt: number;
   serverNow: () => number;
   send: (move: unknown) => Promise<void>;
   label?: string;
+  /** Show the time stopped on the button at once (Last Second); Blind Stop keeps it hidden. */
+  showTime?: boolean;
 }) {
-  const [pressed, setPressed] = useState(false);
+  const [stopped, setStopped] = useState<number | null>(null);
+  // Timed on this phone the moment it's touched, so network lag never changes the
+  // time; the button answers at once with a buzz and the time (Khai, 2026-11-24).
+  const press = () => {
+    if (stopped !== null) return;
+    const elapsedMs = Math.max(0, Math.round(serverNow() - startsAt));
+    setStopped(elapsedMs);
+    if ("vibrate" in navigator) navigator.vibrate(30);
+    void send({ elapsedMs });
+  };
   return (
     <button
       type="button"
-      disabled={pressed}
-      onPointerDown={() => {
-        if (pressed) return;
-        setPressed(true);
-        void send({ elapsedMs: Math.max(0, Math.round(serverNow() - startsAt)) });
-      }}
+      disabled={stopped !== null}
+      onPointerDown={press}
       onKeyDown={(e) => {
-        if ((e.key === "Enter" || e.key === " ") && !pressed) {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          setPressed(true);
-          void send({ elapsedMs: Math.max(0, Math.round(serverNow() - startsAt)) });
+          press();
         }
       }}
       className="mx-auto grid aspect-square w-[min(78vw,20rem)] touch-none place-items-center rounded-full bg-gm-buzzer font-gm-display text-6xl font-bold text-gm-buzzer-ink shadow-xl select-none disabled:bg-gm-buzzer-locked motion-safe:active:scale-[0.97]"
     >
-      {label}
+      {stopped === null ? label : showTime ? fmtSeconds(stopped) : "Stopped!"}
     </button>
   );
 }

@@ -21,7 +21,7 @@ Every game here follows spec 24: the host's steps, Who's played, the TV demo, 1 
 
 ### Snow Sum (`snowsum`)
 
-1. Content: rounds (default 3), each with how many snowflakes and which operations, getting harder (5 flakes of + and −, 7 flakes, then 8 flakes with ×2), dealt from the seed. Totals stay between −50 and 200.
+1. Content: rounds (default 3), each with how many snowflakes and which operations, dealt from the seed: round 1 only adds (5 flakes), round 2 takes away too (6 flakes), round 3 doubles too (6 flakes, at least one ×2) (Khai, 2026-11-24). Totals stay between −50 and 200.
 2. Play: the snowflakes fall one at a time on the TV, starting from 0, under "Do the math!". A flake never takes away from 0 or less, so totals stay friendly for kids. When the last has fallen, every team types the total within 10 s; it goes in as the time runs out.
 3. Results: the TV shows the total only, not the working (Khai, 2026-11-24), and every team's answer. **Points per round: a round's share of 150 (50 a round over three) times how close: exact scores it all, and it falls away evenly to nothing at a miss of half the true number (at least 5), so near misses still score (ADR-045).**
 
@@ -35,6 +35,7 @@ Every game here follows spec 24: the host's steps, Who's played, the TV demo, 1 
 
 1. Content: rounds (default 3), countdown length (default 10 s).
 2. Play: a big countdown runs on the TV, fully visible (Khai, 2026-11-17), from 10.00 to 0.00. Each team's player taps **Stop** on the captain's phone whenever they dare. Each phone times its stop from the shared start (spec 24, shared start), to the hundredth, like Blind Stop. A team that hasn't stopped by zero has busted.
+2a. The phone times the stop the moment Stop is touched, on the shared clock, so network lag never changes the time; the button buzzes and shows the time stopped at once (Blind Stop says "Stopped!" without the time) (Khai, 2026-11-24).
 3. Results: the TV shows every team's stop time, latest first, and the busts. **Points per round: up to 50 for how late the stop was, the share of the countdown gone (stopping with 1 s of 10 left scores 45); a bust scores 0 (ADR-045).**
 
 ## Data
@@ -50,7 +51,7 @@ Each game's content is validated in the event file and its round state lives in 
 ## Acceptance criteria
 
 - [x] AC-1: Fly-by Count deals rounds from the seed, never sends the count early, takes one number per team within 10 s (sent as the time runs out), and scores up to 50 a round on how close it is, near misses too.
-- [x] AC-2: Snow Sum deals harder seeded snowflake sums each round, takes one total per team within 10 s (sent as the time runs out), and scores up to 50 a round on how close it is.
+- [x] AC-2: Snow Sum deals seeded snowflake sums, adding only in round 1, taking away too in round 2 and doubling too in round 3, takes one total per team within 10 s (sent as the time runs out), and scores up to 50 a round on how close it is.
 - [x] AC-3: Fly-by Count's later rounds mix red, white and green presents, each with its own mark, ask about one kind only once they've flown past, and never repeat the last round's answer.
 - [x] AC-4: Blind Stop plays three rounds, shows the clock for 3 s then a "?", takes each team's phone-timed stop, and scores each stop up to 50 on its own closeness to 10.00, nothing at 3 s off.
 - [x] AC-5: Last Second runs a visible countdown, takes each team's phone-timed stop, busts teams that didn't stop by zero, and scores the rest up to 50 a round on how late they stopped, busts 0.
