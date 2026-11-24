@@ -39,9 +39,7 @@ function ColorPicker({
   const names = useTheme()?.teamColorNames ?? [];
   return (
     <fieldset className="m-0 grid gap-2 border-0 p-0">
-      <legend className="mb-2 text-sm font-bold text-gm-text-muted">
-        Pick your team&apos;s color. It&apos;s yours for the whole party.
-      </legend>
+      <legend className="mb-2 text-sm font-bold text-gm-text-muted">Team color</legend>
       <div className="grid grid-cols-4 gap-2">
         {Array.from({ length: 8 }, (_, i) => i + 1).map((c) => {
           const holder = teams.find((t) => t.id !== mine && t.color === c);
@@ -121,9 +119,6 @@ function TeamSelfie({
   };
   return (
     <div className="grid gap-2">
-      <p className="m-0 text-sm font-bold text-gm-text-muted">
-        Take a team selfie: everyone in! It&apos;s a surprise for the end of the party.
-      </p>
       <label
         htmlFor={id}
         className="relative grid aspect-[4/3] w-full cursor-pointer place-items-center overflow-hidden rounded-gm border-4 border-dashed bg-gm-surface text-center font-gm-display text-xl font-bold"
@@ -411,8 +406,9 @@ export function Donate({
 }
 
 /** The latest view: a reply to this phone's own action until the next poll arrives. */
-function useTeams(slug: string, playerId: string | null) {
+export function useTeams(slug: string, playerId: string | null) {
   const load = useCallback(async () => {
+    if (!slug) return null;
     const res = await teamsApi.view(slug, playerId);
     return res.ok ? res.data : null;
   }, [slug, playerId]);
@@ -429,7 +425,16 @@ function useTeams(slug: string, playerId: string | null) {
 }
 
 /** Teams on the party page: pick your team, name it as captain, see yours, and donate (spec 03). */
-export function TeamPanel({ slug, fallback = null }: { slug: string; fallback?: ReactNode }) {
+export function TeamPanel({
+  slug,
+  fallback = null,
+  donations = true,
+}: {
+  slug: string;
+  fallback?: ReactNode;
+  /** Whether this event lets players give points to a team (S03-AC6). */
+  donations?: boolean;
+}) {
   const { Panel, Button, ScoreCard } = useSlots();
   const device = useOptionalDevice();
   const playerId = device?.active?.id ?? null;
@@ -449,26 +454,29 @@ export function TeamPanel({ slug, fallback = null }: { slug: string; fallback?: 
   const mineTeam = data.mine ? data.teams.find((t) => t.id === data.mine?.teamId) : undefined;
   const teamScore = (teamId: string): number | null =>
     given?.teamId === teamId ? given.team : polledScore?.id === teamId ? polledScore.points : null;
+  // Giving points has its own card, apart from your team's (Khai, 2026-11-24).
   const donate =
-    data.phase === "team" && data.teams.length > 0 ? (
-      <Donate
-        teams={data.teams}
-        mine={mineTeam?.id ?? null}
-        has={device.total}
-        onGive={async (teamId, points) => {
-          const res = await teamsApi.donate(slug, await device.token(), playerId, teamId, points);
-          await device.refreshPlays();
-          if (!res.ok) return res.message;
-          setView(res.data);
-          if (res.data.donated) setGiven(res.data.donated);
-          return null;
-        }}
-      />
+    donations && data.phase === "team" && data.teams.length > 0 ? (
+      <Panel label="Give points to a team">
+        <Donate
+          teams={data.teams}
+          mine={mineTeam?.id ?? null}
+          has={device.total}
+          onGive={async (teamId, points) => {
+            const res = await teamsApi.donate(slug, await device.token(), playerId, teamId, points);
+            await device.refreshPlays();
+            if (!res.ok) return res.message;
+            setView(res.data);
+            if (res.data.donated) setGiven(res.data.donated);
+            return null;
+          }}
+        />
+      </Panel>
     ) : null;
 
   if (mineTeam && data.mine) {
     const { isCaptain, named } = data.mine;
-    return (
+    const yours = (
       <Panel label="Your team">
         <div className="grid gap-3">
           <div className="flex items-center justify-between gap-3">
@@ -486,12 +494,6 @@ export function TeamPanel({ slug, fallback = null }: { slug: string; fallback?: 
                 : { state: "blank" as const })}
             />
           </div>
-          <p className="m-0 text-sm text-gm-text-muted">
-            {isCaptain
-              ? "You're the captain: you play the team games for everyone."
-              : `Captain: ${mineTeam.captain?.nickname ?? "none yet"}`}
-            {` · ${String(mineTeam.members.length)} on the team`}
-          </p>
           {isCaptain && !named && (
             <NameTeam
               teams={data.teams}
@@ -514,15 +516,20 @@ export function TeamPanel({ slug, fallback = null }: { slug: string; fallback?: 
               }}
             />
           )}
-          {donate}
         </div>
       </Panel>
+    );
+    return (
+      <>
+        {yours}
+        {donate}
+      </>
     );
   }
 
   if (data.phase !== "team" || data.teams.length === 0) return fallback;
 
-  return (
+  const picker = (
     <Panel label="Pick your team">
       <div className="grid gap-2">
         <h2 className="m-0 font-gm-display text-2xl font-bold">Pick your team</h2>
@@ -578,9 +585,14 @@ export function TeamPanel({ slug, fallback = null }: { slug: string; fallback?: 
             {error}
           </p>
         )}
-        {!confirm && donate}
       </div>
     </Panel>
+  );
+  return (
+    <>
+      {picker}
+      {!confirm && donate}
+    </>
   );
 }
 

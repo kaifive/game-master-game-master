@@ -21,7 +21,7 @@ Two competitions in one event (ADR-030): **individual** (solo games on your own 
 4. In Controls the host makes a player a **captain**. That creates their team in the first team color no other team holds, and the captain is its first member. An event has **at most 6 teams** (Khai, 2026-11-18), so every showdown fits; a seventh captain is refused, and Controls says so.
 5. The captain's phone asks them to **name the team**: 2–20 characters, the same characters and name filter as nicknames (spec 02), unique per event, and to pick its color, fixed after that (spec 29). Until named, it shows as "Team <captain's name>".
 6. The host sets a **maximum team size** in Controls (suggested: active players ÷ teams, rounded up). Once a team is full, nobody else can join it.
-7. Teams live on the **Team** tab (`/[event]/team`); the games list nudges there when teams open or a new captain needs to name their team. In the team phase, a player who isn't on a team sees **Pick your team** on the Team tab: every team with its name, color, captain, members and room left. Joining takes one tap and a confirm ("You can't switch later"). Players can't leave or switch; the host can **move** them.
+7. Teams live on the **Team** tab (`/[event]/team`), which shows in the tab bar once the team phase starts, or earlier for a captain who has a team to set up (Khai, 2026-11-24); the games list nudges there when teams open or a new captain needs to name their team. In the team phase, a player who isn't on a team sees **Pick your team** on the Team tab: every team with its name, color, captain, members and room left. Joining takes one tap and a confirm ("You can't switch later"). Players can't leave or switch; the host can **move** them.
 8. The host can **change a team's captain** to another member, for example if the captain leaves. A team with no captain (its captain was removed) can't play team games until it has one.
 9. Captains can't start over (ADR-027).
 
@@ -32,7 +32,7 @@ Two competitions in one event (ADR-030): **individual** (solo games on your own 
 
 ### Donations
 
-12. In the team phase, any player can **donate** any whole number of their own points, up to what they have, to any team, from the team panel with a confirm ("Give 25 of your points to Cranes? Your score goes down by 25. You can't undo this."). It's two ledger entries in one transaction: a deduction from the player and an award to the team, so the player's individual score goes down. Not once the event has ended.
+12. Unless the event turns it off (`donations: false`; off for the holiday party, Khai 2026-11-24), in the team phase any player can **donate** any whole number of their own points, up to what they have, to any team, from the team panel with a confirm ("Give 25 of your points to Cranes? Your score goes down by 25. You can't undo this."). Giving has its own card on the Team tab, apart from your team's. It's two ledger entries in one transaction: a deduction from the player and an award to the team, so the player's individual score goes down. Not once the event has ended.
 13. A player can't undo a donation. The host can void it from Controls (both entries): the Donations card loads the list on request, since each donation costs a read.
 14. A player who starts over forfeits their points, and their donations are voided from the teams they went to (ADR-027).
 

@@ -263,6 +263,8 @@ export async function donateToTeam(
   teamId: string,
   points: number,
 ) {
+  if (event.donations === false)
+    throw new AppError("FORBIDDEN", "Giving points to a team is off for this party.");
   if (event.scoring === "individual") throw noTeams();
   const [player, status, view] = await Promise.all([
     ownPlayer(deps, event, uid, playerId),

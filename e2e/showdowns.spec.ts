@@ -67,11 +67,10 @@ test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1 S26-AC2 S12-AC1 S1
   await expect(tv.getByRole("heading", { name: "Fly-by Count" })).toBeVisible();
   await expect(tv.getByText(/Count the presents as they fly past/)).toBeVisible();
 
-  // Phones: the games list says Live now; a captain's phone is the controller (S24-AC3).
+  // Phones go to the showdown on their own; a captain's phone is the controller (S24-AC3).
   const [capA, capB] = phones;
   if (!capA || !capB) throw new Error("no phones");
-  await capA.goto("/holiday-2026");
-  await capA.getByRole("link", { name: /Live now/ }).click();
+  await expect(capA).toHaveURL(/\/holiday-2026\/live$/, { timeout: 15_000 });
   await expect(capA.getByText("You're the controller")).toBeVisible();
   await capB.goto("/holiday-2026/live");
   await expect(capB.getByText("You're the controller")).toBeVisible();

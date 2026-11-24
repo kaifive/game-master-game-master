@@ -22,6 +22,8 @@ export const holiday2026: EventConfig = {
   joinPolicy: "open",
   scoring: "both",
   restartsPerDevice: 1,
+  // Giving points to a team is off for the party (Khai, 2026-11-24).
+  donations: false,
   soloGamePoints: 100,
   // Games can be played again; each player's best run counts. Decide before the party.
   replayable: true,

@@ -118,6 +118,8 @@ export const EventConfig = z
     replayable: z.boolean().optional(),
     /** What every solo game is worth; a game scores its share of it (S08-AC10). */
     soloGamePoints: z.number().int().min(0).max(10_000),
+    /** Whether players can give their points to a team (S03-AC6); on unless set false. */
+    donations: z.boolean().optional(),
     /** Extra words the name filter blocks for this event (spec 02). */
     blockedNames: z.array(z.string().min(1)).optional(),
     games: z.array(GameConfig),
@@ -128,8 +130,9 @@ export type EventConfig = z.infer<typeof EventConfig>;
 /** What a page may show about an event: everything except codes. */
 export type PublicEvent = Omit<
   EventConfig,
-  "joinCode" | "games" | "blockedNames" | "replayable"
+  "joinCode" | "games" | "blockedNames" | "replayable" | "donations"
 > & {
   replayable: boolean;
+  donations: boolean;
   games: Omit<GameConfig, "codes" | "content" | "instructions">[];
 };
