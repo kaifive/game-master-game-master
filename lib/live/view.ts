@@ -110,3 +110,25 @@ export const controlsView = (
             : null,
       }
     : { active: false, serverNow: now, screen, next: null, host: null };
+
+/** The moments in a round's timeline where its view changes by itself. */
+const BOUNDARIES = ["startsAt", "showEndsAt", "closesAt"] as const;
+
+/**
+ * When a screen should fetch again without waiting for its next poll: the
+ * next start, end of the show or close in the game's view, so the TV and
+ * phones move on the moment the scene or question becomes theirs to show
+ * (Khai, 2026-11-24: the TV crashed showing the question from a view fetched
+ * before the start). Null when nothing is due.
+ */
+export function wakeAt(view: LiveView): number | null {
+  if (!view.active || view.session.step !== "play") return null;
+  const g = view.game as Record<string, unknown> | null;
+  if (!g || typeof g !== "object") return null;
+  let next: number | null = null;
+  for (const key of BOUNDARIES) {
+    const at = g[key];
+    if (typeof at === "number" && at > view.serverNow && (next === null || at < next)) next = at;
+  }
+  return next;
+}

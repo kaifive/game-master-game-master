@@ -56,6 +56,16 @@ describe("perception showdowns on the phone and TV (spec 28)", () => {
     expect(screen.getByText(String(count + 2))).toBeInTheDocument();
   });
 
+  test("S28-AC4: a view fetched before the start keeps the TV and phone on Get ready, not a crash, once the start passes", () => {
+    const r = round("staffangle");
+    const s = timing(r.state);
+    const early = r.view(tv, s.startsAt - 100);
+    show("staffangle", early, s.startsAt + 300, "tv");
+    expect(screen.getByText("Get your eye in!")).toBeInTheDocument();
+    show("staffangle", r.view(cap("t1"), s.startsAt - 100), s.startsAt + 300);
+    expect(screen.getByText("Get ready!")).toBeInTheDocument();
+  });
+
   test("S28-AC4: the captain's phone says it's locked in, and nothing more, until the reveal", () => {
     const r = round("staffangle", [["t1", { answer: 40 }, T0 + 500]]);
     show("staffangle", r.view(cap("t1"), T0 + 600), T0 + 600);

@@ -242,7 +242,9 @@ function tv(type: string) {
           />
         </div>
       );
-    if (now < g.startsAt)
+    // A view fetched before the start has no scene yet: hold on Get ready
+    // until the one after it comes (it's fetched the moment the round starts).
+    if (now < g.startsAt || (g.scene === null && g.phase === "show"))
       return <GetReady startsAt={g.startsAt} now={now} line={getReadyLine(type)} />;
     if (now < g.showEndsAt && g.scene !== null)
       return <ShowScene type={type} scene={g.scene} elapsed={now - g.startsAt} />;
@@ -258,7 +260,8 @@ function controller(type: string) {
     if (revealed) return <PhoneResult view={view} />;
     if (g.answered)
       return <PhoneNote title="Locked in">Now watch the TV for the answer.</PhoneNote>;
-    if (now < g.startsAt) return <PhoneNote title="Get ready!">{getReadyLine(type)}</PhoneNote>;
+    if (now < g.startsAt || (g.scene === null && g.phase === "show"))
+      return <PhoneNote title="Get ready!">{getReadyLine(type)}</PhoneNote>;
     if (now > g.closesAt)
       return <PhoneNote title="Time's up">Watch the TV for the answer.</PhoneNote>;
     return (
