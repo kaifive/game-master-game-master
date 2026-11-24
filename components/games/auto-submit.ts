@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 /** How long before the timer ends the controller sends what it has (network time to reach the server). */
-export const AUTO_SUBMIT_MS = 500;
+export const AUTO_SUBMIT_MS = 800;
 
 /**
  * Sends whatever is on a controller just before its timer runs out (Khai,

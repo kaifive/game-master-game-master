@@ -2,7 +2,6 @@ import {
   auction,
   blindstop,
   flyby,
-  landmass,
   buzzer,
   lastsecond,
   path,
@@ -12,7 +11,7 @@ import {
   stockings,
   to21,
 } from "./games";
-import { PERCEPTION_CORES, SHOWDOWN_ONLY_CORES } from "@/lib/games";
+import { PERCEPTION_CORES } from "@/lib/games";
 import { perceptionShowdown } from "./games/perception";
 import type { AnyShowdown } from "./model";
 
@@ -31,14 +30,10 @@ const SHOWDOWNS: Record<string, AnyShowdown> = {
   path,
   shuffle,
   to21,
-  landmass,
   buzzer,
   // Perception games (spec 28): showdown versions; their solo versions are in lib/games.
   ...Object.fromEntries(
-    [...PERCEPTION_CORES, ...SHOWDOWN_ONLY_CORES].map((core) => [
-      core.type,
-      perceptionShowdown(core as never),
-    ]),
+    PERCEPTION_CORES.map((core) => [core.type, perceptionShowdown(core as never)]),
   ),
 };
 

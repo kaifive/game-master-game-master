@@ -273,6 +273,18 @@ describe("showdown screen and Who's played (spec 24)", () => {
     expect((await phoneLiveView(deps, event, null, null)).screen).toBe("leaderboard");
   });
 
+  it("S24-AC9: the menu marks a showdown played once it has shown a round's results, not when it's started and ended at once", async () => {
+    await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
+    let view = await adminLiveAction(deps, event, { action: "end" });
+    expect(view.finished).toEqual([]);
+    await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
+    await adminLiveAction(deps, event, { action: "next" });
+    await adminLiveAction(deps, event, { action: "next" });
+    view = await adminLiveAction(deps, event, { action: "end" });
+    expect(view.finished).toEqual(["tap-off"]);
+    expect((await phoneLiveView(deps, event, null, null)).finished).toEqual(["tap-off"]);
+  });
+
   it("S24-AC2: Who's played lists joined players and added names per team, and keeps them across showdowns", async () => {
     let view = await adminLiveView(deps, event);
     expect(view.played.map((r) => [r.teamId, r.people.map((p) => p.name)])).toEqual([

@@ -281,7 +281,6 @@ export const holiday2026: EventConfig = {
         ["path", "Memory Path"],
         ["shuffle", "Present Shuffle"],
         ["to21", "Snowball to 21"],
-        ["landmass", "Land Mass"],
       ] as const
     ).map(([type, title]) => ({
       id: type,
@@ -298,10 +297,7 @@ export const holiday2026: EventConfig = {
     // chooses which to put on the menu.
     ...(
       [
-        ["snowpile", "Snow Pile"],
         ["staffangle", "Staff Angle"],
-        ["sleighrun", "Sleigh Run"],
-        ["liondrum", "Lion Drum"],
         ["ribbon", "Cut the Ribbon"],
       ] as const
     ).flatMap(([type, title]) => [
@@ -326,8 +322,8 @@ export const holiday2026: EventConfig = {
         scoring: { awardTo: "player" as const },
       },
     ]),
-    // Second modes (spec 30, ADR-041): the counting showdowns as solo games and
-    // Color Matcher as a showdown. Off and hidden until Khai puts them on the menu.
+    // Second modes (spec 30, ADR-041): the counting showdowns as solo games, off
+    // until Khai puts them on the menu.
     ...(
       [
         ["flyby", "Fly-by Count"],
@@ -343,16 +339,6 @@ export const holiday2026: EventConfig = {
       content: {},
       scoring: { awardTo: "player" as const },
     })),
-    {
-      id: "color-showdown",
-      type: "color",
-      title: "Color Matcher",
-      mode: "live",
-      phase: "team",
-      visibility: "hidden",
-      content: {},
-      scoring: { awardTo: "team" },
-    },
     // Spec 12: the host's buzzer round. Sample questions until Khai writes the
     // party's own (Q35); hidden, so it's only started from Controls.
     {

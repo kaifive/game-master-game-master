@@ -1,31 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { toHsv } from "../color/logic";
 import { dealFormation, FLYBY_ROUNDS } from "../counts";
 import { gameLogic } from "../registry";
 import { LEVELS } from "./core";
-import { colorCore, flybyCore, nearCloseness, snowsumCore, type FlybyTask } from "./counts";
+import { flybyCore, nearCloseness, snowsumCore, type FlybyTask } from "./counts";
 
 const T0 = 1_000_000;
-const rgb = (hex: string): [number, number, number] =>
-  [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
-
-describe("Color Matcher as a showdown (spec 30)", () => {
-  it("S30-AC1: deals a color per round from the seed: vivid, then softer, then muted; shown only during the show", () => {
-    for (let seed = 1; seed <= 40; seed++) {
-      expect(colorCore.deal(seed, 1)).toEqual(colorCore.deal(seed, 1));
-      const vivid = toHsv(rgb(colorCore.deal(seed, 1).target));
-      const muted = toHsv(rgb(colorCore.deal(seed, 3).target));
-      expect(vivid.s).toBeGreaterThan(0.8);
-      expect(vivid.v).toBeGreaterThan(0.8);
-      expect(muted.s).toBeLessThan(0.6);
-      expect(muted.v).toBeLessThan(0.75);
-    }
-    const t = colorCore.deal(3, 2);
-    expect(colorCore.scene(t, "show")).toEqual({ color: t.target });
-    expect(colorCore.scene(t, "answer")).toBeNull();
-    expect(colorCore.showMs(colorCore.deal(3, 1))).toBeGreaterThan(colorCore.showMs(t));
-  });
-});
 
 describe("the counting games solo (spec 30)", () => {
   it("S30-AC2: Fly-by Count and Snow Sum each run solo: three rounds at the showdown's levels, scored by its own rule", () => {

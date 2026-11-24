@@ -833,3 +833,20 @@ solo version (spec 30), is removed from the library and the party.
 **Consequences:** Fly-by Count teaches the "watch everything" trick in one
 game. Spec 25 now covers four showdowns.
 
+## ADR-044: Land Mass, Snow Pile, Sleigh Run, Lion Drum and the Color Matcher showdown are removed
+
+**Status:** accepted (Khai, 2026-11-24). Changes ADR-040's and ADR-041's lists of games.
+
+Khai's play-test of every showdown: Land Mass's controls were too hard on a
+phone; Snow Pile was too close to the counting games; Sleigh Run, Lion Drum
+and the Color Matcher showdown didn't earn their place on the night.
+
+**Decision:** Land Mass (spec 27), Snow Pile, Sleigh Run and Lion Drum (spec 28,
+both modes) and the Color Matcher showdown (spec 30) are removed from the
+library, the party and the code. Solo Color Matcher (spec 18) stays. Their
+acceptance criteria are marked retired in their specs.
+
+**Consequences:** the night has fewer, stronger showdowns, and the TV's menu
+fits one screen with room to spare. Bringing one back means building it again
+from git history and a new ADR.
+

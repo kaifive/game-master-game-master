@@ -34,12 +34,8 @@ export const GAME_TYPES = [
   "path",
   "shuffle",
   "to21",
-  "landmass",
   // Perception games (spec 28): solo or showdown, chosen per event (ADR-040).
-  "snowpile",
   "staffangle",
-  "sleighrun",
-  "liondrum",
   "ribbon",
 ] as const;
 

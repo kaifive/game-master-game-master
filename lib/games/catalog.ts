@@ -15,35 +15,6 @@ export type CatalogEntry = {
   modes: readonly Mode[];
 };
 
-/**
- * The TV game menu's hint for each showdown: the solo game it's like, or what
- * kind of game it is, so teams know roughly what's coming but not exactly
- * (Khai, 2026-11-24; spec 24's "Trained by").
- */
-const TEASERS: Record<string, string> = {
-  flyby: "Like Rapid Recall",
-  snowsum: "Like Rapid Recall, with sums",
-  blindstop: "Like T-Timer",
-  lastsecond: "Like T-Timer, as late as you dare",
-  path: "Like Pathfinder",
-  shuffle: "Like Rapid Recall",
-  landmass: "Like Block Fit",
-  auction: "Pure strategy",
-  to21: "Pure strategy",
-  stockings: "Push your luck",
-  snatch: "Pure nerve",
-  buzzer: "Like Trivia, out loud",
-  color: "Like Color Matcher",
-  snowpile: "Like Guessing Jar",
-  staffangle: "Trust your eye",
-  sleighrun: "Trust your eye",
-  liondrum: "Like Tap Masher, in time",
-  ribbon: "Trust your eye",
-};
-
-/** A showdown's hint for the TV menu, or null (spec 24). */
-export const teaserFor = (type: string): string | null => TEASERS[type] ?? null;
-
 export type Mode = "solo" | "showdown";
 const SOLO: readonly Mode[] = ["solo"];
 const SHOWDOWN: readonly Mode[] = ["showdown"];
@@ -96,9 +67,8 @@ export const CATALOG: readonly CatalogEntry[] = [
   {
     type: "color",
     name: "Color Matcher",
-    pitch:
-      "Match a color on a color wheel: one from memory solo, or one flashed on the TV as a showdown.",
-    modes: BOTH,
+    pitch: "Match a color from memory on a color wheel.",
+    modes: SOLO,
   },
   {
     type: "draw",
@@ -198,12 +168,6 @@ export const CATALOG: readonly CatalogEntry[] = [
     modes: SHOWDOWN,
   },
   {
-    type: "landmass",
-    name: "Land Mass",
-    pitch: "teams take turns placing block pieces on one board; the most land wins.",
-    modes: SHOWDOWN,
-  },
-  {
     type: "buzzer",
     name: "Buzzer Round",
     pitch:
@@ -212,27 +176,9 @@ export const CATALOG: readonly CatalogEntry[] = [
   },
   // Perception games (spec 28): built in both modes.
   {
-    type: "snowpile",
-    name: "Snow Pile",
-    pitch: "Snowflakes flash up for a moment; say how many. The closer, the more points.",
-    modes: BOTH,
-  },
-  {
     type: "staffangle",
     name: "Staff Angle",
     pitch: "Turn a wushu staff to an angle like 35 degrees by eye, with no number to read.",
-    modes: BOTH,
-  },
-  {
-    type: "sleighrun",
-    name: "Sleigh Run",
-    pitch: "A sleigh flies into a cloud; tap where it will come out the other side.",
-    modes: BOTH,
-  },
-  {
-    type: "liondrum",
-    name: "Lion Drum",
-    pitch: "A lion-dance drum flashes a beat, then goes dark; keep tapping in time.",
     modes: BOTH,
   },
   {

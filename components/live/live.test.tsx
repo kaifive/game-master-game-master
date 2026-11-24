@@ -181,18 +181,18 @@ describe("the TV (spec 24)", () => {
     expect(screen.getByText("still frame")).toBeInTheDocument();
   });
 
-  test("S24-AC9: between showdowns the Showdown screen shows the menu of showdowns, each with its hint, and the team standings; during one, the game", () => {
+  test("S24-AC9: between showdowns the Showdown screen shows the menu of showdowns, with no subtitles and the played ones marked, and the team standings; during one, the game", () => {
     const totals = [
       { id: "t1", name: "Reds", color: 1, points: 300 },
       { id: "t2", name: "Blues", color: 2, points: 500 },
     ];
     const menu = [
-      { id: "fly", title: "Fly-by Count", type: "flyby", teaser: "Like Rapid Recall" },
-      { id: "nerve", title: "Share or Snatch", type: "snatch", teaser: "Pure nerve" },
+      { id: "fly", title: "Fly-by Count", type: "flyby" },
+      { id: "nerve", title: "Share or Snatch", type: "snatch" },
     ];
     const { unmount } = wrap(
       <ShowdownScreen
-        view={idle}
+        view={{ ...idle, finished: ["nerve"] }}
         serverNow={() => 0}
         totals={totals}
         renderers={{ tap: stand }}
@@ -200,8 +200,10 @@ describe("the TV (spec 24)", () => {
       />,
     );
     const showdowns = screen.getByRole("region", { name: "Showdowns" });
-    expect(showdowns).toHaveTextContent("Fly-by CountLike Rapid Recall");
-    expect(showdowns).toHaveTextContent("Share or SnatchPure nerve");
+    expect(showdowns).toHaveTextContent("Fly-by Count");
+    expect(showdowns).toHaveTextContent("Share or SnatchPlayed");
+    expect(showdowns).not.toHaveTextContent("Fly-by CountPlayed");
+    expect(showdowns).not.toHaveTextContent("Like");
     // Not signed in as the host: nothing to tap.
     expect(screen.queryByRole("button", { name: /Start/ })).toBeNull();
     expect(screen.getByRole("region", { name: "Team standings" })).toHaveTextContent(/Blues.*Reds/);
@@ -227,8 +229,8 @@ describe("the TV (spec 24)", () => {
       blocked: { fly: null, path: "This game needs at least 2 teams." },
     };
     const menu = [
-      { id: "fly", title: "Fly-by Count", type: "flyby", teaser: "Like Rapid Recall" },
-      { id: "path", title: "Memory Path", type: "path", teaser: "Like Pathfinder" },
+      { id: "fly", title: "Fly-by Count", type: "flyby" },
+      { id: "path", title: "Memory Path", type: "path" },
     ];
     const { unmount } = wrap(<GameMenu games={menu} totals={[]} host={host} />);
     await user.click(screen.getByRole("button", { name: "Start Fly-by Count" }));

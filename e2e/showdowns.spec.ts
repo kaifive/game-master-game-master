@@ -78,10 +78,12 @@ test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1 S26-AC2 S12-AC1 S1
   // Round 1: the presents fly, then each phone gets the number pad (S25-AC1).
   await page.getByRole("button", { name: "Start round 1" }).click();
   await expect(capA.getByText("Watch the TV and count!")).toBeVisible();
-  await expect(capA.getByRole("button", { name: "Lock in" })).toBeVisible({ timeout: 15_000 });
+  // No Lock in: what's typed goes in as the time runs out (Khai, 2026-11-24).
+  await expect(capA.getByText("Your answer goes in when time's up.")).toBeVisible({
+    timeout: 15_000,
+  });
   await capA.getByRole("button", { name: "7", exact: true }).click();
-  await capA.getByRole("button", { name: "Lock in 7" }).click();
-  await expect(capA.getByText("Locked in: 7")).toBeVisible();
+  await expect(capA.getByText("Locked in: 7")).toBeVisible({ timeout: 15_000 });
   await expect(tv.getByRole("list", { name: "Locked in" })).toContainText(/In/);
 
   // Results: the TV reveals the count and every team's answer (S24-AC1).

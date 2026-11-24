@@ -34,11 +34,7 @@ function HowClose({ last }: { last: NonNullable<PerceptionSoloView["last"]> }) {
   );
 }
 
-/**
- * Games whose question comes only once the show is over (Fly-by Count asks which
- * kind then), so the phone fetches it. Others carry on locally: a refetch would
- * reset Lion Drum's taps as the dark beats begin.
- */
+/** Games whose question comes only once the show is over (Fly-by Count asks which kind then), so the phone fetches it. */
 const ASKS_AFTER_SHOW = new Set(["flyby"]);
 
 /** One view from the server, run on this phone's clock from the moment it came. */
@@ -90,7 +86,6 @@ function Task({
       type={type}
       scene={view.scene}
       elapsed={elapsed}
-      clock={clock}
       showMs={view.showMs}
       answerMs={view.answerMs}
       busy={busy}

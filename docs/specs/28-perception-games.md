@@ -1,4 +1,4 @@
-# 28: Perception games (Snow Pile, Staff Angle, Sleigh Run, Lion Drum, Cut the Ribbon)
+# 28: Perception games (Staff Angle, Cut the Ribbon)
 
 **Status:** Done (agreed with Khai 2026-11-18)
 **Backlog:** M3
@@ -6,8 +6,9 @@
 
 ## Summary
 
-Five quick games that test how well you judge what you see: how many, which angle,
-where something moving ends up, keeping a beat, and how far along. They're inspired
+Two quick games that test how well you judge what you see: which angle, and how far
+along. Snow Pile, Sleigh Run and Lion Drum were removed after play-testing (ADR-044).
+They're inspired
 by perception puzzles like Perceptle (Khai, 2026-11-18), with their own names and the
 event's look. Each game can run solo on players' phones or as a team showdown on the
 TV; the event file chooses per game (ADR-040).
@@ -32,52 +33,26 @@ TV; the event file chooses per game (ADR-040).
    the same task on the TV and answers on the captain's phone. Points per round: ranked
    by closeness, 100, 70, 50, 30, then 10, ties sharing; no answer scores 0.
 4. Answers stay secret until the reveal (S24-AC7); the TV shows who has answered.
-   Anything that gives the answer away (the snowflakes, the sleigh's path) shows only
-   while it's meant to be seen.
-5. Lion Drum times taps on the phone, from the moment the beat starts on that phone
-   (solo) or from the shared start (showdown); the server checks the taps are possible
-   by its own clock, as T-Timer does (spec 16).
-
-### Snow Pile (`snowpile`)
-
-1. A heap of snowflakes, scattered across the screen, shows for a moment, then hides.
-   Type how many there were.
-2. Levels: 12 to 25 flakes for 2 s, 25 to 50 for 1.5 s, 50 to 100 for 1.2 s. 10 s to answer.
-3. Closeness: 1 minus the miss as a share of the true count (40 for 50 is 0.8), never below 0.
+   Anything that gives the answer away shows only while it's meant to be seen. A TV or
+   phone holding a view from before the start shows Get ready until the next one comes,
+   which it fetches the moment the round starts.
 
 ### Staff Angle (`staffangle`)
 
 1. The screen says an angle ("Set the staff at 35°"). The player turns a wushu staff on
-   their phone, by dragging or with nudge buttons, and locks it in. There's no number
-   on screen to read off while turning, only a flat floor line to judge from.
+   their phone by dragging it round. There are no buttons to step it, so the angle can't
+   be counted out (Khai, 2026-11-24), and no number on screen to read off while
+   turning, only a flat floor line to judge from. Solo locks it in; a showdown phone
+   sends where the staff is as the time runs out.
 2. Levels: multiples of 15° (15 to 165), then multiples of 5°, then any whole degree.
    15 s to answer.
 3. Closeness: 1 minus the miss in degrees over 45, never below 0 (5° off is 0.89).
 
-### Sleigh Run (`sleighrun`)
-
-1. A sleigh flies in a straight line from the left toward a cloud bank and disappears
-   into it. The player taps the cloud's far edge where the sleigh will come out.
-2. Levels: a gentle slope and a narrow cloud; steeper and wider; steepest, widest and
-   faster. The flight shows for about 2 s; 10 s to answer.
-3. Closeness: 1 minus the miss as a share of a quarter of the screen's height, never below 0.
-4. The results show the sleigh's real path through the cloud.
-
-### Lion Drum (`liondrum`)
-
-1. A lion-dance drum flashes on every beat for a few beats (no sound: phones stay
-   silent), then goes dark. The player keeps tapping in time, one tap per beat, for the
-   beats after it goes dark.
-2. Levels: 70 to 90 beats a minute, 8 shown and 4 to keep; 90 to 120, 6 shown and 6 to
-   keep; 120 to 150, 4 shown and 8 to keep.
-3. Closeness: for each beat to keep, the nearest unused tap; the average miss as a share
-   of half a beat, taken from 1, never below 0. A missing tap misses by half a beat.
-
 ### Cut the Ribbon (`ribbon`)
 
 1. A ribbon stretches across the screen with no marks on it. The screen says a fraction
-   ("Cut it one third of the way along"). The player taps where to cut, can move it, and
-   locks it in.
+   ("Cut it one third of the way along"). The player taps where to cut and can move it.
+   Solo locks it in; a showdown phone sends the cut as the time runs out.
 2. Levels: halves, thirds and quarters; fifths and eighths; any fraction in tenths, said
    as a percentage ("Cut it 70% of the way along"). 10 s to answer.
 3. Closeness: 1 minus the miss as a share of 15% of the ribbon, never below 0.
@@ -95,7 +70,7 @@ rounds live in the live session (spec 11).
 - **TV (showdown):** the task big enough for the room, who has answered, then the reveal
   with the right answer and each team's drawn on the scene (in its color), each team's
   answer, how close, and the points.
-- **Captain phone (showdown):** the same input as solo.
+- **Captain phone (showdown):** the same input as solo, with no Lock in: what's on it goes in as the time runs out.
 - **Demo:** each game's looping TV demo and one line of text (spec 24).
 
 ## Acceptance criteria
@@ -104,7 +79,7 @@ rounds live in the live session (spec 11).
 - [x] AC-2: Solo runs three tasks, levels 1 to 3, with a show phase and an answer window each, scores the game's points times the average closeness, and counts no answer as 0.
 - [x] AC-3: Showdowns run three rounds, levels 1 to 3, every team answering the same task, and rank each round by closeness, 100, 70, 50, 30, then 10, ties sharing, no answer 0.
 - [x] AC-4: Nothing that gives an answer away reaches a phone or the TV outside its show time, and answers stay secret until the reveal.
-- [x] AC-5: Lion Drum takes phone-timed taps and refuses taps the server's clock says couldn't have happened yet.
+- Retired with Lion Drum (ADR-044): AC-5, phone-timed taps.
 - [x] AC-6: The event file can run any perception game solo or as a showdown, and both appear in the game library.
 
 ## Tests

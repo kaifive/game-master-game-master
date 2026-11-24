@@ -1,16 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { leadCounts, leadOrder } from "../fairness";
+import { leadCounts } from "../fairness";
 import type { AnyShowdown, MoveResult, Role } from "../model";
 import { PLAYTEST_TEAM_COUNTS, playtest, type Bot, type BotContext } from "../playtest";
-import {
-  cover,
-  dealPiece,
-  irregular,
-  landmass,
-  placements,
-  squaresOf,
-  type LandState,
-} from "./landmass";
 import { dealPath, path, type PathState, type Square } from "./path";
 import { afterSwaps, shuffle, type ShuffleState } from "./shuffle";
 import { to21, type To21State } from "./to21";
@@ -185,64 +176,6 @@ describe("Present Shuffle", () => {
   });
 });
 
-describe("Land Mass", () => {
-  it("S27-AC4: deals irregular pieces of 4 to 6 squares; a piece goes anywhere it fits, takes the team's color, and is replaced in the tray", () => {
-    for (let seed = 1; seed < 100; seed++) {
-      const p = dealPiece(seed);
-      expect(p.length).toBeGreaterThanOrEqual(4);
-      expect(p.length).toBeLessThanOrEqual(6);
-      // Irregular: never a straight line, never a filled rectangle (Khai, 2026-11-18).
-      expect(irregular(p)).toBe(true);
-      const rows = new Set(p.map((c) => c[0])).size;
-      const cols = new Set(p.map((c) => c[1])).size;
-      expect(rows > 1 && cols > 1 && rows * cols !== p.length).toBe(true);
-    }
-    const g = rig<LandState>(landmass);
-    expect(landmass.rounds(g.c, 4)).toBe(1);
-    let s = g.deal();
-    expect(s.tray).toHaveLength(4);
-    const first = placements(s, s.tray[0] ?? []).next().value;
-    if (!first) throw new Error("no place");
-    const piece = s.tray[0] ?? [];
-    expect(g.move(s, "t2", { piece: 0, ...first }, T0 + 10)).toMatchObject({
-      ok: false,
-      message: "It isn't your turn.",
-    });
-    s = g.step(s, "t1", { piece: 0, ...first }, T0 + 10);
-    expect(squaresOf(s, "t1")).toBe(piece.length);
-    expect(s.tray[0]).not.toEqual(piece);
-    // No overlap, nothing off the board.
-    expect(
-      g.move(s, "t2", { piece: 1, turns: first.turns, row: first.row, col: first.col }, T0 + 20),
-    ).toMatchObject({ ok: false });
-    expect(cover(s, [[0, 0]], 0, s.rows, 0)).toBeNull();
-  });
-
-  it("S27-AC4: turns time out after 30 s; the lead moves one team on each time round", () => {
-    const g = rig<LandState>(landmass);
-    let s = g.deal();
-    const turns: string[] = [];
-    for (let i = 0; i < 9; i++) {
-      turns.push(g.turn(s, T0 + i * 30_001)?.teamId ?? "");
-      s = g.tick(s, T0 + (i + 1) * 30_001);
-    }
-    expect(turns).toEqual([...leadOrder(teams, 0), ...leadOrder(teams, 1), ...leadOrder(teams, 2)]);
-  });
-
-  it("S27-AC4: when nothing fits the tray swaps once, then the game ends; every square scores 5", () => {
-    const g = rig<LandState>(landmass, { cols: 6, rows: 6 });
-    let s = g.deal();
-    // Fill the board but one lone square: no piece of 4 or more can fit.
-    s = { ...s, board: s.board.map((_, i) => (i === 0 ? null : i % 2 ? "t1" : "t2")) };
-    s = g.tick(s, T0 + 30_001);
-    expect(s.ended).toBe(true);
-    expect(s.swaps).toBe(1);
-    const pts = g.score({ ...s, board: s.board.map((o, i) => (i < 3 ? "t3" : o)) });
-    expect(pts.t3).toBe(3 * 5);
-    expect(g.score({ ...s, board: s.board.map(() => null) })).toEqual({ t1: 0, t2: 0, t3: 0 });
-  });
-});
-
 // ---- Mock play tests (S24-AC8, S24-AC6)
 
 const gv = (ctx: BotContext) => ctx.view.game as Record<string, unknown> | null;
@@ -305,26 +238,6 @@ const SHUFFLE: Record<string, Bot> = {
   cautious: (ctx) =>
     myTurn(ctx) && since(ctx, "turnEndsAt") > -3000 ? { slot: Math.floor(ctx.random() * 9) } : null,
   reckless: (ctx) => (myTurn(ctx) ? { slot: 99 } : null),
-  late: () => null,
-};
-
-const landPlace = (ctx: BotContext, pickRandom: boolean) => {
-  if (!myTurn(ctx)) return null;
-  const s = ctx.peek as LandState;
-  for (const [i, piece] of s.tray.entries()) {
-    const spots = [...placements(s, piece)];
-    if (spots.length === 0) continue;
-    const spot = pickRandom ? spots[Math.floor(ctx.random() * spots.length)] : spots[0];
-    if (spot) return { piece: i, ...spot };
-  }
-  return null;
-};
-const LAND: Record<string, Bot> = {
-  perfect: (ctx) => landPlace(ctx, false),
-  random: (ctx) => landPlace(ctx, true),
-  cautious: (ctx) =>
-    myTurn(ctx) && since(ctx, "turnEndsAt") > -4000 ? landPlace(ctx, true) : null,
-  reckless: (ctx) => (myTurn(ctx) ? { piece: 0, turns: 0, row: -1, col: -1 } : null),
   late: () => null,
 };
 
@@ -404,41 +317,4 @@ describe("spec 27 play tests (S24-AC8, S24-AC6)", () => {
             for (const round of r.rounds) expect(Object.values(round)).toContain(100);
         }
     });
-
-  it("S24-AC8 S24-AC6: Land Mass plays to the end with 1 to 6 teams, leads rotating each lap, 5 points a square", () => {
-    for (const n of PLAYTEST_TEAM_COUNTS)
-      for (const shift of [0, 2, 4, 6]) {
-        const line = lineup(LAND, n, shift);
-        const r = playtest(
-          landmass,
-          { cols: 8, rows: 6 },
-          {
-            teams: n,
-            seed: n * 23 + shift,
-            stepMs: 3000,
-            roundCapMs: 9_000_000,
-            bots: line.bots,
-            dropOutFrom: line.dropOutFrom,
-          },
-        );
-        expect(r.ended).toBe(true);
-        const final = r.finals[0] as LandState;
-        expect(final.ended).toBe(true);
-        // The lead moves one team on each time round.
-        const order = r.turnOrders[0] ?? [];
-        const flat = final.history.map((h) => h.teamId);
-        for (let lap = 0; lap * n < flat.length; lap++)
-          expect(flat.slice(lap * n, lap * n + n)).toEqual(
-            leadOrder(
-              Array.from({ length: n }, (_, i) => `t${String(i + 1)}`),
-              lap,
-            ).slice(0, flat.slice(lap * n, lap * n + n).length),
-          );
-        expect(order.length).toBeGreaterThan(0);
-        for (const p of Object.values(r.rounds[0] ?? {})) expect(p % 5).toBe(0);
-        // Nobody owns a square twice: the board adds up.
-        const owned = final.board.filter((o) => o !== null).length;
-        expect(owned).toBe(Object.keys(r.scores).reduce((a, t) => a + squaresOf(final, t), 0));
-      }
-  });
 });

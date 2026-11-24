@@ -24,7 +24,7 @@ describe("game library (spec 23)", () => {
       expect(g.modes.includes("solo")).toBe(builtGameTypes().includes(g.type));
       expect(g.modes.includes("showdown")).toBe(showdownTypes().includes(g.type));
     }
-    for (const type of ["snowpile", "staffangle", "sleighrun", "liondrum", "ribbon"])
+    for (const type of ["staffangle", "ribbon", "flyby", "snowsum"])
       expect(CATALOG.find((g) => g.type === type)?.modes).toEqual(["solo", "showdown"]);
   });
 

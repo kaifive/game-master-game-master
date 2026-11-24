@@ -1,17 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
-  colorCore,
-  exitY,
-  keepBeats,
-  liondrumCore,
   PERCEPTION_CORES,
   staffangleCore,
   type AngleTask,
-  type DrumTask,
   type PerceptionCore,
   type RibbonTask,
-  type SleighTask,
-  type SnowPileTask,
 } from "@/lib/games";
 import { PLAYTEST_TEAM_COUNTS, playtest, type Bot, type BotContext } from "../playtest";
 import { perceptionShowdown, type PerceptionState, type PerceptionView } from "./perception";
@@ -93,58 +86,6 @@ describe("perception showdowns (spec 28)", () => {
       ).scene,
     ).toBeNull();
   });
-
-  it("S28-AC5: Lion Drum takes phone-timed taps and refuses any the server's clock says haven't happened yet", () => {
-    const game = perceptionShowdown(liondrumCore);
-    const c = game.content.parse({});
-    const s = game.deal(c, {
-      seed: 4,
-      round: 1,
-      teams,
-      startsAt: T0,
-      prev: null,
-    }) as PerceptionState<DrumTask, number[]>;
-    const beats = keepBeats(s.task);
-    expect(
-      game.move(s, c, { teamId: "t1", move: { answer: beats }, now: T0 + 1000 }),
-    ).toMatchObject({ ok: false, message: "Those taps aren't possible." });
-    const ok = game.move(s, c, {
-      teamId: "t1",
-      move: { answer: beats },
-      now: T0 + (beats.at(-1) ?? 0) + 100,
-    });
-    expect(ok.ok).toBe(true);
-  });
-});
-
-const rgb = (hex: string): [number, number, number] =>
-  [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
-
-describe("Color Matcher as a showdown (spec 30)", () => {
-  it("S30-AC1: ranks teams by the spec 18 distance, 100, 70, 50, 30, then 10; no answer 0", () => {
-    const game = perceptionShowdown(colorCore);
-    const c = game.content.parse({});
-    const teams = ["t1", "t2", "t3", "t4", "t5", "t6"];
-    let s = game.deal(c, { seed: 8, round: 1, teams, startsAt: T0, prev: null });
-    const target = (s as { task: { target: string } }).task.target;
-    const [r, g, b] = rgb(target);
-    const shift = (d: number) =>
-      `#${[r, g, b]
-        .map((v) =>
-          Math.max(0, v - d)
-            .toString(16)
-            .padStart(2, "0"),
-        )
-        .join("")}`.toUpperCase();
-    const at = T0 + colorCore.showMs((s as { task: never }).task) + 500;
-    // Even inside full marks, the nearer color ranks higher.
-    ["t1", "t2", "t3", "t4", "t5"].forEach((team, i) => {
-      const out = game.move(s, c, { teamId: team, move: { answer: shift(i * 3) }, now: at });
-      if (!out.ok) throw new Error(out.message);
-      s = out.state;
-    });
-    expect(game.score(s, c, teams)).toEqual({ t1: 100, t2: 70, t3: 50, t4: 30, t5: 10, t6: 0 });
-  });
 });
 
 // ---- Mock play tests (S24-AC8)
@@ -153,22 +94,12 @@ type V = PerceptionView | null;
 const gv = (ctx: BotContext) => ctx.view.game as V;
 /** The right answer, from the real task: only perfect bots look. */
 function perfectAnswer(type: string, task: unknown): unknown {
-  if (type === "snowpile") return (task as SnowPileTask).count;
   if (type === "staffangle") return (task as AngleTask).target;
-  if (type === "sleighrun") return exitY(task as SleighTask);
-  if (type === "liondrum") return keepBeats(task as DrumTask);
-  if (type === "color") return (task as { target: string }).target;
   return (task as RibbonTask).at;
 }
 function randomAnswer(type: string, ctx: BotContext): unknown {
   const r = ctx.random();
-  if (type === "snowpile") return Math.floor(r * 120);
   if (type === "staffangle") return Math.round(r * 180);
-  if (type === "liondrum") return [Math.round(r * 5000)];
-  if (type === "color")
-    return `#${Math.floor(r * 0xffffff)
-      .toString(16)
-      .padStart(6, "0")}`;
   return r;
 }
 
@@ -178,15 +109,10 @@ function bots(type: string): Record<string, Bot> {
     return v !== null && !v.answered && ctx.now >= v.showEndsAt && ctx.now <= v.closesAt;
   };
   return {
-    // Lion Drum's perfect taps are sent once the last beat has passed.
     perfect: (ctx) => {
-      const v = gv(ctx);
-      if (!ready(ctx) || !v) return null;
+      if (!ready(ctx)) return null;
       const s = ctx.peek as PerceptionState<unknown, unknown>;
-      const a = perfectAnswer(type, s.task);
-      if (type === "liondrum" && ctx.now - v.startsAt < Math.max(...(a as number[])) + 50)
-        return null;
-      return { answer: a };
+      return { answer: perfectAnswer(type, s.task) };
     },
     random: (ctx) =>
       ready(ctx) && ctx.now - (gv(ctx)?.showEndsAt ?? 0) > 3000
@@ -202,10 +128,7 @@ function bots(type: string): Record<string, Bot> {
 }
 
 describe("spec 28 play tests (S24-AC8)", () => {
-  for (const core of [...PERCEPTION_CORES, colorCore] as readonly PerceptionCore<
-    unknown,
-    unknown
-  >[])
+  for (const core of PERCEPTION_CORES as readonly PerceptionCore<unknown, unknown>[])
     it(`S24-AC8: ${core.name} as a showdown plays whole games with 1 to 6 teams: ends, ranks within the rules, leaks nothing, perfect never beaten`, () => {
       const game = perceptionShowdown(core);
       const kinds = ["perfect", "random", "late", "silent", "dropout"];

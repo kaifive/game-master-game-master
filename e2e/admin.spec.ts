@@ -80,7 +80,7 @@ test("S23-AC2: the game library lists every built game, for admins only", async 
   const games = page.getByRole("list", { name: "Games" });
   // 14 solo games, 11 showdowns (specs 25 to 27; Color Count merged into Fly-by, ADR-043),
   // 5 perception games that are both (spec 28) and the buzzer round (spec 12).
-  await expect(games.getByRole("listitem")).toHaveCount(31);
+  await expect(games.getByRole("listitem")).toHaveCount(27);
   await expect(games).toContainText("Stack Attack");
   await expect(games).toContainText("stacker");
   await expect(games).toContainText("Fly-by Count");

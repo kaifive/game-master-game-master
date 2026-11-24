@@ -1,12 +1,13 @@
 "use client";
 
 import type { AdminLiveAct } from "@/lib/live";
+import { CheckIcon } from "@/components/icons/game";
 import { cx } from "@/lib/ui";
 import { Swatch } from "./games/shared";
 import type { TeamTotal } from "./live-tv";
 
-/** A showdown on the TV's menu: its name, and a hint at what it's like (spec 24). */
-export type MenuGame = { id: string; title: string; type: string; teaser: string | null };
+/** A showdown on the TV's menu (spec 24). */
+export type MenuGame = { id: string; title: string; type: string };
 
 /** What the TV can do when its browser is signed in as the host (Khai, 2026-11-24). */
 export type TvHost = {
@@ -48,18 +49,21 @@ function MiniStandings({ totals }: { totals: readonly TeamTotal[] }) {
 }
 
 /**
- * Between showdowns, the TV shows the menu of showdowns, each with a hint at
- * the solo game it's like, and the team standings beside it (Khai,
- * 2026-11-24). With the host signed in on the TV, a tap starts one.
+ * Between showdowns, the TV shows the menu of showdowns, the ones already
+ * played marked, and the team standings beside it (Khai, 2026-11-24). With
+ * the host signed in on the TV, a tap starts one.
  */
 export function GameMenu({
   games,
   totals,
   host,
+  played = [],
 }: {
   games: readonly MenuGame[];
   totals: readonly TeamTotal[];
   host?: TvHost | null;
+  /** Game ids already played tonight: marked, and still startable again. */
+  played?: readonly string[];
 }) {
   // One reason that holds for every game (no teams yet) is said once, not on every card.
   const reasons = host ? games.map((g) => host.blocked[g.id] ?? null) : [];
@@ -86,14 +90,16 @@ export function GameMenu({
         >
           {games.map((g) => {
             const blocked = host?.blocked[g.id] ?? null;
+            const done = played.includes(g.id);
             const inner = (
               <>
                 <span className="font-gm-display text-[clamp(1.2rem,3vh,2.4rem)] leading-tight font-bold">
                   {g.title}
                 </span>
-                {g.teaser && (
-                  <span className="text-[clamp(0.9rem,2vh,1.5rem)] text-gm-text-muted">
-                    {g.teaser}
+                {done && (
+                  <span className="inline-flex items-center gap-[0.5vh] text-[clamp(0.9rem,2vh,1.5rem)] font-bold text-gm-text-muted">
+                    <CheckIcon size={18} />
+                    Played
                   </span>
                 )}
                 {host && !shared && (
@@ -108,8 +114,11 @@ export function GameMenu({
                 )}
               </>
             );
-            const look =
-              "grid h-full content-start gap-[0.4vh] rounded-gm bg-gm-surface px-[1.6vh] py-[1.4vh] text-left ring-1 ring-gm-border";
+            const look = cx(
+              "grid h-full content-start gap-[0.4vh] rounded-gm px-[1.6vh] py-[1.4vh] text-left ring-1 ring-gm-border",
+              // A played game sinks back, so what's left stands out.
+              done ? "bg-gm-bg opacity-70" : "bg-gm-surface",
+            );
             return (
               <li key={g.id}>
                 {host ? (

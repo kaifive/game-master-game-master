@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { colorDistance, colorShare, hsvToRgb, toHex } from "../color/logic";
 import {
   dealFlakes,
   dealFormation,
@@ -12,12 +11,11 @@ import {
   type Flake,
   type Formation,
 } from "../counts";
-import { seededRandom } from "../random";
 import { type Level, type PerceptionCore } from "./core";
 
 /**
  * The second modes of spec 30 (ADR-041), built as perception cores: Fly-by
- * Count and Snow Sum as solo games, Color Matcher as a showdown.
+ * Count and Snow Sum as solo games (Color Matcher's showdown was dropped, ADR-044).
  */
 
 /** The counting showdowns' own rule: exact 1, one off a half, else 0 (spec 25). */
@@ -104,48 +102,5 @@ export const snowsumCore: PerceptionCore<SnowSumTask, number> = {
   said: (_t, a) => String(a),
 };
 
-// ---- Color Matcher as a showdown
-
-export type ColorTask = { level: Level; target: string; showMs: number };
-
-/** Vivid, then softer, then muted and dark (S30-AC1). */
-const SHADES: Record<Level, { s: [number, number]; v: [number, number]; showMs: number }> = {
-  1: { s: [0.85, 1], v: [0.85, 1], showMs: 3000 },
-  2: { s: [0.5, 0.85], v: [0.6, 0.9], showMs: 2500 },
-  3: { s: [0.2, 0.55], v: [0.35, 0.7], showMs: 2000 },
-};
-
-const Hex = z.string().regex(/^#[0-9a-fA-F]{6}$/);
-
-export const colorCore: PerceptionCore<ColorTask, string> = {
-  type: "color",
-  name: "Color Matcher",
-  demo: "A color shows on the TV for a moment. Make it again on the color wheel: the closest team wins.",
-  timeout: "Out of time? No answer scores 0.",
-  instructions: [
-    "A color shows for a moment, then hides.",
-    "Make it again on the wheel and the brightness slider.",
-    "Lock it in. The closer, the more points.",
-  ],
-  deal(seed, level) {
-    const random = seededRandom(seed);
-    const { s, v, showMs } = SHADES[level];
-    const at = ([lo, hi]: [number, number]) => lo + random() * (hi - lo);
-    const target = toHex(hsvToRgb({ h: random() * 360, s: at(s), v: at(v) }));
-    return { level, target, showMs };
-  },
-  showMs: (t) => t.showMs,
-  answerMs: () => 15_000,
-  answer: Hex,
-  valid: () => true,
-  closeness: (t, a) => colorShare(colorDistance(a.toUpperCase(), t.target)),
-  distance: (t, a) => colorDistance(a.toUpperCase(), t.target),
-  scene: (t, phase) => (phase === "answer" ? null : { color: t.target }),
-  truth: () => "this color",
-  said: (t, a) =>
-    `${String(Math.round(colorShare(colorDistance(a.toUpperCase(), t.target)) * 100))}% match`,
-};
-
 /** Every core that has a solo version, and every one that has a showdown (ADR-041). */
 export const SOLO_ONLY_CORES = [flybyCore, snowsumCore] as const;
-export const SHOWDOWN_ONLY_CORES = [colorCore] as const;

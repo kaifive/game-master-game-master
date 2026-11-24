@@ -1,7 +1,6 @@
 export { auction, auctionWinner, NUMBERS, type AuctionView } from "./auction";
 export { blindstop, EXACT_BONUS, exact, type BlindView } from "./blindstop";
 export { snatch, type Pair, type SnatchView } from "./snatch";
-export { cover, landmass, squaresOf, type LandView } from "./landmass";
 export { path, type PathView, type Square } from "./path";
 export { shuffle, type ShuffleView } from "./shuffle";
 export { to21, type To21View } from "./to21";
