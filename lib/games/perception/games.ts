@@ -11,6 +11,9 @@ const between = (random: () => number, lo: number, hi: number) =>
 
 export type AngleTask = { level: Level; target: number };
 
+/** Seconds to set the staff, by level: less each round. */
+export const STAFF_ANSWER_MS: Record<Level, number> = { 1: 15_000, 2: 12_000, 3: 9_000 };
+
 export const staffangleCore: PerceptionCore<AngleTask, number> = {
   type: "staffangle",
   name: "Staff Angle",
@@ -18,7 +21,7 @@ export const staffangleCore: PerceptionCore<AngleTask, number> = {
   timeout: "Out of time? What's on your phone goes in.",
   instructions: [
     "The screen says an angle, like 35°.",
-    "Drag the staff, or use the nudge buttons, until you think it's right.",
+    "Drag the staff round until you think it's right.",
     "Lock it in. Within a few degrees scores big. Three angles.",
   ],
   deal(seed, level) {
@@ -28,7 +31,8 @@ export const staffangleCore: PerceptionCore<AngleTask, number> = {
     return { level, target };
   },
   showMs: () => 0,
-  answerMs: () => 15_000,
+  // Less time each round: 15 s, then 12, then 9 (Khai, 2026-11-24).
+  answerMs: (t) => STAFF_ANSWER_MS[t.level],
   answer: z.number(),
   valid: (_t, a) => a >= 0 && a <= 180,
   closeness: (t, a) => clamp01(1 - Math.abs(a - t.target) / 45),

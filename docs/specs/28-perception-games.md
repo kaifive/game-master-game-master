@@ -46,7 +46,7 @@ TV; the event file chooses per game (ADR-040).
    turning, only a flat floor line to judge from. Solo locks it in; a showdown phone
    sends where the staff is as the time runs out.
 2. Levels: multiples of 15° (15 to 165), then multiples of 5°, then any whole degree.
-   15 s to answer.
+   15 s to answer, then 12, then 9 (Khai, 2026-11-24).
 3. Closeness: 1 minus the miss in degrees over 45, never below 0 (5° off is 0.89).
 
 ### Cut the Ribbon (`ribbon`)
