@@ -22,7 +22,7 @@ Every game here follows spec 24: the host's steps, Who's played, the TV demo, 1 
 ### Stocking Stuffer (`stockings`)
 
 1. Content: number of rounds (default 5), stocking values (default 5 to 30), how often coal turns up (default 1 in 6), seconds to choose (default 10).
-2. A round: every team still in taps **Open** or **Bank** at the same time. Each team that opens gets its own stocking from the seed, revealed on the TV: points go into that team's pot for the round, or **coal empties the pot and the team is out until the next round**. A team that banks keeps its pot and sits out the rest of the round. No choice in time counts as Bank.
+2. A round: every team still in taps **Open** or **Bank** at the same time. Each team that opens gets its own stocking from the seed, revealed on the TV: points go into that team's pot for the round, or **coal empties the pot and the team is out until the next round**. The first stocking of a round is coal for one team at most (Khai, 2026-11-24). A team that banks keeps its pot and sits out the rest of the round. No choice in time counts as Bank.
 3. Each opening shows on the TV for about 3 seconds before the next choice. The round ends when every team has banked or hit coal; after 12 openings, anyone still in banks. If the host shows results early, anyone still in banks. **Points: everything a team banked, up to 30 a round (a round's share of 150 over five).** Stockings hold 2 to 8 points (ADR-045).
 
 ### Share or Snatch (`snatch`)
@@ -44,7 +44,7 @@ Each game's content is validated in the event file and its round state lives in 
 ## Acceptance criteria
 
 - [x] AC-1: Auction gives each team the numbers 1 to 10 once each, takes one secret bid a round (the lowest left if none), cancels tied bids, gives the prize to the highest untied bid (nobody if all tie), and pays the prizes won, five prizes making 150.
-- [x] AC-2: Stocking Stuffer takes Open or Bank from every team at once each round (Bank if no choice), reveals each opener's seeded stocking, empties a team's pot and puts it out for the round on coal, ends the round when all have banked or busted, and pays what each team banked, up to 30 a round.
+- [x] AC-2: Stocking Stuffer takes Open or Bank from every team at once each round (Bank if no choice), reveals each opener's seeded stocking (coal for one team at most on the first), empties a team's pot and puts it out for the round on coal, ends the round when all have banked or busted, and pays what each team banked, up to 30 a round.
 - [x] AC-3: Share or Snatch needs 2 teams or more, pairs teams at random for three rounds (one round per team with an odd number, each team sitting out exactly once), takes one secret Share or Snatch per team (Share if none), and pays what each team takes: half the pot each for two shares, all of it to a lone snatcher, nothing for two snatches, up to 150 a game.
 
 ## Tests

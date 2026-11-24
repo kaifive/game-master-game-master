@@ -61,6 +61,15 @@ export function stockingFor(
   return { kind: "stocking", value: s.min + Math.floor(random() * (s.max - s.min + 1)) };
 }
 
+/** What a team finds instead of a second coal on the first opening: a seeded stocking. */
+export function firstStockingFor(
+  s: Pick<StockingState, "seed" | "min" | "max">,
+  teamIndex: number,
+): Found {
+  const random = seededRandom((s.seed ^ Math.imul(teamIndex + 7, 0x27d4eb2d)) >>> 0);
+  return { kind: "stocking", value: s.min + Math.floor(random() * (s.max - s.min + 1)) };
+}
+
 const stillIn = (s: StockingState) => s.teams.filter((t) => s.status[t] === "in");
 
 /** Settles one opening: missing choices bank; openers get their stockings. */
@@ -68,6 +77,7 @@ function resolve(s: StockingState, now: number, everyoneBanks = false): Stocking
   const pots = { ...s.pots };
   const status = { ...s.status };
   const got: Record<string, Opened> = {};
+  let coal = 0;
   s.teams.forEach((t, i) => {
     if (status[t] !== "in") return;
     const choice = everyoneBanks ? "bank" : (s.choices[t] ?? "bank");
@@ -76,7 +86,9 @@ function resolve(s: StockingState, now: number, everyoneBanks = false): Stocking
       got[t] = { kind: "bank" };
       return;
     }
-    const found = stockingFor(s, i, s.opening);
+    let found = stockingFor(s, i, s.opening);
+    // The first stocking is coal for one team at most, so a round starts with a haul (Khai, 2026-11-24).
+    if (found.kind === "coal" && s.opening === 1 && coal++ > 0) found = firstStockingFor(s, i);
     got[t] = found;
     if (found.kind === "coal") {
       pots[t] = 0;
