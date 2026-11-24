@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test, vi } from "vitest";
 import { PackRoot } from "@/components/packs/judges-table/root";
@@ -204,6 +204,15 @@ describe("stop showdowns on the phone and TV (spec 25)", () => {
     onTv("blindstop", r.view(tv, T0 + 5000), T0 + 5000);
     expect(screen.getByText("?")).toBeInTheDocument();
     expect(screen.queryByText("5.00")).toBeNull();
+  });
+
+  test("S25-AC5: Last Second's Stop answers at once with the time stopped, timed on the phone", () => {
+    const r = round("lastsecond");
+    const at = T0 + 7_250;
+    const send = phone("lastsecond", r.view(cap, at), at);
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Stop" }));
+    expect(send).toHaveBeenCalledWith({ elapsedMs: 7_250 });
+    expect(screen.getByRole("button", { name: "7.25" })).toBeDisabled();
   });
 
   test("S25-AC5: Last Second counts down on the TV, and a team that didn't stop shows as a bust", () => {

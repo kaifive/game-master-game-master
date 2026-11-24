@@ -206,7 +206,7 @@ function LastController({ view, game, serverNow, revealed, send }: LiveControlle
           this phone.
         </PhoneNote>
       ) : (
-        <StopButton startsAt={g.startsAt} serverNow={serverNow} send={send} />
+        <StopButton startsAt={g.startsAt} serverNow={serverNow} send={send} showTime />
       )}
     </div>
   );
