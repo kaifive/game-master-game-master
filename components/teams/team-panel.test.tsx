@@ -74,7 +74,7 @@ describe("TeamPanel", () => {
     await user.click(screen.getByRole("button", { name: "Join Dragons" }));
     expect(posts).toEqual([{ action: "join", playerId: "p3", teamId: "t1" }]);
     expect(await screen.findByText("Dragons")).toBeInTheDocument();
-    expect(screen.getByText(/on the team/)).toBeInTheDocument();
+    expect(screen.getByText(/You.re on/)).toBeInTheDocument();
   });
 
   test("S03-AC1: before the team phase, players without a team see nothing", async () => {
@@ -239,7 +239,7 @@ describe("TeamPanel", () => {
       mine: { teamId: "t1", isCaptain: false, named: true },
     });
     panel();
-    expect(await screen.findByText(/on the team/)).toBeInTheDocument();
+    expect(await screen.findByText(/You.re on/)).toBeInTheDocument();
     expect(screen.queryByLabelText("Points to give")).toBeNull();
   });
 

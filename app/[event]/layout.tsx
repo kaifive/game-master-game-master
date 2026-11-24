@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { EventSurface } from "@/components/events/surface";
+import { LiveWatcher } from "@/components/live/live-watcher";
 import { loadPackRoot } from "@/components/packs/loaders";
 import { DeviceProvider } from "@/components/players/device";
 import { PlayerFooter } from "@/components/players/footer";
@@ -30,6 +31,7 @@ export default async function EventLayout({ params, children }: Props & { childr
         <DeviceProvider slug={event.slug} identity={deviceIdentity()}>
           <LeaveGuard>
             {children}
+            {event.games.some((g) => g.mode === "live") && <LiveWatcher slug={event.slug} />}
             <PlayerFooter hasTeams={event.scoring !== "individual"} />
           </LeaveGuard>
         </DeviceProvider>

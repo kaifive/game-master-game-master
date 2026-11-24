@@ -6,7 +6,6 @@ import { GamePlayer } from "@/components/games/game-player";
 import { HowToPlayButton } from "@/components/games/instructions";
 import { rendererFor } from "@/components/games/renderers";
 import { PhoneLeaderboard } from "@/components/leaderboard/phone-leaderboard";
-import { LiveBanner } from "@/components/live/live-banner";
 import { LivePhone } from "@/components/live/live-phone";
 import { useOptionalDevice } from "@/components/players/device";
 import { PlayerHub } from "@/components/players/hub";
@@ -275,7 +274,6 @@ export function LiveView({ event }: { event: PublicEvent }) {
       <Body>
         <JoinGate>
           <PlayerStrip />
-          {event.games.some((g) => g.mode === "live") && <LiveBanner slug={event.slug} />}
           {event.scoring !== "individual" && <TeamNudge slug={event.slug} />}
           <GameList event={event} status="live" />
         </JoinGate>
@@ -321,6 +319,7 @@ export function TeamView({ event }: { event: PublicEvent }) {
         <JoinGate>
           <TeamPanel
             slug={event.slug}
+            donations={event.donations}
             fallback={
               <p className="m-0 text-lg">
                 Teams open when the host starts the team phase. Keep playing until then!

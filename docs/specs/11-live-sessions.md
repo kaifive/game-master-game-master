@@ -43,7 +43,7 @@ The engine for games the host runs for the whole room at once, on the TV, with c
 
 - **Controls:** a Live card: the TV screen switch, pick a live game and Start; while one runs, the step, what Next will do, Next, End, and each team's points; and spec 24's Who's played.
 - **TV:** the display has a leaderboard screen and a live screen; the host switches between them, and starting a session switches to the live screen (spec 24, AC-9).
-- **Phones:** a "Live now" banner on the games list; captains get the game's controller, members Watch the TV.
+- **Phones:** when a showdown starts, every joined phone goes to it on its own, once per showdown: captains get the game's controller, members Watch the TV. A phone in the middle of a solo game isn't pulled out; it gets a "Showdown on now" bar above the tabs instead, as every other page does while the showdown runs (Khai, 2026-11-24: his phone never switched). The TV's pages are left alone.
 
 ## Edge cases
 

@@ -91,6 +91,7 @@ export function toPublicEvent(e: EventConfig): PublicEvent {
     scoring: e.scoring,
     restartsPerDevice: e.restartsPerDevice,
     soloGamePoints: e.soloGamePoints,
+    donations: e.donations !== false,
     games: e.games.map((g) => ({
       id: g.id,
       type: g.type,

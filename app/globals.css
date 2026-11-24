@@ -244,3 +244,17 @@ body {
     opacity: 1;
   }
 }
+
+/*
+ * Tailwind v4 leaves buttons with the arrow cursor; anything tappable shows the
+ * hand, so the host can tell what's clickable in Controls (Khai, 2026-11-24).
+ */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  label[for],
+  summary,
+  select {
+    cursor: pointer;
+  }
+}

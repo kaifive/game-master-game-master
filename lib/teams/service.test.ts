@@ -22,7 +22,12 @@ import {
   type TeamDeps,
 } from "./service";
 
-const event: EventConfig = { ...holiday2026, scoring: "both", blockedNames: ["grinch"] };
+const event: EventConfig = {
+  ...holiday2026,
+  scoring: "both",
+  blockedNames: ["grinch"],
+  donations: true,
+};
 const SLUG = event.slug;
 let deps: TeamDeps;
 let clock = 1;
@@ -243,6 +248,24 @@ describe("teams", () => {
       team: null,
       isCaptain: false,
     });
+  });
+
+  it("S03-AC6: an event can turn giving points to teams off", async () => {
+    await makeCaptain(deps, event, id("Mai"));
+    await setPhase(deps, event, "team");
+    const team = (await teamsView(deps, event, null)).teams[0];
+    expect(
+      await failure(
+        donateToTeam(
+          deps,
+          { ...event, donations: false },
+          phone("Bao"),
+          id("Bao"),
+          team?.id ?? "",
+          5,
+        ),
+      ),
+    ).toEqual({ status: 403, message: "Giving points to a team is off for this party." });
   });
 
   it("S03-AC6: any player donates their own points to any team, not after the end", async () => {

@@ -77,20 +77,11 @@ test("S03-AC1 S03-AC2 S03-AC3 S03-AC6 S03-AC8 S29-AC1 S31-AC1: teams from captai
   await page.reload();
   await expect(page.getByRole("list", { name: "Teams" })).toContainText(player);
 
-  // A member gives the team some of the points the host gave them (S03-AC6).
-  await page.getByPlaceholder("Find a player").fill(player);
-  await page
-    .getByRole("list", { name: "Players" })
-    .getByRole("button", { name: new RegExp(player) })
-    .click();
-  await page.getByLabel("Points to add (negative to take away)").fill("40");
-  await page.getByRole("button", { name: "Change points" }).click();
-  await expect(page.getByRole("list", { name: "Players" })).toContainText("40");
+  // Giving points to a team is off for the party (S03-AC6; the giving itself is covered by
+  // the service and component tests).
   await mem.goto("/holiday-2026/team");
-  await mem.getByLabel("Points to give").fill("15");
-  await mem.getByRole("button", { name: "Give points" }).click();
-  await mem.getByRole("button", { name: "Yes, give 15" }).click();
-  await expect(mem.getByText(`You gave 15 to ${team}.`)).toBeVisible();
+  await expect(mem.getByText(`You're on`)).toBeVisible();
+  await expect(mem.getByRole("region", { name: "Give points to a team" })).toHaveCount(0);
 
   // The captain playing a team game (S03-AC5) is covered by the service tests: the party's
   // only team game, Team Trivia, is off (spec 23).

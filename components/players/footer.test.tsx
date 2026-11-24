@@ -20,6 +20,12 @@ const device = vi.hoisted(() => ({
   },
 }));
 vi.mock("./device", () => ({ useOptionalDevice: () => device.state }));
+// The teams view the footer polls: the phase, and whether this player captains a team.
+const teams = vi.hoisted(() => ({ view: {} }));
+vi.mock("@/lib/teams", async (real) => ({
+  ...(await real<Record<string, unknown>>()),
+  teamsApi: { view: () => Promise.resolve({ ok: true, data: teams.view }) },
+}));
 vi.mock("./player-sheet", () => ({
   PlayerSheet: ({ hasTeams }: { hasTeams: boolean }) => (
     <div role="dialog" aria-label="Player">
@@ -64,14 +70,33 @@ describe("PlayerFooter", () => {
     expect(screen.queryByRole("link", { name: /Team/ })).toBeNull();
   });
 
-  test("S03-AC3: events with teams get a Team tab; a game page still counts as Games", () => {
+  test("S03-AC3: the Team tab shows once the team phase starts; a game page still counts as Games", async () => {
     nav.path = "/holiday-2026/play/trivia";
+    teams.view = { phase: "individual", maxTeamSize: 4, teams: [], board: {}, mine: null };
+    const { unmount } = footer(true);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(screen.queryByRole("link", { name: /Team/ })).toBeNull();
+    unmount();
+    teams.view = { ...teams.view, phase: "team" };
     footer(true);
-    expect(screen.getByRole("link", { name: /Team/ })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: /Team/ })).toHaveAttribute(
       "href",
       "/holiday-2026/team",
     );
     expect(screen.getByRole("link", { name: /Games/ })).toHaveAttribute("aria-current", "page");
+  });
+
+  test("S03-AC2: a captain sees the Team tab before teams open, to set up their team", async () => {
+    nav.path = "/holiday-2026";
+    teams.view = {
+      phase: "individual",
+      maxTeamSize: 4,
+      teams: [],
+      board: {},
+      mine: { teamId: "t1", isCaptain: true, named: false },
+    };
+    footer(true);
+    expect(await screen.findByRole("link", { name: /Team/ })).toBeInTheDocument();
   });
 
   test("S08-AC14: asks before leaving a game in progress", async () => {

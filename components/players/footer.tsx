@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { BoardIcon, GamesIcon, TeamIcon, YouIcon } from "@/components/icons/nav";
+import { useTeams } from "@/components/teams/team-panel";
 import { cx } from "@/lib/ui";
 import { useOptionalDevice } from "./device";
 import { GuardedLink } from "./leave-guard";
@@ -40,6 +41,11 @@ export function PlayerFooter({ hasTeams }: { hasTeams: boolean }) {
   const device = useOptionalDevice();
   const path = usePathname();
   const [sheet, setSheet] = useState(false);
+  // Team shows once the team phase starts, or for a captain who has a team to set up (Khai, 2026-11-24).
+  const [teams] = useTeams(hasTeams ? (device?.slug ?? "") : "", device?.active?.id ?? null);
+  const showTeam =
+    hasTeams &&
+    (teams?.phase === "team" || teams?.mine?.isCaptain === true || path.endsWith("/team"));
   if (!device?.active) return null;
   const hub = `/${device.slug}`;
   const board = `${hub}/leaderboard`;
@@ -60,7 +66,7 @@ export function PlayerFooter({ hasTeams }: { hasTeams: boolean }) {
             current={path === hub || path.startsWith(`${hub}/play`)}
           />
           <Tab href={board} label="Leaderboard" icon={<BoardIcon />} current={path === board} />
-          {hasTeams && <Tab href={team} label="Team" icon={<TeamIcon />} current={path === team} />}
+          {showTeam && <Tab href={team} label="Team" icon={<TeamIcon />} current={path === team} />}
           <button
             type="button"
             aria-haspopup="dialog"
