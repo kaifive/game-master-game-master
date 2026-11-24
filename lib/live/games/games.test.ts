@@ -98,7 +98,7 @@ describe("Fly-by Count", () => {
 });
 
 describe("Snow Sum", () => {
-  it("S25-AC2: deals harder seeded sums each round in range, takes one total in the window, and scores up to 50 a round on how close", () => {
+  it("S25-AC2: deals seeded sums in range, adding only, then taking away, then doubling, takes one total in the window, and scores up to 50 a round on how close", () => {
     for (let seed = 1; seed < 300; seed++) {
       const flakes = dealFlakes(seed, 8, ["add", "sub", "double"]);
       let total = 0;
@@ -109,8 +109,16 @@ describe("Snow Sum", () => {
       }
     }
     const lengths = [1, 2, 3].map((r) => play<SnowState>(snowsum, {}, r).state.flakes.length);
-    expect(lengths).toEqual([5, 7, 8]);
-    expect(play<SnowState>(snowsum, {}, 1).state.flakes.every((f) => f.op !== "double")).toBe(true);
+    expect(lengths).toEqual([5, 6, 6]);
+    // Round 1 only adds; round 2 takes away too; round 3 doubles too (Khai, 2026-11-24).
+    for (const seed of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+      const ops = (r: number) =>
+        play<SnowState>(snowsum, {}, r, seed).state.flakes.map((f) => f.op);
+      expect(ops(1).every((o) => o === "add")).toBe(true);
+      expect(ops(2)).toContain("sub");
+      expect(ops(2)).not.toContain("double");
+      expect(ops(3)).toContain("double");
+    }
     const g = play<SnowState>(snowsum, {}, 3, 11);
     expect(g.state.total).toBe(sum(g.state.flakes));
     expect(g.view(g.state, cap("t1"), false)).toMatchObject({ flakes: null, total: null });

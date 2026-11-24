@@ -89,10 +89,11 @@ export type Flake = { op: SnowOp; n: number };
 export const SNOW_MIN = -50;
 export const SNOW_MAX = 200;
 
+/** Round 1 only adds, round 2 takes away too, round 3 doubles too (Khai, 2026-11-24). */
 export const SNOW_ROUNDS = [
-  { flakes: 5, ops: ["add", "sub"] as SnowOp[] },
-  { flakes: 7, ops: ["add", "sub"] as SnowOp[] },
-  { flakes: 8, ops: ["add", "sub", "double"] as SnowOp[] },
+  { flakes: 5, ops: ["add"] as SnowOp[] },
+  { flakes: 6, ops: ["add", "sub"] as SnowOp[] },
+  { flakes: 6, ops: ["add", "sub", "double"] as SnowOp[] },
 ];
 
 export const apply = (total: number, f: Flake) =>
@@ -114,6 +115,9 @@ export function dealFlakes(seed: number, flakes: number, ops: readonly SnowOp[])
       list[Math.floor(random() * list.length)] ?? "add";
     // Taking away from nothing is no fun to count, so at 0 or below it adds.
     let op = total <= 0 ? "add" : pick(allowed.length > 0 ? allowed : ["add"]);
+    // A round that teaches an operation shows it at least once, near the end at the latest.
+    const missing = ops.find((o) => o !== "add" && !out.some((f) => f.op === o));
+    if (missing && i >= flakes - 2 && total > 0 && allowed.includes(missing)) op = missing;
     let n =
       op === "add" ? 1 + Math.floor(random() * 9) : op === "sub" ? 1 + Math.floor(random() * 5) : 2;
     if (apply(total, { op, n }) < SNOW_MIN) op = "add";
