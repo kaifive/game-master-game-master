@@ -48,6 +48,8 @@ export function PlayerFooter({ hasTeams }: { hasTeams: boolean }) {
     (teams?.phase === "team" || teams?.mine?.isCaptain === true || path.endsWith("/team"));
   if (!device?.active) return null;
   const hub = `/${device.slug}`;
+  // The TV display is the room's screen, not a phone: no tabs there (Khai, 2026-11-24).
+  if (path.startsWith(`${hub}/display`)) return null;
   const board = `${hub}/leaderboard`;
   const team = `${hub}/team`;
 

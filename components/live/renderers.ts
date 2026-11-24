@@ -10,7 +10,7 @@ import type { LiveRenderer } from "./types";
 /** Each showdown type's TV view, phone controller and demo (specs 25 to 27). */
 /** What someone in the room calls out in each game's demo, under the drawn TV (Khai, 2026-11-24). */
 const SAYS: Readonly<Record<string, string>> = {
-  flyby: "7!",
+  flyby: "5!",
   snowsum: "12!",
   blindstop: "Stop!",
   lastsecond: "Not yet… now!",

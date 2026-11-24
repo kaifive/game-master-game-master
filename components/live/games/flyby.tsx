@@ -216,7 +216,7 @@ function Controller({ view, game, serverNow, revealed, send, busy }: LiveControl
   );
 }
 
-/** Five presents drift across, then the count pops up (S24-AC4). */
+/** Five presents drift across; someone in the room calls out the count (S24-AC4). */
 function Demo({ still }: { still: boolean }) {
   return (
     <div className="relative grid h-full w-full place-items-center overflow-hidden text-[clamp(1.6rem,6vh,4rem)]">
@@ -234,14 +234,6 @@ function Demo({ still }: { still: boolean }) {
           />
         ))}
       </div>
-      <span
-        className={cx(
-          "absolute right-[8%] bottom-[8%] rounded-gm bg-gm-tile-present px-[0.4em] font-gm-display font-bold text-gm-tile-present-ink shadow-md",
-          !still && "motion-safe:animate-[gm-demo-answer_5s_linear_infinite]",
-        )}
-      >
-        5
-      </span>
     </div>
   );
 }
