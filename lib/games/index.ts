@@ -56,13 +56,11 @@ export {
 } from "./perception/games";
 export {
   colorCore,
-  colorcountCore,
   flybyCore,
   nearCloseness,
   SHOWDOWN_ONLY_CORES,
   snowsumCore,
   SOLO_ONLY_CORES,
-  type ColorCountTask,
   type ColorTask,
   type FlybyTask,
   type SnowSumTask,
@@ -70,12 +68,10 @@ export {
 export { FEEDBACK_MS, type SoloView as PerceptionSoloView } from "./perception/solo";
 export {
   apply,
-  COLOR_ROUNDS,
   dealFlakes,
-  dealFlashes,
   dealFormation,
   FLYBY_ROUNDS,
-  ORNAMENT_COLORS,
+  PRESENT_KINDS,
   runningTotals,
   SNOW_MAX,
   SNOW_MIN,
@@ -83,9 +79,8 @@ export {
   SNOW_ROUNDS,
   sum,
   type Flake,
-  type Flash,
   type FlybyRound,
+  type PresentKind,
   type Formation,
-  type OrnamentColor,
   type SnowOp,
 } from "./counts";

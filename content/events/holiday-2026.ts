@@ -273,7 +273,6 @@ export const holiday2026: EventConfig = {
       [
         ["flyby", "Fly-by Count"],
         ["snowsum", "Snow Sum"],
-        ["colorcount", "Color Count"],
         ["blindstop", "Blind Stop"],
         ["lastsecond", "Last Second"],
         ["auction", "Auction"],
@@ -333,7 +332,6 @@ export const holiday2026: EventConfig = {
       [
         ["flyby", "Fly-by Count"],
         ["snowsum", "Snow Sum"],
-        ["colorcount", "Color Count"],
       ] as const
     ).map(([type, title]) => ({
       id: `${type}-solo`,

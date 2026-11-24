@@ -68,7 +68,16 @@ export function perceptionSolo<T, A>(
     content: z.object({}).strict(),
     instructions: () => ({ title: "How to play", lines: core.instructions }),
     create: (_c, seed, { now }) => ({
-      tasks: LEVELS.map((level) => core.deal((seed + Math.imul(level, 0x9e3779b1)) >>> 0, level)),
+      tasks: LEVELS.reduce<T[]>((dealt, level) => {
+        const base = (seed + Math.imul(level, 0x9e3779b1)) >>> 0;
+        let task = core.deal(base, level);
+        // Never the same answer as the round before (Khai, 2026-11-24).
+        const last = dealt.at(-1);
+        const key = core.answerKey;
+        for (let i = 1; key && last && key(task) === key(last) && i < 20; i++)
+          task = core.deal(base + i, level);
+        return [...dealt, task];
+      }, []),
       at: 0,
       startedAt: now,
       answers: [],

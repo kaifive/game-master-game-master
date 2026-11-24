@@ -3,14 +3,7 @@ import { toHsv } from "../color/logic";
 import { dealFormation, FLYBY_ROUNDS } from "../counts";
 import { gameLogic } from "../registry";
 import { LEVELS } from "./core";
-import {
-  colorCore,
-  colorcountCore,
-  flybyCore,
-  nearCloseness,
-  snowsumCore,
-  type FlybyTask,
-} from "./counts";
+import { colorCore, flybyCore, nearCloseness, snowsumCore, type FlybyTask } from "./counts";
 
 const T0 = 1_000_000;
 const rgb = (hex: string): [number, number, number] =>
@@ -35,11 +28,11 @@ describe("Color Matcher as a showdown (spec 30)", () => {
 });
 
 describe("the counting games solo (spec 30)", () => {
-  it("S30-AC2: Fly-by Count, Snow Sum and Color Count each run solo: three rounds at the showdown's levels, scored by its own rule", () => {
+  it("S30-AC2: Fly-by Count and Snow Sum each run solo: three rounds at the showdown's levels, scored by its own rule", () => {
     expect(nearCloseness(12, 12)).toBe(1);
     expect(nearCloseness(11, 12)).toBe(0.5);
     expect(nearCloseness(10, 12)).toBe(0);
-    for (const type of ["flyby", "snowsum", "colorcount"]) {
+    for (const type of ["flyby", "snowsum"]) {
       const logic = gameLogic(type);
       if (!logic) throw new Error(type);
       const c = logic.content.parse({});
@@ -54,9 +47,17 @@ describe("the counting games solo (spec 30)", () => {
     const snow = snowsumCore.deal(4, 3);
     expect(snowsumCore.closeness(snow, snow.total + 1)).toBe(0.5);
     expect(snowsumCore.valid(snow, -51)).toBe(false);
-    const cc = colorcountCore.deal(4, 2);
-    expect(colorcountCore.closeness(cc, cc.truth)).toBe(1);
-    expect(colorcountCore.closeness(cc, cc.truth * 3)).toBe(0);
+    // Fly-by's later rounds ask about one kind of present.
+    const kind = flybyCore.deal(4, 3);
+    expect(kind.ask).not.toBeNull();
+    expect(flybyCore.truth(kind)).toMatch(/^\d+ (red|white|green) presents$/);
+    // A solo run never repeats an answer round to round.
+    const solo = gameLogic("flyby");
+    for (let seed = 1; seed <= 60; seed++) {
+      const tasks = (solo?.create({}, seed, { now: T0 }) as { tasks: FlybyTask[] }).tasks;
+      expect(tasks[1]?.count).not.toBe(tasks[0]?.count);
+      expect(tasks[2]?.count).not.toBe(tasks[1]?.count);
+    }
   });
 
   it("S30-AC2: points are the game's points times the average closeness; no answer counts 0", () => {
@@ -80,13 +81,14 @@ describe("the counting games solo (spec 30)", () => {
   it("S30-AC3: nothing that gives the answer away shows outside the show", () => {
     const fly = flybyCore.deal(1, 1);
     expect(flybyCore.scene(fly, "show")).toMatchObject({ cells: fly.cells });
-    expect(flybyCore.scene(fly, "answer")).toBeNull();
-    expect(flybyCore.scene(fly, "reveal")).toEqual({ count: fly.count });
+    expect(flybyCore.scene(fly, "answer")).toEqual({ ask: null });
+    expect(flybyCore.scene(fly, "reveal")).toEqual({ count: fly.count, ask: null });
     const snow = snowsumCore.deal(1, 1);
     expect(snowsumCore.scene(snow, "answer")).toBeNull();
-    const cc = colorcountCore.deal(1, 1);
-    expect(colorcountCore.scene(cc, "show")).toMatchObject({ ask: null });
-    expect(colorcountCore.scene(cc, "answer")).toEqual({ flashes: null, ask: cc.ask });
+    // Which kind Fly-by asks about comes only after the show.
+    const later = flybyCore.deal(2, 2);
+    expect(flybyCore.scene(later, "show")).not.toHaveProperty("ask");
+    expect(flybyCore.scene(later, "answer")).toEqual({ ask: later.ask });
     const solo = gameLogic("snowsum");
     if (!solo) throw new Error("snowsum");
     const c = solo.content.parse({});

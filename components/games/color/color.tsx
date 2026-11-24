@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { useSlots } from "@/components/slots/registry";
+import { useAutoSubmit } from "../auto-submit";
 import { hsvToRgb, toHex, type ColorView } from "@/lib/games";
 import type { GameRendererProps } from "../types";
 
@@ -25,12 +26,29 @@ const WHEEL =
  * The color wheel, brightness slider and swatch, with Lock in: solo Color
  * Matcher (spec 18) and the captain's phone in its showdown (spec 30).
  */
-export function ColorWheel({ busy, onLock }: { busy: boolean; onLock: (hex: string) => void }) {
+export function ColorWheel({
+  busy,
+  onLock,
+  closesIn,
+}: {
+  busy: boolean;
+  onLock: (hex: string) => void;
+  /** Time left to answer, in ms: a color that's been picked is sent as it runs out. */
+  closesIn?: number;
+}) {
   const { Button } = useSlots();
   const id = useId();
-  const [hsv, setHsv] = useState<Hsv>({ h: 0, s: 0, v: 0.75 });
+  const [hsv, setHsvNow] = useState<Hsv>({ h: 0, s: 0, v: 0.75 });
+  const [touched, setTouched] = useState(false);
+  const setHsv = (next: Hsv | ((c: Hsv) => Hsv)) => {
+    setHsvNow(next);
+    setTouched(true);
+  };
   const [dragging, setDragging] = useState(false);
   const hex = toHex(hsvToRgb(hsv));
+  useAutoSubmit(closesIn, touched && !busy, () => {
+    onLock(hex);
+  });
   const pick = (e: React.PointerEvent<HTMLDivElement>) => {
     const box = e.currentTarget.getBoundingClientRect();
     const at = wheelPick((e.clientX - box.left) / box.width, (e.clientY - box.top) / box.height);

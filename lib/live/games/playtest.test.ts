@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import type { AnyShowdown, Role } from "../model";
 import { PLAYTEST_TEAM_COUNTS, playtest, type Bot, type BotContext } from "../playtest";
 import { blindstop, EXACT_BONUS } from "./blindstop";
-import { colorcount } from "./colorcount";
 import { flyby } from "./flyby";
 import { lastsecond } from "./lastsecond";
 import { snowsum } from "./snowsum";
@@ -132,12 +131,10 @@ type Case = {
 const ranked = [0, 10, 30, 50, 70, 100];
 const flybyTruth: Truth = (p) => (p as { count: number }).count;
 const snowTruth: Truth = (p) => (p as { total: number }).total;
-const colorTruth: Truth = (p) => (p as { truth: number }).truth;
 
 const CASES: Case[] = [
   { name: "Fly-by Count", game: flyby, bots: countBots(flybyTruth, 30), allowed: [0, 50, 100] },
   { name: "Snow Sum", game: snowsum, bots: countBots(snowTruth, 60), allowed: [0, 50, 100] },
-  { name: "Color Count", game: colorcount, bots: countBots(colorTruth, 20), allowed: ranked },
   {
     name: "Blind Stop",
     game: blindstop,

@@ -14,10 +14,10 @@ const teams = [
 ];
 
 /** A real round of a showdown, and what a role sees of it at `now`. */
-function round(type: string, moves: [string, unknown, number][] = []) {
+function round(type: string, moves: [string, unknown, number][] = [], content: unknown = {}) {
   const game = showdownFor(type);
   if (!game) throw new Error(type);
-  const c = game.content.parse({});
+  const c = game.content.parse(content);
   let state = game.deal(c, { seed: 4, round: 1, teams: ["t1", "t2"], startsAt: T0, prev: null });
   for (const [teamId, move, at] of moves) {
     const r = game.move(state, c, { teamId, move, now: at });
@@ -150,22 +150,26 @@ describe("count showdowns on the phone and TV (spec 25)", () => {
     ).toBeInTheDocument();
   });
 
-  test("S25-AC3: Color Count keeps the color secret on the phone until the ornaments are done", () => {
-    const r = round("colorcount");
+  // A round of three kinds of present, as Fly-by's later rounds are.
+  const byKind = { rounds: [{ min: 10, max: 14, ms: 3000, cols: 6, rows: 3, kinds: 3 }] };
+
+  test("S25-AC3: by kind, the phone says to count every kind and keeps which one secret until they've flown past", () => {
+    const r = round("flyby", [], byKind);
     const end = r.s.showEndsAt ?? 0;
-    phone("colorcount", r.view(cap, end - 50), end - 50);
-    expect(screen.getByText("Watch the ornaments!")).toBeInTheDocument();
+    phone("flyby", r.view(cap, end - 50), end - 50);
+    expect(
+      screen.getByText("Count every kind: you'll find out which one at the end."),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/How many/)).toBeNull();
   });
 
-  test("S25-AC3: after the flashes the phone asks how many of one color, with the ornament beside it", () => {
-    const r = round("colorcount");
+  test("S25-AC3: after the fly-by the phone asks how many of one kind, with that present beside it", () => {
+    const r = round("flyby", [], byKind);
     const end = (r.s.showEndsAt ?? 0) + 10;
-    phone("colorcount", r.view(cap, end), end);
+    phone("flyby", r.view(cap, end), end);
     const ask = (r.state as { ask: number }).ask;
-    const color = ["red", "green", "blue", "gold", "purple"][ask] ?? "";
-    expect(screen.getByText(/How many/)).toBeInTheDocument();
-    expect(screen.getAllByRole("img", { name: `${color} ornament` }).length).toBeGreaterThan(0);
+    const kind = ["red", "white", "green"][ask] ?? "";
+    expect(screen.getByText(`${kind} presents?`)).toBeInTheDocument();
   });
 });
 

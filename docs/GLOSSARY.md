@@ -38,7 +38,7 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Live session** | A game the admin runs for the whole room at once, such as Jeopardy. | `LiveSession` |
 | **Round** | One question or prompt inside a live session. Opened, buzzed, judged, closed. | `Round` |
 | **Buzz** | A captain pressing the buzzer during an open round. Stamped with server time. | `Buzz` |
-| **Showdown** | A team game on the TV with each captain's phone as the controller: Fly-by Count, Memory Path, Blind Stop, Land Mass, Present Shuffle, Auction, Snowball to 21, Stocking Stuffer, Snow Sum, Share or Snatch, Last Second, Color Count (spec 24). | `flyby`, `path`, `blindstop`, `landmass`, `shuffle`, `auction`, `to21`, `stockings`, `snowsum`, `snatch`, `lastsecond`, `colorcount` |
+| **Showdown** | A team game on the TV with each captain's phone as the controller: Fly-by Count, Memory Path, Blind Stop, Land Mass, Present Shuffle, Auction, Snowball to 21, Stocking Stuffer, Snow Sum, Share or Snatch, Last Second and more (spec 24, `docs/GAMES.md`). | `flyby`, `path`, `blindstop`, `landmass`, `shuffle`, `auction`, `to21`, `stockings`, `snowsum`, `snatch`, `lastsecond` |
 | **Who's played** | The host's list in Controls of each team's people (joined players plus names added by hand), marked once they've played a showdown turn, so nobody goes again until everyone has. Kept for the whole event (ADR-038). | `played`, `Played` |
 | **Showdown screen** | The TV screen that shows showdowns, which the host switches to and from like the leaderboard (ADR-038). | `screen: "showdown"` |
 | **Judge** | The admin marking a buzz right or wrong. | `judge()` |

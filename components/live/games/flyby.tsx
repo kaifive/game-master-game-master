@@ -1,6 +1,7 @@
 "use client";
 
 import { GiftWrap, type Wrap } from "@/components/games/gift";
+import { PRESENT_KINDS } from "@/lib/games";
 import type { FlybyView } from "@/lib/live";
 import { cx } from "@/lib/ui";
 import type { LiveControllerProps, LiveRenderer, LiveTvProps } from "../types";
@@ -23,17 +24,42 @@ const WRAPS: Wrap[] = [
   { paper: "var(--gm-team-4)", ribbon: "var(--gm-tile-present)", bow: "var(--gm-tile-present)" },
 ];
 
-/** One present, sized by its grid square. */
+/**
+ * One present, sized by its grid square: red with a gold bow, white with a red
+ * ribbon, or green with white stripes. Fly-by Count asks about these kinds by
+ * name, and each has a mark besides its color (PRESENT_KINDS).
+ */
 export function Present({ i, className }: { i: number; className?: string }) {
-  const wrap = WRAPS[i % WRAPS.length] ?? WRAPS[0];
+  const kind = i % WRAPS.length;
+  const wrap = WRAPS[kind] ?? WRAPS[0];
   if (!wrap) return null;
   return (
     <span
       aria-hidden="true"
-      className={cx("relative block aspect-square rounded-[0.15em] shadow-md", className)}
-      style={{ background: wrap.paper }}
+      className={cx(
+        "relative block aspect-square overflow-hidden rounded-[0.15em] shadow-md",
+        className,
+      )}
+      style={{
+        background:
+          kind === 2
+            ? `repeating-linear-gradient(135deg, ${wrap.paper} 0 0.18em, var(--gm-tile-present) 0.18em 0.26em)`
+            : wrap.paper,
+      }}
     >
       <GiftWrap wrap={wrap} />
+    </span>
+  );
+}
+
+/** "How many presents?", or "How many [present] red presents?" once it's asked. */
+export function PresentAsk({ ask, size }: { ask: number | null; size: "tv" | "phone" }) {
+  if (ask === null) return <>How many presents?</>;
+  return (
+    <span className="inline-flex flex-wrap items-center justify-center gap-[0.3em]">
+      How many
+      <Present i={ask} className={size === "tv" ? "w-[1.2em]" : "w-9"} />
+      <strong>{PRESENT_KINDS[ask] ?? ""} presents?</strong>
     </span>
   );
 }
@@ -58,11 +84,12 @@ function Formation({ fly, numbered = false }: { fly: Fly; numbered?: boolean }) 
         >
           {Array.from({ length: fly.cols }, (_, col) => {
             const at = fly.cells.findIndex(([r, c]) => r === row && c === col);
+            const kind = fly.cells[at]?.[2] ?? 0;
             return at === -1 ? (
               <span key={col} />
             ) : (
               <span key={col} className="relative">
-                <Present i={row + col} />
+                <Present i={kind} />
                 {numbered && (
                   <span className="absolute inset-0 grid place-items-center font-gm-display text-[0.9em] font-bold text-gm-tile-present-ink">
                     <span className="rounded-[0.2em] bg-gm-tile-present px-[0.15em]">{at + 1}</span>
@@ -95,12 +122,14 @@ export function FlyingPresents({
     <div
       role="img"
       aria-label="Presents flying past"
-      className={cx("[container-type:inline-size] relative overflow-hidden", className)}
+      className={cx("[container-type:size] relative overflow-hidden", className)}
     >
       <div
         className="absolute top-1/2 left-0 w-max will-change-transform"
         style={{
           transform: `translate(calc(100cqw - ${String(p * 100)}cqw - ${String(p * 100)}%), -50%)`,
+          // Each row is a present and a gap, about 3em: every row fits the height (Khai, 2026-11-24).
+          fontSize: `min(1em, ${String(Math.floor(9000 / (fly.rows * 3.3)) / 100)}cqh)`,
         }}
       >
         <Formation fly={fly} />
@@ -117,7 +146,8 @@ function Tv({ view, game, serverNow, revealed }: LiveTvProps) {
     return (
       <div className="grid gap-[3vh]">
         <p className="m-0 text-center font-gm-display text-[clamp(2rem,6vh,4.5rem)] font-bold">
-          There were <span className="text-gm-tile-correct">{g.count}</span> presents
+          There were <span className="text-gm-tile-correct">{g.count}</span>
+          {g.ask !== null ? ` ${PRESENT_KINDS[g.ask] ?? ""}` : ""} presents
         </p>
         <Reveal
           view={view}
@@ -135,7 +165,13 @@ function Tv({ view, game, serverNow, revealed }: LiveTvProps) {
       </div>
     );
   if (now < g.startsAt)
-    return <GetReady startsAt={g.startsAt} now={now} line="Count the presents!" />;
+    return (
+      <GetReady
+        startsAt={g.startsAt}
+        now={now}
+        line={g.byKind ? "Count every kind of present!" : "Count the presents!"}
+      />
+    );
   if (now < g.showEndsAt && g.fly) {
     return (
       <FlyingPresents
@@ -148,7 +184,7 @@ function Tv({ view, game, serverNow, revealed }: LiveTvProps) {
   return (
     <div className="grid gap-[3vh]">
       <p className="m-0 text-center font-gm-display text-[clamp(2.4rem,8vh,6rem)] font-bold">
-        How many presents?
+        <PresentAsk ask={g.ask} size="tv" />
       </p>
       <TimeLeft closesAt={g.closesAt} now={now} total={g.closesAt - g.showEndsAt} />
       <LockedIn view={view} locked={g.lockedIn} />
@@ -164,11 +200,19 @@ function Controller({ view, game, serverNow, revealed, send, busy }: LiveControl
   if (now < g.showEndsAt)
     return (
       <PhoneNote title="Watch the TV and count!">
-        Type your number when they&apos;ve flown by.
+        {g.byKind
+          ? "Count every kind: you'll find out which one at the end."
+          : "Type your number when they've flown by."}
       </PhoneNote>
     );
   return (
-    <NumberPad prompt="How many presents flew by?" window={g} now={now} send={send} busy={busy} />
+    <NumberPad
+      prompt={<PresentAsk ask={g.ask} size="phone" />}
+      window={g}
+      now={now}
+      send={send}
+      busy={busy}
+    />
   );
 }
 

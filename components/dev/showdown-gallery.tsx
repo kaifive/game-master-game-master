@@ -249,7 +249,7 @@ const SCRIPTS: Record<string, Script> = {
 };
 
 /** Plays the round up to the moment, with made-up answers from a few teams. */
-function freeze(type: string, moment: GalleryMoment, n: number) {
+function freeze(type: string, moment: GalleryMoment, n: number, round = 1) {
   const game = showdownFor(type);
   if (!game) return null;
   const m: Machine = { game, content: game.content.parse(CONTENT[type] ?? {}) };
@@ -274,6 +274,8 @@ function freeze(type: string, moment: GalleryMoment, n: number) {
   });
   if (moment === "intro") return { m, s: fresh, now: T0 };
   let s = step(fresh, T0);
+  // A later round: step through the ones before it at the same moment, so it starts as round 1 would.
+  while (s.round < round && s.step !== "final") s = step(s, T0);
   const startsAt = T0 + START_LEAD_MS;
   const script = SCRIPTS[type]?.(s.state, n);
   if (script) {
@@ -379,7 +381,6 @@ function freeze(type: string, moment: GalleryMoment, n: number) {
 export const TITLES: Record<string, string> = {
   flyby: "Fly-by Count",
   snowsum: "Snow Sum",
-  colorcount: "Color Count",
   blindstop: "Blind Stop",
   lastsecond: "Last Second",
   auction: "Auction",
@@ -403,13 +404,16 @@ export function ShowdownTvFrame({
   type,
   moment,
   teamCount = 4,
+  round = 1,
 }: {
   type: string;
   moment: GalleryMoment;
   teamCount?: number;
+  /** Which round to show (1 by default). */
+  round?: number;
 }) {
   const { Banner } = useSlots();
-  const frozen = freeze(type, moment, teamCount);
+  const frozen = freeze(type, moment, teamCount, round);
   if (!frozen) return <p>Unknown showdown {type}</p>;
   const view = liveView(frozen.m, frozen.s, { kind: "tv" }, frozen.now) as ActiveLiveView;
   const totals = view.teams.map((t, i) => ({
@@ -435,14 +439,16 @@ export function ShowdownPhoneFrame({
   moment,
   teamCount = 4,
   as,
+  round = 1,
 }: {
   type: string;
   moment: GalleryMoment;
   teamCount?: number;
   /** Whose phone to show; by default team 4 on the answer moment, else team 1. */
   as?: string | undefined;
+  round?: number;
 }) {
-  const frozen = freeze(type, moment, teamCount);
+  const frozen = freeze(type, moment, teamCount, round);
   if (!frozen) return <p>Unknown showdown {type}</p>;
   const captain = as ?? (moment === "answer" ? "t4" : "t1");
   const view = liveView(frozen.m, frozen.s, { kind: "captain", teamId: captain }, frozen.now);

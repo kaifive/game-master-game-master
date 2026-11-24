@@ -13,10 +13,9 @@ captains' phones (`mode: "live"`). A game with both can run either way (ADR-040)
 | Blind Stop | `blindstop` | showdown | stop a clock at exactly 10.00 after it hides behind a question mark. |
 | Block Fit | `blocks` | solo | Drag and turn pieces to fill a board exactly; can rebuild a photo. |
 | Buzzer Round | `buzzer` | showdown | The host reads a question; captains buzz when it goes green, and answer out loud in buzz order. |
-| Color Count | `colorcount` | solo, showdown | Ornaments flash up, then it asks how many of one color there were. |
 | Color Matcher | `color` | solo, showdown | Match a color on a color wheel: one from memory solo, or one flashed on the TV as a showdown. |
 | Cut the Ribbon | `ribbon` | solo, showdown | Tap where to cut a ribbon, like one third of the way along, with no marks to help. |
-| Fly-by Count | `flyby` | solo, showdown | Presents fly past; count them. Exactly right scores full points, one off half. |
+| Fly-by Count | `flyby` | solo, showdown | Presents fly past: count them all, then only one kind, asked after they've gone. |
 | Geocache | `cache` | solo | Find codes hidden around the venue and type them in for points. |
 | Guessing Jar | `jar` | solo | One guess at how many things are in a real jar; the host reveals the count. |
 | Land Mass | `landmass` | showdown | teams take turns placing block pieces on one board; the most land wins. |

@@ -1,7 +1,6 @@
 import {
   auction,
   blindstop,
-  colorcount,
   flyby,
   landmass,
   buzzer,
@@ -24,7 +23,6 @@ import type { AnyShowdown } from "./model";
 const SHOWDOWNS: Record<string, AnyShowdown> = {
   flyby,
   snowsum,
-  colorcount,
   blindstop,
   lastsecond,
   auction,
