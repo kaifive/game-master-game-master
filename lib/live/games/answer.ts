@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { MoveResult } from "../model";
+import { LATE_MS, type MoveResult } from "../model";
 
 /**
  * The answer window shared by the counting showdowns (spec 25): the TV shows
@@ -44,7 +44,8 @@ export function lockIn<S extends AnswerWindow>(
   if (!parsed.success) return { ok: false, message: "Type a whole number." };
   const { answer } = parsed.data;
   if (now < s.showEndsAt) return { ok: false, message: "Watch the TV first!" };
-  if (now > s.closesAt) return { ok: false, message: "Time's up." };
+  // Sent as the time ran out, it may land a moment after (LATE_MS).
+  if (now > s.closesAt + LATE_MS) return { ok: false, message: "Time's up." };
   if (s.answers[teamId] !== undefined) return { ok: false, message: "You've locked in." };
   if (answer < range.min || answer > range.max)
     return {

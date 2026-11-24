@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { AnyShowdown, MoveResult } from "../model";
+import { LATE_MS, type AnyShowdown, type MoveResult } from "../model";
 import { ANSWER_MS } from "./answer";
 import { blindstop, EXACT_BONUS } from "./blindstop";
 import { flyby, FLYBY_ROUNDS, type FlybyState } from "./flyby";
@@ -73,7 +73,9 @@ describe("Fly-by Count", () => {
     s = g.step(s, "t2", { answer: n + 1 }, shown + 20);
     s = g.step(s, "t3", { answer: n - 2 }, shown + 30);
     expect(g.refuse(s, "t1", { answer: 3 }, shown + 40)).toBe("You've locked in.");
-    expect(g.refuse(s, "t4", { answer: 3 }, shown + ANSWER_MS + 1)).toBe("Time's up.");
+    // One sent as the time ran out may land a moment late (LATE_MS); after that, no.
+    expect(g.refuse(s, "t4", { answer: 3 }, shown + ANSWER_MS + LATE_MS - 1)).toBe("accepted");
+    expect(g.refuse(s, "t4", { answer: 3 }, shown + ANSWER_MS + LATE_MS + 1)).toBe("Time's up.");
     expect(g.refuse(s, "t4", { answer: 100 }, shown + 50)).toMatch(/from 0 to 99/);
     expect(g.refuse(s, "t4", { answer: 2.5 }, shown + 50)).toBe("Type a whole number.");
     // Other teams' answers stay hidden from a phone until the reveal.

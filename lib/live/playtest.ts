@@ -142,6 +142,12 @@ export function playtest(
     while (playing.step === "play" && now < roundEnds) {
       const ticked = tick(m, playing, now);
       if (ticked.ok && ticked.session) playing = ticked.session;
+      // A round with nothing left to wait for closes by itself (spec 24).
+      if (ticked.ok && ticked.award) {
+        result.rounds.push(ticked.award.points);
+        result.finals.push(ticked.session?.state);
+        break;
+      }
       checkLeaks(playing);
       const turn = m.game.turn?.(playing.state, m.content, now) ?? null;
       if (turn && order[order.length - 1] !== turn.teamId) order.push(turn.teamId);
@@ -162,7 +168,7 @@ export function playtest(
       now += stepMs;
     }
     if (order.length > 0) result.turnOrders.push(order);
-    s = hostNext(playing); // play → results
+    s = hostNext(playing); // play → results, or on from the results it closed to
   }
   result.ended = s === null;
   for (const r of result.rounds)

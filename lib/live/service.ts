@@ -115,11 +115,22 @@ async function current(deps: LiveDeps, event: EventConfig): Promise<LiveState> {
   if (!m || !state.session || state.session.step !== "play") return state;
   const ticked = machineTick(m, state.session, deps.now());
   if (!ticked.ok || ticked.session === state.session) return state;
-  return deps.live.update(event.slug, (latest) => {
+  // What this read wrote, if it won: a round it closed pays its points, once.
+  const box: { before: Session | null; outcome: Outcome | null } = { before: null, outcome: null };
+  const after = await deps.live.update(event.slug, (latest) => {
+    box.before = null;
+    box.outcome = null;
     if (!latest.session || latest.session.revision !== state.session?.revision) return null;
     const again = machineTick(m, latest.session, deps.now());
-    return again.ok ? { ...latest, session: again.session } : null;
+    if (!again.ok) return null;
+    box.before = latest.session;
+    box.outcome = again;
+    return withFinished({ ...latest, session: again.session }, again.session);
   });
+  const { before, outcome } = box;
+  if (before && outcome?.ok && after.session?.revision === outcome.session?.revision)
+    await pay(deps, event.slug, before, outcome);
+  return after;
 }
 
 type SummaryTeam = TeamsSummary["teams"][number];

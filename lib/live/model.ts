@@ -126,4 +126,11 @@ export const defineShowdown = <C, S>(g: ShowdownGame<C, S>): AnyShowdown =>
   g as unknown as AnyShowdown;
 
 /** How far ahead a round's shared start is set, so every device has it in hand (S11-AC5). */
-export const START_LEAD_MS = 2000;
+export const START_LEAD_MS = 3000;
+
+/**
+ * How long after a round's time is up an answer sent just before it can
+ * still arrive: the server takes it, and the round closes only after (Khai,
+ * 2026-11-24: phones send what's on them as time runs out).
+ */
+export const LATE_MS = 1000;
