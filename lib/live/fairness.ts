@@ -19,3 +19,15 @@ export function leadCounts(orders: readonly (readonly string[])[]): Record<strin
   }
   return counts;
 }
+
+/** Fewest rounds a turn showdown plays, each harder than the last (Khai, 2026-11-24). */
+export const MIN_TURN_ROUNDS = 3;
+
+/**
+ * Rounds for a turn showdown: at least three, in whole laps of the table so
+ * every team leads equally often (S24-AC6). Two teams play 4, three play 3.
+ */
+export const lapRounds = (teams: number) => {
+  const n = Math.max(1, teams);
+  return n * Math.ceil(MIN_TURN_ROUNDS / n);
+};

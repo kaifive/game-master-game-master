@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { seededRandom } from "@/lib/games";
-import { leadOrder } from "../fairness";
+import { lapRounds, leadOrder } from "../fairness";
 import { defineShowdown, type Role, type ShowdownGame, type TurnInfo } from "../model";
 import { roundShare } from "./scoring";
 
@@ -112,7 +112,7 @@ export type PathState = {
   stepMs: number;
   /** Which team in `order` is crossing; order.length once everyone has gone. */
   at: number;
-  /** Squares the crossing team has got right. */
+  /** Squares the crossing team has got right, counting the start square it's given. */
   progress: number;
   stepEndsAt: number;
   /** The most squares any team got right before going out: lit for the rest. */
@@ -124,6 +124,18 @@ export type PathState = {
 
 const crossing = (s: PathState) => (s.winner === null ? (s.order[s.at] ?? null) : null);
 
+/**
+ * Each team starts on the path's first square, given (so the phone only needs
+ * arrows, Khai 2026-11-24), and steps up, left or right from there.
+ */
+export const START = 1;
+
+/** Where a step from the crossing team's square lands: up, left or right. */
+export function stepFrom(square: Square, dir: "up" | "left" | "right"): Square {
+  const [col, row] = square;
+  return dir === "up" ? [col, row - 1] : dir === "left" ? [col - 1, row] : [col + 1, row];
+}
+
 /** The crossing team goes out (wrong or slow); the next team starts from the bottom. */
 function out(s: PathState, now: number, miss: Square | null): PathState {
   const teamId = s.order[s.at] ?? "";
@@ -133,7 +145,7 @@ function out(s: PathState, now: number, miss: Square | null): PathState {
     lit: Math.max(s.lit, s.progress),
     lastMiss: miss ? { teamId, square: miss } : null,
     at: s.at + 1,
-    progress: 0,
+    progress: START,
     stepEndsAt: now + s.stepMs,
   };
 }
@@ -184,7 +196,7 @@ const game: ShowdownGame<C, PathState> = {
   content: Content,
   demo: "Remember the path, then cross it!",
   timeout: "Out of time? 5 seconds on one step and you're out.",
-  rounds: (_c, teams) => Math.max(1, teams),
+  rounds: (_c, teams) => lapRounds(teams),
   deal: (c, { seed, round, teams, startsAt }) => {
     const level = levelFor(c.levels, round) ?? { minLength: 12, maxLength: 16, showMs: 6000 };
     return {
@@ -197,7 +209,7 @@ const game: ShowdownGame<C, PathState> = {
       showEndsAt: startsAt + level.showMs,
       stepMs: c.stepMs,
       at: 0,
-      progress: 0,
+      progress: START,
       stepEndsAt: startsAt + level.showMs + c.stepMs,
       lit: 0,
       results: {},
@@ -207,12 +219,16 @@ const game: ShowdownGame<C, PathState> = {
   },
   move(s, _c, { teamId, move, now }) {
     const parsed = z
-      .object({ square: z.tuple([z.number().int(), z.number().int()]) })
+      .union([
+        z.object({ dir: z.enum(["up", "left", "right"]) }),
+        z.object({ square: z.tuple([z.number().int(), z.number().int()]) }),
+      ])
       .safeParse(move);
-    if (!parsed.success) return { ok: false, message: "Tap a square." };
+    if (!parsed.success) return { ok: false, message: "Pick a way to go." };
     if (now < s.showEndsAt) return { ok: false, message: "Watch the path first!" };
     if (crossing(s) !== teamId) return { ok: false, message: "It isn't your turn." };
-    const [col, row] = parsed.data.square;
+    const here = s.path[s.progress - 1] ?? s.path[0] ?? [0, 0];
+    const [col, row] = "dir" in parsed.data ? stepFrom(here, parsed.data.dir) : parsed.data.square;
     const want = s.path[s.progress];
     if (!want || want[0] !== col || want[1] !== row)
       return { ok: true, state: out(s, now, [col, row]) };
@@ -239,11 +255,11 @@ const game: ShowdownGame<C, PathState> = {
   over: (s) => s.winner !== null || s.at >= s.order.length,
   // Crossing scores the round's share; some right squares 80% of it; none 50% (Khai, 2026-11-24).
   score: (s, c, teams) => {
-    const full = c.points ?? roundShare(teams.length);
+    const full = c.points ?? roundShare(lapRounds(teams.length));
     return Object.fromEntries(
       teams.map((t) => {
         const r = s.results[t];
-        const share = t === s.winner ? 1 : r && r.reached > 0 ? 0.8 : 0.5;
+        const share = t === s.winner ? 1 : r && r.reached > START ? 0.8 : 0.5;
         return [t, Math.round(full * share)];
       }),
     );

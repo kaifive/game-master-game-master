@@ -1,15 +1,17 @@
 import { z } from "zod";
-import { leadOrder } from "../fairness";
+import { lapRounds, leadOrder } from "../fairness";
 import { defineShowdown, type Role, type ShowdownGame, type TurnInfo } from "../model";
 import { roundShare } from "./scoring";
 
 /**
  * Snowball to 21 (spec 27, S27-AC3): a shared count goes up by 1, 2 or 3 a
- * turn; the team that makes it exactly 21 wins the round. One round per
- * team, each team starting one (S24-AC6).
+ * turn; the team that makes the round's number exactly (21, then others)
+ * wins it. At least three rounds, in whole laps, so every team starts as
+ * often as the others (S24-AC6).
  */
 const Content = z.object({
-  target: z.number().int().min(5).max(50).default(21),
+  /** The number to make, round by round: a new one each round (Khai, 2026-11-24). */
+  targets: z.array(z.number().int().min(5).max(50)).min(1).default([21, 17, 25, 13, 29, 19]),
   turnMs: z.number().int().min(3000).max(30_000).default(10_000),
   /** What the round's winner scores; left out, its share of 150. Every other team gets half (ADR-045). */
   points: z.number().int().min(1).max(500).optional(),
@@ -66,9 +68,9 @@ function view(s: To21State, _c: unknown, { role, now }: ViewCtx) {
 
 const game: ShowdownGame<C, To21State> = {
   content: Content,
-  demo: "Add 1, 2 or 3. Make exactly 21 to win!",
+  demo: "Add 1, 2 or 3. Hit the number exactly to win!",
   timeout: "Out of time? 10 seconds, or you add 1.",
-  rounds: (_c, teams) => Math.max(1, teams),
+  rounds: (_c, teams) => lapRounds(teams),
   deal: (c, { round, teams, startsAt }) => ({
     startsAt,
     // A different team starts each round, so every team starts once (S24-AC6).
@@ -76,7 +78,7 @@ const game: ShowdownGame<C, To21State> = {
     at: 0,
     turnStartedAt: startsAt,
     count: 0,
-    target: c.target,
+    target: c.targets[(round - 1) % c.targets.length] ?? 21,
     turnMs: c.turnMs,
     history: [],
     winner: null,
@@ -103,7 +105,7 @@ const game: ShowdownGame<C, To21State> = {
   over: (s) => s.winner !== null,
   // The winner takes the round's share; every other team half of it (Khai, 2026-11-24).
   score: (s, c, teams) => {
-    const win = c.points ?? Math.round(roundShare(teams.length));
+    const win = c.points ?? Math.round(roundShare(lapRounds(teams.length)));
     return Object.fromEntries(teams.map((t) => [t, t === s.winner ? win : Math.round(win / 2)]));
   },
   turn: (s, _c, now): TurnInfo =>
