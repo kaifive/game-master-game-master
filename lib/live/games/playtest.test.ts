@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { AnyShowdown, Role } from "../model";
 import { PLAYTEST_TEAM_COUNTS, playtest, type Bot, type BotContext } from "../playtest";
-import { blindstop, EXACT_BONUS } from "./blindstop";
+import { blindstop } from "./blindstop";
 import { flyby } from "./flyby";
 import { lastsecond } from "./lastsecond";
 import { snowsum } from "./snowsum";
+import { GAME_POINTS, roundShare } from "./scoring";
 
 /**
  * Mock play tests (S24-AC8) for the count and stop showdowns (spec 25):
@@ -123,23 +124,19 @@ type Case = {
   name: string;
   game: AnyShowdown;
   bots: Record<string, Bot>;
-  /** Points a team can get in one round. */
-  allowed: number[];
   stepMs?: number;
 };
 
-const ranked = [0, 10, 30, 50, 70, 100];
 const flybyTruth: Truth = (p) => (p as { count: number }).count;
 const snowTruth: Truth = (p) => (p as { total: number }).total;
 
 const CASES: Case[] = [
-  { name: "Fly-by Count", game: flyby, bots: countBots(flybyTruth, 30), allowed: [0, 50, 100] },
-  { name: "Snow Sum", game: snowsum, bots: countBots(snowTruth, 60), allowed: [0, 50, 100] },
+  { name: "Fly-by Count", game: flyby, bots: countBots(flybyTruth, 30) },
+  { name: "Snow Sum", game: snowsum, bots: countBots(snowTruth, 60) },
   {
     name: "Blind Stop",
     game: blindstop,
     stepMs: 10,
-    allowed: [...ranked, ...ranked.filter((p) => p > 0).map((p) => p + EXACT_BONUS)],
     bots: {
       perfect: stopAt(() => 10_000),
       random: stopAt((ctx) => 2000 + ctx.random() * 16_000),
@@ -152,7 +149,6 @@ const CASES: Case[] = [
     name: "Last Second",
     game: lastsecond,
     stepMs: 10,
-    allowed: ranked,
     bots: {
       perfect: stopAt(() => 9_980),
       random: stopAt((ctx) => ctx.random() * 12_000),
@@ -162,6 +158,13 @@ const CASES: Case[] = [
     },
   },
 ];
+
+/** A round's points: whole, never negative, at most its share of 150 (ADR-045). */
+function expectRoundPoints(p: number, rounds: number) {
+  expect(Number.isInteger(p)).toBe(true);
+  expect(p).toBeGreaterThanOrEqual(0);
+  expect(p).toBeLessThanOrEqual(Math.ceil(roundShare(rounds)));
+}
 
 describe("spec 25 play tests (S24-AC8)", () => {
   for (const c of CASES) {
@@ -189,8 +192,10 @@ describe("spec 25 play tests (S24-AC8)", () => {
             expect(Object.keys(round).sort()).toEqual(
               Array.from({ length: n }, (_, i) => `t${String(i + 1)}`).sort(),
             );
-            for (const p of Object.values(round)) expect(c.allowed).toContain(p);
+            for (const p of Object.values(round)) expectRoundPoints(p, result.rounds.length);
           }
+          for (const total of Object.values(result.scores))
+            expect(total).toBeLessThanOrEqual(GAME_POINTS);
           // The perfect team (t1) is never turned down and never loses to anyone.
           expect(result.rejected.filter((r) => r.teamId === "t1")).toEqual([]);
           const best = Math.max(...Object.values(result.scores));

@@ -152,7 +152,7 @@ describe("count showdowns on the phone and TV (spec 25)", () => {
     expect(within(answers).getByText("Exactly right!")).toBeInTheDocument();
     expect(within(answers).getByText("No answer")).toBeInTheDocument();
     expect(
-      within(answers).getByRole("img", { name: "Reds this round: 100 points" }),
+      within(answers).getByRole("img", { name: "Reds this round: 50 points" }),
     ).toBeInTheDocument();
   });
 

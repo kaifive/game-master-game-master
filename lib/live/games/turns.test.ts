@@ -37,7 +37,7 @@ function rig<S>(game: AnyShowdown, content: unknown = {}) {
 }
 
 describe("Snowball to 21", () => {
-  it("S27-AC3: one round per team, each starting one; 1, 2 or 3 a turn, never past 21; 1 if too slow; 100 for making 21", () => {
+  it("S27-AC3: one round per team, each starting one; 1, 2 or 3 a turn, never past 21; 1 if too slow; making 21 scores the round's share of 150 and every other team half", () => {
     const g = rig<To21State>(to21);
     expect(to21.rounds(g.c, 4)).toBe(4);
     expect([1, 2, 3].map((r) => g.deal(r).order[0])).toEqual(["t1", "t2", "t3"]);
@@ -63,7 +63,7 @@ describe("Snowball to 21", () => {
     s = g.step(s, "t1", { add: 2 }, T0 + 10_030);
     expect(s.winner).toBe("t1");
     expect(g.over(s, T0)).toBe(true);
-    expect(g.score(s)).toEqual({ t1: 100, t2: 0, t3: 0 });
+    expect(g.score(s)).toEqual({ t1: 50, t2: 25, t3: 25 });
   });
 });
 
@@ -102,7 +102,7 @@ describe("Memory Path", () => {
     }
   });
 
-  it("S27-AC1: shows then hides the path, knocks a team out on a wrong or slow step, keeps its right squares lit, and pays only the crosser", () => {
+  it("S27-AC1: shows then hides the path, knocks a team out on a wrong or slow step, keeps its right squares lit, and pays the crosser most, part way less, and nothing done least", () => {
     const g = rig<PathState>(path);
     expect(path.rounds(g.c, 3)).toBe(3);
     expect([1, 2, 3].map((r) => g.deal(r).order[0])).toEqual(["t1", "t2", "t3"]);
@@ -130,7 +130,8 @@ describe("Memory Path", () => {
     for (let i = 0; i < s.path.length; i++)
       s = g.step(s, "t3", { square: s.path[i] }, after + 6000 + i);
     expect(s.winner).toBe("t3");
-    expect(g.score(s)).toEqual({ t1: 0, t2: 0, t3: 150 });
+    // Of three rounds' 50: across 50, some squares right 40, none 25 (Khai, 2026-11-24).
+    expect(g.score(s)).toEqual({ t1: s.results.t1?.reached ? 40 : 25, t2: 25, t3: 50 });
     expect((g.view(s, tv, after + 9000, true).shown as Square[]).length).toBe(s.path.length);
   });
 });
@@ -257,10 +258,18 @@ function lineup(bots: Record<string, Bot>, n: number, shift: number) {
   };
 }
 
-const roundGames: [string, AnyShowdown, Record<string, Bot>, number[]][] = [
-  ["Snowball to 21", to21, TO21, [0, 100]],
-  ["Memory Path", path, PATH, [0, 150]],
-  ["Present Shuffle", shuffle, SHUFFLE, [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]],
+/** The points a round can pay with n teams (one round each): its share of 150 (ADR-045). */
+const share = (n: number) => 150 / n;
+const roundGames: [string, AnyShowdown, Record<string, Bot>, (n: number) => number[] | null][] = [
+  [
+    "Snowball to 21",
+    to21,
+    TO21,
+    (n) => [Math.round(share(n)), Math.round(Math.round(share(n)) / 2)],
+  ],
+  ["Memory Path", path, PATH, (n) => [1, 0.8, 0.5].map((f) => Math.round(share(n) * f))],
+  // Any present's value, up to the round's share.
+  ["Present Shuffle", shuffle, SHUFFLE, () => null],
 ];
 
 describe("spec 27 play tests (S24-AC8, S24-AC6)", () => {
@@ -300,7 +309,12 @@ describe("spec 27 play tests (S24-AC8, S24-AC6)", () => {
           expect(r.leaks).toEqual([]);
           expect(r.rounds).toHaveLength(n);
           for (const round of r.rounds)
-            for (const p of Object.values(round)) expect(allowed).toContain(p);
+            for (const p of Object.values(round)) {
+              const ok = allowed(n);
+              if (ok) expect(ok).toContain(p);
+              else expect(p).toBeLessThanOrEqual(Math.ceil(share(n)));
+              expect(p).toBeGreaterThanOrEqual(0);
+            }
           // Every team leads exactly once over the game (S24-AC6).
           expect(leadCounts(r.turnOrders)).toEqual(
             Object.fromEntries(Array.from({ length: n }, (_, i) => [`t${String(i + 1)}`, 1])),
@@ -310,11 +324,12 @@ describe("spec 27 play tests (S24-AC8, S24-AC6)", () => {
             if (k !== "perfect" || game === to21) return;
             const id = `t${String(i + 1)}`;
             const led = r.turnOrders.findIndex((o) => o[0] === id);
-            if (game === path) expect(r.rounds[led]?.[id]).toBe(150);
+            if (game === path) expect(r.rounds[led]?.[id]).toBe(Math.round(share(n)));
           });
           // Snowball: someone always makes 21.
           if (game === to21)
-            for (const round of r.rounds) expect(Object.values(round)).toContain(100);
+            for (const round of r.rounds)
+              expect(Object.values(round)).toContain(Math.round(share(n)));
         }
     });
 });

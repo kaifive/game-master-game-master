@@ -10,7 +10,8 @@ describe("perception cores (spec 28)", () => {
     for (const core of PERCEPTION_CORES as readonly PerceptionCore<unknown, unknown>[])
       for (const level of LEVELS) {
         expect(core.deal(9, level)).toEqual(core.deal(9, level));
-        expect(core.demo.length).toBeGreaterThan(20);
+        expect(core.demo.length).toBeGreaterThan(10);
+        expect(core.demo.length).toBeLessThanOrEqual(60);
         expect(core.timeout).toMatch(/^Out of time\?/);
       }
   });

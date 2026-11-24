@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { seededRandom } from "@/lib/games";
 import { defineShowdown, type Role, type ShowdownGame } from "../model";
+import { roundShare } from "./scoring";
 
 /**
  * Stocking Stuffer (spec 26, S26-AC2): every team still in picks Open or
@@ -10,8 +11,8 @@ import { defineShowdown, type Role, type ShowdownGame } from "../model";
  */
 const Content = z.object({
   rounds: z.number().int().min(1).max(10).default(5),
-  min: z.number().int().min(1).max(100).default(5),
-  max: z.number().int().min(1).max(200).default(30),
+  min: z.number().int().min(1).max(100).default(2),
+  max: z.number().int().min(1).max(200).default(8),
   /** One stocking in this many is coal. */
   coalOneIn: z.number().int().min(2).max(20).default(6),
   chooseMs: z.number().int().min(4000).max(30_000).default(10_000),
@@ -113,7 +114,7 @@ function view(s: StockingState, _c: unknown, { role }: ViewCtx) {
 
 const game: ShowdownGame<C, StockingState> = {
   content: Content.refine((c) => c.min <= c.max, "min must not be above max"),
-  demo: "Each team opens its own stocking for points, or banks what it has. 1 in 6 stockings is coal, and coal loses this round's pot!",
+  demo: "Open a stocking or bank your points. Coal loses it all!",
   timeout: "Out of time? You bank what you have.",
   rounds: (c) => c.rounds,
   deal: (c, { seed, startsAt, teams }) => ({
@@ -164,8 +165,14 @@ const game: ShowdownGame<C, StockingState> = {
     return out;
   },
   over: (s, _c, now) => stillIn(s).length === 0 && (s.revealUntil === null || now >= s.revealUntil),
-  score: (s, _c, teams) =>
-    Object.fromEntries(teams.map((t) => [t, s.status[t] === "banked" ? (s.pots[t] ?? 0) : 0])),
+  // A banked pot is what a team scores, up to the round's share of 150 (ADR-045).
+  score: (s, c, teams) =>
+    Object.fromEntries(
+      teams.map((t) => [
+        t,
+        s.status[t] === "banked" ? Math.min(s.pots[t] ?? 0, Math.round(roundShare(c.rounds))) : 0,
+      ]),
+    ),
   view,
 };
 

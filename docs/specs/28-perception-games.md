@@ -30,8 +30,9 @@ TV; the event file chooses per game (ADR-040).
    Points: the game's points times the average closeness, rounded. No answer in time
    counts as 0 for that task. It starts after the 3-2-1 like the other timed games.
 3. **Showdown** (`mode: "live"`, spec 24): three rounds, levels 1 to 3. Every team gets
-   the same task on the TV and answers on the captain's phone. Points per round: ranked
-   by closeness, 100, 70, 50, 30, then 10, ties sharing; no answer scores 0.
+   the same task on the TV and answers on the captain's phone. Points per round: up to
+   50 (a round's share of 150) times the team's own closeness, whatever the other teams
+   did; no answer scores 0 (ADR-045).
 4. Answers stay secret until the reveal (S24-AC7); the TV shows who has answered.
    Anything that gives the answer away shows only while it's meant to be seen. A TV or
    phone holding a view from before the start shows Get ready until the next one comes,
@@ -77,7 +78,7 @@ rounds live in the live session (spec 11).
 
 - [x] AC-1: Each game deals tasks from a seed at levels 1 to 3 that get harder, and scores answers by closeness from 0 to 1 by its own rule.
 - [x] AC-2: Solo runs three tasks, levels 1 to 3, with a show phase and an answer window each, scores the game's points times the average closeness, and counts no answer as 0.
-- [x] AC-3: Showdowns run three rounds, levels 1 to 3, every team answering the same task, and rank each round by closeness, 100, 70, 50, 30, then 10, ties sharing, no answer 0.
+- [x] AC-3: Showdowns run three rounds, levels 1 to 3, every team answering the same task, and score each team up to 50 a round on its own closeness, no answer 0.
 - [x] AC-4: Nothing that gives an answer away reaches a phone or the TV outside its show time, and answers stay secret until the reveal.
 - Retired with Lion Drum (ADR-044): AC-5, phone-timed taps.
 - [x] AC-6: The event file can run any perception game solo or as a showdown, and both appear in the game library.

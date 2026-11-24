@@ -2,15 +2,17 @@ import { describe, expect, it } from "vitest";
 import { dealFormation, FLYBY_ROUNDS } from "../counts";
 import { gameLogic } from "../registry";
 import { LEVELS } from "./core";
-import { flybyCore, nearCloseness, snowsumCore, type FlybyTask } from "./counts";
+import { countCloseness, flybyCore, snowsumCore, type FlybyTask } from "./counts";
 
 const T0 = 1_000_000;
 
 describe("the counting games solo (spec 30)", () => {
   it("S30-AC2: Fly-by Count and Snow Sum each run solo: three rounds at the showdown's levels, scored by its own rule", () => {
-    expect(nearCloseness(12, 12)).toBe(1);
-    expect(nearCloseness(11, 12)).toBe(0.5);
-    expect(nearCloseness(10, 12)).toBe(0);
+    // Exact is 1; it falls away to 0 at a miss of half the number (at least 5).
+    expect(countCloseness(12, 12)).toBe(1);
+    expect(countCloseness(9, 12)).toBe(0.5);
+    expect(countCloseness(18, 12)).toBe(0);
+    expect(countCloseness(-1, 2)).toBeCloseTo(0.4);
     for (const type of ["flyby", "snowsum"]) {
       const logic = gameLogic(type);
       if (!logic) throw new Error(type);
@@ -24,7 +26,9 @@ describe("the counting games solo (spec 30)", () => {
         dealFormation(9, FLYBY_ROUNDS[level - 1] ?? FLYBY_ROUNDS[0]!).count,
       );
     const snow = snowsumCore.deal(4, 3);
-    expect(snowsumCore.closeness(snow, snow.total + 1)).toBe(0.5);
+    expect(snowsumCore.closeness(snow, snow.total + 1)).toBe(
+      countCloseness(snow.total + 1, snow.total),
+    );
     expect(snowsumCore.valid(snow, -51)).toBe(false);
     // Fly-by's later rounds ask about one kind of present.
     const kind = flybyCore.deal(4, 3);
@@ -54,7 +58,8 @@ describe("the counting games solo (spec 30)", () => {
     answer(task(1).count + 1, (s as { startedAt: number }).startedAt + task(1).ms + 100);
     s = logic.tick(s, c, { now: (s as { startedAt: number }).startedAt + 60_000 }) as never;
     expect(logic.isOver(s)).toBe(true);
-    expect(logic.score(s, 90)).toBe(Math.round((90 * (1 + 0.5 + 0)) / 3));
+    const near = countCloseness(task(1).count + 1, task(1).count);
+    expect(logic.score(s, 90)).toBe(Math.round((90 * (1 + near + 0)) / 3));
   });
 
   it("S30-AC3: nothing that gives the answer away shows outside the show", () => {

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { LATE_MS, type AnyShowdown, type MoveResult } from "../model";
 import { ANSWER_MS } from "./answer";
-import { blindstop, EXACT_BONUS } from "./blindstop";
+import { blindstop } from "./blindstop";
 import { flyby, FLYBY_ROUNDS, type FlybyState } from "./flyby";
 import { lastsecond } from "./lastsecond";
-import { rankedPoints } from "./scoring";
+import { closePoints, roundShare, sharePoints } from "./scoring";
 import { dealFlakes, SNOW_MAX, SNOW_MIN, snowsum, sum, type SnowState } from "./snowsum";
 import { MAX_LAG_MS } from "./stop";
 
@@ -37,22 +37,19 @@ function play<S>(game: AnyShowdown, content: unknown, round = 1, seed = 7) {
   };
 }
 
-describe("ranked points (spec 25)", () => {
-  it("ranks 100, 70, 50, 30, then 10; ties share a place; no answer scores 0", () => {
-    const v: Record<string, number | null> = { t1: 3, t2: 0, t3: 3, t4: 9, t5: 12, t6: null };
-    expect(rankedPoints(teams, (t) => v[t] ?? null)).toEqual({
-      t2: 100,
-      t1: 70,
-      t3: 70,
-      t4: 30,
-      t5: 10,
-      t6: 0,
-    });
+describe("showdown points (ADR-045)", () => {
+  it("S25-AC1: a round's share of 150, scored on how close, never negative", () => {
+    expect(roundShare(3)).toBe(50);
+    expect(closePoints(1, 3)).toBe(50);
+    expect(closePoints(0.5, 3)).toBe(25);
+    expect(closePoints(-2, 3)).toBe(0);
+    expect(closePoints(null, 3)).toBe(0);
+    expect(sharePoints(30, 100, 3)).toBe(15);
   });
 });
 
 describe("Fly-by Count", () => {
-  it("S25-AC1: deals rounds from the seed, keeps the count off phones, takes one number in the window, and scores exact 100, one off 50", () => {
+  it("S25-AC1: deals rounds from the seed, keeps the count off phones, takes one number in the window, and scores up to 50 a round on how close, near misses too", () => {
     const g = play<FlybyState>(flyby, {});
     expect(flyby.rounds(g.c, 4)).toBe(3);
     const again = play<FlybyState>(flyby, {});
@@ -80,7 +77,12 @@ describe("Fly-by Count", () => {
     expect(g.refuse(s, "t4", { answer: 2.5 }, shown + 50)).toBe("Type a whole number.");
     // Other teams' answers stay hidden from a phone until the reveal.
     expect(g.view(s, cap("t2"), false)).toMatchObject({ mine: n + 1, answers: null });
-    expect(g.score(s)).toMatchObject({ t1: 100, t2: 50, t3: 0, t4: 0 });
+    const pts = g.score(s);
+    expect(pts.t1).toBe(50);
+    expect(pts.t2).toBeGreaterThan(25);
+    expect(pts.t2).toBeLessThan(50);
+    expect(pts.t3).toBeLessThan(pts.t2 ?? 0);
+    expect(pts.t4).toBe(0);
     expect(g.view(s, cap("t4"), true)).toMatchObject({ count: n });
     // The round is over once everyone has locked in, or the window closes.
     expect(g.over(s, shown + 100)).toBe(false);
@@ -96,7 +98,7 @@ describe("Fly-by Count", () => {
 });
 
 describe("Snow Sum", () => {
-  it("S25-AC2: deals harder seeded sums each round in range, takes one total in the window, and scores exact 100, one off 50", () => {
+  it("S25-AC2: deals harder seeded sums each round in range, takes one total in the window, and scores up to 50 a round on how close", () => {
     for (let seed = 1; seed < 300; seed++) {
       const flakes = dealFlakes(seed, 8, ["add", "sub", "double"]);
       let total = 0;
@@ -116,7 +118,11 @@ describe("Snow Sum", () => {
     let s = g.step(g.state, "t1", { answer: g.state.total }, at);
     s = g.step(s, "t2", { answer: g.state.total - 1 }, at);
     s = g.step(s, "t3", { answer: g.state.total + 3 }, at);
-    expect(g.score(s)).toMatchObject({ t1: 100, t2: 50, t3: 0, t5: 0 });
+    const pts = g.score(s);
+    expect(pts.t1).toBe(50);
+    expect(pts.t2).toBeGreaterThan(pts.t3 ?? 0);
+    expect(pts.t3).toBeGreaterThan(0);
+    expect(pts.t5).toBe(0);
     expect(g.refuse(s, "t4", { answer: -51 }, at)).toMatch(/from -50 to 200/);
   });
 });
@@ -148,7 +154,7 @@ describe("Fly-by Count by kind", () => {
 
 describe("Blind Stop", () => {
   type S = { startsAt: number; stops: Record<string, number> };
-  it("S25-AC4: shows the clock for 3 s, takes phone-timed stops checked against the server, and ranks by closeness to 10.00 with a 50 bonus for exact", () => {
+  it("S25-AC4: shows the clock for 3 s, takes phone-timed stops checked against the server, and scores each stop on its own closeness to 10.00, 3 rounds of up to 50", () => {
     const g = play<S>(blindstop, {});
     expect(g.view(g.state, tv, false)).toMatchObject({
       showMs: 3000,
@@ -166,15 +172,9 @@ describe("Blind Stop", () => {
     expect(g.refuse(s, "t5", stopAt(25_000), T0 + 25_000)).toBe("Time's up.");
     expect(g.refuse(s, "t1", stopAt(10_000), T0 + 10_100)).toBe("You've stopped.");
     expect(g.view(s, cap("t2"), false)).toMatchObject({ stopped: true, stops: null });
-    // 10.004 shows as 10.00: exact, so top place and the bonus.
-    expect(g.score(s)).toEqual({
-      t1: 100 + EXACT_BONUS,
-      t2: 70,
-      t3: 50,
-      t4: 30,
-      t5: 0,
-      t6: 0,
-    });
+    expect(blindstop.rounds(g.c, 3)).toBe(3);
+    // Each stop on its own: 3 s off scores nothing, 2 s off (12.00) a third.
+    expect(g.score(s)).toEqual({ t1: 50, t2: 48, t3: 45, t4: 17, t5: 0, t6: 0 });
     expect(g.over(s, T0 + 19_000)).toBe(false);
     expect(g.over(s, T0 + 20_001)).toBe(true);
   });
@@ -182,7 +182,7 @@ describe("Blind Stop", () => {
 
 describe("Last Second", () => {
   type S = { startsAt: number; stops: Record<string, number> };
-  it("S25-AC5: runs a visible countdown, busts teams that didn't stop before zero, and ranks the rest by how late they stopped", () => {
+  it("S25-AC5: runs a visible countdown, busts teams that didn't stop before zero, and scores the rest on how late they stopped, up to 50 a round", () => {
     const g = play<S>(lastsecond, {});
     expect(lastsecond.rounds(g.c, 3)).toBe(3);
     let s = g.step(g.state, "t1", { elapsedMs: 9_800 }, T0 + 9_850);
@@ -192,7 +192,7 @@ describe("Last Second", () => {
     expect(g.refuse(s, "t5", { elapsedMs: 10_000 }, T0 + 10_050)).toBe("Time's up.");
     expect(g.view(s, cap("t1"), false)).toMatchObject({ mine: 9_800, stops: null });
     expect(g.view(s, tv, false)).toMatchObject({ mine: null, stops: null });
-    expect(g.score(s)).toEqual({ t2: 100, t3: 100, t1: 50, t4: 30, t5: 0, t6: 0 });
+    expect(g.score(s)).toEqual({ t2: 50, t3: 50, t1: 49, t4: 20, t5: 0, t6: 0 });
     // A stop made just before zero may still be on its way.
     expect(g.over(s, T0 + 10_000 + MAX_LAG_MS - 1)).toBe(false);
     expect(g.over(s, T0 + 10_000 + MAX_LAG_MS + 1)).toBe(true);
@@ -216,7 +216,9 @@ describe("every showdown's intro (blind review)", () => {
     const { showdownFor, showdownTypes } = await import("../registry");
     for (const type of showdownTypes()) {
       const game = showdownFor(type);
-      expect(game?.demo.length).toBeGreaterThan(20);
+      // Super short: the demo shows the rest (Khai, 2026-11-24).
+      expect(game?.demo.length).toBeGreaterThan(10);
+      expect(game?.demo.length).toBeLessThanOrEqual(60);
       expect(game?.timeout).toMatch(/^Out of time\?/);
     }
   });

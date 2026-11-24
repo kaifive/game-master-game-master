@@ -2,12 +2,13 @@ import { z } from "zod";
 import { seededRandom } from "@/lib/games";
 import { leadOrder } from "../fairness";
 import { defineShowdown, type Role, type ShowdownGame, type TurnInfo } from "../model";
+import { roundShare } from "./scoring";
 
 /**
  * Memory Path (spec 27, S27-AC1): a path lights up on the TV and hides;
  * teams take turns crossing it from memory. A wrong square or a slow step
  * knocks a team out; the squares it got right stay lit for the teams after.
- * Only a team that makes it across scores.
+ * Crossing scores most, getting part way less, and every team something.
  */
 /**
  * Each round is harder than the last (Khai, 2026-11-18): a longer path and
@@ -36,7 +37,8 @@ const Content = z
     rows: z.number().int().min(4).max(12).default(9),
     levels: z.array(Level).min(1).max(10).default(PATH_LEVELS),
     stepMs: z.number().int().min(2000).max(20_000).default(5000),
-    points: z.number().int().min(1).max(500).default(150),
+    /** A crossing's points; left out, the round's share of 150 (ADR-045). */
+    points: z.number().int().min(1).max(500).optional(),
   })
   .refine(
     (c) => c.levels.every((l) => l.minLength >= c.rows),
@@ -180,7 +182,7 @@ function view(s: PathState, _c: unknown, { role, revealed, now }: ViewCtx) {
 
 const game: ShowdownGame<C, PathState> = {
   content: Content,
-  demo: "Watch the path light up from the bottom row to the top, then cross it one square at a time. A wrong square, or 5 seconds on one step, and you're out! Each round is longer.",
+  demo: "Remember the path, then cross it!",
   timeout: "Out of time? 5 seconds on one step and you're out.",
   rounds: (_c, teams) => Math.max(1, teams),
   deal: (c, { seed, round, teams, startsAt }) => {
@@ -235,7 +237,17 @@ const game: ShowdownGame<C, PathState> = {
     return st;
   },
   over: (s) => s.winner !== null || s.at >= s.order.length,
-  score: (s, c, teams) => Object.fromEntries(teams.map((t) => [t, t === s.winner ? c.points : 0])),
+  // Crossing scores the round's share; some right squares 80% of it; none 50% (Khai, 2026-11-24).
+  score: (s, c, teams) => {
+    const full = c.points ?? roundShare(teams.length);
+    return Object.fromEntries(
+      teams.map((t) => {
+        const r = s.results[t];
+        const share = t === s.winner ? 1 : r && r.reached > 0 ? 0.8 : 0.5;
+        return [t, Math.round(full * share)];
+      }),
+    );
+  },
   turn: (s, _c, now): TurnInfo => {
     const team = crossing(s);
     return team && now >= s.showEndsAt ? { teamId: team, turnNo: s.at } : null;

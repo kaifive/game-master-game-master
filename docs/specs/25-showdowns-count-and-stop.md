@@ -17,25 +17,25 @@ Every game here follows spec 24: the host's steps, Who's played, the TV demo, 1 
 1. Content: `rounds`, each with a count range, how long the fly-by lasts, the grid size and how many kinds of present (1 to 3); defaults are 3 rounds that get harder (6 to 12 presents over 4 s, all one kind; 10 to 18 over 3.5 s in two kinds; 15 to 25 over 3 s in three kinds). The layout comes from the session's seed; the count is never sent to phones before the reveal. A round's answer is never the same as the round before's (Khai, 2026-11-24).
 2. Kinds: red with a gold bow, white with a red ribbon, and green with white stripes, so each has a mark besides its color. With one kind the question is "How many presents?". With more, everyone knows from the start it'll ask about one kind, but which one ("How many red presents?") shows only once they've flown past, so teams must count every kind (Khai, 2026-11-24, merging in Color Count).
 3. Play: the presents fly across the TV in rows and columns with gaps (some rows offset), sized so every row fits the screen. When they've passed, every team's player types a number on the captain's phone within 10 seconds; there's no Lock in: what's typed goes in as the time runs out (spec 24).
-4. Results: the TV shows the count ("There were 7 red presents") and each team's number. **Points per round: exactly right 100, one off 50, otherwise 0.**
+4. Results: the TV shows the count ("There were 7 red presents") and each team's number. **Points per round: a round's share of 150 (50 a round over three) times how close: exact scores it all, and it falls away evenly to nothing at a miss of half the true number (at least 5), so near misses still score (ADR-045).**
 
 ### Snow Sum (`snowsum`)
 
 1. Content: rounds (default 3), each with how many snowflakes and which operations, getting harder (5 flakes of + and −, 7 flakes, then 8 flakes with ×2), dealt from the seed. Totals stay between −50 and 200.
 2. Play: the snowflakes fall one at a time on the TV, starting from 0. A flake never takes away from 0 or less, so totals stay friendly for kids. When the last has fallen, every team types the total within 10 s and locks it in.
-3. Results: the TV replays the sum step by step. **Points per round: exactly right 100, one off 50, otherwise 0.**
+3. Results: the TV replays the sum step by step. **Points per round: a round's share of 150 (50 a round over three) times how close: exact scores it all, and it falls away evenly to nothing at a miss of half the true number (at least 5), so near misses still score (ADR-045).**
 
 ### Blind Stop (`blindstop`)
 
 1. Content: target (default 10.00 s), seconds the clock shows before turning into "?" (default 3). Several rounds (default 1; the host can run it again).
 2. Play: the TV shows a big clock counting up from 0.00. After 3 s the numbers become a "?" while it keeps running. Every team's player taps Stop on the captain's phone. Each phone times its stop from the shared start (spec 24, shared start), to the hundredth, and sends it; the server checks it's plausible against its own clock, as T-Timer does (spec 16). A phone that hasn't stopped by 20 s counts as no answer.
-3. Results: the TV reveals every team's time, closest first. **Points: ranked by how close to 10.00: 100, 70, 50, 30, then 10 for every team after; an exact 10.00 gets a 50 bonus.** Ties share the place.
+3. Results: the TV reveals every team's time, closest first. **Three rounds. Points per round: up to 50 for how close the stop is to 10.00, falling away evenly to nothing at 3 s off (8.75 s scores 29), whatever the other teams did (ADR-045).** The round ends as soon as every team has stopped.
 
 ### Last Second (`lastsecond`)
 
 1. Content: rounds (default 3), countdown length (default 10 s).
 2. Play: a big countdown runs on the TV, fully visible (Khai, 2026-11-17), from 10.00 to 0.00. Each team's player taps **Stop** on the captain's phone whenever they dare. Each phone times its stop from the shared start (spec 24, shared start), to the hundredth, like Blind Stop. A team that hasn't stopped by zero has busted.
-3. Results: the TV shows every team's stop time, latest first, and the busts. **Points per round: ranked by how late they stopped before zero: 100, 70, 50, 30, then 10 for every other team that stopped; a bust scores 0.** Ties share the place.
+3. Results: the TV shows every team's stop time, latest first, and the busts. **Points per round: up to 50 for how late the stop was, the share of the countdown gone (stopping with 1 s of 10 left scores 45); a bust scores 0 (ADR-045).**
 
 ## Data
 
@@ -49,11 +49,11 @@ Each game's content is validated in the event file and its round state lives in 
 
 ## Acceptance criteria
 
-- [x] AC-1: Fly-by Count deals rounds from the seed, never sends the count early, takes one locked-in number per team within 10 s, and scores exact 100, one off 50, else 0.
-- [x] AC-2: Snow Sum deals harder seeded snowflake sums each round, takes one locked-in total per team within 10 s, and scores exact 100, one off 50, else 0.
+- [x] AC-1: Fly-by Count deals rounds from the seed, never sends the count early, takes one number per team within 10 s (sent as the time runs out), and scores up to 50 a round on how close it is, near misses too.
+- [x] AC-2: Snow Sum deals harder seeded snowflake sums each round, takes one total per team within 10 s (sent as the time runs out), and scores up to 50 a round on how close it is.
 - [x] AC-3: Fly-by Count's later rounds mix red, white and green presents, each with its own mark, ask about one kind only once they've flown past, and never repeat the last round's answer.
-- [x] AC-4: Blind Stop shows the clock for 3 s then a "?", takes each team's phone-timed stop, and ranks by closeness to 10.00: 100, 70, 50, 30, then 10, with a 50 bonus for exactly 10.00 and ties sharing.
-- [x] AC-5: Last Second runs a visible countdown, takes each team's phone-timed stop, busts teams that didn't stop by zero, and ranks the rest by how late they stopped: 100, 70, 50, 30, then 10, ties sharing, busts 0.
+- [x] AC-4: Blind Stop plays three rounds, shows the clock for 3 s then a "?", takes each team's phone-timed stop, and scores each stop up to 50 on its own closeness to 10.00, nothing at 3 s off.
+- [x] AC-5: Last Second runs a visible countdown, takes each team's phone-timed stop, busts teams that didn't stop by zero, and scores the rest up to 50 a round on how late they stopped, busts 0.
 
 ## Tests
 

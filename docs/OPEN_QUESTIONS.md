@@ -18,6 +18,7 @@ Move answered ones to the bottom with the answer.
 | Q27 | Tap Masher film: which part of the video, and how many frames? | Spec 16 | Khai (2026-11-14): play like video (skip at most one frame) using the form's first 11.5 s, and 50 taps is all the points (the video is styling). So 172 frames, every other frame, at 256 × 192 to keep the sheet to 1.3 MB; nobody reaches the end in 5 s. |
 | Q34 | Team selfies: who puts the stickers on, the host in Controls or the captain on their phone? | Spec 31 | The host, in Controls, so the finale is a surprise (Khai first said "from the admin side") |
 | Q35 | Buzzer round: what questions, how many, and how many points each? | Spec 12 | Build with a short sample set marked hidden; Khai writes the real ones in the event file (10 to 15 questions, 100 points each) |
+| Q36 | Turn showdowns (Memory Path, Present Shuffle, Snowball to 21) play one round per team so every team leads once. Is 150 split over that many rounds right, or should they always play three? | ADR-045 | Split 150 over the rounds, so the game is worth the same however many teams; Memory Path's 50/40/25 becomes the same shares of each round |
 
 ## Answered
 

@@ -14,8 +14,8 @@ export type AngleTask = { level: Level; target: number };
 export const staffangleCore: PerceptionCore<AngleTask, number> = {
   type: "staffangle",
   name: "Staff Angle",
-  demo: "Turn the staff to the angle on the screen, judging by eye: there's no number to read while you turn it.",
-  timeout: "Out of time? No answer scores 0.",
+  demo: "Turn the staff to the angle, by eye!",
+  timeout: "Out of time? What's on your phone goes in.",
   instructions: [
     "The screen says an angle, like 35°.",
     "Drag the staff, or use the nudge buttons, until you think it's right.",
@@ -64,8 +64,8 @@ const FRACTIONS: Record<1 | 2, [number, number, string][]> = {
 export const ribbonCore: PerceptionCore<RibbonTask, number> = {
   type: "ribbon",
   name: "Cut the Ribbon",
-  demo: "Tap where to cut the ribbon, like one third of the way along. There are no marks to help!",
-  timeout: "Out of time? No answer scores 0.",
+  demo: "Cut the ribbon at the right spot!",
+  timeout: "Out of time? What's on your phone goes in.",
   instructions: [
     "The screen says how far along to cut, like one third.",
     "Tap the ribbon where you'd cut it; tap again to move it.",

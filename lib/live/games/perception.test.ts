@@ -13,7 +13,7 @@ const T0 = 1_000_000;
 const teams = ["t1", "t2", "t3", "t4"];
 
 describe("perception showdowns (spec 28)", () => {
-  it("S28-AC3: three rounds at levels 1 to 3, every team on the same task, ranked by closeness, no answer 0", () => {
+  it("S28-AC3: three rounds at levels 1 to 3, every team on the same task, each scored up to 50 on its own closeness, no answer 0", () => {
     const game = perceptionShowdown(staffangleCore);
     const c = game.content.parse({});
     expect(game.rounds(c, 4)).toBe(3);
@@ -44,7 +44,8 @@ describe("perception showdowns (spec 28)", () => {
       ok: false,
       message: "You've answered.",
     });
-    expect(game.score(s, c, teams)).toEqual({ t1: 100, t2: 70, t3: 70, t4: 0 });
+    // 10° off of 45 is 78% close: 39 of the round's 50, whatever the others did.
+    expect(game.score(s, c, teams)).toEqual({ t1: 50, t2: 39, t3: 39, t4: 0 });
   });
 
   it("S28-AC4: answers stay secret until the reveal; the TV shows who has answered", () => {
@@ -129,7 +130,7 @@ function bots(type: string): Record<string, Bot> {
 
 describe("spec 28 play tests (S24-AC8)", () => {
   for (const core of PERCEPTION_CORES as readonly PerceptionCore<unknown, unknown>[])
-    it(`S24-AC8: ${core.name} as a showdown plays whole games with 1 to 6 teams: ends, ranks within the rules, leaks nothing, perfect never beaten`, () => {
+    it(`S24-AC8: ${core.name} as a showdown plays whole games with 1 to 6 teams: ends, scores up to 50 a round, leaks nothing, perfect never beaten`, () => {
       const game = perceptionShowdown(core);
       const kinds = ["perfect", "random", "late", "silent", "dropout"];
       for (const n of PLAYTEST_TEAM_COUNTS)
@@ -167,7 +168,9 @@ describe("spec 28 play tests (S24-AC8)", () => {
           expect(r.leaks).toEqual([]);
           expect(r.rounds).toHaveLength(3);
           for (const round of r.rounds)
-            for (const p of Object.values(round)) expect([0, 10, 30, 50, 70, 100]).toContain(p);
+            for (const p of Object.values(round)) {
+              expect(Number.isInteger(p) && p >= 0 && p <= 50).toBe(true);
+            }
           expect(r.rejected.filter((x) => x.teamId === "t1")).toEqual([]);
           expect(r.scores.t1).toBe(Math.max(...Object.values(r.scores)));
           mine.forEach((k, i) => {

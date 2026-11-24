@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { leadOrder } from "../fairness";
 import { defineShowdown, type Role, type ShowdownGame, type TurnInfo } from "../model";
+import { roundShare } from "./scoring";
 
 /**
  * Snowball to 21 (spec 27, S27-AC3): a shared count goes up by 1, 2 or 3 a
@@ -10,7 +11,8 @@ import { defineShowdown, type Role, type ShowdownGame, type TurnInfo } from "../
 const Content = z.object({
   target: z.number().int().min(5).max(50).default(21),
   turnMs: z.number().int().min(3000).max(30_000).default(10_000),
-  points: z.number().int().min(1).max(500).default(100),
+  /** What the round's winner scores; left out, its share of 150. Every other team gets half (ADR-045). */
+  points: z.number().int().min(1).max(500).optional(),
 });
 
 export type To21State = {
@@ -64,7 +66,7 @@ function view(s: To21State, _c: unknown, { role, now }: ViewCtx) {
 
 const game: ShowdownGame<C, To21State> = {
   content: Content,
-  demo: "Take turns adding 1, 2 or 3 to the snowball, never past 21. Whoever makes exactly 21 wins 100!",
+  demo: "Add 1, 2 or 3. Make exactly 21 to win!",
   timeout: "Out of time? 10 seconds, or you add 1.",
   rounds: (_c, teams) => Math.max(1, teams),
   deal: (c, { round, teams, startsAt }) => ({
@@ -99,7 +101,11 @@ const game: ShowdownGame<C, To21State> = {
     return out;
   },
   over: (s) => s.winner !== null,
-  score: (s, c, teams) => Object.fromEntries(teams.map((t) => [t, t === s.winner ? c.points : 0])),
+  // The winner takes the round's share; every other team half of it (Khai, 2026-11-24).
+  score: (s, c, teams) => {
+    const win = c.points ?? Math.round(roundShare(teams.length));
+    return Object.fromEntries(teams.map((t) => [t, t === s.winner ? win : Math.round(win / 2)]));
+  },
   turn: (s, _c, now): TurnInfo =>
     s.winner === null && now >= s.startsAt ? { teamId: whose(s), turnNo: s.at } : null,
   view,

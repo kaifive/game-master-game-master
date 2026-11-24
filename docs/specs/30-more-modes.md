@@ -28,7 +28,7 @@ and showdown versions are made from it.
    the showdown's three default levels, each shown and then answered within 10 s.
    It starts after the 3-2-1 like the other timed games.
 8. How close, for each round, by the showdown's own rule:
-   - Fly-by Count and Snow Sum: exact counts 1, one off counts a half, anything else 0.
+   - Fly-by Count and Snow Sum: exact counts 1, falling away evenly to 0 at a miss of half the true number (at least 5).
 9. Points: the game's points times the average over the three rounds, rounded. No
    answer in time counts 0. After each answer the phone holds up how close it was.
 10. What gives the answer away (the presents, the snowflakes, the ornaments) shows only

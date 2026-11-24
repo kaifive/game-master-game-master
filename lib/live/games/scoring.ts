@@ -1,32 +1,22 @@
 /**
- * Ranked points for showdowns (spec 25): the best gets 100, then 70, 50, 30,
- * and 10 for every team after that. Ties share a place and its points, and
- * the next place is skipped (1, 2, 2, 4). A team with no answer scores 0.
+ * Showdown points (ADR-045, Khai 2026-11-24): every showdown is worth up to
+ * 150 a game, split evenly over its rounds (50 a round over three), and a
+ * team scores on how well it did itself, never by how it ranked against the
+ * other teams. Points are never negative.
  */
-export const LADDER = [100, 70, 50, 30] as const;
-export const REST = 10;
+export const GAME_POINTS = 150;
 
-/** `score` is lower-is-better (a distance, time left); null means no answer. */
-export function rankedPoints(
-  teams: readonly string[],
-  score: (teamId: string) => number | null,
-  ladder: readonly number[] = LADDER,
-  rest: number = REST,
-): Record<string, number> {
-  const answered = teams
-    .map((t) => ({ t, v: score(t) }))
-    .filter((x): x is { t: string; v: number } => x.v !== null)
-    .sort((a, b) => a.v - b.v);
-  const out: Record<string, number> = Object.fromEntries(teams.map((t) => [t, 0]));
-  let place = 0;
-  answered.forEach((x, i) => {
-    const prev = answered[i - 1];
-    if (!prev || prev.v !== x.v) place = i;
-    out[x.t] = ladder[place] ?? rest;
-  });
-  return out;
-}
+/** One round's share of a game's points. */
+export const roundShare = (rounds: number) => GAME_POINTS / Math.max(1, rounds);
 
-/** Exact 100, one off 50, otherwise 0: Fly-by Count and Snow Sum. */
-export const nearPoints = (answer: number | undefined, truth: number) =>
-  answer === undefined ? 0 : answer === truth ? 100 : Math.abs(answer - truth) === 1 ? 50 : 0;
+const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
+
+/** A round's points for how close a team got, 0 to 1; no answer scores 0. */
+export const closePoints = (closeness: number | null | undefined, rounds: number) =>
+  closeness === null || closeness === undefined
+    ? 0
+    : Math.round(clamp01(closeness) * roundShare(rounds));
+
+/** Points for a share of a round's best result (a pot, a present, a prize). */
+export const sharePoints = (won: number, best: number, rounds: number) =>
+  best <= 0 ? 0 : Math.round(clamp01(won / best) * roundShare(rounds));

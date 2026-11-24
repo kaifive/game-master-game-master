@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { defineShowdown, type Role, type ShowdownGame } from "../model";
-import { rankedPoints } from "./scoring";
+import { closePoints } from "./scoring";
 import { acceptStop, MAX_LAG_MS, type Stops } from "./stop";
 
 /**
  * Last Second (spec 25, S25-AC5): a countdown runs on the TV; stop it as late
- * as you dare. Ranked by how little time was left; hit zero and you bust.
+ * as you dare. The less time left, the more it scores; hit zero and you bust.
  */
 const Content = z.object({
   rounds: z.number().int().min(1).max(10).default(3),
@@ -30,7 +30,7 @@ function view(s: LastState, _c: unknown, { role, revealed }: ViewCtx) {
 
 const game: ShowdownGame<C, LastState> = {
   content: Content,
-  demo: "Stop the countdown as close to zero as you dare. Closest scores most, but if it hits zero first you get nothing.",
+  demo: "Stop the countdown as late as you dare!",
   timeout: "Out of time? Hit zero and you get nothing.",
   rounds: (c) => c.rounds,
   deal: (c, { startsAt, teams }) => ({
@@ -45,11 +45,14 @@ const game: ShowdownGame<C, LastState> = {
   // A stop made just before zero can still be on its way, so wait out the lag.
   over: (s, _c, now) =>
     now > s.startsAt + s.countdownMs + MAX_LAG_MS || s.teams.every((t) => s.stops[t] !== undefined),
-  score: (s, _c, teams) =>
-    rankedPoints(teams, (t) => {
-      const ms = s.stops[t];
-      return ms === undefined ? null : s.countdownMs - ms;
-    }),
+  // The later the stop, the more it scores, whatever the others did; a bust is 0 (ADR-045).
+  score: (s, c, teams) =>
+    Object.fromEntries(
+      teams.map((t) => {
+        const ms = s.stops[t];
+        return [t, closePoints(ms === undefined ? null : ms / s.countdownMs, c.rounds)];
+      }),
+    ),
   view,
 };
 

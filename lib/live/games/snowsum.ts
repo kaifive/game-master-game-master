@@ -10,7 +10,8 @@ import {
 } from "@/lib/games";
 import { defineShowdown, type Role, type ShowdownGame } from "../model";
 import { answered, answerWindow, lockIn, windowView, type AnswerWindow } from "./answer";
-import { nearPoints } from "./scoring";
+import { countCloseness } from "@/lib/games";
+import { closePoints } from "./scoring";
 
 /**
  * Snow Sum (spec 25, S25-AC2): snowflakes marked +3, −2 or ×2 fall one at a
@@ -58,8 +59,8 @@ function view(s: SnowState, _c: unknown, { role, revealed }: ViewCtx) {
 
 const game: ShowdownGame<C, SnowState> = {
   content: Content,
-  demo: "Start at 0 and do each snowflake in order: + adds, − takes away, ×2 doubles. Exactly right scores 100, one off scores 50.",
-  timeout: "Out of time? No answer scores 0.",
+  demo: "Do the math as the snowflakes fall!",
+  timeout: "Out of time? What's on your phone goes in.",
   rounds: (c) => c.rounds.length,
   deal(c, { seed, round, startsAt, teams }) {
     const r = c.rounds[round - 1] ?? c.rounds[c.rounds.length - 1] ?? SNOW_ROUNDS[0];
@@ -76,8 +77,16 @@ const game: ShowdownGame<C, SnowState> = {
     lockIn(s, teamId, move, now, { min: SNOW_MIN, max: SNOW_MAX }),
   tick: (s) => s,
   over: (s, _c, now) => answered(s, now),
-  score: (s, _c, teams) =>
-    Object.fromEntries(teams.map((t) => [t, nearPoints(s.answers[t], s.total)])),
+  score: (s, c, teams) =>
+    Object.fromEntries(
+      teams.map((t) => {
+        const a = s.answers[t];
+        return [
+          t,
+          closePoints(a === undefined ? null : countCloseness(a, s.total), c.rounds.length),
+        ];
+      }),
+    ),
   view,
 };
 

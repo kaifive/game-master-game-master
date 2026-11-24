@@ -850,3 +850,27 @@ acceptance criteria are marked retired in their specs.
 fits one screen with room to spare. Bringing one back means building it again
 from git history and a new ADR.
 
+## ADR-045: Every showdown is worth 150, scored on how well a team did
+
+**Status:** accepted (Khai, 2026-11-24). Replaces the ranked ladders of specs 25,
+26 and 28 (100, 70, 50, 30, then 10) and Share or Snatch's ranked payout.
+
+Khai's play-test: "I got 8.75 s and still 100 points." Ranking against the other
+teams meant a poor answer could take full points, and the strategy games could
+hand one team far more than any other game.
+
+**Decision:** every showdown is worth up to 150 a game, split evenly over its
+rounds (50 a round over three). A team scores on its own result, never its rank:
+how close (counting, Blind Stop, Last Second, Staff Angle, Cut the Ribbon), or
+what it won (Auction's prizes adding to 150, Stocking Stuffer's banked pot up to
+the round's share, Share or Snatch's pot sized to 150, Present Shuffle's values
+scaled so the best is the round's share). Snowball to 21 pays the winner the
+round's share and every other team half; Memory Path pays a crossing all of it,
+some right squares 80%, nothing half. Points never go below zero. Games with one
+round per team split 150 over that many rounds. The buzzer round keeps its own
+points per question.
+
+**Consequences:** no one showdown decides the night; a near miss still scores;
+results can be read without comparing teams. The team totals on the TV grow
+more slowly than before, which suits a night of many games.
+

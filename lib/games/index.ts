@@ -47,7 +47,7 @@ export {
 } from "./perception/games";
 export {
   flybyCore,
-  nearCloseness,
+  countCloseness,
   snowsumCore,
   SOLO_ONLY_CORES,
   type FlybyTask,
