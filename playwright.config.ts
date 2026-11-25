@@ -11,6 +11,9 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",
+    // A click or request that never lands fails and says where, rather than hanging the run.
+    actionTimeout: 20_000,
+    navigationTimeout: 30_000,
   },
   // The three surfaces: player phone, controls tablet, display TV. The teams and showdowns
   // tests switch the shared event into the team phase, so they run on their own, after the rest.
