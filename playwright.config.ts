@@ -20,23 +20,30 @@ export default defineConfig({
   projects: [
     {
       name: "phone",
-      testIgnore: /(teams|showdowns|showdowns-play)\.spec/,
+      testIgnore: /(teams|showdowns|showdowns-play|raffle)\.spec/,
       use: { ...devices["Pixel 7"] },
     },
     {
       name: "tablet",
-      testIgnore: /(teams|showdowns|showdowns-play|showdown-gallery)\.spec/,
+      testIgnore: /(teams|showdowns|showdowns-play|showdown-gallery|raffle)\.spec/,
       use: { ...devices["Desktop Chrome"], viewport: { width: 1024, height: 768 } },
     },
     {
       name: "tv",
-      testIgnore: /(teams|showdowns|showdowns-play)\.spec/,
+      testIgnore: /(teams|showdowns|showdowns-play|raffle)\.spec/,
       use: { ...devices["Desktop Chrome"], viewport: { width: 1920, height: 1080 } },
+    },
+    // Check-in and the raffle (spec 32): alone, as it changes what the shared TV shows.
+    {
+      name: "raffle",
+      testMatch: /raffle\.spec/,
+      dependencies: ["phone", "tablet", "tv"],
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1024, height: 768 } },
     },
     {
       name: "teams",
       testMatch: /teams\.spec/,
-      dependencies: ["phone", "tablet", "tv"],
+      dependencies: ["raffle"],
       use: { ...devices["Desktop Chrome"], viewport: { width: 1024, height: 768 } },
     },
     {

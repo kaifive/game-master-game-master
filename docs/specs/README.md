@@ -36,4 +36,4 @@ Statuses are explained in `../conventions/docs.md`.
 | 29 | [Team colors chosen by the captain](29-team-colors.md) | M4 | Done |
 | 30 | [Second modes: Color Matcher showdown, solo counting games](30-more-modes.md) | M3 | Done |
 | 31 | [Team selfies dressed up with stickers](31-team-selfies.md) | M4 | Done |
-| 32 | [Check-in and raffle](32-checkin-and-raffle.md) | M4 | Ready |
+| 32 | [Check-in and raffle](32-checkin-and-raffle.md) | M4 | Done |

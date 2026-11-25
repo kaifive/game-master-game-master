@@ -104,3 +104,4 @@ Move answered ones to the bottom with the answer.
 | A77 | Prize names and a winners list? (spec 32) | Khai (2026-11-25): nothing kept; Claimed just uses up the ticket. |
 | A78 | Uploading the CSV again? (spec 32) | Khai (2026-11-25): merge, keeping check-ins; names gone from the file are listed to remove. |
 | A79 | How the raffle stops, and a wheel? (spec 32) | Khai (2026-11-25): it slows down over 3 to 4 s onto a winner drawn the moment Stop is pressed; flip mode only, no wheel; as fair as possible. Claimed uses up just that one ticket. |
+| A80 | The check-in code? (was A76, spec 32) | Khai (2026-11-25): no separate passphrase; just the game's party code, checked on the server but not secret (ADR-048). |

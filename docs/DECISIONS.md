@@ -913,3 +913,24 @@ screen, so the TV and Controls follow it as they do showdowns.
 **Consequences:** a poll costs one RTDB read; two helpers' check-ins merge in a
 transaction; nobody can steer the draw by timing a key press. The list is capped
 at 1000 guests.
+
+## ADR-048: Check-in opens with the party code, and the guest list lives in RTDB alone
+
+**Status:** accepted (Khai, 2026-11-25). Changes ADR-047's storage and spec 32's
+check-in code (A76).
+
+Khai asked for the check-in page to open with "just the game code", not a
+second passphrase to set and share. Building it showed the guest list needs no
+Firestore copy: the live state already lives in RTDB alone (ADR-037), and one
+value changed in transactions is all the list needs.
+
+**Decision:** the check-in page asks for the event's join code and sends it in
+an `x-checkin-code` header; the server checks it against the event's join code,
+and the admin session works too. The code isn't secret, so it opens only
+checking in and adding guests; uploads, tickets, removals and the raffle stay
+admin-only. The guest list is one JSON value at `guests/{slug}` in RTDB,
+changed in transactions, with no Firestore document.
+
+**Consequences:** nothing extra to set before the party. Anyone who reads the
+TV could tick guests in or add names; the host can fix that in Controls. One
+poll is one RTDB read; the list is capped at 1000 guests.

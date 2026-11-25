@@ -25,6 +25,7 @@ list whenever a new event file is added.
 - [ ] Load test passes for the expected head count plus 20%.
 - [ ] Every showdown played through with every round: `npx playwright test --project showdowns-play --no-deps` passes (`conventions/testing.md`).
 - [ ] Name filter reviewed for this crowd (add club or local words).
+- [ ] RSVP list uploaded in Controls → Guests (a `.csv`: names, or family then name). Door helpers have `/[slug]/checkin` and the party code (spec 32).
 - [ ] The event's `replayable` and each game's `alwaysOpen` decided. Games left
       `alwaysOpen` for testing let people play (and score) before the start.
 - [ ] Test players and plays from before the party cleared with **Clear test
@@ -33,6 +34,7 @@ list whenever a new event file is added.
 ## On the day
 
 - [ ] Open Controls on your phone and the display on the TV before doors.
+- [ ] Door helpers check guests in on the check-in page; walk-ins are added there. The raffle runs from the TV's Raffle screen or Controls.
 - [ ] Glance at "new since you last looked" between activities.
 - [ ] Triage photos right before each photo vote or slideshow.
 

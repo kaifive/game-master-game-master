@@ -1,6 +1,6 @@
 # 32: Check-in and raffle
 
-**Status:** Ready
+**Status:** Done
 **Backlog:** M4
 **Depends on:** 05 (display), 06 (admin sign-in), 07 (Controls), 24 (TV screens and host bar)
 
@@ -53,12 +53,10 @@ Then the next raffle can start.
 
 ### Who can check in
 
-8. **Check-in code (Khai, 2026-11-25).** The check-in page asks for a check-in code, set as `CHECKIN_PASSPHRASE` on the server.
-   - Right code: a signed `gm_checkin` cookie for 24 hours, scoped to check-in only.
+8. **Check-in code (Khai, 2026-11-25: "maybe just the game code"; ADR-048).** The check-in page asks for the event's party code, the join code shown on the TV.
+   - The page sends it with every request (header `x-checkin-code`), and the server checks it against the event's join code. The phone remembers it.
    - The admin session also opens the check-in page.
-   - Wrong codes are rate-limited as admin sign-in is (spec 06).
-   - Without `CHECKIN_PASSPHRASE`, only the admin can check in.
-   - The check-in code can't open Controls, upload, set tickets or remove guests.
+   - It isn't secret: anyone who sees the TV can open check-in. They can only check guests in or out and add guests; they can't upload, set tickets, remove guests, run the raffle or open Controls.
 9. Several phones can check in at once; each change is a server transaction, so two helpers ticking the same family can't undo each other's ticks for other members.
 
 ### Tickets and the draw
@@ -90,16 +88,14 @@ Update `reference/data-model.md`.
 
 ```
 Firestore
-events/{slug}/guests/list            the whole guest list, one document (ADR-047)
-  guests: [{ id, name, family: string | null, key, checkedIn: boolean,
-             checkedInAt: number | null, source: "list" | "door",
-             extra: number, won: number }]
-  updatedAt
-
 Realtime Database
-guests/{slug}                        mirror of the list as one JSON string, written by
-                                     the server after every change; the check-in page
-                                     and Controls poll it through the API (ADR-031 pattern)
+guests/{slug}                        the whole guest list as one JSON value, changed in
+                                     transactions by the server (ADR-047, ADR-048); the
+                                     check-in page and Controls poll it through the API
+  { guests: [{ id, name, family: string | null, key, checkedIn: boolean,
+               checkedInAt: number | null, source: "list" | "door",
+               extra: number, won: number }],
+    updatedAt }
 
 live/{slug} (the live document, spec 11)
   screen: "leaderboard" | "showdown" | "raffle"
@@ -122,13 +118,12 @@ Update `reference/security-rules.md`: `guests/{slug}` is server-only.
 
 | Route | Who | Body | Response |
 |---|---|---|---|
-| `POST /api/events/[slug]/checkin/session` | anyone | `{ passphrase }` | 204 + `gm_checkin` cookie; 401, 429 as spec 06 |
-| `GET /api/events/[slug]/guests` | check-in or admin | | `{ guests, here, total }` |
-| `POST /api/events/[slug]/guests` | check-in or admin | `{ action: "checkIn", ids, checkedIn }` or `{ action: "add", name, family? }` | the list |
+| `GET /api/events/[slug]/guests` | party code (`x-checkin-code`) or admin | | `{ guests, here, total }` |
+| `POST /api/events/[slug]/guests` | party code or admin | `{ action: "checkIn", ids, checkedIn }` or `{ action: "add", name, family? }` | the list |
 | `POST /api/admin/events/[slug]/guests` | admin | `{ action: "upload", csv }`, `{ action: "tickets", id, extra }`, `{ action: "remove", id }` | the list, plus `{ added, kept, missing }` after an upload |
 | `POST /api/admin/events/[slug]/live` | admin | `{ action: "raffle", step: "start" \| "stop" \| "claim" \| "notHere", drawId? }`, and `screen: "raffle"` | the Controls live view |
 
-- The public live view (spec 11) adds the raffle when the screen is Raffle: `status`, `landsAt`, the winner's name once stopped, and `names`. `names` is up to 60 names drawn at random from those holding tickets, refreshed on each Start, for the TV to flip through. It never includes skipped guests or guests with no tickets.
+- The public live view (spec 11) adds the raffle when the screen is Raffle and the TV asks for it (`?tv=1`): `status`, `landsAt`, the winner's name once stopped, and `names`. `names` is up to 60 names drawn at random from those holding tickets, refreshed on each Start, for the TV to flip through. It never includes skipped guests or guests with no tickets.
 - The TV polls as it does for showdowns (`LIVE_POLL_MS`), and fetches at `landsAt`.
 - The check-in page polls the list every 5 s while open.
 
@@ -136,7 +131,7 @@ Update `reference/security-rules.md`: `guests/{slug}` is server-only.
 
 ### Check-in page (`/[event]/checkin`, phone first)
 
-- Signed out: a check-in code field and a Check in button. No tab bar, no game UI.
+- Signed out: a party code field and an Open check-in button. No tab bar, no game UI.
 - Signed in:
   - The title "Check-in" with "42 of 80 here".
   - A search box that filters by name or family as you type.
@@ -184,20 +179,20 @@ Update `reference/security-rules.md`: `guests/{slug}` is server-only.
 
 ## Acceptance criteria
 
-- [ ] AC-1: Uploading a CSV of one column adds each row as a guest with no family; two columns add family then name; a recognized header row is skipped; quoted fields, blank rows, empty families and names over 60 characters are handled as in Behavior 2.
-- [ ] AC-2: Uploading again merges: matching guests (family and name, ignoring case, accents and spaces) keep their check-in, tickets and wins; new ones are added unchecked; missing ones are listed with Remove; the result counts added, kept and missing.
-- [ ] AC-3: On the check-in page, Check in all checks in a whole family, each person can be ticked in or out on their own, search filters by name or family, and the header counts who's here.
-- [ ] AC-4: Add someone adds a checked-in door guest; a name already on the list checks that guest in instead of adding a copy.
-- [ ] AC-5: The check-in page needs the check-in code or an admin session; the check-in code can check in and add but not upload, change tickets, remove, or open Controls; wrong codes are rate-limited; with no `CHECKIN_PASSPHRASE` only the admin can check in.
-- [ ] AC-6: Two check-ins sent at once on different members of a family both land.
-- [ ] AC-7: A checked-in guest holds 1 + extra − won tickets (never below 0) and an unchecked guest none; Controls sets extra tickets from 0 to 99 and shows tickets and people in the draw.
-- [ ] AC-8: Stop draws on the server with a secure random number, each ticket held by a guest not skipped this raffle equally likely; over many seeded draws a 3-ticket guest wins about three times as often as a 1-ticket guest; the shown names don't affect the pick.
-- [ ] AC-9: Start flips names on the TV; Stop sets the winner and `landsAt` 3.5 s later; every TV and Controls lands on the winner at `landsAt`; reduced motion shows Drawing…, then the winner.
-- [ ] AC-10: Claimed uses up one of the winner's tickets and ends the raffle; Not here skips that guest for the rest of this raffle only and starts flipping again; the next raffle starts with nobody skipped.
-- [ ] AC-11: Start is refused with plain messages when no tickets are left or a showdown is running; each step carries its draw, so a repeated Stop or Claimed does nothing.
-- [ ] AC-12: The TV switches to the Raffle screen from Controls or the host bar, and Start switches it there; on a signed-in TV space or a click starts and stops but never claims; Claimed and Not here are host-bar buttons; a TV not signed in only shows.
-- [ ] AC-13: The TV's flip names never include skipped guests or guests with no tickets, and phones never see the raffle.
-- [ ] AC-14: The check-in page, the Guests card and the TV raffle screen pass the layout sweep (375 px phone, tablet, 1920 and 1280 TV) with no page-level sideways scroll.
+- [x] AC-1: Uploading a CSV of one column adds each row as a guest with no family; two columns add family then name; a recognized header row is skipped; quoted fields, blank rows, empty families and names over 60 characters are handled as in Behavior 2.
+- [x] AC-2: Uploading again merges: matching guests (family and name, ignoring case, accents and spaces) keep their check-in, tickets and wins; new ones are added unchecked; missing ones are listed with Remove; the result counts added, kept and missing.
+- [x] AC-3: On the check-in page, Check in all checks in a whole family, each person can be ticked in or out on their own, search filters by name or family, and the header counts who's here.
+- [x] AC-4: Add someone adds a checked-in door guest; a name already on the list checks that guest in instead of adding a copy.
+- [x] AC-5: The check-in page needs the event's party code or an admin session; the code can check in and add but not upload, change tickets or remove; a wrong code is refused; the phone remembers the right one.
+- [x] AC-6: Two check-ins sent at once on different members of a family both land.
+- [x] AC-7: A checked-in guest holds 1 + extra − won tickets (never below 0) and an unchecked guest none; Controls sets extra tickets from 0 to 99 and shows tickets and people in the draw.
+- [x] AC-8: Stop draws on the server with a secure random number, each ticket held by a guest not skipped this raffle equally likely; over many seeded draws a 3-ticket guest wins about three times as often as a 1-ticket guest; the shown names don't affect the pick.
+- [x] AC-9: Start flips names on the TV; Stop sets the winner and `landsAt` 3.5 s later; every TV and Controls lands on the winner at `landsAt`; reduced motion shows Drawing…, then the winner.
+- [x] AC-10: Claimed uses up one of the winner's tickets and ends the raffle; Not here skips that guest for the rest of this raffle only and starts flipping again; the next raffle starts with nobody skipped.
+- [x] AC-11: Start is refused with plain messages when no tickets are left or a showdown is running; each step carries its draw, so a repeated Stop or Claimed does nothing.
+- [x] AC-12: The TV switches to the Raffle screen from Controls or the host bar, and Start switches it there; on a signed-in TV space or a click starts and stops but never claims; Claimed and Not here are host-bar buttons; a TV not signed in only shows.
+- [x] AC-13: The TV's flip names never include skipped guests or guests with no tickets, and phones never see the raffle.
+- [x] AC-14: The check-in page, the Guests card and the TV raffle screen pass the layout sweep (375 px phone, tablet, 1920 and 1280 TV) with no page-level sideways scroll.
 
 ## Tests
 

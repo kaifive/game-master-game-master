@@ -32,7 +32,7 @@ means `request.auth.uid == resource.data.deviceUid`.
 | `live/{slug}/session` | anyone | admin, server |
 | `live/{slug}/captains` | anyone | admin, server |
 | `moments/{slug}` | anyone | server |
-| `guests/{slug}` | server | server (spec 32: read through the API with the check-in code or admin session) |
+| `guests/{slug}` | server | server (spec 32: read through the API with the party code or admin session) |
 | `live/{slug}/buzzes/{roundId}/{teamId}` | anyone | `auth.uid == captains/{teamId}/uid`, once, while the round is open, `at == now` |
 
 ## Vercel Blob
