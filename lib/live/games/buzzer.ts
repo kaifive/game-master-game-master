@@ -102,7 +102,12 @@ const step = (s: BuzzerState, patch: Partial<Judging>): BuzzerState => ({
 });
 
 const Press = z.object({ at: z.number() });
-const HostAction = z.enum(["open", "right", "wrong", "reopen", "reveal", "undo"]);
+const HostStep = z.enum(["open", "right", "wrong", "reopen", "reveal", "undo"]);
+/**
+ * A step, or Right / Wrong naming the team judged: a second device judging the
+ * same buzz a moment later does nothing (QA, 2026-11-25).
+ */
+const HostAction = z.union([HostStep, z.object({ act: HostStep, team: z.string().max(64) })]);
 
 /** A captain's press, on the shared clock (S12-AC2, S12-AC7). */
 export function press(
@@ -136,7 +141,10 @@ export function hostStep(s: BuzzerState, raw: unknown, now: number): MoveResult<
   const parsed = HostAction.safeParse(raw);
   if (!parsed.success) return fail("That isn't a step here.");
   const current = upNext(s);
-  switch (parsed.data) {
+  const act = typeof parsed.data === "string" ? parsed.data : parsed.data.act;
+  if (typeof parsed.data !== "string" && current !== parsed.data.team)
+    return fail("That team's already been judged.");
+  switch (act) {
     case "open":
       if (s.phase !== "shown") return fail("The buzzers are already open.");
       return { ok: true, state: step(s, { phase: "open", openedAt: now }) };

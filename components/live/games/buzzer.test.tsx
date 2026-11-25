@@ -99,9 +99,9 @@ describe("the buzzer round on the phone, the TV and Controls (spec 12)", () => {
     const act = host(r.state, OPEN + 500);
     expect(screen.getByText("Jian")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Wrong" }));
-    expect(act).toHaveBeenCalledWith({ action: "host", act: "wrong" });
+    expect(act).toHaveBeenCalledWith({ action: "host", act: { act: "wrong", team: "t2" } });
     await user.click(screen.getByRole("button", { name: "Right" }));
-    expect(act).toHaveBeenCalledWith({ action: "host", act: "right" });
+    expect(act).toHaveBeenCalledWith({ action: "host", act: { act: "right", team: "t2" } });
     cleanup();
     const right = quiz([
       [HOST, "open", OPEN],

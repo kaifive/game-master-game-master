@@ -381,7 +381,7 @@ function Host({ view, host, act, busy }: LiveHostProps) {
                       type="button"
                       disabled={busy}
                       onClick={() => {
-                        act({ action: "host", act: "right" });
+                        act({ action: "host", act: { act: "right", team: b.teamId } });
                       }}
                       className={cx(btn, "min-h-12 bg-gm-success text-gm-bg")}
                     >
@@ -391,7 +391,7 @@ function Host({ view, host, act, busy }: LiveHostProps) {
                       type="button"
                       disabled={busy}
                       onClick={() => {
-                        act({ action: "host", act: "wrong" });
+                        act({ action: "host", act: { act: "wrong", team: b.teamId } });
                       }}
                       className={cx(btn, "min-h-12 bg-gm-danger text-gm-bg")}
                     >
