@@ -336,12 +336,16 @@ describe("showdown screen and Who's played (spec 24)", () => {
 
   it("S24-AC3: when the host hands a team to a new captain mid-showdown, the new captain's phone is the controller", async () => {
     await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
-    expect((await phoneLiveView(deps, event, "m1", "dev-m1")).you).toMatchObject({
+    const you = async (id: string) => {
+      const v = await phoneLiveView(deps, event, id, `dev-${id}`);
+      return v.active ? v.you : null;
+    };
+    expect(await you("m1")).toMatchObject({
       captain: false,
     });
     await followCaptain(deps.live, event.slug, "t1", "m1");
-    expect((await phoneLiveView(deps, event, "m1", "dev-m1")).you).toMatchObject({ captain: true });
-    expect((await phoneLiveView(deps, event, "c1", "dev-c1")).you).toMatchObject({
+    expect(await you("m1")).toMatchObject({ captain: true });
+    expect(await you("c1")).toMatchObject({
       captain: false,
     });
   });

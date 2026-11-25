@@ -91,7 +91,7 @@ Team games played on the big screen, with each team's captain's phone as the con
 
 ## Acceptance criteria
 
-- [x] AC-1: A showdown steps intro → play → results per round, then final standings, on the host's Next, except that a round shows its results (and pays them, once) by itself as soon as it has nothing left to wait for; it can be ended early with points kept.
+- [x] AC-1: A showdown steps intro → play → results per round, then final standings, on the host's Next, except that a round shows its results (and pays them, once) by itself as soon as it has nothing left to wait for; it can be ended early with points kept. Next waits out a round's 3-2-1 on Controls and the TV, so a double tap can't close a round no one has played.
 - [x] AC-2: Controls' Who's played lists each team's joined players plus people the host adds by name, marks who has played in the team's color when tapped (tap again to unmark), counts them, offers Start over once everyone has played, and keeps it across every showdown in the event.
 - [x] AC-3: Only a team's captain can pick and answer for it; other phones show Watch the TV and their team's status.
 - [x] AC-4: Each showdown's TV intro plays a looping animated demo on a drawn TV with the room calling out an answer, and one line of text (a still frame under reduced motion).

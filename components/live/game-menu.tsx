@@ -6,6 +6,7 @@ import { CheckIcon } from "@/components/icons/game";
 import { cx } from "@/lib/ui";
 import { Swatch } from "./games/shared";
 import type { TeamTotal } from "./live-tv";
+import { useHeld } from "./use-live";
 
 /** A showdown on the TV's menu (spec 24). */
 export type MenuGame = { id: string; title: string; type: string };
@@ -18,6 +19,8 @@ export type TvHost = {
   blocked: Record<string, string | null>;
   /** What Next does now, while a showdown runs. */
   next: string | null;
+  /** How long Next waits while the round counts down (QA, 2026-11-25). */
+  nextInMs: number | null;
   /** The step Next would be pressed on, so a late press does nothing. */
   at: { step: string; round: number } | null;
 };
@@ -207,6 +210,7 @@ export function TvHostBar({
 }) {
   // Not the leaderboard mid-round: the round would vanish from the room (QA, 2026-11-25).
   const midRound = running && host.at?.step === "play" && screen === "showdown";
+  const held = useHeld(host.nextInMs);
   const button =
     "min-h-11 rounded-gm px-4 font-bold ring-1 ring-gm-border bg-gm-surface hover:bg-gm-surface-raised disabled:opacity-50";
   return (
@@ -217,7 +221,7 @@ export function TvHostBar({
       {running && host.next && (
         <button
           type="button"
-          disabled={host.busy}
+          disabled={host.busy || held}
           onClick={() => {
             host.act(host.at ? { action: "next", at: host.at } : { action: "next" });
           }}

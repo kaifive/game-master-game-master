@@ -94,9 +94,18 @@ export function liveView(
 /** Controls' view of the session: the TV's, plus what Next will do. */
 export type ControlsSessionView = LiveView & {
   next: string | null;
+  /** How long Next waits while the round counts down, so a double tap can't close it (QA, 2026-11-25). */
+  nextInMs: number | null;
   /** The game's view for the host, with what only Controls sees (spec 12: the answer). */
   host: unknown;
 };
+
+function countdownLeft(s: Session, now: number): number | null {
+  const startsAt = (s.state as { startsAt?: unknown } | null)?.startsAt;
+  return s.step === "play" && typeof startsAt === "number" && startsAt > now
+    ? startsAt - now
+    : null;
+}
 
 export const controlsView = (
   m: Machine | null,
@@ -109,12 +118,21 @@ export const controlsView = (
     ? {
         ...liveView(m, s, { kind: "tv" }, now, screen, finished),
         next: nextLabel(m, s),
+        nextInMs: countdownLeft(s, now),
         host:
           s.step === "play" && m.game.hostView
             ? m.game.hostView(s.state, m.content, { now, teams: s.teams.map((t) => t.id) })
             : null,
       }
-    : { active: false, serverNow: now, screen, finished: [...finished], next: null, host: null };
+    : {
+        active: false,
+        serverNow: now,
+        screen,
+        finished: [...finished],
+        next: null,
+        nextInMs: null,
+        host: null,
+      };
 
 /** The moments in a round's timeline where its view changes by itself. */
 const BOUNDARIES = ["startsAt", "showEndsAt", "closesAt"] as const;

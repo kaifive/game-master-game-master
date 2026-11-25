@@ -249,6 +249,7 @@ describe("the TV (spec 24)", () => {
       act,
       busy: false,
       next: "Start round 1",
+      nextInMs: null,
       at: { step: "intro", round: 0 },
       blocked: { fly: null, path: "This game needs at least 2 teams." },
     };
@@ -273,6 +274,23 @@ describe("the TV (spec 24)", () => {
     expect(act).toHaveBeenCalledWith({ action: "end" });
     await user.click(screen.getByRole("button", { name: "Leaderboard" }));
     expect(act).toHaveBeenCalledWith({ action: "screen", screen: "leaderboard" });
+  });
+
+  test("S24-AC1: the TV's Next waits out the round's 3-2-1, so a double tap can't close a round no one has played", async () => {
+    vi.useFakeTimers();
+    const host = {
+      act: vi.fn(),
+      busy: false,
+      next: "Show results",
+      nextInMs: 2500,
+      at: { step: "play", round: 1 },
+      blocked: {},
+    };
+    wrap(<TvHostBar host={host} running screen="showdown" />);
+    expect(screen.getByRole("button", { name: "Show results" })).toBeDisabled();
+    await act(() => vi.advanceTimersByTimeAsync(2600));
+    expect(screen.getByRole("button", { name: "Show results" })).toBeEnabled();
+    vi.useRealTimers();
   });
 
   test("S24-AC4: the demo shows the room in front of the TV, someone calling out an answer", () => {

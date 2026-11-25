@@ -7,7 +7,7 @@ import { CheckIcon } from "@/components/icons/game";
 import { adminLiveApi, type AdminLiveAct, type AdminLiveView, type Roster } from "@/lib/live";
 import { cx } from "@/lib/ui";
 import { LIVE_RENDERERS } from "./renderers";
-import { useLive } from "./use-live";
+import { useHeld, useLive } from "./use-live";
 
 const STEP_NAME: Record<string, string> = {
   intro: "How to play",
@@ -234,6 +234,7 @@ export function WhosPlayed({ view, act, busy }: { view: AdminLiveView; act: Act;
  * and see each team's points.
  */
 export function LiveCard({ view, act, busy }: { view: AdminLiveView; act: Act; busy: boolean }) {
+  const held = useHeld(view.active ? view.nextInMs : null);
   return (
     <Card title={view.active ? `Showdown: ${view.session.title}` : "Showdown"}>
       <div className="grid gap-4">
@@ -257,7 +258,7 @@ export function LiveCard({ view, act, busy }: { view: AdminLiveView; act: Act; b
             <div className="flex flex-wrap gap-3">
               {view.next && (
                 <AdminButton
-                  disabled={busy}
+                  disabled={busy || held}
                   onClick={() => {
                     act({
                       action: "next",
