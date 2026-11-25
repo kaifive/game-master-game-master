@@ -77,3 +77,8 @@ Use these words exactly, in code and docs. Add a term here before using a new on
 | **Logic** | The pure functions of a game type: create, apply move, is over, score. | `logic.ts` |
 | **Play** | One player's single run at one solo game. Server-owned; scored once when it ends. | `PlayRecord`, `plays/{gameId}_{playerId}` |
 | **Instructions box** | The rules shown before a game starts; the play begins when it is closed. | `Instructions` |
+| **Guest** | A person on the event's RSVP list or added at the door, checked in or not (spec 32). Not a player: a guest needn't have joined on a phone. | `Guest` |
+| **Check-in** | Marking a guest as here; the check-in page, opened with the party code, is for door helpers (spec 32). | `checkedIn`, `x-checkin-code` |
+| **Ticket** | One raffle entry. A checked-in guest holds 1 + extra − won (spec 32). | `extra`, `won` |
+| **Raffle** | One prize drawn on the TV's Raffle screen: names flip, Stop draws a ticket, then Claimed or Not here (spec 32). | `raffle` |
+| **Draw** | One flip-and-stop inside a raffle; Not here starts another draw for the same raffle. | `drawId` |

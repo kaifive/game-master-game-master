@@ -186,6 +186,17 @@ leaderboard/{slug}           written only by the server after each ledger entry,
                              playerId and nickname are the team's for team awards; from = a donation's giver
   teams/{teamId}: { name, color, points }     team score; name and color written on every team change
 
+guests/{slug}                spec 32, ADR-047/048: the guest list as one JSON value, changed in
+                             transactions by the server; read only by the API
+  { guests: [{ id, name, family: string | null, key, checkedIn, checkedInAt: number | null,
+               source: "list" | "door", extra: number, won: number }], updatedAt }
+  key = normalized "family|name", for merging uploads
+
+live/{slug}.screen           "leaderboard" | "showdown" | "raffle" (spec 32 adds raffle)
+live/{slug}.raffle           spec 32: { drawId, raffleId, status: "idle" | "flipping" | "landing"
+                             | "landed", startedAt, landsAt, winner: { guestId, name } | null,
+                             skipped: guestId[] } | null
+
 teams/{slug}                 spec 03, ADR-031: what phones see of teams, as one JSON string
   { phase, maxTeamSize, teams: [{ id, name, named, color, captain, members, room }],
     board: { phones, tv } }   whether the standings show (spec 07)

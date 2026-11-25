@@ -893,3 +893,44 @@ rounds also grow: up to 180°, then 360°, then 540°.
 
 **Consequences:** good play pulls ahead; a rough guess scores little but never
 below zero. Younger players score less in these four games than before.
+## ADR-047: The guest list is one document, and the raffle draws on the server
+
+**Status:** accepted (Khai, 2026-11-25). Spec 32.
+
+Door helpers poll the guest list on their phones for a couple of hours, and a
+party has 50 to 150 guests. One Firestore document per guest would cost a read
+per guest per poll and blow the free tier (`reference/free-tier-budget.md`).
+Khai asked for the raffle to be "as fair as possible".
+
+**Decision:** the guest list is one Firestore document (`events/{slug}/guests/list`,
+well under the 1 MB limit at 1000 guests), changed in transactions and mirrored
+to RTDB as one JSON string for polling, as ADR-031 does for teams. The raffle's
+winner is drawn on the server with `crypto.randomInt` at the moment Stop is
+pressed, each ticket equally likely; the names flipping on the TV are decoration
+and never decide the pick. Its state rides on the live document beside the
+screen, so the TV and Controls follow it as they do showdowns.
+
+**Consequences:** a poll costs one RTDB read; two helpers' check-ins merge in a
+transaction; nobody can steer the draw by timing a key press. The list is capped
+at 1000 guests.
+
+## ADR-048: Check-in opens with the party code, and the guest list lives in RTDB alone
+
+**Status:** accepted (Khai, 2026-11-25). Changes ADR-047's storage and spec 32's
+check-in code (A76).
+
+Khai asked for the check-in page to open with "just the game code", not a
+second passphrase to set and share. Building it showed the guest list needs no
+Firestore copy: the live state already lives in RTDB alone (ADR-037), and one
+value changed in transactions is all the list needs.
+
+**Decision:** the check-in page asks for the event's join code and sends it in
+an `x-checkin-code` header; the server checks it against the event's join code,
+and the admin session works too. The code isn't secret, so it opens only
+checking in and adding guests; uploads, tickets, removals and the raffle stay
+admin-only. The guest list is one JSON value at `guests/{slug}` in RTDB,
+changed in transactions, with no Firestore document.
+
+**Consequences:** nothing extra to set before the party. Anyone who reads the
+TV could tick guests in or add names; the host can fix that in Controls. One
+poll is one RTDB read; the list is capped at 1000 guests.

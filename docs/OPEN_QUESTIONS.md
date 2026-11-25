@@ -19,6 +19,7 @@ Move answered ones to the bottom with the answer.
 | Q34 | Team selfies: who puts the stickers on, the host in Controls or the captain on their phone? | Spec 31 | The host, in Controls, so the finale is a surprise (Khai first said "from the admin side") |
 | Q35 | Buzzer round: what questions, how many, and how many points each? | Spec 12 | Build with a short sample set marked hidden; Khai writes the real ones in the event file (10 to 15 questions, 100 points each) |
 | Q36 | Turn showdowns now play at least three rounds in whole laps (two teams play 4). Is 150 split over those rounds right? | ADR-045 | Yes: 150 over the rounds, so the game is worth the same however many teams; Memory Path's 50/40/25 becomes the same shares of each round |
+| Q47 | Raffle tickets for game points, or paid in the app? | Spec 32 (later spec) | Not for the holiday party: Khai adds extra tickets by hand |
 
 ## Answered
 
@@ -94,3 +95,13 @@ Move answered ones to the bottom with the answer.
 | A68 | Wording? (was Q44) | Khai (2026-11-25): fine. |
 | A69 | Team colors? (was Q45) | Khai (2026-11-25): remove Slate; make Orange distinct from Red; no colorblind set needed. |
 | A70 | TV readability? (was Q46) | Khai (2026-11-25): the QR code is fine, and clicking it shows it big. The Latest points ticker now says the new best beside a replay's gain. |
+| A71 | Raffle: who's in the draw? (spec 32) | Khai (2026-11-25): checked-in guests; later perhaps tickets for game points or paid in person, and Khai adding entries. |
+| A72 | Where does the raffle run? (spec 32) | Khai (2026-11-25): both on the TV laptop (space or click) and from Controls. |
+| A73 | A winner who isn't there? (spec 32) | Khai (2026-11-25): out for this prize only; they stay in for later raffles. |
+| A74 | Checking in families? (spec 32) | Khai (2026-11-25): tap the family to check everyone in, untick anyone missing. |
+| A75 | Extra raffle tickets? (spec 32) | Khai (2026-11-25): Khai adds them by hand in Controls; points-for-tickets later (Q47). |
+| A76 | Who checks people in? (spec 32) | Khai (2026-11-25): helpers with a separate check-in code that opens only the check-in page. |
+| A77 | Prize names and a winners list? (spec 32) | Khai (2026-11-25): nothing kept; Claimed just uses up the ticket. |
+| A78 | Uploading the CSV again? (spec 32) | Khai (2026-11-25): merge, keeping check-ins; names gone from the file are listed to remove. |
+| A79 | How the raffle stops, and a wheel? (spec 32) | Khai (2026-11-25): it slows down over 3 to 4 s onto a winner drawn the moment Stop is pressed; flip mode only, no wheel; as fair as possible. Claimed uses up just that one ticket. |
+| A80 | The check-in code? (was A76, spec 32) | Khai (2026-11-25): no separate passphrase; just the game's party code, checked on the server but not secret (ADR-048). |

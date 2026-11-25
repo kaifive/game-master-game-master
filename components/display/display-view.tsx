@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { MomentsProvider, MomentsStage, ToastChainView, useCelebrate } from "@/components/motion";
 import { usePoll } from "@/components/leaderboard/use-poll";
 import { Finale } from "./finale";
+import { RaffleScreen } from "./raffle-screen";
+import type { RaffleView } from "@/lib/guests";
 import { TvHostBar, type MenuGame, type TvHost } from "@/components/live/game-menu";
 import { ShowdownScreen } from "@/components/live/live-tv";
 import type { LiveRenderer } from "@/components/live/types";
@@ -279,10 +281,13 @@ function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers, showdowns 
   // The host switches the TV between the leaderboard and the showdown (S24-AC9).
   const loadLive = useCallback(
     (): Promise<ApiResult<LiveView | AdminLiveView>> =>
-      signedIn ? adminLiveApi.view(slug) : liveApi.view(slug, "", null),
+      signedIn ? adminLiveApi.view(slug) : liveApi.view(slug, "", null, true),
     [slug, signedIn],
   );
-  const live = useLive<LiveView | AdminLiveView>(loadLive, { idleMs: SCREEN_POLL_MS });
+  const live = useLive<LiveView | AdminLiveView>(loadLive, {
+    idleMs: SCREEN_POLL_MS,
+    busy: rafflePolling,
+  });
   const [busy, setBusy] = useState(false);
   const admin = signedIn && live.view && "games" in live.view ? live.view : null;
   const host: TvHost | null = admin
@@ -292,6 +297,11 @@ function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers, showdowns 
         nextInMs: admin.active ? admin.nextInMs : null,
         at: admin.active ? { step: admin.session.step, round: admin.session.round } : null,
         blocked: Object.fromEntries(admin.games.map((g) => [g.id, g.blocked])),
+        raffle: admin.raffle,
+        raffleLandsIn:
+          admin.raffle.status === "landing" && admin.raffle.landsAt !== null
+            ? admin.raffle.landsAt - admin.serverNow
+            : null,
         act: (a) => {
           setBusy(true);
           void adminLiveApi.act(slug, a).then((res) => {
@@ -305,6 +315,18 @@ function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers, showdowns 
   const hostBar = host && live.view && (
     <TvHostBar host={host} running={live.view.active} screen={live.view.screen} />
   );
+  if (live.view?.screen === "raffle")
+    return (
+      <div className="grid h-dvh grid-rows-[auto_1fr] overflow-hidden">
+        <Banner title={name} size="lg" />
+        <RaffleMain
+          raffle={live.view.raffle ?? IDLE_RAFFLE}
+          serverNow={live.serverNow}
+          host={host}
+        />
+        {hostBar}
+      </div>
+    );
   if (live.view?.screen === "showdown")
     return (
       <div className="grid h-dvh grid-rows-[auto_1fr] overflow-hidden">
@@ -419,6 +441,69 @@ function BigQr({
         </div>
       )}
     </>
+  );
+}
+
+/** The raffle before anything is known about it. */
+const IDLE_RAFFLE: RaffleView = {
+  status: "idle",
+  drawId: null,
+  landsAt: null,
+  winner: null,
+  names: [],
+  people: 0,
+  tickets: 0,
+};
+
+/** Poll fast while a raffle is being drawn, so a Stop from Controls lands quickly on the TV. */
+const rafflePolling = (v: LiveView | AdminLiveView) =>
+  v.screen === "raffle" && v.raffle !== undefined && v.raffle.status !== "idle";
+
+/**
+ * The raffle on the TV. A signed-in TV starts and stops it with space or a
+ * click; Claimed and Not here stay as buttons, so a stray key can't award a
+ * prize (S32-AC12).
+ */
+function RaffleMain({
+  raffle,
+  serverNow,
+  host,
+}: {
+  raffle: RaffleView;
+  serverNow: () => number;
+  host: TvHost | null;
+}) {
+  const press = useCallback(() => {
+    if (!host || host.busy) return;
+    const step = raffle.status === "idle" ? "start" : raffle.status === "flipping" ? "stop" : null;
+    if (step)
+      host.act({ action: "raffle", step, ...(raffle.drawId ? { drawId: raffle.drawId } : {}) });
+  }, [host, raffle.status, raffle.drawId]);
+  useEffect(() => {
+    if (!host) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== " " && e.code !== "Space") return;
+      // Space on a focused button presses that button instead.
+      if (e.target instanceof Element && e.target.closest("button, input, textarea, select"))
+        return;
+      e.preventDefault();
+      press();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [host, press]);
+  return (
+    <main
+      className={cx("min-h-0 overflow-hidden", host && "cursor-pointer")}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest("button, a, nav")) return;
+        press();
+      }}
+    >
+      <RaffleScreen raffle={raffle} serverNow={serverNow} />
+    </main>
   );
 }
 

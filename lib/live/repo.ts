@@ -1,3 +1,4 @@
+import type { RaffleState } from "@/lib/guests";
 import type { Screen, Session } from "./model";
 import type { Played } from "./played";
 
@@ -11,6 +12,8 @@ export type LiveState = {
   played: Played;
   screen: Screen;
   finished: string[];
+  /** The raffle on the TV's Raffle screen (spec 32). */
+  raffle: RaffleState | null;
 };
 
 export const EMPTY_LIVE: LiveState = {
@@ -18,6 +21,7 @@ export const EMPTY_LIVE: LiveState = {
   played: {},
   screen: "leaderboard",
   finished: [],
+  raffle: null,
 };
 
 /** Marks the session's game as played, once it has shown a round's results. */
@@ -35,8 +39,9 @@ export function normalizeLive(raw: unknown): LiveState {
   return {
     session: v.session ?? null,
     played: v.played ?? {},
-    screen: v.screen === "showdown" ? "showdown" : "leaderboard",
+    screen: v.screen === "showdown" || v.screen === "raffle" ? v.screen : "leaderboard",
     finished: Array.isArray(v.finished) ? v.finished.filter((f) => typeof f === "string") : [],
+    raffle: v.raffle && typeof v.raffle === "object" ? v.raffle : null,
   };
 }
 

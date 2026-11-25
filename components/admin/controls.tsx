@@ -7,6 +7,7 @@ import { TeamSelfiesCard } from "./team-selfies";
 import { LiveControls } from "@/components/live/live-controls";
 import { useHydrated } from "@/components/motion";
 import { MAX_TEAMS } from "@/lib/teams";
+import { GuestsCard } from "./guests-card";
 import { AdminButton, Card, field, StatusBadge } from "./ui";
 
 type Player = {
@@ -934,6 +935,7 @@ export function Controls({
       {/* The showdown first: it's what the host is pressing all night, so Next and a
           buzzer round's Right and Wrong sit at the top of a tablet (QA, 2026-11-25). */}
       {live && <LiveControls slug={slug} />}
+      <GuestsCard slug={slug} />
 
       <Card title="Event">
         <div className="flex flex-wrap items-center gap-3">

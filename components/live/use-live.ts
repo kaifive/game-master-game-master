@@ -22,13 +22,22 @@ const wallNow = () => Date.now();
  */
 export function useLive<V extends { serverNow: number; active: boolean } = LiveView>(
   load: () => Promise<Result<V>>,
-  { activeMs = LIVE_POLL_MS, idleMs = IDLE_POLL_MS }: { activeMs?: number; idleMs?: number } = {},
+  {
+    activeMs = LIVE_POLL_MS,
+    idleMs = IDLE_POLL_MS,
+    busy,
+  }: {
+    activeMs?: number;
+    idleMs?: number;
+    /** Also poll fast while this says so, as the TV does for a raffle being drawn (spec 32). */
+    busy?: (view: V) => boolean;
+  } = {},
 ) {
   const [view, setView] = useState<V | null>(null);
   const [error, setError] = useState<string | null>(null);
   const samples = useRef<ClockSample[]>([]);
   const [offset, setOffset] = useState(0);
-  const active = view?.active === true;
+  const active = view !== null && (view.active || (busy?.(view) ?? false));
   const loadRef = useRef(load);
   useEffect(() => {
     loadRef.current = load;

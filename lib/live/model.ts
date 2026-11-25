@@ -8,8 +8,8 @@ import type { z } from "zod";
 /** The host's steps through a showdown (S24-AC1). */
 export type Step = "intro" | "play" | "results" | "final";
 
-/** What the TV shows: the leaderboard, or the showdown (S24-AC9, ADR-038). */
-export type Screen = "leaderboard" | "showdown";
+/** What the TV shows: the leaderboard, the showdown (S24-AC9, ADR-038), or the raffle (spec 32). */
+export type Screen = "leaderboard" | "showdown" | "raffle";
 
 /** Most teams a showdown is built for: the event's team cap (S24-AC11). */
 export { MAX_TEAMS } from "@/lib/teams";

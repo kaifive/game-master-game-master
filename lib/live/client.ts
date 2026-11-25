@@ -1,4 +1,5 @@
 import { apiCall } from "@/lib/players";
+import type { RaffleView } from "@/lib/guests";
 import type { Screen } from "./model";
 import type { Roster } from "./played";
 import type { ControlsSessionView, LiveView } from "./view";
@@ -15,6 +16,10 @@ export type AdminLiveView = ControlsSessionView & {
   games: { id: string; title: string; type: string; blocked: string | null }[];
   /** Who's played, per team (S24-AC2). */
   played: Roster[];
+  /** The raffle (spec 32). */
+  raffle: RaffleView;
+  /** Said after a raffle step that couldn't go on: "Nobody left to draw." */
+  notice?: string;
 };
 
 export type AdminLiveAct =
@@ -27,13 +32,14 @@ export type AdminLiveAct =
   | { action: "played"; teamId: string; personId: string; played: boolean }
   | { action: "add"; teamId: string; name: string }
   | { action: "remove"; teamId: string; personId: string }
-  | { action: "reset"; teamId: string };
+  | { action: "reset"; teamId: string }
+  | { action: "raffle"; step: "start" | "stop" | "claim" | "notHere"; drawId?: string };
 
 export const liveApi = {
   /** The caller's view; the token proves a captain's phone (the TV sends none). */
-  view: (slug: string, token: string, playerId: string | null) =>
+  view: (slug: string, token: string, playerId: string | null, tv = false) =>
     apiCall<LiveView>(
-      `/api/events/${slug}/live${playerId ? `?playerId=${encodeURIComponent(playerId)}` : ""}`,
+      `/api/events/${slug}/live${playerId ? `?playerId=${encodeURIComponent(playerId)}` : tv ? "?tv=1" : ""}`,
       token,
     ),
   move: (slug: string, token: string, playerId: string, round: number, move: unknown) =>
