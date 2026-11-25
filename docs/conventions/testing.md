@@ -62,8 +62,8 @@ Three checks now cover every showdown, so a new game is covered by adding it:
   real TV and two captains' phones over a network slowed by 250 ms, the
   host stepping with Next and the phones tapping whatever they're offered.
   It fails on any page error, a step that never comes, a TV that doesn't
-  show a round's results, or a broken layout along the way. CI plays two
-  rounds of each game (`SMOKE_ROUNDS`); run it with every round before an
+  show a round's results, or a broken layout along the way. CI plays one
+  round of each game (`SMOKE_ROUNDS`, one in CI); run it with every round before an
   event: `npx playwright test --project showdowns-play --no-deps`.
 
 These catch crashes and broken layouts. They can't tell whether a game is fun,

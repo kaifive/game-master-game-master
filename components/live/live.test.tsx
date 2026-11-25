@@ -226,6 +226,7 @@ describe("the TV (spec 24)", () => {
       act,
       busy: false,
       next: "Start round 1",
+      at: { step: "intro", round: 0 },
       blocked: { fly: null, path: "This game needs at least 2 teams." },
     };
     const menu = [
@@ -240,7 +241,8 @@ describe("the TV (spec 24)", () => {
     unmount();
     wrap(<TvHostBar host={host} running screen="showdown" />);
     await user.click(screen.getByRole("button", { name: "Start round 1" }));
-    expect(act).toHaveBeenCalledWith({ action: "next" });
+    // Next says the step it was pressed on, so a late press does nothing.
+    expect(act).toHaveBeenCalledWith({ action: "next", at: { step: "intro", round: 0 } });
     await user.click(screen.getByRole("button", { name: "End early" }));
     expect(act).toHaveBeenCalledWith({ action: "end" });
     await user.click(screen.getByRole("button", { name: "Leaderboard" }));
@@ -319,7 +321,7 @@ describe("Controls (spec 11, spec 24)", () => {
     );
     expect(screen.getByText(/Playing · round 1 of 3/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Show results" }));
-    expect(act).toHaveBeenLastCalledWith({ action: "next" });
+    expect(act).toHaveBeenLastCalledWith({ action: "next", at: { step: "play", round: 1 } });
     await user.click(screen.getByRole("button", { name: "End early" }));
     expect(act).toHaveBeenLastCalledWith({ action: "end" });
   });

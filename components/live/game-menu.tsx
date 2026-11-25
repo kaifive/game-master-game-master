@@ -17,6 +17,8 @@ export type TvHost = {
   blocked: Record<string, string | null>;
   /** What Next does now, while a showdown runs. */
   next: string | null;
+  /** The step Next would be pressed on, so a late press does nothing. */
+  at: { step: string; round: number } | null;
 };
 
 /** The team standings, small, beside the menu. */
@@ -174,7 +176,7 @@ export function TvHostBar({
           type="button"
           disabled={host.busy}
           onClick={() => {
-            host.act({ action: "next" });
+            host.act(host.at ? { action: "next", at: host.at } : { action: "next" });
           }}
           className={cx(button, "bg-gm-accent text-gm-text-on-accent hover:bg-gm-accent-hover")}
         >

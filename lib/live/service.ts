@@ -161,7 +161,12 @@ const Id = z.string().min(1).max(64);
 
 export const AdminLiveAction = z.discriminatedUnion("action", [
   z.object({ action: z.literal("start"), gameId: Id }),
-  z.object({ action: z.literal("next") }),
+  z.object({
+    action: z.literal("next"),
+    at: z
+      .object({ step: z.enum(["intro", "play", "results", "final"]), round: z.number().int() })
+      .optional(),
+  }),
   z.object({ action: z.literal("end") }),
   /** The game's own host step, such as opening the buzzers (spec 12). */
   z.object({ action: z.literal("host"), act: z.unknown() }),
@@ -288,7 +293,15 @@ export async function adminLiveAction(
     if (box.refused)
       throw new AppError("CONFLICT", "A live game is already running. End it first.");
   } else if (body.action === "next") {
-    await transition(deps, event, (m, s, now) => machineNext(m, s, now));
+    // A Next pressed on a step that has since moved on (a round closing itself as
+    // the host taps Show results) does nothing, so no results screen is skipped
+    // (play-through, 2026-11-25).
+    const at = body.at;
+    await transition(deps, event, (m, s, now) =>
+      at && (s.step !== at.step || s.round !== at.round)
+        ? { ok: true, session: s, award: null }
+        : machineNext(m, s, now),
+    );
   } else if (body.action === "host") {
     const act = body.act;
     await transition(deps, event, (m, s, now) => hostAct(m, s, act, now));

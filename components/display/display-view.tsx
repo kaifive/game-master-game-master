@@ -259,6 +259,7 @@ function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers, showdowns 
     ? {
         busy,
         next: admin.next,
+        at: admin.active ? { step: admin.session.step, round: admin.session.round } : null,
         blocked: Object.fromEntries(admin.games.map((g) => [g.id, g.blocked])),
         act: (a) => {
           setBusy(true);

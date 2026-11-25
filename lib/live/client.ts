@@ -19,7 +19,8 @@ export type AdminLiveView = ControlsSessionView & {
 
 export type AdminLiveAct =
   | { action: "start"; gameId: string }
-  | { action: "next" }
+  /** `at`: the step Next was pressed on; a press for a step that's already passed does nothing. */
+  | { action: "next"; at?: { step: string; round: number } }
   | { action: "end" }
   | { action: "host"; act: unknown }
   | { action: "screen"; screen: Screen }

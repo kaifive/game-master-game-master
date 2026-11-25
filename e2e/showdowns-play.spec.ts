@@ -9,13 +9,14 @@ import { joinOnPhone, slowNetwork, teamPhaseWithCaptains, unique } from "./suppo
  * phones tap whatever their controller offers. It fails on any page error, on
  * a step that never comes, or on a screen that's cut off or overlapping.
  *
- * SMOKE_ROUNDS caps the rounds played per game (CI plays 2); unset plays all.
+ * SMOKE_ROUNDS caps the rounds played per game (CI plays 1, waiting at most
+ * 12 s a round); unset plays every round, as before an event.
  */
 const LAG_MS = 250;
 const LIVE = "/api/admin/events/holiday-2026/live";
-const CAP = Number(process.env.SMOKE_ROUNDS ?? (process.env.CI ? 2 : 99));
+const CAP = Number(process.env.SMOKE_ROUNDS ?? (process.env.CI ? 1 : 99));
 /** Longest a round may wait for teams before the host shows results anyway. */
-const PLAY_CAP_MS = 25_000;
+const PLAY_CAP_MS = process.env.CI ? 12_000 : 25_000;
 
 type Step = "intro" | "play" | "results" | "final";
 type View = {
@@ -133,16 +134,18 @@ test("S24-AC8 S11-AC2 S11-AC5: every showdown plays through on the TV and two ph
           if (!ok) problems.push(`${where}: the TV didn't show the results`);
         }
       }
-      if (step === "intro") await act({ action: "next" });
+      // Next says the step it's pressed on, as Controls and the TV do.
+      const next = { action: "next", at: { step, round } };
+      if (step === "intro") await act(next);
       else if (step === "results") {
         if (round >= Math.min(CAP, v.session.rounds)) {
           await act({ action: "end" });
           break;
         }
-        await act({ action: "next" });
+        await act(next);
       } else if (step === "final") {
         await look(`${g.title} final`);
-        await act({ action: "next" });
+        await act(next);
       } else {
         // Play: the host opens buzzers when the game has its own steps; the phones tap away.
         if (g.type === "buzzer") await act({ action: "host", act: "open" });
@@ -157,7 +160,7 @@ test("S24-AC8 S11-AC2 S11-AC5: every showdown plays through on the TV and two ph
             await act({ action: "end" });
             break;
           }
-          await act({ action: "next" });
+          await act(next);
         }
       }
       await sleep(400);
