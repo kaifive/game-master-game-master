@@ -1,4 +1,4 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { PackRoot } from "@/components/packs/judges-table/root";
 import { holiday2026 } from "@/content/events/holiday-2026";
@@ -122,6 +122,18 @@ describe("DisplayView", () => {
     ).toBeInTheDocument();
     expect(join).toHaveTextContent("example.app/join/WUSH7");
     expect(join).toHaveTextContent("WUSH7");
+  });
+
+  test("S05-AC3: clicking the QR code shows it big in the middle of the TV; a click closes it", () => {
+    serve({ players: [], recent: [] });
+    show();
+    fireEvent.click(screen.getByRole("button", { name: "Show the QR code big" }));
+    const big = screen.getByRole("dialog", { name: "Scan to join" });
+    expect(
+      within(big).getByRole("img", { name: "Big QR code for example.app/join/WUSH7" }),
+    ).toBeInTheDocument();
+    fireEvent.click(big);
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   test("S05-AC4 S05-AC5: a results board; new awards since the last update become toasts, none at first", async () => {

@@ -304,9 +304,7 @@ function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers, showdowns 
             className="grid gap-2 rounded-gm bg-gm-surface p-4 text-center shadow-xl ring-1 ring-gm-border"
           >
             <p className="m-0 font-gm-display text-2xl font-bold">Scan to join</p>
-            <div className="mx-auto w-full max-w-[10rem]">
-              <QrCode value={joinUrl} label={`QR code for ${shortUrl}`} />
-            </div>
+            <BigQr value={joinUrl} shortUrl={shortUrl} joinCode={joinCode} />
             <p className="m-0 text-base break-all text-gm-text-muted">{shortUrl}</p>
             <p className="m-0 text-base">
               Code{" "}
@@ -321,6 +319,70 @@ function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers, showdowns 
       </div>
       {hostBar}
     </div>
+  );
+}
+
+/**
+ * The join QR code, which opens big in the middle of the TV when clicked, for
+ * phones at the back of the room (Khai, 2026-11-25). Any click or Escape closes it.
+ */
+function BigQr({
+  value,
+  shortUrl,
+  joinCode,
+}: {
+  value: string;
+  shortUrl: string;
+  joinCode: string;
+}) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  return (
+    <>
+      <button
+        type="button"
+        aria-label="Show the QR code big"
+        onClick={() => {
+          setOpen(true);
+        }}
+        className="mx-auto block w-full max-w-[10rem] cursor-zoom-in rounded-gm"
+      >
+        <QrCode value={value} label={`QR code for ${shortUrl}`} />
+      </button>
+      {open && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Scan to join"
+          onClick={() => {
+            setOpen(false);
+          }}
+          className="fixed inset-0 z-50 grid cursor-zoom-out place-items-center bg-gm-bg/90 backdrop-blur"
+        >
+          <div className="grid justify-items-center gap-[2vh] text-center">
+            <p className="m-0 font-gm-display text-[6vh] font-bold">Scan to join</p>
+            <div className="w-[70vh]">
+              <QrCode value={value} label={`Big QR code for ${shortUrl}`} />
+            </div>
+            <p className="m-0 text-[3.5vh]">
+              {shortUrl} · Code{" "}
+              <span className="font-gm-display font-bold tracking-[0.2em] text-gm-accent-ink">
+                {joinCode}
+              </span>
+            </p>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
