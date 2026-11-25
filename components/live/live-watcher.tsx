@@ -43,8 +43,8 @@ export function LiveWatcher({ slug }: { slug: string }) {
   const { view } = useLive(load, { activeMs: IDLE_POLL_MS });
   const live = `/${slug}/live`;
   const playing = path.startsWith(`/${slug}/play/`);
-  // The TV and its pages follow the showdown themselves.
-  const screen = path.startsWith(`/${slug}/display`);
+  // The TV and its pages follow the showdown themselves; check-in isn't a player page (spec 32).
+  const screen = path.startsWith(`/${slug}/display`) || path.startsWith(`/${slug}/checkin`);
   const sessionId = view?.active ? view.session.id : null;
   const joined = Boolean(device?.active);
 

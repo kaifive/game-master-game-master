@@ -50,6 +50,8 @@ export function PlayerFooter({ hasTeams }: { hasTeams: boolean }) {
   const hub = `/${device.slug}`;
   // The TV display is the room's screen, not a phone: no tabs there (Khai, 2026-11-24).
   if (path.startsWith(`${hub}/display`)) return null;
+  // Check-in is for door helpers, not players (spec 32).
+  if (path.startsWith(`${hub}/checkin`)) return null;
   // The live game is the captain's controller: the whole screen is its, so a mashed
   // key can't land on a tab (QA, 2026-11-25). Its header's back arrow goes to Games.
   if (path === `${hub}/live`) return null;
