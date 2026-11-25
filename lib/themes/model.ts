@@ -5,6 +5,9 @@ import { z } from "zod";
  * Every pack defines every core token for light and dark; packs may add
  * their own extra tokens (such as "snow") for their own slot components.
  */
+/** How many team colors a theme has (spec 29). */
+export const TEAM_COLOR_COUNT = 7;
+
 export const COLOR_MODES = ["light", "dark"] as const;
 export const ColorMode = z.enum(COLOR_MODES);
 export type ColorMode = z.infer<typeof ColorMode>;
@@ -41,7 +44,6 @@ export const CORE_COLOR_TOKENS = [
   "team-5",
   "team-6",
   "team-7",
-  "team-8",
 ] as const;
 
 /** Motion timing every pack defines (spec 14). */
@@ -108,8 +110,8 @@ export const PackDefinition = z
     tokens: z.object({ light: TokenSet, dark: TokenSet }).strict(),
     decorations: z.array(z.string()).optional(),
     contrastPairs: z.array(ContrastPair).optional(),
-    /** What each of `team-1` to `team-8` is called, for picking a team's color (spec 29). */
-    teamColorNames: z.array(z.string().min(1)).length(8),
+    /** What each of `team-1` to `team-7` is called, for picking a team's color (spec 29). */
+    teamColorNames: z.array(z.string().min(1)).length(TEAM_COLOR_COUNT),
     variants: z.record(z.string(), VariantDefinition),
   })
   .strict();

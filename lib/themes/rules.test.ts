@@ -134,7 +134,7 @@ describe("readableInk", () => {
   test("every team color in every pack gets ink that meets 4.5:1", () => {
     for (const { pack, variant, mode } of combos) {
       const t = resolveTheme(pack, variant, mode).tokens;
-      for (let n = 1; n <= 8; n++) {
+      for (let n = 1; n <= 7; n++) {
         const bg = t[`team-${n}`]!;
         expect(contrastRatio(readableInk(bg), bg)).toBeGreaterThanOrEqual(4.5);
       }

@@ -16,7 +16,7 @@ const fonts = {
 export const judgesTable: PackDefinition = {
   id: "judges-table",
   name: "Judges' Table",
-  teamColorNames: ["Red", "Blue", "Gold", "Green", "Purple", "Teal", "Orange", "Slate"],
+  teamColorNames: ["Red", "Blue", "Gold", "Green", "Purple", "Teal", "Orange"],
   tokens: {
     light: {
       bg: "#f6f6f4",
@@ -48,8 +48,7 @@ export const judgesTable: PackDefinition = {
       "team-4": "#1f7a52",
       "team-5": "#7a3fb0",
       "team-6": "#0f7f8c",
-      "team-7": "#d0641c",
-      "team-8": "#3d4a52",
+      "team-7": "#ef7d0e",
       ...fonts,
       snow: "#f6f6f4",
       card: "#ffffff",
@@ -97,8 +96,7 @@ export const judgesTable: PackDefinition = {
       "team-4": "#3fbf86",
       "team-5": "#b77ce8",
       "team-6": "#34c3d1",
-      "team-7": "#ff8a3d",
-      "team-8": "#9aa9b1",
+      "team-7": "#ffa033",
       ...fonts,
       snow: "#121012",
       card: "#ffffff",
