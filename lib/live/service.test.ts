@@ -9,6 +9,7 @@ import { MemoryLiveRepo } from "./repo.memory";
 import {
   adminLiveAction,
   adminLiveView,
+  phaseChangeProblem,
   phoneLiveView,
   playerLiveAction,
   type LiveDeps,
@@ -315,6 +316,20 @@ describe("showdown screen and Who's played (spec 24)", () => {
     const back = await adminLiveAction(deps, event, { action: "screen", screen: "leaderboard" });
     expect(back).toMatchObject({ active: true, screen: "leaderboard" });
     expect((await phoneLiveView(deps, event, null, null)).screen).toBe("leaderboard");
+  });
+
+  it("S24-AC11: showdowns need the team phase, and the host can't leave it while one runs", async () => {
+    const individual = { ...summary, phase: "individual" as const };
+    const solo = { ...deps, teams: () => Promise.resolve(individual) };
+    expect(
+      await failure(adminLiveAction(solo, event, { action: "start", gameId: "tap-off" })),
+    ).toEqual({ status: 409, message: "Start the team phase first." });
+    expect(await phaseChangeProblem(deps.live, event.slug, "individual")).toBeNull();
+    await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
+    expect(await phaseChangeProblem(deps.live, event.slug, "individual")).toBe(
+      "End the showdown first.",
+    );
+    expect(await phaseChangeProblem(deps.live, event.slug, "team")).toBeNull();
   });
 
   it("S24-AC9: the menu marks a showdown played once it has shown a round's results, not when it's started and ended at once", async () => {

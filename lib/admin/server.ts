@@ -1,5 +1,5 @@
 import "server-only";
-import { liveRepo } from "@/lib/live/server";
+import { liveRepo, phaseChangeProblem } from "@/lib/live/server";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { AppError } from "@/lib/errors";
@@ -207,9 +207,12 @@ export async function runAction(slug: Slug, body: ControlsAction) {
     case "clear":
       await clearTestData(d, event, body.confirm);
       break;
-    case "phase":
+    case "phase": {
+      const problem = d.live ? await phaseChangeProblem(d.live, event.slug, body.phase) : null;
+      if (problem) throw new AppError("CONFLICT", problem);
       await setPhase(d, event, body.phase);
       break;
+    }
     case "teamSize":
       await setTeamSize(d, event, body.size);
       break;
