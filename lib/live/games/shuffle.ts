@@ -99,7 +99,7 @@ function view(s: ShuffleState, _c: unknown, { role, revealed, now }: ViewCtx) {
 const game: ShowdownGame<C, ShuffleState> = {
   content: Content,
   demo: "Follow the big present as they shuffle!",
-  timeout: "Out of time? 15 seconds to pick, or you get no present.",
+  timeout: "Out of time? No present.",
   rounds: (_c, teams) => lapRounds(teams),
   deal(c, { seed, round, teams, startsAt }) {
     const random = seededRandom(seed);

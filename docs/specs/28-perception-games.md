@@ -69,7 +69,7 @@ rounds live in the live session (spec 11).
 - **Phone (solo):** the task, the input, a clear answer timer, and after each answer how
   close it was. The result shows the average closeness.
 - **TV (showdown):** the task big enough for the room, who has answered, then the reveal
-  with the right answer and each team's drawn on the scene (in its color), each team's
+  with the right answer marked by a white star and each team's drawn on the scene in its color, each team's
   answer, how close, and the points.
 - **Captain phone (showdown):** the same input as solo, with no Lock in: what's on it goes in as the time runs out.
 - **Demo:** each game's looping TV demo and one line of text (spec 24).
