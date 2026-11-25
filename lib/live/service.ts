@@ -1,6 +1,15 @@
 import { z } from "zod";
 import { AppError } from "@/lib/errors";
 import type { EventConfig, GameConfig } from "@/lib/events";
+import {
+  pool,
+  raffleStep,
+  raffleView,
+  spendTicket,
+  type GuestRepo,
+  type RaffleOutcome,
+  type RaffleView,
+} from "@/lib/guests";
 import type { PointsDeps } from "@/lib/points";
 import { awardTeam } from "@/lib/points";
 import type { TeamsSummary } from "@/lib/teams";
@@ -25,7 +34,7 @@ import {
   roster,
 } from "./played";
 import { withFinished, type LiveRepo, type LiveState } from "./repo";
-import { controlsView, liveView } from "./view";
+import { controlsView, liveView, type LiveView } from "./view";
 
 /** Everything the live service needs (spec 11). */
 export type LiveDeps = {
@@ -39,6 +48,10 @@ export type LiveDeps = {
   now: () => number;
   id: () => string;
   seed: () => number;
+  /** The guest list, for the raffle (spec 32). */
+  guests: GuestRepo;
+  /** A secure uniform whole number below n: the raffle's draw (ADR-047). */
+  randomInt: (n: number) => number;
 };
 
 /** The event's live games the host can start (S11-AC1). */
@@ -170,7 +183,16 @@ export const AdminLiveAction = z.discriminatedUnion("action", [
   z.object({ action: z.literal("end") }),
   /** The game's own host step, such as opening the buzzers (spec 12). */
   z.object({ action: z.literal("host"), act: z.unknown() }),
-  z.object({ action: z.literal("screen"), screen: z.enum(["leaderboard", "showdown"]) }),
+  z.object({
+    action: z.literal("screen"),
+    screen: z.enum(["leaderboard", "showdown", "raffle"]),
+  }),
+  /** A raffle step, carrying the draw it was pressed on (spec 32). */
+  z.object({
+    action: z.literal("raffle"),
+    step: z.enum(["start", "stop", "claim", "notHere"]),
+    drawId: z.string().max(64).optional(),
+  }),
   z.object({ action: z.literal("played"), teamId: Id, personId: Id, played: z.boolean() }),
   z.object({ action: z.literal("add"), teamId: Id, name: z.string().max(80) }),
   z.object({ action: z.literal("remove"), teamId: Id, personId: Id }),
@@ -194,8 +216,14 @@ function teamsProblem(
   return null;
 }
 
-/** Controls' view: the session, the TV screen, the games to start, and Who's played. */
-export async function adminLiveView(deps: LiveDeps, event: EventConfig) {
+/** The raffle as the TV and Controls see it (spec 32). */
+async function raffleFor(deps: LiveDeps, slug: string, state: LiveState): Promise<RaffleView> {
+  const list = await deps.guests.read(slug);
+  return raffleView(state.raffle, pool(list.guests, state.raffle?.skipped ?? []), deps.now());
+}
+
+/** Controls' view: the session, the TV screen, the games to start, Who's played, and the raffle. */
+export async function adminLiveView(deps: LiveDeps, event: EventConfig, notice?: string) {
   const state = await current(deps, event);
   const m = machineFor(deps, event, state.session);
   const summary = await deps.teams(event.slug);
@@ -216,7 +244,42 @@ export async function adminLiveView(deps: LiveDeps, event: EventConfig) {
     played: (summary?.teams ?? []).map((t) =>
       roster({ id: t.id, name: t.name, color: t.color, members: membersOf(t) }, state.played),
     ),
+    raffle: await raffleFor(deps, event.slug, state),
+    ...(notice ? { notice } : {}),
   };
+}
+
+/** One raffle step (spec 32): Start, Stop, Claimed or Not here. */
+async function runRaffle(
+  deps: LiveDeps,
+  event: EventConfig,
+  step: "start" | "stop" | "claim" | "notHere",
+  drawId: string | undefined,
+): Promise<string | undefined> {
+  const list = await deps.guests.read(event.slug);
+  const now = deps.now();
+  const box: { out: RaffleOutcome | null; showdown: boolean } = { out: null, showdown: false };
+  await deps.live.update(event.slug, (cur) => {
+    if (step === "start" && cur.session) {
+      box.showdown = true;
+      return null;
+    }
+    const out = raffleStep(cur.raffle, list.guests, step, drawId, {
+      now,
+      id: deps.id,
+      randomInt: deps.randomInt,
+    });
+    box.out = out;
+    if (!out.ok) return null;
+    // Starting a raffle puts it on the TV (S32-AC12).
+    return { ...cur, raffle: out.raffle, screen: step === "start" ? "raffle" : cur.screen };
+  });
+  if (box.showdown) throw new AppError("CONFLICT", "End the showdown first.");
+  const out = box.out;
+  if (!out) return undefined;
+  if (!out.ok) throw new AppError("CONFLICT", out.message);
+  if (out.claim) await spendTicket(deps.guests, event.slug, out.claim, now);
+  return out.notice;
 }
 
 /** Checks a Who's played change against the event's teams as they are now. */
@@ -331,6 +394,8 @@ export async function adminLiveAction(
   } else if (body.action === "screen") {
     const screen = body.screen;
     await deps.live.update(event.slug, (cur) => ({ ...cur, screen }));
+  } else if (body.action === "raffle") {
+    return adminLiveView(deps, event, await runRaffle(deps, event, body.step, body.drawId));
   } else {
     await changePlayed(deps, event, body);
   }
@@ -372,13 +437,25 @@ export async function phoneLiveView(
   event: EventConfig,
   playerId: string | null,
   uid: string | null,
-) {
+  tv = false,
+): Promise<LiveView> {
   const state = await current(deps, event);
   const m = machineFor(deps, event, state.session);
+  // Only the TV gets the raffle, and only while it's on screen (S32-AC13).
+  const raffle =
+    tv && !playerId && state.screen === "raffle"
+      ? { raffle: await raffleFor(deps, event.slug, state) }
+      : {};
   if (!m || !state.session)
-    return liveView(null, null, { kind: "tv" }, deps.now(), state.screen, state.finished);
+    return {
+      ...liveView(null, null, { kind: "tv" }, deps.now(), state.screen, state.finished),
+      ...raffle,
+    };
   const role = await roleOf(deps, event, state.session, playerId, uid);
-  return liveView(m, state.session, role, deps.now(), state.screen, state.finished);
+  return {
+    ...liveView(m, state.session, role, deps.now(), state.screen, state.finished),
+    ...raffle,
+  };
 }
 
 export const PlayerLiveAction = z.object({

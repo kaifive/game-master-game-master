@@ -1,3 +1,4 @@
+import { MemoryGuestRepo } from "@/lib/guests";
 import { beforeEach, describe, expect, it } from "vitest";
 import { holiday2026 } from "@/content/events/holiday-2026";
 import { isAppError } from "@/lib/errors";
@@ -128,6 +129,8 @@ beforeEach(() => {
     now: () => clock,
     id: () => "sess1",
     seed: () => 42,
+    guests: new MemoryGuestRepo(),
+    randomInt: () => 0,
   };
 });
 
@@ -480,5 +483,60 @@ describe("buzzer round through the service (spec 12)", () => {
     expect(view.active && view.session.step).toBe("final");
     const ledger = await points.entries(event.slug);
     expect(ledger.map((e) => [e.points, e.to])).toEqual([[100, { kind: "team", id: "t2" }]]);
+  });
+});
+
+describe("the raffle on the live screen (spec 32)", () => {
+  const seed = async (names: string[]) => {
+    const { adminGuestAction, checkinAction } = await import("@/lib/guests");
+    const gdeps = { guests: deps.guests, now: () => clock, id: () => `g${String(clock++)}` };
+    await adminGuestAction(gdeps, event, { action: "upload", csv: names.join("\n") });
+    const list = await deps.guests.read(event.slug);
+    await checkinAction(gdeps, event, {
+      action: "checkIn",
+      ids: list.guests.map((g) => g.id),
+      checkedIn: true,
+    });
+  };
+
+  it("S32-AC10 S32-AC12: Start puts the raffle on the TV; Claimed uses up the winner's ticket; phones never get the raffle", async () => {
+    await seed(["Mai", "Bao"]);
+    let view = await adminLiveAction(deps, event, { action: "raffle", step: "start" });
+    expect(view.screen).toBe("raffle");
+    expect(view.raffle).toMatchObject({ status: "flipping", people: 2, tickets: 2 });
+    const tv = await phoneLiveView(deps, event, null, null, true);
+    expect(tv.raffle?.names.length).toBe(2);
+    // A phone's view, even the TV-style one the banner polls, carries no raffle.
+    expect((await phoneLiveView(deps, event, null, null)).raffle).toBeUndefined();
+    expect((await phoneLiveView(deps, event, "m1", "dev-m1", true)).raffle).toBeUndefined();
+    const drawId = view.raffle.drawId ?? "";
+    view = await adminLiveAction(deps, event, { action: "raffle", step: "stop", drawId });
+    expect(view.raffle.status).toBe("landing");
+    clock += 4000;
+    view = await adminLiveAction(deps, event, {
+      action: "raffle",
+      step: "claim",
+      drawId: view.raffle.drawId ?? "",
+    });
+    expect(view.raffle).toMatchObject({ status: "idle", people: 1, tickets: 1 });
+    const won = (await deps.guests.read(event.slug)).guests.filter((g) => g.won === 1);
+    expect(won).toHaveLength(1);
+  });
+
+  it("S32-AC11: Start is refused with nobody to draw, or while a showdown runs", async () => {
+    expect(
+      await failure(adminLiveAction(deps, event, { action: "raffle", step: "start" })),
+    ).toEqual({
+      status: 409,
+      message: "Nobody left to draw.",
+    });
+    await seed(["Mai"]);
+    await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
+    expect(
+      await failure(adminLiveAction(deps, event, { action: "raffle", step: "start" })),
+    ).toEqual({
+      status: 409,
+      message: "End the showdown first.",
+    });
   });
 });

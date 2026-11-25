@@ -26,13 +26,14 @@ const session = (revision: number): Session => ({
 export function liveRepoContract(make: () => Promise<LiveRepo>) {
   test("S11-AC8: starts empty, stores the session and rotation, and clears", async () => {
     const repo = await make();
-    const empty = { session: null, played: {}, screen: "leaderboard", finished: [] };
+    const empty = { session: null, played: {}, screen: "leaderboard", finished: [], raffle: null };
     expect(await repo.read(SLUG)).toEqual(empty);
     const stored = {
       session: session(1),
       played: { t1: { added: [{ id: "x1", name: "Grandma" }], played: ["p1"] } },
       screen: "showdown" as const,
       finished: ["fly"],
+      raffle: null,
     };
     await repo.update(SLUG, () => stored);
     expect(await repo.read(SLUG)).toEqual(stored);
@@ -47,6 +48,7 @@ export function liveRepoContract(make: () => Promise<LiveRepo>) {
       played: {},
       screen: "leaderboard",
       finished: [],
+      raffle: null,
     }));
     const after = await repo.update(SLUG, (cur) =>
       cur.session

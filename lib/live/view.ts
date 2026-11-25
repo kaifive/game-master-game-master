@@ -1,4 +1,5 @@
 import { nextLabel, type Machine } from "./machine";
+import type { RaffleView } from "@/lib/guests";
 import type { Role, Screen, Session } from "./model";
 
 /** What a phone, the TV or Controls sees of the live session (S11-AC3). */
@@ -13,11 +14,19 @@ export type LiveTeamView = {
 };
 
 export type LiveView =
-  | { active: false; serverNow: number; screen: Screen; finished?: string[] }
+  | {
+      active: false;
+      serverNow: number;
+      screen: Screen;
+      finished?: string[];
+      /** The TV's raffle, while it's on screen (spec 32). */
+      raffle?: RaffleView;
+    }
   | {
       active: true;
       serverNow: number;
       screen: Screen;
+      raffle?: RaffleView;
       /** The showdowns already played tonight, by game id, for the TV's menu. */
       finished?: string[];
       session: {

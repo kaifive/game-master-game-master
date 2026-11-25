@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { AdminLiveAct } from "@/lib/live";
+import type { AdminLiveAct, Screen } from "@/lib/live";
 import { CheckIcon } from "@/components/icons/game";
 import { cx } from "@/lib/ui";
 import { Swatch } from "./games/shared";
@@ -209,7 +209,7 @@ export function TvHostBar({
 }: {
   host: TvHost;
   running: boolean;
-  screen: "leaderboard" | "showdown";
+  screen: Screen;
 }) {
   // Not the leaderboard mid-round: the round would vanish from the room (QA, 2026-11-25).
   const midRound = running && host.at?.step === "play" && screen === "showdown";

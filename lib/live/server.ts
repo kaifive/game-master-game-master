@@ -7,6 +7,7 @@ import { pointsDeps } from "@/lib/points/server";
 import { teamSummary } from "@/lib/teams/server";
 import { showdownFor } from "./registry";
 import { liveRepo } from "./runtime";
+import { guestRepo } from "@/lib/guests/server";
 import {
   AdminLiveAction,
   adminLiveAction,
@@ -31,6 +32,8 @@ export const liveDeps = (): LiveDeps => ({
   now: () => Date.now(),
   id: () => randomUUID().replaceAll("-", "").slice(0, 16),
   seed: () => randomInt(1, 2 ** 31 - 1),
+  guests: guestRepo(),
+  randomInt: (n) => randomInt(n),
 });
 
 type Slug = string | string[] | undefined;
@@ -40,8 +43,8 @@ export { AdminLiveAction, PlayerLiveAction };
 export const liveForAdmin = (slug: Slug) => adminLiveView(liveDeps(), requireEvent(slug));
 export const runLiveAction = (slug: Slug, body: z.infer<typeof AdminLiveAction>) =>
   adminLiveAction(liveDeps(), requireEvent(slug), body);
-export const liveForPhone = (slug: Slug, playerId: string | null, uid: string | null) =>
-  phoneLiveView(liveDeps(), requireEvent(slug), playerId, uid);
+export const liveForPhone = (slug: Slug, playerId: string | null, uid: string | null, tv = false) =>
+  phoneLiveView(liveDeps(), requireEvent(slug), playerId, uid, tv);
 export const runPlayerLiveAction = (
   slug: Slug,
   uid: string,
