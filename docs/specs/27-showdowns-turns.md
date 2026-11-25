@@ -32,9 +32,9 @@ Every game here follows spec 24: the host's steps, Who's played, the TV demo, 1 
 
 ### Snowball to 21 (`to21`)
 
-1. At least three rounds, in whole laps of the table so every team leads equally often (two teams play 4, three play 3, four play 4) (spec 24, "Fair for every team"; Khai, 2026-11-24). Each round has its own number to make: 21, then 17, 25, 13, 29 and 19 (content `targets`; Khai, 2026-11-24). A shared snowball count starts at 0. Teams take turns in order, and a different team starts each round, so every team starts equally often. On the TV each number on the track fills in the color of the team that added it.
-2. On its turn a team adds 1, 2 or 3 to the count (a choice that would go past the number is off), within 10 s; too slow adds 1.
-3. **The team that makes the count exactly the number wins the round's share of 150 (50 with three teams); every other team gets half of it (25)** (Khai, 2026-11-24).
+1. At least three rounds, in whole laps of the table so every team leads equally often (two teams play 4, three play 3, four play 4) (spec 24, "Fair for every team"; Khai, 2026-11-24). Every round is to 21 (Khai, 2026-11-25: a changing target was tried and dropped). A shared snowball count starts at 0. Teams take turns in order, and a different team starts each round, so every team starts equally often. On the TV each number on the track fills in the color of the team that added it.
+2. On its turn a team adds 1, 2 or 3 to the count (a choice that would go past 21 is off), within 10 s; too slow adds 1.
+3. **The team that makes the count exactly 21 wins the round's share of 150 (50 with three teams); every other team gets half of it (25)** (Khai, 2026-11-24).
 
 (Land Mass was removed after play-testing: its controls were too hard on a phone, ADR-044.)
 
@@ -52,7 +52,7 @@ Each game's content is validated in the event file and its round state lives in 
 
 - [x] AC-1: Memory Path deals a path from the seed (bottom to top, up/left/right, never doubling back), hides it after showing it, plays at least three rounds in whole laps with a new path that's longer and shows for less time each round, starts each team on the first square and takes up, left or right steps, and an order that rotates so each team goes first equally often, knocks a team out on a wrong square or a slow step, keeps their right squares lit for the next teams, and pays the round's share of 150 to a team that crosses, 80% to a team that got some squares right, and half to the rest.
 - [x] AC-2: Present Shuffle shows seeded values, covers and shuffles them on the TV, plays at least three rounds in whole laps with one more present each round and one pick each, first pick rotating so each team picks first equally often (each picked present gone for everyone, a slow pick getting nothing), and pays the picked present's value, the best worth the round's share of 150.
-- [x] AC-3: Snowball to 21 plays at least three rounds in whole laps with each team starting equally often and a new number each round, takes 1, 2 or 3 per turn (never past the number, 1 if too slow), and pays the round's share of 150 to the team that makes exactly 21 and half of it to every other team.
+- [x] AC-3: Snowball to 21 plays at least three rounds in whole laps with each team starting equally often, takes 1, 2 or 3 per turn (never past 21, 1 if too slow), and pays the round's share of 150 to the team that makes exactly 21 and half of it to every other team.
 - Retired with Land Mass (ADR-044): AC-4.
 
 ## Tests
