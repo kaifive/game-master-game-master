@@ -1,3 +1,4 @@
+import { TEAM_COLOR_COUNT } from "@/lib/themes";
 /** Teams (spec 03, ADR-030). A team plays team games as one player, on its captain's phone. */
 export type Team = {
   id: string;
@@ -56,7 +57,7 @@ export type Sticker = {
 export const MAX_STICKERS = 30;
 
 export const TEAM_NAME_MAX = 20;
-export const TEAM_COLORS = 8;
+export const TEAM_COLORS = TEAM_COLOR_COUNT;
 /** Most teams an event can have, so every showdown fits (Khai, 2026-11-18). */
 export const MAX_TEAMS = 6;
 

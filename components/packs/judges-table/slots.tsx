@@ -518,7 +518,8 @@ function Celebration({ moment, onDone }: CelebrationProps) {
       data-slot="celebration"
       data-animation={animation}
       className={cx(
-        "pointer-events-none fixed inset-0 z-50 grid place-items-center p-6",
+        // Near the top, clear of the numbers a moment like a lead change celebrates (QA, 2026-11-25).
+        "pointer-events-none fixed inset-0 z-50 grid content-start justify-items-center p-6 pt-[6vh]",
         animation === "snow-drift" &&
           "jt-snowfall motion-safe:animate-[jt-drift_var(--gm-motion-stage)_linear]",
       )}
@@ -535,7 +536,7 @@ function Celebration({ moment, onDone }: CelebrationProps) {
         {moment.value !== undefined && animation !== "shake" && (
           <ScoreCard label={moment.text} value={moment.value} state="highlight" size="lg" />
         )}
-        <p className="m-0 font-gm-display text-3xl font-bold tracking-wide text-gm-text uppercase">
+        <p className="m-0 font-gm-display text-[clamp(1.875rem,5vh,4.5rem)] font-bold tracking-wide text-balance text-gm-text uppercase">
           {moment.text}
         </p>
       </div>

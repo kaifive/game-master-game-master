@@ -19,8 +19,7 @@ const teams = {
   "team-4": "#1f8f5f",
   "team-5": "#8a3fbf",
   "team-6": "#0f8796",
-  "team-7": "#d0641c",
-  "team-8": "#56626b",
+  "team-7": "#ef7d0e",
 };
 
 /**
@@ -28,16 +27,7 @@ const teams = {
  * indigo accent, the same for every event.
  */
 /** What the admin theme's team colors are called (spec 29): the same hues as every pack so far. */
-export const ADMIN_TEAM_COLOR_NAMES = [
-  "Red",
-  "Blue",
-  "Gold",
-  "Green",
-  "Purple",
-  "Teal",
-  "Orange",
-  "Slate",
-];
+export const ADMIN_TEAM_COLOR_NAMES = ["Red", "Blue", "Gold", "Green", "Purple", "Teal", "Orange"];
 
 export const ADMIN_THEME: { light: TokenSet; dark: TokenSet } = {
   light: {

@@ -40,8 +40,7 @@ colors:
   team-4: "#3fbf86"
   team-5: "#b77ce8"
   team-6: "#34c3d1"
-  team-7: "#ff8a3d"
-  team-8: "#9aa9b1"
+  team-7: "#ffa033"
   winter-day-bg: "#edf2f5"
   winter-day-text: "#10181c"
   winter-day-accent: "#b3122e"
@@ -206,7 +205,7 @@ A cold winter-night ground, one warm cranberry voice, gold for winning, and whit
 
 ### Tertiary
 
-- **Team Colors** (`team-1` to `team-8`): one square swatch per team beside its name on the board, team panel and toasts. Always paired with the team's name.
+- **Team Colors** (`team-1` to `team-7`): one square swatch per team beside its name on the board, team panel and toasts. Always paired with the team's name.
 
 ### Neutral
 
@@ -227,7 +226,7 @@ Controls run on a fixed theme (`lib/themes/admin.ts`): cool slate ground (`admin
 
 **The Fill and Ink Rule.** `accent` is for fills under white text; `accent-ink` is for the accent as text, lines and focus rings on the page grounds. Never set text in `accent` on `bg` or `surface`.
 
-**The Contract Rule.** Every pack defines every core token (`bg` through `team-8`, `radius`, both fonts, six motion tokens) for light and dark, and passes the shared contrast pairs: `text` and `text-muted` on `bg` and `surface` at 4.5:1, `text` on `surface-raised`, `text-on-accent` on `accent`, `accent-ink` on `bg` / `surface` / `surface-raised` at 4.5:1; tile inks on their tiles and `buzzer-ink` on `buzzer` at 3:1 (large bold text). Packs add pairs for their extras: Judges' Table checks `card-ink` on `card` (4.5:1), `card-back-ink` on `card-back` (3:1) and `band-ink` on `band` (4.5:1).
+**The Contract Rule.** Every pack defines every core token (`bg` through `team-7`, `radius`, both fonts, six motion tokens) for light and dark, and passes the shared contrast pairs: `text` and `text-muted` on `bg` and `surface` at 4.5:1, `text` on `surface-raised`, `text-on-accent` on `accent`, `accent-ink` on `bg` / `surface` / `surface-raised` at 4.5:1; tile inks on their tiles and `buzzer-ink` on `buzzer` at 3:1 (large bold text). Packs add pairs for their extras: Judges' Table checks `card-ink` on `card` (4.5:1), `card-back-ink` on `card-back` (3:1) and `band-ink` on `band` (4.5:1).
 
 **The Tokens-Not-Colors Rule.** Components use `--gm-*` tokens through Tailwind (`bg-gm-surface`, `text-gm-accent-ink`) or `var(--gm-card)`; hex values live only in `lib/themes/`.
 

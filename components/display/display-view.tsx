@@ -91,8 +91,9 @@ function Results({
   columns?: 1 | 2;
 }) {
   const { LeaderboardRow } = useSlots();
-  const top = podium ? rows.slice(0, 3) : [];
-  const rest = podium ? rows.slice(3) : rows;
+  // Only a score stands on the podium: at 0-0 nobody looks like they're winning (QA, 2026-11-25).
+  const top = podium ? rows.slice(0, 3).filter((r) => r.score > 0) : [];
+  const rest = rows.slice(top.length);
   const row = (r: BoardRow, spot?: 1 | 2 | 3) => (
     <LeaderboardRow
       key={r.id}
@@ -134,7 +135,9 @@ function Results({
         >
           {top.map((r, i) => row(r, (i + 1) as 1 | 2 | 3))}
           {rest.length > 0 && (
-            <li className="col-span-3 row-start-2">{list("Places 4 and below", false)}</li>
+            <li className="col-span-3 row-start-2">
+              {list(`Places ${String(top.length + 1)} and below`, false)}
+            </li>
           )}
         </ol>
       )}
@@ -172,6 +175,33 @@ function Latest({ recent }: { recent: DisplayStandings["recent"] }) {
 }
 
 const LATEST = 3;
+
+/** Beside the champions at the end of the night: every team's final place, then the top players. */
+function FinalStandings({ data }: { data: DisplayStandings }) {
+  const teams = data.teams.map((t) => ({
+    id: t.id,
+    rank: t.rank,
+    name: t.name,
+    score: t.points,
+    team: t.color,
+  }));
+  const players = data.players.map((p) => ({
+    id: p.id,
+    rank: p.rank,
+    name: p.nickname,
+    score: p.points,
+  }));
+  return (
+    <div className="grid min-h-0 content-start gap-5 overflow-hidden">
+      {teams.length > 0 && (
+        <Results label="Final standings" rows={teams} podium={false} columns={1} />
+      )}
+      {players.length > 0 && (
+        <Results label="Top players" rows={players.slice(0, 5)} podium={false} columns={1} />
+      )}
+    </div>
+  );
+}
 
 function Board({ data }: { data: DisplayStandings }) {
   if (data.hidden)
@@ -271,6 +301,7 @@ function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers, showdowns 
         },
       }
     : null;
+  const ended = Boolean(data?.finale && data.finale.teams.length > 0);
   const hostBar = host && live.view && (
     <TvHostBar host={host} running={live.view.active} screen={live.view.screen} />
   );
@@ -299,28 +330,95 @@ function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers, showdowns 
           {data && <Board data={data} />}
         </main>
         <aside className="grid min-h-0 grid-rows-[auto_auto_1fr] content-start gap-5 overflow-hidden">
-          <section
-            aria-label="Join the party"
-            className="grid gap-2 rounded-gm bg-gm-surface p-4 text-center shadow-xl ring-1 ring-gm-border"
-          >
-            <p className="m-0 font-gm-display text-2xl font-bold">Scan to join</p>
-            <div className="mx-auto w-full max-w-[10rem]">
-              <QrCode value={joinUrl} label={`QR code for ${shortUrl}`} />
-            </div>
-            <p className="m-0 text-base break-all text-gm-text-muted">{shortUrl}</p>
-            <p className="m-0 text-base">
-              Code{" "}
-              <span className="font-gm-display text-3xl font-bold tracking-[0.2em] text-gm-accent-ink">
-                {joinCode}
-              </span>
-            </p>
-          </section>
+          {/* The night is over: everyone's final place, not a dead QR code (QA, 2026-11-25). */}
+          {ended && data ? (
+            <FinalStandings data={data} />
+          ) : (
+            <section
+              aria-label="Join the party"
+              className="grid gap-2 rounded-gm bg-gm-surface p-4 text-center shadow-xl ring-1 ring-gm-border"
+            >
+              <p className="m-0 font-gm-display text-2xl font-bold">Scan to join</p>
+              <BigQr value={joinUrl} shortUrl={shortUrl} joinCode={joinCode} />
+              <p className="m-0 text-base break-all text-gm-text-muted">{shortUrl}</p>
+              <p className="m-0 text-base">
+                Code{" "}
+                <span className="font-gm-display text-3xl font-bold tracking-[0.2em] text-gm-accent-ink">
+                  {joinCode}
+                </span>
+              </p>
+            </section>
+          )}
           <ToastChainView />
-          {data && !data.hidden && <Latest recent={data.recent} />}
+          {data && !data.hidden && !ended && <Latest recent={data.recent} />}
         </aside>
       </div>
       {hostBar}
     </div>
+  );
+}
+
+/**
+ * The join QR code, which opens big in the middle of the TV when clicked, for
+ * phones at the back of the room (Khai, 2026-11-25). Any click or Escape closes it.
+ */
+function BigQr({
+  value,
+  shortUrl,
+  joinCode,
+}: {
+  value: string;
+  shortUrl: string;
+  joinCode: string;
+}) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  return (
+    <>
+      <button
+        type="button"
+        aria-label="Show the QR code big"
+        onClick={() => {
+          setOpen(true);
+        }}
+        className="mx-auto block w-full max-w-[10rem] cursor-zoom-in rounded-gm"
+      >
+        <QrCode value={value} label={`QR code for ${shortUrl}`} />
+      </button>
+      {open && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Scan to join"
+          onClick={() => {
+            setOpen(false);
+          }}
+          className="fixed inset-0 z-50 grid cursor-zoom-out place-items-center bg-gm-bg/90 backdrop-blur"
+        >
+          <div className="grid justify-items-center gap-[2vh] text-center">
+            <p className="m-0 font-gm-display text-[6vh] font-bold">Scan to join</p>
+            <div className="w-[70vh]">
+              <QrCode value={value} label={`Big QR code for ${shortUrl}`} />
+            </div>
+            <p className="m-0 text-[3.5vh]">
+              {shortUrl} · Code{" "}
+              <span className="font-gm-display font-bold tracking-[0.2em] text-gm-accent-ink">
+                {joinCode}
+              </span>
+            </p>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

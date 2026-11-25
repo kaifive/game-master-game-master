@@ -72,7 +72,7 @@ Names are stable; values change per theme and color mode.
 --gm-success, --gm-warning, --gm-danger   right, careful, wrong
 --gm-tile-correct, --gm-tile-present, --gm-tile-absent, --gm-tile-empty
 --gm-buzzer, --gm-buzzer-pressed, --gm-buzzer-locked
---gm-team-1 ... --gm-team-8               team colors
+--gm-team-1 ... --gm-team-7               team colors
 --gm-radius, --gm-font-display, --gm-font-body
 ```
 

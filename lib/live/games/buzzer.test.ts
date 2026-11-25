@@ -42,7 +42,7 @@ function begin(n = 3) {
   });
   return ok(next(m, s0, T0));
 }
-const host = (s: Session, action: string, now: number) => ok(hostAct(m, s, action, now));
+const host = (s: Session, action: unknown, now: number) => ok(hostAct(m, s, action, now));
 const buzz = (s: Session, team: string, at: number, now = at + 80) => move(m, s, team, { at }, now);
 const state = (s: Session) => s.state as BuzzerState;
 const tvView = (s: Session, now: number) =>
@@ -119,6 +119,16 @@ describe("buzzer round (spec 12)", () => {
     expect(tvView(q2, T0 + 9000).game).toMatchObject({ answer: "Three", winner: null });
     const none = next(m, q2, T0 + 9500);
     expect(none.ok && none.award?.points).toEqual({ t1: 0, t2: 0, t3: 0, t4: 0 });
+  });
+
+  it("S12-AC3: Right or Wrong names the team judged, so a second device judging the same buzz does nothing", () => {
+    let s = host(begin(4), "open", T0 + 1000);
+    s = ok(buzz(s, "t1", T0 + 1200));
+    s = ok(buzz(s, "t2", T0 + 1300));
+    s = host(s, { act: "wrong", team: "t1" }, T0 + 2000);
+    // The other device still showed t1 up: its Right for t1 mustn't land on t2.
+    expect(hostAct(m, s, { act: "right", team: "t1" }, T0 + 2100)).toMatchObject({ ok: false });
+    expect(tvView(s, T0 + 2100).game).toMatchObject({ upNext: "t2", winner: null });
   });
 
   it("S12-AC4: Controls always has the answer; the TV and phones get it only once it's revealed", () => {

@@ -33,7 +33,7 @@ Motion (Khai, 2026-11-13; all behind reduced-motion): a typed letter pops in; a 
 - [x] AC-1: Answers are validated as five-letter words; each play draws one from its seed.
 - [x] AC-2: A guess must be five letters and a real word (or an answer); anything else is turned away without using a try.
 - [x] AC-3: Each guess is marked correct, present or absent, with repeated letters handled the standard way.
-- [x] AC-4: Points by guesses: 1–2 all, 3 90%, 4 75%, 5 60%, 6 45%, unsolved 0; a replayable event never shows an unsolved answer.
+- [x] AC-4: Points by guesses: 1–2 all, 3 90%, 4 75%, 5 60%, 6 45%, unsolved 0; the word shows at the end, solved or not, since a replay deals a different word (Khai, 2026-11-25).
 - [x] AC-5: The instructions say nothing about the theme, and the party's event file has a Secret Word game with wushu answers that plays end to end on a phone.
 
 ## Tests

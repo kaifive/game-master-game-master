@@ -37,12 +37,15 @@ function MiniStandings({ totals }: { totals: readonly TeamTotal[] }) {
         </p>
       ) : (
         <ol className="m-0 grid list-none gap-[0.8vh] p-0">
-          {ranked.map((t, i) => (
+          {ranked.map((t) => (
             <li
               key={t.id}
               className="flex items-center gap-3 rounded-gm bg-gm-surface px-4 py-[1vh] text-[clamp(1rem,2.6vh,1.9rem)] ring-1 ring-gm-border"
             >
-              <span className="w-[1.4em] font-gm-display font-bold tabular-nums">{i + 1}</span>
+              {/* Tied teams share a place (QA, 2026-11-25). */}
+              <span className="w-[1.4em] font-gm-display font-bold tabular-nums">
+                {1 + ranked.filter((o) => o.points > t.points).length}
+              </span>
               <Swatch color={t.color} />
               <span className="min-w-0 flex-1 truncate font-bold">{t.name}</span>
               <span className="font-gm-display font-bold tabular-nums">{t.points}</span>

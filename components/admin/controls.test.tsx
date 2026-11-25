@@ -250,6 +250,9 @@ describe("Controls teams", () => {
     await user.click(screen.getByRole("button", { name: /Lan/ }));
     await user.click(screen.getByRole("button", { name: "Make captain" }));
     await user.click(screen.getByRole("button", { name: "Move to team" }));
+    // Mai leads Dragons: her panel says so where Make captain would be.
+    await user.click(screen.getByRole("button", { name: /Mai/ }));
+    expect(screen.getByText("Captain of Dragons")).toBeInTheDocument();
     expect(sent).toEqual([
       { action: "phase", phase: "team" },
       { action: "teamSize", size: 5 },

@@ -35,7 +35,7 @@ export type WordView =
       rows: WordRow[];
       maxGuesses: number;
       solved: boolean;
-      /** Kept back when the event is replayable and the word wasn't found (S19-AC4). */
+      /** The word, shown at the end (S19-AC4). */
       answer: string | null;
     };
 
@@ -83,6 +83,7 @@ export const word: GameLogic<WordContent, WordState, WordView> = {
       "Fewer guesses, more points.",
     ],
   }),
+  puzzle: (s) => s.answer,
   create: (c, seed) => {
     const answers = c.answers;
     return {
@@ -94,14 +95,15 @@ export const word: GameLogic<WordContent, WordState, WordView> = {
     };
   },
   tick: (s) => s,
-  view: (s, _c, { replayable }) =>
+  view: (s) =>
     over(s)
       ? {
           kind: "done",
           rows: rows(s),
           maxGuesses: s.maxGuesses,
           solved: solved(s),
-          answer: solved(s) || replayable !== true ? s.answer : null,
+          // Shown at the end, even unsolved: a replay deals a different word (Khai, 2026-11-25).
+          answer: s.answer,
         }
       : { kind: "guessing", rows: rows(s), maxGuesses: s.maxGuesses, rejected: s.rejected },
   move(s, c, raw, { isWord }) {

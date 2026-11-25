@@ -6,6 +6,7 @@ import { PointsIcon } from "@/components/icons/points";
 import { useSlots } from "@/components/slots/registry";
 import { useDevice } from "./device";
 import { forfeitMessage, JoinForm } from "./hub";
+import { MESSAGES } from "@/lib/players";
 
 /**
  * Opened from the footer's name: who's playing, their total, and Start over
@@ -13,7 +14,7 @@ import { forfeitMessage, JoinForm } from "./hub";
  */
 export function PlayerSheet({ hasTeams, onClose }: { hasTeams: boolean; onClose: () => void }) {
   const { Button } = useSlots();
-  const { load, active, total, restart } = useDevice();
+  const { load, active, total, restart, seat } = useDevice();
   const [mode, setMode] = useState<"view" | "confirm" | "restart">("view");
   const id = useId();
   const box = useRef<HTMLDivElement>(null);
@@ -80,8 +81,12 @@ export function PlayerSheet({ hasTeams, onClose }: { hasTeams: boolean; onClose:
             ) : (
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Button onClick={onClose}>Close</Button>
+                {/* A captain is told up front, not after typing a new name (QA, 2026-11-25). */}
+                {seat?.isCaptain && restartsLeft > 0 && (
+                  <p className="m-0 basis-full text-sm text-gm-text-muted">{MESSAGES.captain}</p>
+                )}
                 {/* Quieter than Close: on a shared phone, this is the button you don't want by accident. */}
-                {restartsLeft > 0 && (
+                {restartsLeft > 0 && !seat?.isCaptain && (
                   <button
                     type="button"
                     onClick={() => {

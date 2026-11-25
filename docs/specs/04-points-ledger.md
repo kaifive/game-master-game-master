@@ -36,7 +36,7 @@ Every point movement is an append-only ledger entry written by the server (ADR-0
 - [x] AC-1: Finishing a game with a new best awards the improvement once; a retry or a worse run awards nothing more.
 - [x] AC-2: A manual award or deduction with a reason changes the player's points; a void reverses an entry once; entries are never changed.
 - [x] AC-3: A player's points always equal the sum of their ledger entries.
-- [x] AC-4: Each entry updates the player's row and the recent awards in the leaderboard summary; a replay's award is marked "new best".
+- [x] AC-4: Each entry updates the player's row and the recent awards in the leaderboard summary; a replay's award is marked "new best" with the new best, so the TV's gain beside it doesn't read as the score (Khai, 2026-11-25).
 - [x] AC-5: A player who starts over leaves the leaderboard.
 - [x] AC-6: Rebuild recomputes points from the ledger, adds missing game awards from finished plays, and rewrites the summary.
 - [x] AC-7: The header total shows the player's points from the ledger.

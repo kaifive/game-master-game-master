@@ -381,7 +381,7 @@ function Host({ view, host, act, busy }: LiveHostProps) {
                       type="button"
                       disabled={busy}
                       onClick={() => {
-                        act({ action: "host", act: "right" });
+                        act({ action: "host", act: { act: "right", team: b.teamId } });
                       }}
                       className={cx(btn, "min-h-12 bg-gm-success text-gm-bg")}
                     >
@@ -391,7 +391,7 @@ function Host({ view, host, act, busy }: LiveHostProps) {
                       type="button"
                       disabled={busy}
                       onClick={() => {
-                        act({ action: "host", act: "wrong" });
+                        act({ action: "host", act: { act: "wrong", team: b.teamId } });
                       }}
                       className={cx(btn, "min-h-12 bg-gm-danger text-gm-bg")}
                     >
@@ -403,6 +403,12 @@ function Host({ view, host, act, busy }: LiveHostProps) {
             );
           })}
         </ol>
+      )}
+      {/* Paid on Next, so Undo can still take it back: say so (QA, 2026-11-25). */}
+      {h.winner && (
+        <p className="m-0 font-bold text-gm-success" role="status">
+          +{h.points} to {team(h.winner)?.name ?? "the winner"} on Next
+        </p>
       )}
       <div className="flex flex-wrap gap-2">
         {h.canReopen && (

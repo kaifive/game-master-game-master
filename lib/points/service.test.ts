@@ -45,9 +45,9 @@ describe("points service", () => {
     expect(await deps.points.entries(SLUG)).toHaveLength(2);
   });
 
-  it("S04-AC4: each award updates the row and the recent awards; replays say new best", async () => {
+  it("S04-AC4: each award updates the row and the recent awards; replays say new best and what it is", async () => {
     await awardGame(deps, SLUG, mai, trivia(1, 60, false));
-    await awardGame(deps, SLUG, mai, trivia(2, 20));
+    await awardGame(deps, SLUG, mai, { ...trivia(2, 20), best: 80 });
     await awardGame(deps, SLUG, bao, trivia(1, 90, false));
     const board = await deps.board.read(SLUG);
     expect(board.players.map((p) => [p.nickname, p.points])).toEqual([
@@ -56,7 +56,7 @@ describe("points service", () => {
     ]);
     expect(board.recent.map((r) => [r.nickname, r.points, r.reason])).toEqual([
       ["Bao", 90, "Holiday Trivia"],
-      ["Mai", 20, "Holiday Trivia · new best"],
+      ["Mai", 20, "Holiday Trivia · new best 80"],
       ["Mai", 60, "Holiday Trivia"],
     ]);
   });

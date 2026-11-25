@@ -18,10 +18,11 @@ Once built, spec 03 changes to match.
 
 ## Behavior
 
-1. The palette is the theme's eight team colors (`team-1` to `team-8`), each with a
-   plain name the theme gives it, such as Red, Blue, Gold, Green, Purple, Teal,
-   Orange and Slate. With at most 6 teams (spec 03), there are always at least
-   two colors free.
+1. The palette is the theme's seven team colors (`team-1` to `team-7`), each with a
+   plain name the theme gives it, such as Red, Blue, Gold, Green, Purple, Teal
+   and Orange. With at most 6 teams (spec 03), there's always a color free.
+   Slate is gone (it read as the grey "no answer"), and Orange is bright enough
+   not to pass for Red (Khai, 2026-11-25).
 2. When the captain names the team (S03-AC2), they also pick its color. Every
    color is offered as a swatch with its name. Colors another team holds are
    shown taken, with that team's name, and can't be picked. The next free color
@@ -45,8 +46,8 @@ Once built, spec 03 changes to match.
 - `events/{slug}/teams/{teamId}.color` stays 1 to 8; the captain's pick replaces
   the one given at creation, once, when the team is named. A transaction keeps
   colors unique per event.
-- Each style pack names its eight team colors (`teamColorNames`, spec 09); the
-  pack schema requires all eight. The admin theme names them too.
+- Each style pack names its seven team colors (`teamColorNames`, spec 09); the
+  pack schema requires all seven. The admin theme names them too.
 
 ## Routes and real-time
 
@@ -69,7 +70,7 @@ Once built, spec 03 changes to match.
 
 ## Acceptance criteria
 
-- [x] AC-1: Naming a team takes a color from the theme's eight, offered with names; colors other teams hold are shown taken and can't be picked; the next free color is picked to begin with.
+- [x] AC-1: Naming a team takes a color from the theme's seven, offered with names; colors other teams hold are shown taken and can't be picked; the next free color is picked to begin with.
 - [x] AC-2: No two teams in an event share a color, even when two captains pick at once.
 - [x] AC-3: Once saved, a team's color can't be changed.
 - [x] AC-4: Every surface and every showdown shows the team in its chosen color, always beside its name.
@@ -82,7 +83,7 @@ Once built, spec 03 changes to match.
 
 ## Out of scope
 
-- Custom colors outside the theme's eight (they couldn't be checked for contrast).
+- Custom colors outside the theme's seven (they couldn't be checked for contrast).
 - Team logos or icons.
 
 ## Open questions

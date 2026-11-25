@@ -99,9 +99,9 @@ describe("the buzzer round on the phone, the TV and Controls (spec 12)", () => {
     const act = host(r.state, OPEN + 500);
     expect(screen.getByText("Jian")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Wrong" }));
-    expect(act).toHaveBeenCalledWith({ action: "host", act: "wrong" });
+    expect(act).toHaveBeenCalledWith({ action: "host", act: { act: "wrong", team: "t2" } });
     await user.click(screen.getByRole("button", { name: "Right" }));
-    expect(act).toHaveBeenCalledWith({ action: "host", act: "right" });
+    expect(act).toHaveBeenCalledWith({ action: "host", act: { act: "right", team: "t2" } });
     cleanup();
     const right = quiz([
       [HOST, "open", OPEN],
@@ -111,6 +111,10 @@ describe("the buzzer round on the phone, the TV and Controls (spec 12)", () => {
     show("buzzer", right.view(tv, OPEN + 2100), OPEN + 2100, "tv");
     expect(screen.getByText("Jian")).toBeInTheDocument();
     expect(screen.getByText("Blues")).toBeInTheDocument();
+    cleanup();
+    // Controls says the points land on Next, so the host isn't left wondering.
+    host(right.state, OPEN + 2100);
+    expect(screen.getByText(/^\+\d+ to Blues on Next$/)).toBeInTheDocument();
   });
 
   test("S12-AC5: Controls offers Open buzzers, then Reopen and Undo when they apply", async () => {

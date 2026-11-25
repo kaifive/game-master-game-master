@@ -7,7 +7,7 @@ import { NICKNAME_MAX, NICKNAME_MIN } from "./model";
 export const MESSAGES = {
   tooShort: `Use at least ${NICKNAME_MIN} characters.`,
   tooLong: `Use ${NICKNAME_MAX} characters or fewer.`,
-  characters: "Use letters, numbers, spaces and ' - . _ only.",
+  characters: "Use letters, numbers, emoji, spaces and ' - . _ only.",
   blocked: "Pick another name.",
   taken: "That name is taken. Pick another name.",
   wrongCode: "That code isn't right for this event.",
@@ -46,6 +46,10 @@ export function nicknameKey(nickname: string): string {
 export type NicknameCheck =
   { ok: true; nickname: string; key: string } | { ok: false; message: string };
 
+/** Letters, numbers, spaces, ' - . _ and emoji (with their joiners, variation selectors and skin tones). */
+const NAME_CHARS =
+  /^(?:[\p{L}\p{M}\p{N} '\-._]|\p{Extended_Pictographic}|\p{Emoji_Modifier}|\p{Regional_Indicator}|\u200d|\ufe0f)+$/u;
+
 /** The name rules (S02-AC3, AC5), run on the phone as it's typed and again on the server. */
 export function checkNickname(raw: string, blocked: readonly string[] = []): NicknameCheck {
   return checkName(raw, blocked, NICKNAME_MAX);
@@ -57,7 +61,8 @@ export function checkName(raw: string, blocked: readonly string[], max: number):
   const length = characters(nickname);
   if (length < NICKNAME_MIN) return { ok: false, message: MESSAGES.tooShort };
   if (length > max) return { ok: false, message: `Use ${String(max)} characters or fewer.` };
-  if (!/^[\p{L}\p{N} '\-._]+$/u.test(nickname) || !/[\p{L}\p{N}]/u.test(nickname))
+  // Emoji are fine beside letters (QA, 2026-11-25): a name still needs a letter or number.
+  if (!NAME_CHARS.test(nickname) || !/[\p{L}\p{N}]/u.test(nickname))
     return { ok: false, message: MESSAGES.characters };
   if (isBlockedName(nickname, blocked)) return { ok: false, message: MESSAGES.blocked };
   const key = nicknameKey(nickname);

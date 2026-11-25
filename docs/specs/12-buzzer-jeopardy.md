@@ -136,9 +136,9 @@ the same pieces.
 
 - [x] AC-1: Khai steps each question: show it on the TV, open the buzzers, judge, and go to the next; buzzes before opening are refused.
 - [x] AC-2: Buzzes are ordered by the press time on the shared clock, checked by the server; each team buzzes once per question; Controls, the TV and the captain's phone show the order.
-- [x] AC-3: Right awards the question's points to the team through the ledger and reveals the answer; Wrong takes no points and passes to the next team that buzzed; when none are left Khai can reopen for teams that haven't buzzed or reveal the answer.
+- [x] AC-3: Right awards the question's points to the team through the ledger and reveals the answer; Wrong takes no points and passes to the next team that buzzed; when none are left Khai can reopen for teams that haven't buzzed or reveal the answer. Right and Wrong name the team judged, so a second device judging the same buzz a moment later does nothing.
 - [x] AC-4: Controls always shows the current answer; the TV and phones never get it before it's revealed.
-- [x] AC-5: Khai can undo the last Right or Wrong (taking back its points), skip a question and end the round.
+- [x] AC-5: Khai can undo the last Right or Wrong (taking back its points), skip a question and end the round. After Right, Controls says the points land on Next ("+100 to Blues on Next").
 - [x] AC-6: The buzzer, the order and judging are built as pieces Jeopardy can reuse for a picked clue.
 
 ## Tests

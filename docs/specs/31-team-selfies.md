@@ -117,7 +117,7 @@ nowhere else, so the stickers stay a surprise (Khai, 2026-11-19).
 
 - [x] AC-1: Naming a team requires a selfie from the camera or the photo library, shrunk on the phone and kept in Blob; once saved it's fixed, and only the host can add or replace one after.
 - [x] AC-2: In Controls the host can add any number of stickers to each team's selfie, from the set in Behavior 6, and move, size, turn, flip, layer and remove them; changes save as made.
-- [x] AC-3: At the finale the TV shows the winning team's selfie with its stickers (each tied winner's, side by side), with its name and points; reduced motion shows it at once.
+- [x] AC-3: At the finale the TV shows the winning team's selfie with its stickers (each tied winner's, side by side), with its name and points; reduced motion shows it at once. Beside it, in place of the join code and latest points, every team's final place and the top players.
 - [x] AC-4: Selfies and stickers show nowhere else and never reach phones.
 - [x] AC-5: Selfies are deleted with the team, with test data and in the post-event cleanup.
 

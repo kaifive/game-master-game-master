@@ -485,14 +485,14 @@ function Confirm({
   label: string;
   sure: string;
   onConfirm: () => void;
-  tone?: "primary" | "danger";
+  tone?: "primary" | "secondary" | "danger";
   disabled?: boolean;
 }) {
   const [asking, setAsking] = useState(false);
   if (!asking)
     return (
       <AdminButton
-        tone={tone === "danger" ? "danger" : "primary"}
+        tone={tone}
         disabled={disabled ?? false}
         onClick={() => {
           setAsking(true);
@@ -543,6 +543,7 @@ function PlayerTools({
   const [reason, setReason] = useState("");
   const [gameId, setGameId] = useState(games[0]?.id ?? "");
   const others = teams?.teams.filter((t) => t.id !== player.teamId) ?? [];
+  const leads = teams?.teams.find((t) => t.captain?.id === player.id);
   const [moveTo, setMoveTo] = useState(others[0]?.id ?? "");
   const amount = Number(points);
   return (
@@ -621,6 +622,15 @@ function PlayerTools({
             run({ action: "reset", playerId: player.id, gameId });
           }}
         />
+        {/* Where Make captain was, so it's plain it worked and nothing slides under the finger (QA, 2026-11-25). */}
+        {leads && (
+          <span
+            role="status"
+            className="inline-flex min-h-11 items-center rounded-gm bg-gm-surface-raised px-3 text-sm font-bold"
+          >
+            Captain of {leads.name}
+          </span>
+        )}
         {teams && !player.teamId && (
           <AdminButton
             tone="secondary"
@@ -717,10 +727,11 @@ function TeamsCard({
               }}
             />
           ) : (
+            // Not primary: it's the button Khai almost never wants (QA, 2026-11-25).
             <Confirm
               label="Back to individual"
               sure="Yes, go back"
-              tone="primary"
+              tone="secondary"
               disabled={busy}
               onConfirm={() => {
                 run({ action: "phase", phase: "individual" });

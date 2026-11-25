@@ -250,7 +250,7 @@ test("S19-AC5: Secret Word turns away a non-word, then plays to the end", async 
       expect(now > rows || (await score.isVisible())).toBe(true);
     }).toPass();
   }
-  await expect(score).toContainText(/Solved in|Not this time/);
+  await expect(score).toContainText(/Solved in|The word was [A-Z]{5}/);
 });
 
 test("S20-AC5: Spot and Snipe: send a photo, the host rates it, the points reach the phone", async ({

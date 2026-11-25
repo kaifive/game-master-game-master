@@ -236,6 +236,21 @@ describe("game service", () => {
     expect(StartBody.safeParse({ playerId, startIn: 9000 }).success).toBe(false);
   });
 
+  it("S08-AC18: a run left midway or played again deals a different word or path from the one before", async () => {
+    const replay: EventConfig = { ...event, replayable: true };
+    let n = 0;
+    // The seed comes up the same twice, then changes: the replay mustn't reuse it.
+    deps = { ...deps, seed: () => [42, 42, 42, 9001][n++] ?? 7 };
+    const answerOf = async (again: boolean) => {
+      await startPlay(deps, replay, UID, "secret-word", { playerId, again });
+      const play = await deps.plays.get(replay.slug, "secret-word", playerId);
+      return (play?.state as { answer: string }).answer;
+    };
+    const first = await answerOf(false);
+    const second = await answerOf(true);
+    expect(second).not.toBe(first);
+  });
+
   it("S08-AC18: a game's pictures come with its instructions to load early; trivia's don't", () => {
     expect(instructionsFor(event, "number-slide")?.preload).toEqual([
       "/events/nova-wushu-logo.png",
@@ -262,7 +277,14 @@ describe("game service", () => {
     const done = await playThrough();
     if (done.best === 0) return; // every answer wrong: nothing to award
     expect(bests).toEqual([
-      { gameId: "trivia", title: "Holiday Trivia", run: 1, gain: done.best, replay: false },
+      {
+        gameId: "trivia",
+        title: "Holiday Trivia",
+        run: 1,
+        gain: done.best,
+        replay: false,
+        best: done.best,
+      },
     ]);
     await start(); // reopening a finished play awards nothing more
     expect(bests).toHaveLength(1);
@@ -312,7 +334,7 @@ describe("game service", () => {
     const best = await run(right);
     expect(best.best).toBe(100);
     expect(bests).toEqual([
-      { gameId: "trivia", title: "Holiday Trivia", run: 2, gain: 100, replay: true },
+      { gameId: "trivia", title: "Holiday Trivia", run: 2, gain: 100, replay: true, best: 100 },
     ]);
   });
 

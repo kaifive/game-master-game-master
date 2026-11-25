@@ -81,13 +81,21 @@ export async function awardTeam(
 
 /**
  * A finished run's award: the improvement on the player's best, once per run
- * (S04-AC1). A replay's award is marked "new best" (S04-AC4).
+ * (S04-AC1). A replay's award is marked "new best" with the new best (S04-AC4).
  */
 export async function awardGame(
   deps: PointsDeps,
   slug: string,
   to: Recipient | TeamCompetitor,
-  run: { gameId: string; title: string; run: number; gain: number; replay: boolean; key?: string },
+  run: {
+    gameId: string;
+    title: string;
+    run: number;
+    gain: number;
+    replay: boolean;
+    best?: number;
+    key?: string;
+  },
 ): Promise<void> {
   if (run.gain <= 0) return;
   const award: Award = {
@@ -95,7 +103,10 @@ export async function awardGame(
       ? `game_${run.gameId}_${to.id}_${run.key}`
       : gameAwardId(run.gameId, to.id, run.run),
     points: run.gain,
-    reason: run.replay ? `${run.title} · new best` : run.title,
+    // The gain beside a replay's new best, so "92" next to it doesn't read as the score (Khai, 2026-11-25).
+    reason: run.replay
+      ? `${run.title} · new best${run.best === undefined ? "" : ` ${String(run.best)}`}`
+      : run.title,
     source: { kind: "game", id: run.gameId },
     createdBy: "server",
   };

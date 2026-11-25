@@ -1,4 +1,4 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { PackRoot } from "@/components/packs/judges-table/root";
 import { holiday2026 } from "@/content/events/holiday-2026";
@@ -111,6 +111,10 @@ describe("DisplayView", () => {
     expect(within(champions).getByRole("img", { name: "Reds, dressed up" })).toBeInTheDocument();
     expect(within(champions).getByRole("img", { name: "Blues, dressed up" })).toBeInTheDocument();
     expect(screen.queryByRole("list", { name: "Team standings" })).toBeNull();
+    // Beside them, every team's final place, not a dead QR code or the latest points.
+    expect(screen.getByRole("list", { name: "Final standings" })).toHaveTextContent("Reds");
+    expect(screen.queryByRole("region", { name: "Join the party" })).toBeNull();
+    expect(screen.queryByRole("list", { name: "Latest points" })).toBeNull();
   });
 
   test("S05-AC3: shows the QR code, the short URL and the join code", () => {
@@ -122,6 +126,18 @@ describe("DisplayView", () => {
     ).toBeInTheDocument();
     expect(join).toHaveTextContent("example.app/join/WUSH7");
     expect(join).toHaveTextContent("WUSH7");
+  });
+
+  test("S05-AC3: clicking the QR code shows it big in the middle of the TV; a click closes it", () => {
+    serve({ players: [], recent: [] });
+    show();
+    fireEvent.click(screen.getByRole("button", { name: "Show the QR code big" }));
+    const big = screen.getByRole("dialog", { name: "Scan to join" });
+    expect(
+      within(big).getByRole("img", { name: "Big QR code for example.app/join/WUSH7" }),
+    ).toBeInTheDocument();
+    fireEvent.click(big);
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   test("S05-AC4 S05-AC5: a results board; new awards since the last update become toasts, none at first", async () => {
@@ -174,6 +190,17 @@ describe("DisplayView", () => {
     expect(within(rest).getByLabelText("10. P10, 91 points")).toBeInTheDocument();
     // The page scales with the screen's height as well as its width, so nothing is cut off.
     expect(container.querySelector("style")?.textContent).toMatch(/min\(1\.2vw,2\.1vh\)/);
+  });
+
+  test("S05-AC4: only a score stands on the podium, so at 0-0 nobody looks like they're winning", async () => {
+    serve({
+      players: [row("p1", 1, "Mai", 0), row("p2", 1, "Bao", 0), row("p3", 1, "Lan", 0)],
+      recent: [],
+    });
+    show();
+    const board = await screen.findByRole("list", { name: "Leaderboard" });
+    expect(board.querySelectorAll("[data-podium]")).toHaveLength(0);
+    expect(within(board).getByLabelText("1. Bao, 0 points")).toBeInTheDocument();
   });
 
   test("S05-AC1: tied players share a rank on the bars", async () => {
