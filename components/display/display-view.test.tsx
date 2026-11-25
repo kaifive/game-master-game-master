@@ -188,6 +188,17 @@ describe("DisplayView", () => {
     expect(container.querySelector("style")?.textContent).toMatch(/min\(1\.2vw,2\.1vh\)/);
   });
 
+  test("S05-AC4: only a score stands on the podium, so at 0-0 nobody looks like they're winning", async () => {
+    serve({
+      players: [row("p1", 1, "Mai", 0), row("p2", 1, "Bao", 0), row("p3", 1, "Lan", 0)],
+      recent: [],
+    });
+    show();
+    const board = await screen.findByRole("list", { name: "Leaderboard" });
+    expect(board.querySelectorAll("[data-podium]")).toHaveLength(0);
+    expect(within(board).getByLabelText("1. Bao, 0 points")).toBeInTheDocument();
+  });
+
   test("S05-AC1: tied players share a rank on the bars", async () => {
     serve({
       players: [row("p1", 1, "Mai", 60), row("p2", 2, "Bao", 40), row("p3", 2, "Lan", 40)],

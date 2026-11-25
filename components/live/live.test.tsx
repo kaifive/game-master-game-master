@@ -276,6 +276,32 @@ describe("the TV (spec 24)", () => {
     expect(act).toHaveBeenCalledWith({ action: "screen", screen: "leaderboard" });
   });
 
+  test("S24-AC9: tied teams share a place in the menu's standings", () => {
+    const host = {
+      act: vi.fn(),
+      busy: false,
+      next: null,
+      nextInMs: null,
+      at: null,
+      blocked: {},
+    };
+    wrap(
+      <GameMenu
+        games={[]}
+        totals={[
+          { id: "t1", name: "Reds", color: 1, points: 0 },
+          { id: "t2", name: "Blues", color: 2, points: 0 },
+        ]}
+        host={host}
+      />,
+    );
+    const teams = within(screen.getByRole("region", { name: "Team standings" }));
+    expect(teams.getAllByRole("listitem").map((li) => li.textContent.trim()[0])).toEqual([
+      "1",
+      "1",
+    ]);
+  });
+
   test("S24-AC1: the TV's Next waits out the round's 3-2-1, so a double tap can't close a round no one has played", async () => {
     vi.useFakeTimers();
     const host = {

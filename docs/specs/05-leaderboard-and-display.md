@@ -36,7 +36,7 @@ Display uses the event's style pack; the whole page scales with the screen width
 - [x] AC-1: Ranks go highest points first and ties share a rank; only active players are listed.
 - [x] AC-2: The phone shows the top 10, highlights the player, and adds their own rank and points below when they're outside the top 10, refreshing every 15 seconds.
 - [x] AC-3: The display shows a QR code for the join link, the URL and the join code, and fits 1920×1080 with no scrolling; it scales with the screen's height too, so a shorter screen cuts nothing off. Clicking the QR code shows it big in the middle of the TV until the next click or Escape (Khai, 2026-11-25).
-- [x] AC-4: The display shows the top 10 as a results board (top three on a podium) whose score cards flip when scores change, updating every 3 seconds, with the latest three awards beside it.
+- [x] AC-4: The display shows the top 10 as a results board (top three on a podium, but only those with points, so a 0-0 start crowns nobody) whose score cards flip when scores change, updating every 3 seconds, with the latest three awards beside it.
 - [x] AC-5: Each new award since the last update shows as a toast, a replay's marked "new best"; the first load shows none.
 - [x] AC-6: When a different player takes first place, a lead-change callout plays.
 

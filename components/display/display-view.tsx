@@ -91,8 +91,9 @@ function Results({
   columns?: 1 | 2;
 }) {
   const { LeaderboardRow } = useSlots();
-  const top = podium ? rows.slice(0, 3) : [];
-  const rest = podium ? rows.slice(3) : rows;
+  // Only a score stands on the podium: at 0-0 nobody looks like they're winning (QA, 2026-11-25).
+  const top = podium ? rows.slice(0, 3).filter((r) => r.score > 0) : [];
+  const rest = rows.slice(top.length);
   const row = (r: BoardRow, spot?: 1 | 2 | 3) => (
     <LeaderboardRow
       key={r.id}
@@ -134,7 +135,9 @@ function Results({
         >
           {top.map((r, i) => row(r, (i + 1) as 1 | 2 | 3))}
           {rest.length > 0 && (
-            <li className="col-span-3 row-start-2">{list("Places 4 and below", false)}</li>
+            <li className="col-span-3 row-start-2">
+              {list(`Places ${String(top.length + 1)} and below`, false)}
+            </li>
           )}
         </ol>
       )}
