@@ -11,6 +11,7 @@ import {
 import { percent } from "@/lib/games";
 import type { PerceptionView } from "@/lib/live";
 import type { ActiveLiveView, LiveControllerProps, LiveRenderer, LiveTvProps } from "../types";
+import { useHydrated } from "@/components/motion";
 import { useFrame } from "../use-live";
 import {
   GetReady,
@@ -158,8 +159,9 @@ const pageClock = () => performance.now();
 
 /** A clock that loops every `period` ms while the demo plays; frozen at `at` when still. */
 function useLoop(period: number, still: boolean, at: number) {
-  useFrame(!still);
-  return still ? at : pageClock() % period;
+  const hydrated = useHydrated();
+  useFrame(!still && hydrated);
+  return still || !hydrated ? at : pageClock() % period;
 }
 
 function demo(type: string) {

@@ -462,14 +462,26 @@ function SnatchTv({ view, game, serverNow, revealed }: LiveTvProps) {
   return (
     <div className="grid gap-[2.4vh]">
       {!revealed && <TimeLeft closesAt={g.closesAt} now={now} total={g.closesAt - g.startsAt} />}
-      <ul aria-label="Matchups" className="m-0 grid list-none gap-[2vh] p-0">
+      {/* Three pairs (six teams) sit tighter, so the points below still fit the TV (layout sweep, 2026-11-25). */}
+      <ul
+        aria-label="Matchups"
+        className={cx("m-0 grid list-none p-0", g.pairs.length > 2 ? "gap-[1.2vh]" : "gap-[2vh]")}
+      >
         {g.pairs.map(([a, b]) => (
           <li
             key={`${a}-${b}`}
-            className="grid grid-cols-[1fr_auto_1fr] items-center gap-[3vw] rounded-gm bg-gm-surface px-[2vw] py-[2.6vh] ring-1 ring-gm-border"
+            className={cx(
+              "grid grid-cols-[1fr_auto_1fr] items-center gap-[3vw] rounded-gm bg-gm-surface px-[2vw] ring-1 ring-gm-border",
+              g.pairs.length > 2 ? "py-[1.2vh]" : "py-[2.6vh]",
+            )}
           >
             <SnatchSide view={view} g={g} team={a} align="end" />
-            <ScoreCard label="The pot" value={g.pot} state="highlight" size="lg" />
+            <ScoreCard
+              label="The pot"
+              value={g.pot}
+              state="highlight"
+              size={g.pairs.length > 2 ? "md" : "lg"}
+            />
             <SnatchSide view={view} g={g} team={b} align="start" />
           </li>
         ))}
@@ -479,29 +491,18 @@ function SnatchTv({ view, game, serverNow, revealed }: LiveTvProps) {
           {teamName(view, g.sitOut)} sits this one out.
         </p>
       )}
-      <GamePoints view={view} totals={g.totals ?? g.before} last={revealed && g.last} />
+      <GamePoints view={view} totals={g.totals ?? g.before} />
     </div>
   );
 }
 
-/**
- * Game points so far, best first. They're only for this game: on the last
- * round, their order pays the showdown points (spec 26).
- */
-function GamePoints({
-  view,
-  totals,
-  last,
-}: {
-  view: ActiveLiveView;
-  totals: Record<string, number>;
-  last: boolean;
-}) {
+/** Each team's points so far in this game, best first (spec 26, ADR-045). */
+function GamePoints({ view, totals }: { view: ActiveLiveView; totals: Record<string, number> }) {
   const ranked = [...view.teams].sort((a, b) => (totals[b.id] ?? 0) - (totals[a.id] ?? 0));
   return (
     <section aria-label="Game points" className="grid gap-[1vh]">
       <p className="m-0 text-center font-gm-display text-[clamp(1.2rem,3vh,2.2rem)] font-bold">
-        {last ? "Final order: showdown points" : "Game points so far"}
+        Points so far
       </p>
       <ol className="m-0 flex list-none flex-wrap justify-center gap-[1vw] p-0">
         {ranked.map((t) => (
@@ -512,7 +513,6 @@ function GamePoints({
             <Swatch color={t.color} />
             {t.name}
             <span className="font-gm-display tabular-nums">{totals[t.id] ?? 0}</span>
-            {last && <span className="text-gm-tile-correct">+{t.roundPoints ?? 0}</span>}
           </li>
         ))}
       </ol>
@@ -528,10 +528,8 @@ function SnatchController({ view, game, serverNow, revealed, send, busy }: LiveC
     const me = view.you?.teamId ?? "";
     const got = g.gained?.[me] ?? 0;
     return (
-      <PhoneNote title={`${got < 0 ? "−" : "+"}${String(Math.abs(got))} game points`}>
-        {g.last
-          ? `+${String(view.teams.find((t) => t.id === me)?.roundPoints ?? 0)} showdown points for your place.`
-          : `Your team has ${String(g.totals?.[me] ?? 0)} game points. Look at the TV!`}
+      <PhoneNote title={`+${String(Math.max(0, got))} points`}>
+        Your team has {g.totals?.[me] ?? 0} points this game. Look at the TV!
       </PhoneNote>
     );
   }

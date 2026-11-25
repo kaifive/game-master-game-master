@@ -15,15 +15,19 @@ export default defineConfig({
   // The three surfaces: player phone, controls tablet, display TV. The teams and showdowns
   // tests switch the shared event into the team phase, so they run on their own, after the rest.
   projects: [
-    { name: "phone", testIgnore: /(teams|showdowns)\.spec/, use: { ...devices["Pixel 7"] } },
+    {
+      name: "phone",
+      testIgnore: /(teams|showdowns|showdowns-play)\.spec/,
+      use: { ...devices["Pixel 7"] },
+    },
     {
       name: "tablet",
-      testIgnore: /(teams|showdowns)\.spec/,
+      testIgnore: /(teams|showdowns|showdowns-play|showdown-gallery)\.spec/,
       use: { ...devices["Desktop Chrome"], viewport: { width: 1024, height: 768 } },
     },
     {
       name: "tv",
-      testIgnore: /(teams|showdowns)\.spec/,
+      testIgnore: /(teams|showdowns|showdowns-play)\.spec/,
       use: { ...devices["Desktop Chrome"], viewport: { width: 1920, height: 1080 } },
     },
     {
@@ -36,6 +40,13 @@ export default defineConfig({
       name: "showdowns",
       testMatch: /showdowns\.spec/,
       dependencies: ["teams"],
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1024, height: 768 } },
+    },
+    // Every showdown played through: last, as it also uses the team phase.
+    {
+      name: "showdowns-play",
+      testMatch: /showdowns-play\.spec/,
+      dependencies: ["showdowns"],
       use: { ...devices["Desktop Chrome"], viewport: { width: 1024, height: 768 } },
     },
   ],

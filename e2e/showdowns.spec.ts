@@ -1,20 +1,8 @@
-import { expect, test, type Browser, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { joinOnPhone, teamPhaseWithCaptains, unique } from "./support/party";
 
 // Showdowns need the team phase, which the whole e2e server shares, so this runs in its own
 // project after the teams test (playwright.config.ts) and switches back at the end.
-const PASS = "e2e-host-pass";
-const unique = (base: string) => `${base}${String(Math.floor(Math.random() * 1e6))}`;
-
-async function joinOnPhone(browser: Browser, name: string, baseURL: string): Promise<Page> {
-  const context = await browser.newContext({ viewport: { width: 412, height: 915 } });
-  await context.addCookies([{ name: "gm-dev-status", value: "live", url: baseURL }]);
-  const phone = await context.newPage();
-  await phone.goto("/holiday-2026?code=WUSH7");
-  await phone.getByLabel("Your name").fill(name);
-  await phone.getByRole("button", { name: "Join", exact: true }).click();
-  await expect(phone.getByRole("navigation", { name: "Party" })).toContainText(name);
-  return phone;
-}
 
 test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1 S26-AC2 S12-AC1 S12-AC3: Fly-by Count, Stocking Stuffer and the buzzer round from Controls, on the TV and two captains' phones", async ({
   page,
@@ -26,31 +14,7 @@ test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1 S26-AC2 S12-AC1 S1
   const names = [first, unique("CapB")];
   const phones = await Promise.all(names.map((n) => joinOnPhone(browser, n, base)));
 
-  await page.goto("/admin");
-  await page.getByLabel("Passphrase").fill(PASS);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await page.getByRole("link", { name: /Nova Wushu Holiday Party/ }).click();
-  // A retry starts from wherever the last attempt stopped.
-  if (await page.getByRole("button", { name: "End early" }).isVisible())
-    await page.getByRole("button", { name: "End early" }).click();
-  if (await page.getByRole("button", { name: "Back to individual" }).isVisible()) {
-    await page.getByRole("button", { name: "Back to individual" }).click();
-    await page.getByRole("button", { name: "Yes, go back" }).click();
-  }
-  for (const name of names) {
-    await page.getByPlaceholder("Find a player").fill(name);
-    await page
-      .getByRole("list", { name: "Players" })
-      .getByRole("button", { name: new RegExp(name) })
-      .click();
-    await page.getByRole("button", { name: "Make captain" }).click();
-    await expect(page.getByRole("list", { name: "Teams", exact: true })).toContainText(
-      `Team ${name}`,
-    );
-  }
-  await page.getByRole("button", { name: "Start the team phase" }).click();
-  await page.getByRole("button", { name: "Yes, start teams" }).click();
-  await expect(page.getByText("Phase: Team")).toBeVisible();
+  await teamPhaseWithCaptains(page, names);
 
   // Who's played: tap a captain once they've played (S24-AC2).
   const played = page.getByRole("list", { name: `Team ${first} people` });

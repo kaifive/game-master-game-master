@@ -38,3 +38,17 @@ export function useMotion() {
     easeEmphasized: t?.["ease-emphasized"] ?? "cubic-bezier(0.22, 1, 0.36, 1)",
   };
 }
+
+const never = () => () => undefined;
+
+/**
+ * False while the server draws the page and the browser first matches it,
+ * true after: anything read from the clock waits for it, so the two first
+ * drawings agree (layout sweep, 2026-11-25: demos failed to hydrate).
+ */
+export const useHydrated = () =>
+  useSyncExternalStore(
+    never,
+    () => true,
+    () => false,
+  );

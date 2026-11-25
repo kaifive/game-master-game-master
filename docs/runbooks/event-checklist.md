@@ -23,6 +23,7 @@ list whenever a new event file is added.
 - [ ] Display tested on the venue's TV or projector, at full screen.
 - [ ] Join and play tested on one iPhone and one Android.
 - [ ] Load test passes for the expected head count plus 20%.
+- [ ] Every showdown played through with every round: `npx playwright test --project showdowns-play --no-deps` passes (`conventions/testing.md`).
 - [ ] Name filter reviewed for this crowd (add club or local words).
 - [ ] The event's `replayable` and each game's `alwaysOpen` decided. Games left
       `alwaysOpen` for testing let people play (and score) before the start.

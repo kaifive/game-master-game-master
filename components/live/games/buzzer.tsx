@@ -447,12 +447,13 @@ function Host({ view, host, act, busy }: LiveHostProps) {
 /** Red and locked, then green: BUZZ! (S24-AC4). */
 function Demo() {
   const look =
-    "grid aspect-square w-[min(28vh,14rem)] place-items-center rounded-full font-gm-display text-[clamp(1.6rem,5vh,3.2rem)] font-bold text-gm-bg shadow-xl";
+    "grid aspect-square w-[34%] place-items-center rounded-full font-gm-display text-[clamp(1.2rem,3.6vh,2.6rem)] font-bold text-gm-bg shadow-xl";
+  // Sized by the demo screen, so both buttons fit it whatever the TV (layout sweep, 2026-11-25).
   return (
-    <div className="flex h-full w-full items-center justify-center gap-[6vh]">
+    <div className="flex h-full w-full items-center justify-center gap-[5%] px-[6%]">
       <div className={cx(look, "bg-gm-danger")}>
         <span className="grid justify-items-center gap-2">
-          <LockIcon size={48} />
+          <LockIcon size={36} />
           Wait…
         </span>
       </div>
