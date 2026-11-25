@@ -12,7 +12,7 @@ import type {
   LiveRenderer,
   LiveTvProps,
 } from "../types";
-import { PhoneNote, PhoneResult, Swatch, useServerTime } from "./shared";
+import { PhoneNote, PhoneResult, PRESS_AREA, Swatch, useServerTime } from "./shared";
 
 /**
  * The buzzer round (spec 12): the question on the TV, a red buzzer that turns
@@ -227,7 +227,10 @@ function Buzzer({ view, g, serverNow, send }: LiveControllerProps & { g: BuzzerV
     return (
       <div className="grid justify-items-center gap-4 py-4 text-center">
         <div
-          className="grid aspect-square w-[min(78vw,20rem)] place-items-center rounded-full border-[14px] bg-gm-tile-present font-gm-display text-6xl font-bold text-gm-tile-present-ink shadow-xl"
+          className={cx(
+            PRESS_AREA,
+            "h-[max(40dvh,14rem)] border-[14px] bg-gm-tile-present text-8xl text-gm-tile-present-ink",
+          )}
           style={{ borderColor: team ? `var(--gm-team-${String(team.color)})` : undefined }}
         >
           {ordinal(g.mine.place)}
@@ -261,7 +264,7 @@ function Buzzer({ view, g, serverNow, send }: LiveControllerProps & { g: BuzzerV
     void send({ at });
   };
   return (
-    <div className="grid justify-items-center gap-4 py-2">
+    <div className="grid gap-4 py-2">
       <button
         type="button"
         key={shake}
@@ -277,10 +280,11 @@ function Buzzer({ view, g, serverNow, send }: LiveControllerProps & { g: BuzzerV
           }
         }}
         className={cx(
-          "grid aspect-square w-[min(78vw,20rem)] touch-none place-items-center rounded-full font-gm-display font-bold text-gm-bg shadow-xl select-none",
+          PRESS_AREA,
+          "text-gm-bg",
           live
-            ? "bg-gm-success text-6xl motion-safe:animate-[gm-pop_var(--gm-motion-base)_var(--gm-ease-out)] motion-safe:active:scale-[0.97]"
-            : "bg-gm-danger text-4xl",
+            ? "bg-gm-success text-8xl motion-safe:animate-[gm-pop_var(--gm-motion-base)_var(--gm-ease-out)] motion-safe:active:scale-[0.99]"
+            : "bg-gm-danger text-5xl",
           shake > 0 &&
             !open &&
             "motion-safe:animate-[gm-shake_var(--gm-motion-base)_var(--gm-ease-out)]",
@@ -292,7 +296,7 @@ function Buzzer({ view, g, serverNow, send }: LiveControllerProps & { g: BuzzerV
           "Sent!"
         ) : (
           <span className="grid justify-items-center gap-2">
-            <LockIcon size={56} />
+            <LockIcon size={72} />
             {locked || (lastEarly !== null && !open) ? "Too early!" : "Wait…"}
           </span>
         )}
@@ -445,7 +449,7 @@ function Host({ view, host, act, busy }: LiveHostProps) {
 /** Red and locked, then green: BUZZ! (S24-AC4). */
 function Demo() {
   const look =
-    "grid aspect-square w-[34%] place-items-center rounded-full font-gm-display text-[clamp(1.2rem,3.6vh,2.6rem)] font-bold text-gm-bg shadow-xl";
+    "grid aspect-[3/4] w-[34%] place-items-center rounded-gm font-gm-display text-[clamp(1.2rem,3.6vh,2.6rem)] font-bold text-gm-bg shadow-xl";
   // Sized by the demo screen, so both buttons fit it whatever the TV (layout sweep, 2026-11-25).
   return (
     <div className="flex h-full w-full items-center justify-center gap-[5%] px-[6%]">
