@@ -70,17 +70,19 @@ test("S24-AC8 S11-AC2 S11-AC5: every showdown plays through on the TV and two ph
   ];
   const errors = screens.map(([, p]) => watchErrors(p));
 
+  const problems: string[] = [];
   const view = async (): Promise<View> => {
-    const res = await page.request.get(LIVE);
+    const res = await page.request.get(LIVE, { timeout: 15_000 });
     const json = (await res.json()) as View | { data: View };
     return "data" in json ? json.data : json;
   };
   const act = async (body: unknown) => {
-    const res = await page.request.post(LIVE, { data: body });
-    return res.ok();
+    // A host step that never answers is a problem to report, not a hung run.
+    const res = await page.request.post(LIVE, { data: body, timeout: 15_000 }).catch(() => null);
+    if (!res) problems.push(`no answer to ${JSON.stringify(body)}`);
+    return res?.ok() ?? false;
   };
 
-  const problems: string[] = [];
   const look = async (where: string) => {
     await sleep(700);
     for (const [name, p] of screens)
@@ -91,8 +93,11 @@ test("S24-AC8 S11-AC2 S11-AC5: every showdown plays through on the TV and two ph
     });
   };
 
-  const games = (await view()).games.filter((g) => g.blocked === null);
-  expect(games.length).toBeGreaterThan(5);
+  // SMOKE_FROM starts at a game by title, to go straight back to a failure.
+  const all = (await view()).games.filter((g) => g.blocked === null);
+  const from = all.findIndex((g) => g.title === process.env.SMOKE_FROM);
+  const games = from > 0 ? all.slice(from) : all;
+  expect(all.length).toBeGreaterThan(5);
   const rnd = random(7);
   for (const g of games) {
     expect(await act({ action: "start", gameId: g.id }), `start ${g.title}`).toBe(true);
