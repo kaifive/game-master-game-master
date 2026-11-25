@@ -404,6 +404,12 @@ function Host({ view, host, act, busy }: LiveHostProps) {
           })}
         </ol>
       )}
+      {/* Paid on Next, so Undo can still take it back: say so (QA, 2026-11-25). */}
+      {h.winner && (
+        <p className="m-0 font-bold text-gm-success" role="status">
+          +{h.points} to {team(h.winner)?.name ?? "the winner"} on Next
+        </p>
+      )}
       <div className="flex flex-wrap gap-2">
         {h.canReopen && (
           <button
