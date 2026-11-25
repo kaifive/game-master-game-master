@@ -918,6 +918,10 @@ export function Controls({
         </p>
       )}
 
+      {/* The showdown first: it's what the host is pressing all night, so Next and a
+          buzzer round's Right and Wrong sit at the top of a tablet (QA, 2026-11-25). */}
+      {live && <LiveControls slug={slug} />}
+
       <Card title="Event">
         <div className="flex flex-wrap items-center gap-3">
           {view.status === "upcoming" && (
@@ -960,8 +964,6 @@ export function Controls({
         </div>
         <BoardSwitches board={view.board ?? { phones: true, tv: true }} run={run} busy={busy} />
       </Card>
-
-      {live && <LiveControls slug={slug} />}
 
       {view.teams && (
         <>
