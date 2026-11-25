@@ -1,5 +1,5 @@
 import "server-only";
-import { liveRepo, phaseChangeProblem } from "@/lib/live/server";
+import { finishLive, liveRepo, phaseChangeProblem } from "@/lib/live/server";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { AppError } from "@/lib/errors";
@@ -185,6 +185,8 @@ export async function runAction(slug: Slug, body: ControlsAction) {
     case "end":
     case "reopen":
       await changeStatus(d, event, body.action);
+      // Ending the night ends any showdown and puts the finale on the TV (QA, 2026-11-25).
+      if (body.action === "end" && d.live) await finishLive(d.live, event.slug);
       break;
     case "adjust":
       await adjustPoints(d, event, body.playerId, body.points, body.reason);

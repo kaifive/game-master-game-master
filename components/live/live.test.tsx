@@ -266,7 +266,10 @@ describe("the TV (spec 24)", () => {
     await user.click(screen.getByRole("button", { name: "Start round 1" }));
     // Next says the step it was pressed on, so a late press does nothing.
     expect(act).toHaveBeenCalledWith({ action: "next", at: { step: "intro", round: 0 } });
+    // End early asks twice, so a slip next to Next can't end the showdown.
     await user.click(screen.getByRole("button", { name: "End early" }));
+    expect(act).not.toHaveBeenLastCalledWith({ action: "end" });
+    await user.click(screen.getByRole("button", { name: "Yes, end it" }));
     expect(act).toHaveBeenCalledWith({ action: "end" });
     await user.click(screen.getByRole("button", { name: "Leaderboard" }));
     expect(act).toHaveBeenCalledWith({ action: "screen", screen: "leaderboard" });
@@ -353,7 +356,10 @@ describe("Controls (spec 11, spec 24)", () => {
     expect(screen.getByText("Leaderboard after the round.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Show results" }));
     expect(act).toHaveBeenLastCalledWith({ action: "next", at: { step: "play", round: 1 } });
+    // End early asks twice, so a slip next to Next can't end the showdown.
     await user.click(screen.getByRole("button", { name: "End early" }));
+    expect(act).not.toHaveBeenLastCalledWith({ action: "end" });
+    await user.click(screen.getByRole("button", { name: "Yes, end it" }));
     expect(act).toHaveBeenLastCalledWith({ action: "end" });
   });
 

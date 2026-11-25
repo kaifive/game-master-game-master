@@ -9,6 +9,7 @@ import { MemoryLiveRepo } from "./repo.memory";
 import {
   adminLiveAction,
   adminLiveView,
+  finishLive,
   phaseChangeProblem,
   phoneLiveView,
   playerLiveAction,
@@ -316,6 +317,20 @@ describe("showdown screen and Who's played (spec 24)", () => {
     const back = await adminLiveAction(deps, event, { action: "screen", screen: "leaderboard" });
     expect(back).toMatchObject({ active: true, screen: "leaderboard" });
     expect((await phoneLiveView(deps, event, null, null)).screen).toBe("leaderboard");
+  });
+
+  it("S24-AC9: Next puts the showdown back on the TV; ending the night ends a showdown, shows the leaderboard and allows no more", async () => {
+    await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
+    await adminLiveAction(deps, event, { action: "screen", screen: "leaderboard" });
+    const next = await adminLiveAction(deps, event, { action: "next" });
+    expect(next.screen).toBe("showdown");
+    await finishLive(deps.live, event.slug);
+    const after = await adminLiveView(deps, event);
+    expect(after).toMatchObject({ active: false, screen: "leaderboard" });
+    const ended = { ...deps, teams: () => Promise.resolve({ ...summary, ended: true }) };
+    expect(
+      await failure(adminLiveAction(ended, event, { action: "start", gameId: "tap-off" })),
+    ).toEqual({ status: 409, message: "The party has ended." });
   });
 
   it("S24-AC11: showdowns need the team phase, and the host can't leave it while one runs", async () => {

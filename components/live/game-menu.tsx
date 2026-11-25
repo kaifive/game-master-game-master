@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { AdminLiveAct } from "@/lib/live";
 import { CheckIcon } from "@/components/icons/game";
 import { cx } from "@/lib/ui";
@@ -152,6 +153,46 @@ export function GameMenu({
 }
 
 /**
+ * End early, asked twice: the first tap turns it into "Yes, end it" for a few
+ * seconds, so a slip next to Next can't end a showdown (QA, 2026-11-25).
+ */
+export function EndEarly({
+  onEnd,
+  disabled,
+  className,
+}: {
+  onEnd: () => void;
+  disabled: boolean;
+  className: string;
+}) {
+  const [asking, setAsking] = useState(false);
+  useEffect(() => {
+    if (!asking) return;
+    const t = setTimeout(() => {
+      setAsking(false);
+    }, 4000);
+    return () => {
+      clearTimeout(t);
+    };
+  }, [asking]);
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => {
+        if (asking) {
+          setAsking(false);
+          onEnd();
+        } else setAsking(true);
+      }}
+      className={className}
+    >
+      {asking ? "Yes, end it" : "End early"}
+    </button>
+  );
+}
+
+/**
  * The host's buttons on the TV, small in a corner, while signed in: Next and
  * End during a showdown, and switching between the board and the showdowns.
  */
@@ -185,17 +226,14 @@ export function TvHostBar({
           {host.next}
         </button>
       )}
-      {running && (
-        <button
-          type="button"
+      {running && host.at?.step !== "final" && (
+        <EndEarly
           disabled={host.busy}
-          onClick={() => {
+          onEnd={() => {
             host.act({ action: "end" });
           }}
           className={button}
-        >
-          End early
-        </button>
+        />
       )}
       <button
         type="button"

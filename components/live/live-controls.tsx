@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useId, useState } from "react";
-import { AdminButton, Card, field } from "@/components/admin/ui";
+import { AdminButton, adminButtonLook, Card, field } from "@/components/admin/ui";
+import { EndEarly } from "./game-menu";
 import { CheckIcon } from "@/components/icons/game";
 import { adminLiveApi, type AdminLiveAct, type AdminLiveView, type Roster } from "@/lib/live";
 import { cx } from "@/lib/ui";
@@ -267,15 +268,16 @@ export function LiveCard({ view, act, busy }: { view: AdminLiveView; act: Act; b
                   {view.next}
                 </AdminButton>
               )}
-              <AdminButton
-                tone="danger"
-                disabled={busy}
-                onClick={() => {
-                  act({ action: "end" });
-                }}
-              >
-                End early
-              </AdminButton>
+              {/* Asked twice, and not on the last step, where Next ends it (QA, 2026-11-25). */}
+              {view.session.step !== "final" && (
+                <EndEarly
+                  disabled={busy}
+                  onEnd={() => {
+                    act({ action: "end" });
+                  }}
+                  className={adminButtonLook("danger")}
+                />
+              )}
             </div>
             <ul aria-label="Teams in the showdown" className="m-0 grid list-none gap-2 p-0">
               {view.teams.map((t) => (
