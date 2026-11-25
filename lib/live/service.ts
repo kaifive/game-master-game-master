@@ -437,3 +437,31 @@ export async function finishLive(live: LiveRepo, slug: string): Promise<void> {
     screen: "leaderboard",
   }));
 }
+
+/**
+ * The host handed a team to a new captain mid-showdown (a phone died, someone
+ * left): the running showdown follows at once, so the new captain's phone is
+ * the controller from its next poll (QA, 2026-11-25).
+ */
+export async function followCaptain(
+  live: LiveRepo,
+  slug: string,
+  teamId: string,
+  captainId: string,
+): Promise<void> {
+  await live.update(slug, (cur) => {
+    const s = cur.session;
+    if (!s?.teams.some((t) => t.id === teamId && t.captainId !== captainId)) return null;
+    const captainDevices = Object.fromEntries(
+      Object.entries(s.captainDevices).filter(([id]) => id !== teamId),
+    );
+    return {
+      ...cur,
+      session: {
+        ...s,
+        teams: s.teams.map((t) => (t.id === teamId ? { ...t, captainId } : t)),
+        captainDevices,
+      },
+    };
+  });
+}

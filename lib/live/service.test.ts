@@ -10,6 +10,7 @@ import {
   adminLiveAction,
   adminLiveView,
   finishLive,
+  followCaptain,
   phaseChangeProblem,
   phoneLiveView,
   playerLiveAction,
@@ -331,6 +332,18 @@ describe("showdown screen and Who's played (spec 24)", () => {
     expect(
       await failure(adminLiveAction(ended, event, { action: "start", gameId: "tap-off" })),
     ).toEqual({ status: 409, message: "The party has ended." });
+  });
+
+  it("S24-AC3: when the host hands a team to a new captain mid-showdown, the new captain's phone is the controller", async () => {
+    await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
+    expect((await phoneLiveView(deps, event, "m1", "dev-m1")).you).toMatchObject({
+      captain: false,
+    });
+    await followCaptain(deps.live, event.slug, "t1", "m1");
+    expect((await phoneLiveView(deps, event, "m1", "dev-m1")).you).toMatchObject({ captain: true });
+    expect((await phoneLiveView(deps, event, "c1", "dev-c1")).you).toMatchObject({
+      captain: false,
+    });
   });
 
   it("S24-AC11: showdowns need the team phase, and the host can't leave it while one runs", async () => {

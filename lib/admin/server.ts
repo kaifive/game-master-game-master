@@ -1,5 +1,5 @@
 import "server-only";
-import { finishLive, liveRepo, phaseChangeProblem } from "@/lib/live/server";
+import { finishLive, followCaptain, liveRepo, phaseChangeProblem } from "@/lib/live/server";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { AppError } from "@/lib/errors";
@@ -226,6 +226,8 @@ export async function runAction(slug: Slug, body: ControlsAction) {
       break;
     case "setCaptain":
       await changeCaptain(d, event, body.teamId, body.playerId);
+      // A showdown that's running hands the controller over too (QA, 2026-11-25).
+      if (d.live) await followCaptain(d.live, event.slug, body.teamId, body.playerId);
       break;
     case "donations":
     case "jars":
