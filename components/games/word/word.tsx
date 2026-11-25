@@ -55,6 +55,8 @@ export function WordGame({ view: raw, onMove, busy }: GameRendererProps) {
   const [shake, setShake] = useState(0);
   // "Not in the word list" shows briefly over the board, then gets out of the way.
   const [toast, setToast] = useState(false);
+  // Enter on a short word says why nothing happened (QA, 2026-11-25).
+  const [short, setShort] = useState(false);
   // A guess the server took clears the typed letters and starts its reveal; a turned-away one shakes.
   const [seen, setSeen] = useState({ rows: view.rows.length, view });
   if (seen.view !== view) {
@@ -92,6 +94,7 @@ export function WordGame({ view: raw, onMove, busy }: GameRendererProps) {
     if (shake === 0) return;
     const t = setTimeout(() => {
       setToast(false);
+      setShort(false);
     }, TOAST_MS);
     return () => {
       clearTimeout(t);
@@ -103,7 +106,12 @@ export function WordGame({ view: raw, onMove, busy }: GameRendererProps) {
     if (!guessing) return;
     if (label === ENTER) {
       // One guess in flight at a time.
-      if (!busy && typed.length === LENGTH) onMove({ type: "guess", word: typed });
+      if (typed.length < LENGTH) {
+        setShort(true);
+        setShake((n) => n + 1);
+        return;
+      }
+      if (!busy) onMove({ type: "guess", word: typed });
       return;
     }
     if (label === DELETE) {
@@ -148,10 +156,10 @@ export function WordGame({ view: raw, onMove, busy }: GameRendererProps) {
         aria-live="polite"
         className={cx(
           "pointer-events-none absolute top-2 left-1/2 z-10 m-0 w-max -translate-x-1/2 rounded-gm px-4 py-2 text-center text-lg font-bold",
-          rejected && "bg-gm-surface-raised shadow-xl ring-1 ring-gm-border",
+          (rejected || short) && "bg-gm-surface-raised shadow-xl ring-1 ring-gm-border",
         )}
       >
-        {rejected ? "Not in the word list" : ""}
+        {rejected ? "Not in the word list" : short ? `${String(LENGTH)} letters, please` : ""}
       </p>
       <div className="grid justify-center gap-1.5">
         {Array.from({ length: view.maxGuesses }, (_, r) => {

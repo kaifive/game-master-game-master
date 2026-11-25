@@ -97,7 +97,12 @@ export function TrailGame({ view: raw, onMove, busy }: GameRendererProps) {
     <section aria-label="Pathfinder" className="grid gap-3">
       <p className="m-0 text-center text-lg font-bold" aria-live="polite">
         {problem ??
-          (path.length === 0 ? "Start on 1" : `${String(path.length)} of ${String(total)} squares`)}
+          (path.length === 0
+            ? // The runner stands on the 1 and hides it, so name the runner (QA, 2026-11-25).
+              runner
+              ? `Start on ${runner.alt} (square 1)`
+              : "Start on 1"
+            : `${String(path.length)} of ${String(total)} squares`)}
       </p>
       <div
         data-floor={view.floor ?? "plain"}

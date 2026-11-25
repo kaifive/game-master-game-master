@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { HollyIcon } from "@/components/icons/holly";
+import { BackspaceIcon } from "@/components/icons/game";
 import "@fontsource/oswald/500.css";
 import "@fontsource/oswald/700.css";
 import "./judges-table.css";
@@ -246,7 +247,8 @@ function Key({ label, state = "unused", wide, onPress }: KeyProps) {
       }}
       className={keyLook({ state, width: wide ? "wide" : "normal" })}
     >
-      {label}
+      {/* "Delete" didn't fit a 360 px phone; the rub-out symbol does (QA, 2026-11-25). */}
+      {label === "Delete" ? <BackspaceIcon /> : label}
     </button>
   );
 }
