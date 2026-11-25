@@ -5,6 +5,7 @@ import { useCallback, useEffect, useId, useState } from "react";
 import type { EventStatus } from "@/lib/events";
 import { TeamSelfiesCard } from "./team-selfies";
 import { LiveControls } from "@/components/live/live-controls";
+import { useHydrated } from "@/components/motion";
 import { MAX_TEAMS } from "@/lib/teams";
 import { AdminButton, Card, field, StatusBadge } from "./ui";
 
@@ -830,6 +831,7 @@ export function Controls({
   const [search, setSearch] = useState("");
   const [confirmText, setConfirmText] = useState("");
   const [now, setNow] = useState(() => Date.now());
+  const hydrated = useHydrated();
   const searchId = useId();
 
   const refresh = useCallback(async () => {
@@ -1019,7 +1021,8 @@ export function Controls({
                     <span className="min-w-0">
                       <span className="block truncate font-bold">{p.nickname}</span>
                       <span className="block text-xs text-gm-text-muted">
-                        Joined {ago(p.joinedAt, now)}
+                        {/* After hydration only: the server's "now" isn't the browser's (QA, 2026-11-25). */}
+                        Joined {hydrated ? ago(p.joinedAt, now) : ""}
                         {p.restarts > 0 && ` · started over ${String(p.restarts)}×`}
                       </span>
                     </span>
