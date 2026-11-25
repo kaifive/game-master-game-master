@@ -61,7 +61,7 @@ Phone, in the pack: one big primary action per screen, the game's numbers in the
 
 - [x] AC-1: Each game's content is validated, with defaults for the party, and its instructions are built from it.
 - [x] AC-2: T-Timer always shows the clock and the window; stopping inside the window (edges included) earns all points, falling to 0 at 0.5 s outside it; the phone sends the time its clock shows, and the server refuses a claimed time longer than really passed.
-- [x] AC-3: Tap Masher counts taps for its seconds after a countdown; points scale to the target and an impossible count is refused.
+- [x] AC-3: Tap Masher counts taps for its seconds after a countdown; points scale to the target, and taps past what a person can make (20 a second) are let go rather than refused, so a fast tapper still gets a score (QA, 2026-11-25).
 - [x] AC-4: Pathfinder makes a different puzzle per seed that always has a solution; the server accepts only a path that covers every square once, moves between neighbours and passes the dots in order, and scores half for solving plus up to half for speed, with no time limit.
 - [x] AC-5: Stack Attack trims each stopped bar to the row below, ends on a miss or the top row, and scores by rows stacked.
 - [x] AC-6: Rapid Recall plays three rounds of growing grids from the seed, hides the pattern after 1.2 s, and scores an equal share per square found.

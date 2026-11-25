@@ -119,6 +119,12 @@ describe("PlayerFooter", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  test("not shown on the live game, where the captain's controller needs the whole screen", () => {
+    nav.path = "/holiday-2026/live";
+    const { container } = footer(true);
+    expect(container).toBeEmptyDOMElement();
+  });
+
   test("hidden until a player has joined", () => {
     if (device.state) device.state.active = null;
     const { container } = render(<PlayerFooter hasTeams={false} />);

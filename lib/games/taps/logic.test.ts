@@ -11,14 +11,16 @@ describe("Tap Masher", () => {
     expect(lines).not.toMatch(/50/);
   });
 
-  it("S16-AC3: the countdown starts with the game; 50 taps scores all, and the impossible is refused", () => {
+  it("S16-AC3: the countdown starts with the game; 50 taps scores all, and taps past what a person can make are let go, not refused", () => {
     const s = taps.create(c, 1, at(0));
     expect(taps.view(s, c, at(1000))).toMatchObject({
       kind: "running",
       goInMs: COUNTDOWN_MS - 1000,
     });
     expect(taps.move(s, c, { type: "finish", taps: 20 }, at(4000)).ok).toBe(false); // too early
-    expect(taps.move(s, c, { type: "finish", taps: 101 }, at(8000)).ok).toBe(false); // > 20/s
+    // More than 20 a second: counted only up to what a person could make, not refused (QA, 2026-11-25).
+    const fast = taps.move(s, c, { type: "finish", taps: 500 }, at(8000));
+    expect(fast.ok && (fast.state as { taps: number }).taps).toBe(100);
     const done = taps.move(s, c, { type: "finish", taps: 30 }, at(8000));
     if (!done.ok) throw new Error(done.message);
     expect(taps.score(done.state, 100)).toBe(60);

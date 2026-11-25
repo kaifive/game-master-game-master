@@ -122,16 +122,17 @@ export const taps: GameLogic<TapsContent, TapsState, TapsView> = {
       };
     }
     if (s.phase !== "running" || s.goAt === null) return fail("Tap Start first.");
-    const count = parsed.data.taps;
+    // Taps beyond what a person could make by now are let go rather than refused:
+    // a kid drumming with two fingers still gets a score (QA, 2026-11-25), and a
+    // made-up count still can't beat the fastest person.
+    const elapsed = Math.min(s.seconds * 1000, Math.max(0, now - s.goAt + EARLY_SLACK_MS));
+    const possible = Math.floor((elapsed / 1000) * MAX_TAPS_PER_SECOND);
+    const count = Math.min(parsed.data.taps, possible);
     // A film ends as soon as its last frame plays, if a person could have tapped that fast (S16-AC13).
     const filmFrames = c.film?.frames;
     const finishedFilm = filmFrames !== undefined && count >= filmFrames;
-    const earliest = finishedFilm
-      ? s.goAt + (filmFrames / MAX_TAPS_PER_SECOND) * 1000
-      : s.goAt + s.seconds * 1000;
-    if (now < earliest - EARLY_SLACK_MS) return fail("Time isn't up yet.");
-    if (count > s.seconds * MAX_TAPS_PER_SECOND)
-      return fail("That's more taps than a person can make.");
+    if (!finishedFilm && now < s.goAt + s.seconds * 1000 - EARLY_SLACK_MS)
+      return fail("Time isn't up yet.");
     return { ok: true, state: { ...s, phase: "done", taps: count, step: s.step + 1 } };
   },
   isOver: (s) => s.phase === "done",
