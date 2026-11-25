@@ -195,7 +195,7 @@ function view(s: PathState, _c: unknown, { role, revealed, now }: ViewCtx) {
 const game: ShowdownGame<C, PathState> = {
   content: Content,
   demo: "Remember the path, then cross it!",
-  timeout: "Out of time? 5 seconds on one step and you're out.",
+  timeout: "Out of time? 5 seconds a step, or you're out.",
   rounds: (_c, teams) => lapRounds(teams),
   deal: (c, { seed, round, teams, startsAt }) => {
     const level = levelFor(c.levels, round) ?? { minLength: 12, maxLength: 16, showMs: 6000 };

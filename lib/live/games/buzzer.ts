@@ -207,8 +207,7 @@ export type BuzzerView = ReturnType<typeof view>;
 const game: ShowdownGame<C, BuzzerState> = {
   content: Content,
   demo: "Wait for green, then buzz and answer out loud!",
-  timeout:
-    "Out of time? There's no clock: the host moves on. Pressing while it's red locks you out for a moment.",
+  timeout: "Too early? You're locked out for a moment.",
   rounds: (c) => c.questions.length,
   skipResults: true,
   labels: { start: (n) => `Show question ${String(n)}`, next: "Next question" },

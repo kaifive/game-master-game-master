@@ -22,6 +22,27 @@ const r2 = (n: number) => Math.round(n * 100) / 100;
 
 const teamColor = (c: number) => `var(--gm-team-${String(c)})`;
 
+/**
+ * The right answer's mark at the reveal: a white star, so it never looks like
+ * a team's mark, whatever the teams' colors (Khai, 2026-11-25: a gold team
+ * looked like the gold right answer).
+ */
+function Star({ x, y, r = 5 }: { x: number; y: number; r?: number }) {
+  const points = Array.from({ length: 10 }, (_, i) => {
+    const a = -Math.PI / 2 + (i * Math.PI) / 5;
+    const d = i % 2 === 0 ? r : r * 0.45;
+    return `${String(r2(x + Math.cos(a) * d))},${String(r2(y + Math.sin(a) * d))}`;
+  }).join(" ");
+  return (
+    <polygon
+      points={points}
+      fill="var(--gm-tile-present)"
+      stroke="var(--gm-tile-present-ink)"
+      strokeWidth={0.6}
+    />
+  );
+}
+
 /** A share from 0 to 1, to three places, as answers are sent. */
 const share3 = (n: number) => Math.round(Math.max(0, Math.min(1, n)) * 1000) / 1000;
 
@@ -73,7 +94,7 @@ function Pole({ deg, color, width = 6 }: { deg: number; color?: string; width?: 
  * The floor and the staff. With `onAngle` it's a dial: drag anywhere above
  * the floor to point the staff there, or use the arrow keys. There is no
  * number to read off while turning (spec 28). `marks` are the teams'
- * answers at the reveal; `target` the right angle, drawn as a gold arc.
+ * answers at the reveal; `target` the right angle: the staff outlined in white with a star.
  */
 export function StaffDial({
   angle,
@@ -139,14 +160,26 @@ export function StaffDial({
       )}
     >
       {target !== undefined && (
-        <path d={arc(target, 26)} stroke="var(--gm-tile-correct)" strokeWidth={2} fill="none" />
+        <path d={arc(target, 26)} stroke="var(--gm-tile-present)" strokeWidth={2} fill="none" />
       )}
       {marks.map((m) => (
         <g key={m.id} opacity={0.9}>
           <Pole deg={m.value} color={teamColor(m.color)} width={3} />
         </g>
       ))}
-      {target !== undefined && <Pole deg={target} />}
+      {target !== undefined && (
+        <g aria-label="The right angle">
+          {/* A white outline and a star set the right angle apart from every team's. */}
+          <path
+            d={`M${String(PIVOT.x)} ${String(PIVOT.y)}L${String(tip(target).x)} ${String(tip(target).y)}`}
+            stroke="var(--gm-tile-present)"
+            strokeWidth={10}
+            strokeLinecap="round"
+          />
+          <Pole deg={target} />
+          <Star x={tip(target, STAFF + 9).x} y={tip(target, STAFF + 9).y} r={6} />
+        </g>
+      )}
       {angle !== null && target === undefined && <Pole deg={angle} />}
       <path
         d={`M8 ${String(PIVOT.y)}H192`}
@@ -178,8 +211,8 @@ function Snip({ at, color }: { at: number; color: string }) {
 
 /**
  * The ribbon, with no marks on it. With `onCut` a tap (or drag) puts the
- * scissors there. At the reveal, `truth` shows the right spot in gold and
- * `marks` each team's cut.
+ * scissors there. At the reveal, `truth` shows the right spot as a white star
+ * over a dashed line, and `marks` each team's cut in its color.
  */
 export function RibbonStrip({
   cut,
@@ -237,7 +270,17 @@ export function RibbonStrip({
       {marks.map((m) => (
         <Snip key={m.id} at={m.value} color={teamColor(m.color)} />
       ))}
-      {truth !== null && <Snip at={truth} color="var(--gm-tile-correct)" />}
+      {truth !== null && (
+        <g aria-label="The right spot">
+          <path
+            d={`M${String(ribX(truth))} 9V35`}
+            stroke="var(--gm-tile-present)"
+            strokeWidth={1.6}
+            strokeDasharray="2.5 1.5"
+          />
+          <Star x={ribX(truth)} y={4.5} r={4.5} />
+        </g>
+      )}
       {cut !== null && truth === null && <Snip at={cut} color="var(--gm-tile-present)" />}
     </svg>
   );

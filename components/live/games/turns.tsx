@@ -188,9 +188,7 @@ function To21Controller({ view, game, serverNow, revealed, send, busy }: LiveCon
           </button>
         ))}
       </div>
-      <p className="m-0 text-center text-gm-text-muted">
-        Make it exactly {g.target} to win. Too slow adds 1.
-      </p>
+      <p className="m-0 text-center text-gm-text-muted">Make exactly {g.target} to win!</p>
     </section>
   );
 }

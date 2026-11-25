@@ -298,9 +298,7 @@ function Buzzer({ view, g, serverNow, send }: LiveControllerProps & { g: BuzzerV
         )}
       </button>
       <p className="m-0 text-center text-lg text-gm-text-muted">
-        {live
-          ? "Buzz now! First in answers out loud."
-          : "Wait for green. Pressing early locks you out for a moment."}
+        {live ? "Buzz now! First in answers out loud." : "Wait for green!"}
       </p>
     </div>
   );

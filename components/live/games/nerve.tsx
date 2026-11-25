@@ -377,9 +377,7 @@ function StockingController({ view, game, serverNow, revealed, send, busy }: Liv
       >
         Bank {pot}
       </button>
-      <p className="m-0 text-center text-gm-text-muted">
-        Coal empties your pot. No choice banks it.
-      </p>
+      <p className="m-0 text-center text-gm-text-muted">Coal empties your pot!</p>
     </section>
   );
 }
@@ -570,7 +568,7 @@ function SnatchController({ view, game, serverNow, revealed, send, busy }: LiveC
         Snatch
       </button>
       <p className="m-0 text-center text-gm-text-muted">
-        Both share: {g.pot / 2} each. One snatches: they take it all. Both snatch: both lose 20.
+        Share: {g.pot / 2} each. Snatch: all {g.pot}, unless they snatch too.
       </p>
     </section>
   );

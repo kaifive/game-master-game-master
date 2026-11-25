@@ -227,7 +227,9 @@ describe("every showdown's intro (blind review)", () => {
       // Super short: the demo shows the rest (Khai, 2026-11-24).
       expect(game?.demo.length).toBeGreaterThan(10);
       expect(game?.demo.length).toBeLessThanOrEqual(60);
-      expect(game?.timeout).toMatch(/^Out of time\?/);
+      // What goes wrong if you're slow (or, for the buzzer, too quick), in a line.
+      expect(game?.timeout).toMatch(/^(Out of time|Too early)\?/);
+      expect(game?.timeout?.length ?? 0).toBeLessThanOrEqual(50);
     }
   });
 });
