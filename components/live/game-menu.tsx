@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { RaffleView } from "@/lib/guests";
 import type { AdminLiveAct, Screen } from "@/lib/live";
 import { CheckIcon } from "@/components/icons/game";
 import { cx } from "@/lib/ui";
@@ -23,6 +24,10 @@ export type TvHost = {
   nextInMs: number | null;
   /** The step Next would be pressed on, so a late press does nothing. */
   at: { step: string; round: number } | null;
+  /** The raffle, for its buttons on the Raffle screen (spec 32). */
+  raffle?: RaffleView | null;
+  /** How long until the drawn name lands, from when the view was fetched. */
+  raffleLandsIn?: number | null;
 };
 
 /** The team standings, small, beside the menu. */
@@ -214,6 +219,12 @@ export function TvHostBar({
   // Not the leaderboard mid-round: the round would vanish from the room (QA, 2026-11-25).
   const midRound = running && host.at?.step === "play" && screen === "showdown";
   const held = useHeld(host.nextInMs);
+  const r = host.raffle;
+  // Claimed and Not here wait for the name to land (S32-AC10).
+  const landing = useHeld(host.raffleLandsIn ?? null);
+  const raffleStep = (step: "start" | "stop" | "claim" | "notHere") => {
+    host.act({ action: "raffle", step, ...(r?.drawId ? { drawId: r.drawId } : {}) });
+  };
   const button =
     "min-h-11 rounded-gm px-4 font-bold ring-1 ring-gm-border bg-gm-surface hover:bg-gm-surface-raised disabled:opacity-50";
   return (
@@ -221,6 +232,61 @@ export function TvHostBar({
       aria-label="Host controls"
       className="fixed right-[1.5vmin] bottom-[1.5vmin] z-40 flex gap-2 rounded-gm bg-gm-bg/80 p-2 text-base shadow-xl backdrop-blur"
     >
+      {screen === "raffle" && r && (
+        <>
+          {r.status === "idle" && (
+            <button
+              type="button"
+              disabled={host.busy}
+              onClick={() => {
+                raffleStep("start");
+              }}
+              className={cx(button, "bg-gm-accent text-gm-text-on-accent hover:bg-gm-accent-hover")}
+            >
+              Start
+            </button>
+          )}
+          {r.status === "flipping" && (
+            <button
+              type="button"
+              disabled={host.busy}
+              onClick={() => {
+                raffleStep("stop");
+              }}
+              className={cx(button, "bg-gm-accent text-gm-text-on-accent hover:bg-gm-accent-hover")}
+            >
+              Stop
+            </button>
+          )}
+          {(r.status === "landing" || r.status === "landed") && (
+            <>
+              <button
+                type="button"
+                disabled={host.busy || landing}
+                onClick={() => {
+                  raffleStep("claim");
+                }}
+                className={cx(
+                  button,
+                  "bg-gm-accent text-gm-text-on-accent hover:bg-gm-accent-hover",
+                )}
+              >
+                Claimed
+              </button>
+              <button
+                type="button"
+                disabled={host.busy || landing}
+                onClick={() => {
+                  raffleStep("notHere");
+                }}
+                className={button}
+              >
+                Not here
+              </button>
+            </>
+          )}
+        </>
+      )}
       {running && host.next && (
         <button
           type="button"
@@ -249,13 +315,25 @@ export function TvHostBar({
         onClick={() => {
           host.act({
             action: "screen",
-            screen: screen === "showdown" ? "leaderboard" : "showdown",
+            screen: screen === "leaderboard" ? "showdown" : "leaderboard",
           });
         }}
         className={button}
       >
-        {screen === "showdown" ? "Leaderboard" : "Showdowns"}
+        {screen === "leaderboard" ? "Showdowns" : "Leaderboard"}
       </button>
+      {screen !== "raffle" && host.raffle && (
+        <button
+          type="button"
+          disabled={host.busy || midRound}
+          onClick={() => {
+            host.act({ action: "screen", screen: "raffle" });
+          }}
+          className={button}
+        >
+          Raffle
+        </button>
+      )}
     </nav>
   );
 }

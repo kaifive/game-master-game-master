@@ -309,6 +309,101 @@ export function LiveCard({ view, act, busy }: { view: AdminLiveView; act: Act; b
 }
 
 /** The Showdown card and Who's played, following the session (S11-AC4) and sending the host's actions. */
+/**
+ * The raffle (spec 32): put it on the TV, Start and Stop, then Claimed or Not
+ * here once the winner has landed. Each step carries its draw (S32-AC11).
+ */
+export function RaffleCard({ view, act, busy }: { view: AdminLiveView; act: Act; busy: boolean }) {
+  const r = view.raffle;
+  // Landing until landsAt, on this device's clock from the server's (S32-AC9).
+  const landing = useHeld(
+    r.status === "landing" && r.landsAt !== null ? r.landsAt - view.serverNow : null,
+  );
+  const status = r.status === "landing" && !landing ? "landed" : r.status;
+  const step = (s: "start" | "stop" | "claim" | "notHere") => {
+    act({ action: "raffle", step: s, ...(r.drawId ? { drawId: r.drawId } : {}) });
+  };
+  return (
+    <Card title="Raffle">
+      <div className="grid gap-3">
+        {view.notice && (
+          <p role="status" className="m-0 text-sm font-bold text-gm-danger">
+            {view.notice}
+          </p>
+        )}
+        <p className="m-0 text-sm">
+          {r.tickets} {r.tickets === 1 ? "ticket" : "tickets"}, {r.people}{" "}
+          {r.people === 1 ? "person" : "people"} in the draw
+        </p>
+        {status === "landed" && r.winner && (
+          <p className="m-0 text-2xl font-bold" role="status">
+            {r.winner}
+          </p>
+        )}
+        {status === "landing" && (
+          <p className="m-0 text-sm font-bold text-gm-text-muted" role="status">
+            Drawing…
+          </p>
+        )}
+        <div className="flex flex-wrap gap-3">
+          {status === "idle" && (
+            <AdminButton
+              disabled={busy}
+              onClick={() => {
+                step("start");
+              }}
+            >
+              Start the raffle
+            </AdminButton>
+          )}
+          {status === "flipping" && (
+            <AdminButton
+              disabled={busy}
+              onClick={() => {
+                step("stop");
+              }}
+            >
+              Stop
+            </AdminButton>
+          )}
+          {status === "landed" && (
+            <>
+              <AdminButton
+                disabled={busy}
+                onClick={() => {
+                  step("claim");
+                }}
+              >
+                Claimed
+              </AdminButton>
+              <AdminButton
+                tone="secondary"
+                disabled={busy}
+                onClick={() => {
+                  step("notHere");
+                }}
+              >
+                Not here
+              </AdminButton>
+            </>
+          )}
+          <AdminButton
+            tone="secondary"
+            disabled={
+              busy || view.screen === "raffle" || (view.active && view.session.step === "play")
+            }
+            onClick={() => {
+              act({ action: "screen", screen: "raffle" });
+            }}
+          >
+            {view.screen === "raffle" ? "On the TV" : "Raffle on the TV"}
+          </AdminButton>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 export function LiveControls({ slug }: { slug: string }) {
   const load = useCallback(() => adminLiveApi.view(slug), [slug]);
   const { view, error, show } = useLive<AdminLiveView>(load);
@@ -332,6 +427,7 @@ export function LiveControls({ slug }: { slug: string }) {
         </p>
       )}
       <LiveCard view={view} act={act} busy={busy} />
+      <RaffleCard view={view} act={act} busy={busy} />
       <WhosPlayed view={view} act={act} busy={busy} />
     </>
   );
