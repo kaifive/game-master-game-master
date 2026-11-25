@@ -12,6 +12,9 @@ const Content = z.object({
   countdownMs: z.number().int().min(3000).max(30_000).default(10_000),
 });
 
+/** Only a stop in the last this-many ms scores, more the later it is. */
+export const SCORING_MS = 4000;
+
 export type LastState = Stops & { teams: string[]; countdownMs: number };
 
 type C = z.infer<typeof Content>;
@@ -46,11 +49,13 @@ const game: ShowdownGame<C, LastState> = {
   over: (s, _c, now) =>
     now > s.startsAt + s.countdownMs + MAX_LAG_MS || s.teams.every((t) => s.stops[t] !== undefined),
   // The later the stop, the more it scores, whatever the others did; a bust is 0 (ADR-045).
+  // Only the last 4 seconds score, so nerve counts (Khai, 2026-11-25).
   score: (s, c, teams) =>
     Object.fromEntries(
       teams.map((t) => {
         const ms = s.stops[t];
-        return [t, closePoints(ms === undefined ? null : ms / s.countdownMs, c.rounds)];
+        const left = ms === undefined ? null : s.countdownMs - ms;
+        return [t, closePoints(left === null ? null : 1 - left / SCORING_MS, c.rounds)];
       }),
     ),
   view,

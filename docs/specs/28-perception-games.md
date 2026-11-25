@@ -45,9 +45,17 @@ TV; the event file chooses per game (ADR-040).
    be counted out (Khai, 2026-11-24), and no number on screen to read off while
    turning, only a flat floor line to judge from. Solo locks it in; a showdown phone
    sends where the staff is as the time runs out.
-2. Levels: multiples of 15° (15 to 165), then multiples of 5°, then any whole degree.
-   15 s to answer, then 12, then 9 (Khai, 2026-11-24).
-3. Closeness: 1 minus the miss in degrees over 45, never below 0 (5° off is 0.89).
+2. Levels (Khai, 2026-11-25): round 1 goes up to 180° in multiples of 15°, with the
+   staff standing on the floor; round 2 up to 360° in multiples of 5°, and round 3 up
+   to 540° in whole degrees, both on a full dial that turns from a line pointing right.
+   The staff winds round past a whole turn, and a spiral drawn from the hub shows how
+   far it has gone, so 450° doesn't look like 90°. A tap picks the turn nearest where
+   the staff is; a drag follows the hand and stops at 0 or the round's limit. At the
+   reveal each team's sweep is drawn beside the right one. 15 s to answer, then 12,
+   then 9 (Khai, 2026-11-24).
+3. Closeness rewards skill (Khai, 2026-11-25): within 2° is full marks, then it falls
+   steeply, the square of what's left of the miss up to 27° (5° off is 0.77, 10° off
+   0.46, 15° off 0.23, 27° or more 0).
 
 ### Cut the Ribbon (`ribbon`)
 
@@ -56,7 +64,8 @@ TV; the event file chooses per game (ADR-040).
    Solo locks it in; a showdown phone sends the cut after each tap, and the last one before time's up counts.
 2. Levels: halves, thirds and quarters; fifths and eighths; any fraction in tenths, said
    as a percentage ("Cut it 70% of the way along"). 10 s to answer.
-3. Closeness: 1 minus the miss as a share of 15% of the ribbon, never below 0.
+3. Closeness rewards skill (Khai, 2026-11-25): within 1% of the ribbon is full marks,
+   then the square of what's left of the miss up to 12% (5% off is 0.40, 12% or more 0).
 
 ## Data
 

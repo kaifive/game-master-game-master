@@ -874,3 +874,22 @@ points per question.
 results can be read without comparing teams. The team totals on the TV grow
 more slowly than before, which suits a night of many games.
 
+
+## ADR-046: Skill counts for more in the closeness and memory showdowns
+
+**Status:** accepted (Khai, 2026-11-25). Changes how ADR-045 scores Staff Angle,
+Cut the Ribbon, Last Second and Memory Path; the 150 a game stays.
+
+The persona play-test found skill barely mattered: a random staff within 12° took
+138 of 150, Memory Path paid 19 for one wrong arrow against 30 for nearly
+crossing, and stopping Last Second with 2 s left still scored 40 of 50.
+
+**Decision:** closeness falls off steeply. Staff Angle is full marks within 2°,
+then the square of what's left of the miss up to 27°; Cut the Ribbon the same
+within 1% and up to 12%. Last Second scores only the last 4 seconds, more the
+later. Memory Path pays a crossing all of the round's share and anyone else 10%
+for taking part plus up to 60% by how far along the path they got. Staff Angle's
+rounds also grow: up to 180°, then 360°, then 540°.
+
+**Consequences:** good play pulls ahead; a rough guess scores little but never
+below zero. Younger players score less in these four games than before.

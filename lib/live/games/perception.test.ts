@@ -43,8 +43,8 @@ describe("perception showdowns (spec 28)", () => {
     // A team can change its answer until time's up; the last one counts (QA, 2026-11-25).
     const changed = game.move(s, c, { teamId: "t1", move: { answer: 5 }, now: T0 + 1100 });
     expect(changed.ok && (changed.state as typeof s).answers.t1).toBe(5);
-    // 10° off of 45 is 78% close: 39 of the round's 50, whatever the others did.
-    expect(game.score(s, c, teams)).toEqual({ t1: 50, t2: 39, t3: 39, t4: 0 });
+    // 10° off is (17/25)² = 46% close: 23 of the round's 50, whatever the others did.
+    expect(game.score(s, c, teams)).toEqual({ t1: 50, t2: 23, t3: 23, t4: 0 });
   });
 
   it("S28-AC4: answers stay secret until the reveal; the TV shows who has answered", () => {

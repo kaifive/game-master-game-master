@@ -36,7 +36,7 @@ Every game here follows spec 24: the host's steps, Who's played, the TV demo, 1 
 1. Content: rounds (default 3), countdown length (default 10 s).
 2. Play: a big countdown runs on the TV, fully visible (Khai, 2026-11-17), from 10.00 to 0.00. Each team's player taps **Stop** on the captain's phone whenever they dare. Each phone times its stop from the shared start (spec 24, shared start), to the hundredth, like Blind Stop. A team that hasn't stopped by zero has busted.
 2a. The phone times the stop the moment Stop is touched, on the shared clock, so network lag never changes the time; the button buzzes and shows the time stopped at once (Blind Stop says "Stopped!" without the time) (Khai, 2026-11-24).
-3. Results: the TV shows every team's stop time, latest first, and the busts. **Points per round: up to 50 for how late the stop was, the share of the countdown gone (stopping with 1 s of 10 left scores 45); a bust scores 0 (ADR-045).**
+3. Results: the TV shows every team's stop time, latest first, and the busts. **Points per round: up to 50 for how late the stop was; only the last 4 seconds score, so 1 s left scores 38, 2 s left 25 and 4 s or more 0 (Khai, 2026-11-25); a bust scores 0 (ADR-045).**
 
 ## Data
 
@@ -54,7 +54,7 @@ Each game's content is validated in the event file and its round state lives in 
 - [x] AC-2: Snow Sum deals seeded snowflake sums, adding only in round 1, taking away too in round 2 and doubling too in round 3, takes a total per team within 10 s (each change sent as it's typed; the last one counts), and scores up to 50 a round on how close it is.
 - [x] AC-3: Fly-by Count's later rounds mix red, white and green presents, each with its own mark, ask about one kind only once they've flown past, and never repeat the last round's answer.
 - [x] AC-4: Blind Stop plays three rounds, shows the clock for 3 s then a "?", takes each team's phone-timed stop, and scores each stop up to 50 on its own closeness to 10.00, nothing at 3 s off.
-- [x] AC-5: Last Second runs a visible countdown, takes each team's phone-timed stop, busts teams that didn't stop by zero, and scores the rest up to 50 a round on how late they stopped, busts 0.
+- [x] AC-5: Last Second runs a visible countdown, takes each team's phone-timed stop, busts teams that didn't stop by zero, and scores the rest up to 50 a round on how late they stopped within the last 4 seconds, busts 0.
 
 ## Tests
 
