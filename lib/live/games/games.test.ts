@@ -201,7 +201,8 @@ describe("Last Second", () => {
     expect(g.refuse(s, "t5", { elapsedMs: 10_000 }, T0 + 10_050)).toBe("Time's up.");
     expect(g.view(s, cap("t1"), false)).toMatchObject({ mine: 9_800, stops: null });
     expect(g.view(s, tv, false)).toMatchObject({ mine: null, stops: null });
-    expect(g.score(s)).toEqual({ t2: 50, t3: 50, t1: 49, t4: 20, t5: 0, t6: 0 });
+    // Only the last 4 s score: 0.05 s left is 49, 0.2 s left 48, 6 s left nothing.
+    expect(g.score(s)).toEqual({ t2: 49, t3: 49, t1: 48, t4: 0, t5: 0, t6: 0 });
     // A stop made just before zero may still be on its way.
     expect(g.over(s, T0 + 10_000 + MAX_LAG_MS - 1)).toBe(false);
     expect(g.over(s, T0 + 10_000 + MAX_LAG_MS + 1)).toBe(true);

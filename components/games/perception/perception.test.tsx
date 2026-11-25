@@ -90,3 +90,32 @@ describe("the counting games solo on the phone (spec 30)", () => {
     expect(screen.getAllByRole("button", { name: "Lock in" }).length).toBeGreaterThan(0);
   });
 });
+
+describe("the staff dial (spec 28)", () => {
+  test("S28-AC1: up to 180° the staff stands on the floor; rounds 2 and 3 turn it on a full dial that winds past a whole turn", async () => {
+    const { StaffDial, windTo } = await import("./scenes");
+    // A pointer means the turn nearest where the staff already is, up to the round's limit.
+    expect(windTo(90, 0, 540)).toBe(90);
+    expect(windTo(10, 350, 540)).toBe(370);
+    expect(windTo(-90, 0, 360)).toBe(270);
+    // A drag past the limit stops there, not a whole turn back.
+    expect(windTo(200, 500, 540, true)).toBe(540);
+    expect(windTo(10, 350, 540, true)).toBe(370);
+    expect(windTo(-20, 10, 540, true)).toBe(0);
+    const user = userEvent.setup();
+    let angle = 358;
+    const onAngle = vi.fn((a: number) => {
+      angle = a;
+    });
+    const { rerender } = render(<StaffDial angle={angle} onAngle={onAngle} max={540} />);
+    const dial = screen.getByRole("slider", { name: /staff/ });
+    expect(dial).toHaveAttribute("aria-valuemax", "540");
+    expect(dial.getAttribute("viewBox")).toBe("0 0 200 200");
+    dial.focus();
+    await user.keyboard("{ArrowLeft}{ArrowLeft}{ArrowLeft}");
+    rerender(<StaffDial angle={angle} onAngle={onAngle} max={540} />);
+    expect(onAngle).toHaveBeenLastCalledWith(359);
+    render(<StaffDial angle={20} onAngle={vi.fn()} />);
+    expect(screen.getAllByRole("slider")[1]?.getAttribute("viewBox")).toBe("0 0 200 112");
+  });
+});

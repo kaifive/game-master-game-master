@@ -130,6 +130,10 @@ const crossing = (s: PathState) => (s.winner === null ? (s.order[s.at] ?? null) 
  */
 export const START = 1;
 
+/** What a team that goes out scores of a crossing: a little for playing, the rest by squares (Khai, 2026-11-25). */
+export const TAKING_PART = 0.1;
+export const ALONG = 0.6;
+
 /** Where a step from the crossing team's square lands: up, left or right. */
 export function stepFrom(square: Square, dir: "up" | "left" | "right"): Square {
   const [col, row] = square;
@@ -253,13 +257,16 @@ const game: ShowdownGame<C, PathState> = {
     return st;
   },
   over: (s) => s.winner !== null || s.at >= s.order.length,
-  // Crossing scores the round's share; some right squares 80% of it; none 50% (Khai, 2026-11-24).
+  // Crossing scores the round's share. Going out scores 10% for taking part plus up to
+  // 60% for how far along it got, so remembering counts (Khai, 2026-11-25).
   score: (s, c, teams) => {
     const full = c.points ?? roundShare(lapRounds(teams.length));
+    const squares = Math.max(1, s.path.length - START);
     return Object.fromEntries(
       teams.map((t) => {
         const r = s.results[t];
-        const share = t === s.winner ? 1 : r && r.reached > START ? 0.8 : 0.5;
+        const got = r ? Math.max(0, r.reached - START) / squares : 0;
+        const share = t === s.winner ? 1 : TAKING_PART + ALONG * Math.min(1, got);
         return [t, Math.round(full * share)];
       }),
     );

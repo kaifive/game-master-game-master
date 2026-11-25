@@ -11,7 +11,8 @@ import { cx } from "@/lib/ui";
  * mean the same spot.
  */
 
-export type AngleScene = { target: number };
+/** The angle to set, and how far the staff can turn this round (180, 360 or 540). */
+export type AngleScene = { target: number; max?: number };
 export type RibbonScene = { label: string; at: number | null };
 
 /** A team's answer drawn on a scene at the reveal: its palette color and name. */
@@ -56,31 +57,47 @@ function shareOf(e: React.PointerEvent, axis: "x" | "y", from = 0, to = 1) {
 
 // ---- Staff Angle
 
-const PIVOT = { x: 100, y: 104 };
+/** Where the staff pivots: on the floor for a half turn, in the middle for a dial that winds. */
+type Pivot = { x: number; y: number };
+const PIVOT: Pivot = { x: 100, y: 104 };
+const HUB: Pivot = { x: 100, y: 100 };
 const STAFF = 88;
-const tip = (deg: number, len = STAFF) => {
+const SPOKE = 74;
+const tip = (deg: number, len = STAFF, at: Pivot = PIVOT) => {
   const a = (deg * Math.PI) / 180;
-  return { x: r2(PIVOT.x + Math.cos(a) * len), y: r2(PIVOT.y - Math.sin(a) * len) };
+  return { x: r2(at.x + Math.cos(a) * len), y: r2(at.y - Math.sin(a) * len) };
 };
 
-/** A wushu staff: a long gold pole with cranberry grip bands, pivoting on the floor line. */
-function Pole({ deg, color, width = 6 }: { deg: number; color?: string; width?: number }) {
-  const end = tip(deg);
+/** A wushu staff: a long gold pole with cranberry grip bands, pivoting at `at`. */
+function Pole({
+  deg,
+  color,
+  width = 6,
+  len = STAFF,
+  at = PIVOT,
+}: {
+  deg: number;
+  color?: string;
+  width?: number;
+  len?: number;
+  at?: Pivot;
+}) {
+  const end = tip(deg, len, at);
   const band = (from: number, to: number) => {
-    const a = tip(deg, from);
-    const b = tip(deg, to);
+    const a = tip(deg, from, at);
+    const b = tip(deg, to, at);
     return `M${String(a.x)} ${String(a.y)}L${String(b.x)} ${String(b.y)}`;
   };
   return (
     <g strokeLinecap="round">
       <path
-        d={`M${String(PIVOT.x)} ${String(PIVOT.y)}L${String(end.x)} ${String(end.y)}`}
+        d={`M${String(at.x)} ${String(at.y)}L${String(end.x)} ${String(end.y)}`}
         stroke={color ?? "var(--gm-tile-correct)"}
         strokeWidth={width}
       />
       {!color && (
         <path
-          d={`${band(STAFF - 9, STAFF - 4)}${band(4, 9)}`}
+          d={`${band(len - 9, len - 4)}${band(4, 9)}`}
           stroke="var(--gm-accent)"
           strokeWidth={width + 0.5}
           strokeLinecap="butt"
@@ -91,33 +108,98 @@ function Pole({ deg, color, width = 6 }: { deg: number; color?: string; width?: 
 }
 
 /**
- * The floor and the staff. With `onAngle` it's a dial: drag anywhere above
- * the floor to point the staff there, or use the arrow keys. There is no
- * number to read off while turning (spec 28). `marks` are the teams'
- * answers at the reveal; `target` the right angle: the staff outlined in white with a star.
+ * How far the staff has turned, as a spiral out from the hub: past a full
+ * turn it keeps going on a wider loop, so 450° doesn't look like 90°.
+ */
+function Sweep({
+  deg,
+  from,
+  color,
+  width,
+}: {
+  deg: number;
+  from: number;
+  color: string;
+  width: number;
+}) {
+  if (deg <= 0) return null;
+  const points: string[] = [];
+  for (let a = 0; a <= deg; a = Math.min(deg, a + 4)) {
+    const p = tip(a, from + (a / 360) * 16, HUB);
+    points.push(`${String(p.x)},${String(p.y)}`);
+    if (a === deg) break;
+  }
+  return (
+    <polyline
+      points={points.join(" ")}
+      fill="none"
+      stroke={color}
+      strokeWidth={width}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  );
+}
+
+/**
+ * The angle a pointer means. A tap picks, of the turns the dial allows, the
+ * one nearest where the staff is; a drag follows the hand round and stops at
+ * 0 or the round's limit rather than jumping a whole turn.
+ */
+export function windTo(raw: number, prev: number, max: number, drag = false): number {
+  const base = ((raw % 360) + 360) % 360;
+  if (drag) {
+    let delta = base - (((prev % 360) + 360) % 360);
+    if (delta > 180) delta -= 360;
+    if (delta <= -180) delta += 360;
+    return Math.round(Math.max(0, Math.min(max, prev + delta)));
+  }
+  let best = Math.min(base, max);
+  for (let turn = 0; turn * 360 + base <= max; turn++) {
+    const c = turn * 360 + base;
+    if (Math.abs(c - prev) < Math.abs(best - prev)) best = c;
+  }
+  return Math.round(best);
+}
+
+/**
+ * The staff. With `onAngle` it's a dial: drag to point the staff, or use the
+ * arrow keys. There is no number to read off while turning (spec 28).
+ * Up to 180° the staff stands on the floor; up to 360° or 540° (rounds 2 and
+ * 3) it turns on a full dial from the line pointing right, round and round,
+ * with its sweep drawn. `marks` are the teams' answers at the reveal;
+ * `target` the right angle: the staff outlined in white with a star.
  */
 export function StaffDial({
   angle,
   onAngle,
   target,
   marks = [],
+  max = 180,
   className,
 }: {
   angle: number | null;
   onAngle?: (deg: number) => void;
   target?: number;
   marks?: readonly Mark[];
+  /** How far the staff can turn: 180, 360 or 540 degrees. */
+  max?: number;
   className?: string;
 }) {
   const dragging = useRef(false);
-  const pointTo = (e: React.PointerEvent<SVGSVGElement>) => {
+  const full = max > 180;
+  const at = full ? HUB : PIVOT;
+  const len = full ? SPOKE : STAFF;
+  const height = full ? 200 : 112;
+  const pointTo = (e: React.PointerEvent<SVGSVGElement>, drag = false) => {
     if (!onAngle) return;
     const box = e.currentTarget.getBoundingClientRect();
     const px = ((e.clientX - box.left) / box.width) * 200;
-    const py = ((e.clientY - box.top) / box.height) * 112;
-    const deg = (Math.atan2(PIVOT.y - py, px - PIVOT.x) * 180) / Math.PI;
+    const py = ((e.clientY - box.top) / box.height) * height;
+    const deg = (Math.atan2(at.y - py, px - at.x) * 180) / Math.PI;
+    if (full) onAngle(windTo(deg, angle ?? 0, max, drag));
     // Below the floor counts as the nearer end.
-    onAngle(Math.round(deg < -90 ? 180 : deg < 0 ? 0 : deg));
+    else onAngle(Math.round(deg < -90 ? 180 : deg < 0 ? 0 : deg));
   };
   const arc = (deg: number, r: number) => {
     const end = tip(deg, r);
@@ -125,11 +207,11 @@ export function StaffDial({
   };
   return (
     <svg
-      viewBox="0 0 200 112"
+      viewBox={`0 0 200 ${String(height)}`}
       role={onAngle ? "slider" : "img"}
       aria-label={onAngle ? "The staff: drag to turn it" : "The staff"}
       aria-valuemin={onAngle ? 0 : undefined}
-      aria-valuemax={onAngle ? 180 : undefined}
+      aria-valuemax={onAngle ? max : undefined}
       aria-valuenow={onAngle && angle !== null ? angle : undefined}
       tabIndex={onAngle ? 0 : undefined}
       onPointerDown={(e) => {
@@ -139,7 +221,7 @@ export function StaffDial({
         pointTo(e);
       }}
       onPointerMove={(e) => {
-        if (dragging.current) pointTo(e);
+        if (dragging.current) pointTo(e, true);
       }}
       onPointerUp={() => {
         dragging.current = false;
@@ -147,7 +229,7 @@ export function StaffDial({
       onKeyDown={(e) => {
         if (!onAngle || angle === null) return;
         const step = e.shiftKey ? 5 : 1;
-        if (e.key === "ArrowLeft" || e.key === "ArrowUp") onAngle(Math.min(180, angle + step));
+        if (e.key === "ArrowLeft" || e.key === "ArrowUp") onAngle(Math.min(max, angle + step));
         else if (e.key === "ArrowRight" || e.key === "ArrowDown")
           onAngle(Math.max(0, angle - step));
         else return;
@@ -159,35 +241,65 @@ export function StaffDial({
         className,
       )}
     >
-      {target !== undefined && (
-        <path d={arc(target, 26)} stroke="var(--gm-tile-present)" strokeWidth={2} fill="none" />
+      {full && (
+        <circle
+          cx={HUB.x}
+          cy={HUB.y}
+          r={SPOKE + 6}
+          fill="none"
+          stroke="var(--gm-border)"
+          strokeWidth={1}
+        />
       )}
-      {marks.map((m) => (
+      {target !== undefined &&
+        (full ? (
+          <Sweep deg={target} from={18} color="var(--gm-tile-present)" width={2} />
+        ) : (
+          <path d={arc(target, 26)} stroke="var(--gm-tile-present)" strokeWidth={2} fill="none" />
+        ))}
+      {marks.map((m, i) => (
         <g key={m.id} opacity={0.9}>
-          <Pole deg={m.value} color={teamColor(m.color)} width={3} />
+          {full && <Sweep deg={m.value} from={24 + i * 4} color={teamColor(m.color)} width={1.5} />}
+          <Pole deg={m.value} color={teamColor(m.color)} width={3} len={len} at={at} />
         </g>
       ))}
       {target !== undefined && (
         <g aria-label="The right angle">
           {/* A white outline and a star set the right angle apart from every team's. */}
           <path
-            d={`M${String(PIVOT.x)} ${String(PIVOT.y)}L${String(tip(target).x)} ${String(tip(target).y)}`}
+            d={`M${String(at.x)} ${String(at.y)}L${String(tip(target, len, at).x)} ${String(tip(target, len, at).y)}`}
             stroke="var(--gm-tile-present)"
             strokeWidth={10}
             strokeLinecap="round"
           />
-          <Pole deg={target} />
-          <Star x={tip(target, STAFF + 9).x} y={tip(target, STAFF + 9).y} r={6} />
+          <Pole deg={target} len={len} at={at} />
+          <Star x={tip(target, len + 9, at).x} y={tip(target, len + 9, at).y} r={6} />
         </g>
       )}
-      {angle !== null && target === undefined && <Pole deg={angle} />}
-      <path
-        d={`M8 ${String(PIVOT.y)}H192`}
-        stroke="var(--gm-text-muted)"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-      />
-      <circle cx={PIVOT.x} cy={PIVOT.y} r={3.5} fill="var(--gm-text)" />
+      {angle !== null && target === undefined && (
+        <>
+          {full && <Sweep deg={angle} from={18} color="var(--gm-tile-correct)" width={2.5} />}
+          <Pole deg={angle} len={len} at={at} />
+        </>
+      )}
+      {full ? (
+        // Where every turn starts: the line pointing right.
+        <path
+          d={`M${String(HUB.x)} ${String(HUB.y)}H${String(HUB.x + SPOKE + 10)}`}
+          stroke="var(--gm-text-muted)"
+          strokeWidth={1.5}
+          strokeDasharray="4 3"
+          strokeLinecap="round"
+        />
+      ) : (
+        <path
+          d={`M8 ${String(PIVOT.y)}H192`}
+          stroke="var(--gm-text-muted)"
+          strokeWidth={1.5}
+          strokeLinecap="round"
+        />
+      )}
+      <circle cx={at.x} cy={at.y} r={3.5} fill="var(--gm-text)" />
     </svg>
   );
 }
