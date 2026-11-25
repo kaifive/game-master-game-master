@@ -72,6 +72,9 @@ export function round(
 export const cap = (teamId: string): Role => ({ kind: "captain", teamId });
 export const tv: Role = { kind: "tv" };
 
+/** Rerenders the last screen `show` drew with a later view (no remount). */
+export let showNext: (next: ActiveLiveView) => void = () => undefined;
+
 /** `now` may be a clock, read every frame, to let a phone's timer run (auto-submit). */
 export function show(
   type: string,
@@ -82,27 +85,30 @@ export function show(
   const R = LIVE_RENDERERS[type];
   if (!R) throw new Error(type);
   const send = vi.fn(() => Promise.resolve());
-  const revealed = v.session.step === "results";
-  render(
-    <PackRoot styleRef={holiday2026.style}>
-      {on === "phone" ? (
-        <R.Controller
-          view={v}
-          game={v.game}
-          serverNow={typeof now === "number" ? () => now : now}
-          revealed={revealed}
-          send={send}
-          busy={false}
-        />
-      ) : (
-        <R.Tv
-          view={v}
-          game={v.game}
-          serverNow={typeof now === "number" ? () => now : now}
-          revealed={revealed}
-        />
-      )}
-    </PackRoot>,
-  );
+  const clock = typeof now === "number" ? () => now : now;
+  const tree = (v: ActiveLiveView) => {
+    const revealed = v.session.step === "results";
+    return (
+      <PackRoot styleRef={holiday2026.style}>
+        {on === "phone" ? (
+          <R.Controller
+            view={v}
+            game={v.game}
+            serverNow={clock}
+            revealed={revealed}
+            send={send}
+            busy={false}
+          />
+        ) : (
+          <R.Tv view={v} game={v.game} serverNow={clock} revealed={revealed} />
+        )}
+      </PackRoot>
+    );
+  };
+  const r = render(tree(v));
+  /** The same screen given a later view, as the next poll does. */
+  showNext = (next: ActiveLiveView) => {
+    r.rerender(tree(next));
+  };
   return send;
 }

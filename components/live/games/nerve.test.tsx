@@ -1,7 +1,7 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test } from "vitest";
-import { cap, NAMES, round, show, T0, tv } from "./showdown-kit.test.helpers";
+import { cap, NAMES, round, show, showNext, T0, tv } from "./showdown-kit.test.helpers";
 describe("Auction on the phone and TV (spec 26)", () => {
   test("S26-AC1: the phone shows the numbers left, used ones off, and bids the one picked", async () => {
     const user = userEvent.setup();
@@ -12,6 +12,32 @@ describe("Auction on the phone and TV (spec 26)", () => {
     await user.click(screen.getByRole("button", { name: "7" }));
     await user.click(screen.getByRole("button", { name: "Bid 7" }));
     expect(send).toHaveBeenCalledWith({ bid: 7 });
+  });
+
+  test("S26-AC1: a number picked but not bid goes in as time runs out in every round, and a new round starts with no pick", async () => {
+    const user = userEvent.setup();
+    const r1 = round("auction");
+    const closesAt = (r1.state as { closesAt: number }).closesAt;
+    let t = T0 + 500;
+    const send = show("auction", r1.view(cap("t1"), t), () => t);
+    await user.click(screen.getByRole("button", { name: "7" }));
+    t = closesAt - 300;
+    await waitFor(() => {
+      expect(send).toHaveBeenCalledWith({ bid: 7 });
+    });
+    // Round 2, on the same phone: 7 is spent and nothing is picked.
+    const done = round("auction", [["t1", { bid: 7 }, T0 + 100]]);
+    const r2 = round("auction", [], done.closed());
+    send.mockClear();
+    t = T0 + 500;
+    const v2 = r2.view(cap("t1"), t);
+    showNext({ ...v2, session: { ...v2.session, round: 2 } });
+    expect(screen.getByRole("button", { name: "Pick a number" })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "9" }));
+    t = closesAt - 300;
+    await waitFor(() => {
+      expect(send).toHaveBeenCalledWith({ bid: 9 });
+    });
   });
 
   test("S26-AC1: the reveal marks tied bids cancelled and names the winner", () => {

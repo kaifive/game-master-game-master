@@ -18,6 +18,8 @@ export function useAutoSubmit(left: number | undefined, ready: boolean, submit: 
     send.current = submit;
   }, [submit]);
   useEffect(() => {
+    // A new round (time back above the mark) arms it again (QA, 2026-11-25).
+    if (left !== undefined && left > AUTO_SUBMIT_MS) fired.current = false;
     if (fired.current || left === undefined || !ready || left > AUTO_SUBMIT_MS || left < 0) return;
     fired.current = true;
     send.current();

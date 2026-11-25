@@ -129,7 +129,13 @@ function AuctionTv({ view, game, serverNow, revealed }: LiveTvProps) {
 function AuctionController({ view, game, serverNow, revealed, send, busy }: LiveControllerProps) {
   const g = game as AuctionView | null;
   const now = useServerTime(serverNow, !revealed);
-  const [pick, setPick] = useState<number | null>(null);
+  const [picked, setPicked] = useState<{ round: number; n: number } | null>(null);
+  // A pick belongs to its round: the next round starts with none (QA, 2026-11-25).
+  const round = view.session.round;
+  const pick = picked?.round === round ? picked.n : null;
+  const setPick = (n: number) => {
+    setPicked({ round, n });
+  };
   // A number picked but not yet bid is sent as the time runs out (Khai, 2026-11-24).
   useAutoSubmit(
     g && !revealed && g.mine === null ? g.closesAt - now : undefined,
