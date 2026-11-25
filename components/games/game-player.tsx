@@ -10,6 +10,7 @@ import { useDevice } from "@/components/players/device";
 import { useSlots } from "@/components/slots/registry";
 import { gamesApi, type Instructions, type PlayResponse } from "@/lib/games";
 import { flyPoints } from "./fly";
+import { cx } from "@/lib/ui";
 import { InstructionsDialog } from "./instructions";
 import { rendererFor } from "./renderers";
 
@@ -153,6 +154,16 @@ function Result({
     };
   }, [gain, reduced, refreshPlays]);
 
+  const [awake, setAwake] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAwake(true);
+    }, RESULT_GUARD_MS);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, []);
+
   return (
     <section aria-label="Your score" className="grid justify-items-center gap-4 py-6 text-center">
       <span ref={icon} hidden>
@@ -177,8 +188,13 @@ function Result({
           {newBest ? "New best!" : `Your best: ${String(play.best)}`}
         </p>
       )}
-      {/* The way back sits by Play again, not only in the header (Khai, 2026-11-10). */}
-      <div className="flex flex-wrap justify-center gap-3">
+      {/* The way back sits by Play again, not only in the header (Khai, 2026-11-10).
+          They wake a moment after the score shows, so the taps of a tap-anywhere game
+          don't land on them (QA, 2026-11-25). */}
+      <div
+        className={cx("flex flex-wrap justify-center gap-3", !awake && "pointer-events-none")}
+        aria-busy={!awake}
+      >
         {onAgain && (
           <Button size="lg" onClick={onAgain}>
             Play again
@@ -191,6 +207,9 @@ function Result({
     </section>
   );
 }
+
+/** How long the result's buttons ignore taps, so a game's last taps don't press them. */
+export const RESULT_GUARD_MS = 900;
 
 /** A solo game on the phone: instructions, play, result (spec 08). */
 export function GamePlayer({

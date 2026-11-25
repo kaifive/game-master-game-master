@@ -227,6 +227,21 @@ describe("GamePlayer", () => {
     expect(screen.getByRole("button", { name: "Play again" })).toBeInTheDocument();
   });
 
+  test("S08-AC11: a result's buttons ignore taps for a moment, so a tap-anywhere game's last taps don't press them", async () => {
+    setReducedMotion(true);
+    api.plays.mockReturnValue(ok({ plays: {} }));
+    api.start.mockReturnValue(ok(finished));
+    page(true);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Start" }));
+    const back = await screen.findByRole("button", { name: "Back to games" });
+    const row = back.parentElement;
+    expect(row).toHaveAttribute("aria-busy", "true");
+    await waitFor(() => {
+      expect(row).toHaveAttribute("aria-busy", "false");
+    });
+  });
+
   test("S08-AC12: Play again on a result shows the instructions before the new run", async () => {
     setReducedMotion(true);
     api.plays.mockReturnValue(ok({ plays: {} }));
