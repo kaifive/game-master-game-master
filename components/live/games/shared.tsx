@@ -149,19 +149,25 @@ export function Reveal({
         return (
           <li
             key={t.id}
-            className="grid content-start justify-items-center gap-[1.2vh] rounded-gm bg-gm-surface px-3 py-[2.4vh] text-center ring-1 ring-gm-border"
+            // min-w-0 all the way down, so a long name ends in "…" in its own card (layout sweep).
+            className="grid min-w-0 content-start justify-items-center gap-[1.2vh] rounded-gm bg-gm-surface px-3 py-[2.4vh] text-center ring-1 ring-gm-border"
           >
-            <span className="flex max-w-full items-center gap-2 text-[clamp(1rem,2.6vh,1.9rem)] font-bold">
+            <span className="flex max-w-full min-w-0 items-center gap-2 text-[clamp(1rem,2.6vh,1.9rem)] font-bold">
               <Swatch color={t.color} />
-              <span className="truncate">{t.name}</span>
+              <span className="min-w-0 truncate" title={t.name}>
+                {t.name}
+              </span>
             </span>
             {said !== undefined && (
               <span
                 className={cx(
-                  "font-gm-display leading-none font-bold tabular-nums",
+                  "max-w-full font-gm-display leading-none font-bold text-balance tabular-nums",
                   said === null
                     ? "py-[1vh] text-[clamp(1.2rem,3.4vh,2.4rem)] text-gm-text-muted"
-                    : "text-[clamp(2.4rem,8.5vh,6rem)]",
+                    : // A long answer ("29% along") in a narrow card steps down a size.
+                      said.length > 4 && ranked.length > 3
+                      ? "text-[clamp(1.6rem,4.6vh,3.4rem)]"
+                      : "text-[clamp(2.4rem,8.5vh,6rem)]",
                 )}
               >
                 {said ?? "No answer"}

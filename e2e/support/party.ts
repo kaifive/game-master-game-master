@@ -52,12 +52,16 @@ export async function teamPhaseWithCaptains(page: Page, names: readonly string[]
       .getByRole("list", { name: "Players" })
       .getByRole("button", { name: new RegExp(name) })
       .click();
-    await page.getByRole("button", { name: "Make captain" }).click();
+    // A retry finds them made captain already.
+    const make = page.getByRole("button", { name: "Make captain" });
+    if (await make.isVisible().catch(() => false)) await make.click();
     await expect(page.getByRole("list", { name: "Teams", exact: true })).toContainText(
       `Team ${name}`,
     );
   }
-  await page.getByRole("button", { name: "Start the team phase" }).click();
-  await page.getByRole("button", { name: "Yes, start teams" }).click();
+  if (await page.getByRole("button", { name: "Start the team phase" }).isVisible()) {
+    await page.getByRole("button", { name: "Start the team phase" }).click();
+    await page.getByRole("button", { name: "Yes, start teams" }).click();
+  }
   await expect(page.getByText("Phase: Team")).toBeVisible();
 }

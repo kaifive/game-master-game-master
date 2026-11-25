@@ -28,9 +28,10 @@ import {
 
 const NAMES = [
   "Snow Dragons",
-  "Jade Tigers",
+  "Team Wwwwwwwwwwwwwww",
   "Iron Cranes",
-  "Golden Monkeys",
+  // As long as a team name can be (TEAM_NAME_MAX), so the sweep sees the widest case.
+  "Wild Wushu Warriors!",
   "Swift Mantis",
   "Red Lanterns",
 ];
