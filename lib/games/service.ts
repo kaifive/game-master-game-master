@@ -45,6 +45,8 @@ export type FinishedRun = {
   run: number;
   gain: number;
   replay: boolean;
+  /** The new best, so the TV can say it beside the gain (Khai, 2026-11-25). */
+  best?: number;
   /** Makes the award's id unique when one run scores in steps (progressive games, S17-AC4). */
   key?: string;
 };
@@ -115,6 +117,7 @@ async function changePlay(
         run: cur.runs,
         gain: next.best - cur.best,
         replay: cur.runs > 1,
+        best: next.best,
       };
     return next;
   });

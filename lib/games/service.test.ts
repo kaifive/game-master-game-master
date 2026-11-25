@@ -277,7 +277,14 @@ describe("game service", () => {
     const done = await playThrough();
     if (done.best === 0) return; // every answer wrong: nothing to award
     expect(bests).toEqual([
-      { gameId: "trivia", title: "Holiday Trivia", run: 1, gain: done.best, replay: false },
+      {
+        gameId: "trivia",
+        title: "Holiday Trivia",
+        run: 1,
+        gain: done.best,
+        replay: false,
+        best: done.best,
+      },
     ]);
     await start(); // reopening a finished play awards nothing more
     expect(bests).toHaveLength(1);
@@ -327,7 +334,7 @@ describe("game service", () => {
     const best = await run(right);
     expect(best.best).toBe(100);
     expect(bests).toEqual([
-      { gameId: "trivia", title: "Holiday Trivia", run: 2, gain: 100, replay: true },
+      { gameId: "trivia", title: "Holiday Trivia", run: 2, gain: 100, replay: true, best: 100 },
     ]);
   });
 
