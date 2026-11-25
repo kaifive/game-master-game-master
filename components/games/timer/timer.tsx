@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { TimerView } from "@/lib/games";
+import { TIMER_TIMEOUT_MS, type TimerView } from "@/lib/games";
 import type { GameRendererProps } from "../types";
 
 /** A time cut to the hundredth, as a stopwatch shows it. */
@@ -21,6 +21,7 @@ export function TimerGame({ view: raw, onMove }: GameRendererProps) {
   const kind = view.kind;
   const running = kind === "running" && stoppedAt === null;
   const resumedAt = view.kind === "running" ? view.elapsedMs : 0;
+  const toSeconds = view.toSeconds;
 
   // A play made before auto-start still waits on Start: send it for them.
   useEffect(() => {
@@ -31,14 +32,24 @@ export function TimerGame({ view: raw, onMove }: GameRendererProps) {
     if (!running) return;
     // The server counts from when the play opened; pick up from its count.
     start.current ??= performance.now() - resumedAt;
+    const begun = start.current;
+    // Never stopped: the clock gives up well past the window, as the server
+    // does, rather than counting forever (QA, 2026-11-25).
+    const limit = toSeconds * 1000 + TIMER_TIMEOUT_MS;
     let frame = requestAnimationFrame(function tick() {
-      setNow(performance.now());
+      const t = performance.now();
+      if (t - begun > limit) {
+        setStoppedAt(t);
+        move.current({ type: "stop", elapsedMs: toHundredths(t - begun) });
+        return;
+      }
+      setNow(t);
       frame = requestAnimationFrame(tick);
     });
     return () => {
       cancelAnimationFrame(frame);
     };
-  }, [running, resumedAt]);
+  }, [running, resumedAt, toSeconds]);
 
   if (view.kind === "done") return null;
   const end = stoppedAt ?? now;
