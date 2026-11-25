@@ -83,6 +83,7 @@ export const trail: GameLogic<TrailContent, TrailState, TrailView> = {
           `You're done when all ${String(size(c) * size(c))} squares are touched. Finish fast for more points.`,
         ],
   }),
+  puzzle: (s) => JSON.stringify(s.dots),
   create(c, seed, { now }) {
     const { dots } = makePuzzle(size(c), count(c), seed);
     return { size: size(c), dots, startedAt: now, phase: "playing", tookMs: null, step: 0 };

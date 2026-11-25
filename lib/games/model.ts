@@ -43,6 +43,11 @@ export type GameLogic<C, S, V> = {
   progressive?: boolean;
   /** Finished, but scored later by the host (S17-AC2). */
   waiting?: (state: S) => boolean;
+  /**
+   * Names the puzzle a run deals (the word, the path), so the next run deals a
+   * different one: a replay can't reuse what the last one gave away (Khai, 2026-11-25).
+   */
+  puzzle?: (state: S) => string;
   /** The run's drawing, for games that make one: kept when the game opts in (ADR-032). */
   drawing?: (state: S) => [number, number][][] | null;
 };

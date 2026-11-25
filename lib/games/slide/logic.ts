@@ -113,6 +113,7 @@ export const slideGame: GameLogic<SlideContent, SlideState, SlideView> = {
       "Finish fast for the most points.",
     ],
   }),
+  puzzle: (s) => JSON.stringify([s.start, s.picture ?? null]),
   create: (c, seed, { now }) => ({
     size: sizeOf(c),
     start: scrambled(sizeOf(c), c.scramble ?? 80, seed),

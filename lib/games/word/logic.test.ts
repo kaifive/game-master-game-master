@@ -69,7 +69,7 @@ describe("Secret Word", () => {
     ]);
   });
 
-  it("S19-AC4: points by guesses; a replayable event never shows an unsolved answer", () => {
+  it("S19-AC4: points by guesses; the word shows at the end, solved or not", () => {
     expect([1, 2, 3, 4, 5, 6].map((n) => wordShare(n, true))).toEqual([1, 1, 0.9, 0.75, 0.6, 0.45]);
     expect(wordShare(6, false)).toBe(0);
     let s = { ...word.create(c, 1, at), answer: "SPEAR" };
@@ -88,7 +88,7 @@ describe("Secret Word", () => {
     expect(word.score(lost, 100)).toBe(0);
     expect(word.view(lost, c, { now: 0, replayable: true })).toMatchObject({
       solved: false,
-      answer: null,
+      answer: "SPEAR",
     });
     expect(word.view(lost, c, { now: 0 })).toMatchObject({ answer: "SPEAR" });
     expect(word.move(lost, c, { type: "guess", word: "spear" }, at).ok).toBe(false);

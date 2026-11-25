@@ -265,11 +265,20 @@ export async function startPlay(
 ): Promise<PlayResponse> {
   const r = await guard(deps, event, uid, gameId, body.playerId);
   const now = deps.now();
-  const run = () => {
-    const seed = deps.seed();
+  // A run deals a different puzzle from the one before it, where the game names its puzzle.
+  const run = (prev?: unknown) => {
+    const ctx = { now: now + (body.startIn ?? 0) };
+    const name = r.logic.puzzle;
+    const last = prev === undefined || !name ? null : name(prev);
+    let seed = deps.seed();
+    let state = r.logic.create(r.content, seed, ctx);
+    for (let i = 0; i < 8 && last !== null && name?.(state) === last; i++) {
+      seed = deps.seed();
+      state = r.logic.create(r.content, seed, ctx);
+    }
     return {
       seed,
-      state: r.logic.create(r.content, seed, { now: now + (body.startIn ?? 0) }),
+      state,
       status: "playing" as const,
       points: 0,
     };
@@ -286,9 +295,10 @@ export async function startPlay(
         ...run(),
       };
     const again = body.again === true && event.replayable === true && !r.logic.once;
-    if (cur.status === "finished") return again ? { ...cur, ...run(), runs: cur.runs + 1 } : null;
+    if (cur.status === "finished")
+      return again ? { ...cur, ...run(cur.state), runs: cur.runs + 1 } : null;
     // Left mid-run and back again: a fresh run, so no clock kept going while away (S08-AC18).
-    if (again) return { ...cur, ...run(), runs: cur.runs + 1 };
+    if (again) return { ...cur, ...run(cur.state), runs: cur.runs + 1 };
     const ticked = r.logic.tick(cur.state, r.content, { now });
     return ticked === cur.state ? null : settle(cur, ticked, r);
   });
