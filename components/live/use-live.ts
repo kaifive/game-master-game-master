@@ -106,3 +106,21 @@ export function useFrame(on: boolean) {
     };
   }, [on]);
 }
+
+/**
+ * True for `ms` from when it's given, then false: the host's Next waits out
+ * the round's 3-2-1 so a double tap can't close it (QA, 2026-11-25).
+ */
+export function useHeld(ms: number | null): boolean {
+  const [doneFor, setDoneFor] = useState<number | null>(null);
+  useEffect(() => {
+    if (ms === null || ms <= 0) return;
+    const t = setTimeout(() => {
+      setDoneFor(ms);
+    }, ms);
+    return () => {
+      clearTimeout(t);
+    };
+  }, [ms]);
+  return ms !== null && ms > 0 && doneFor !== ms;
+}

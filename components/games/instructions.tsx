@@ -30,7 +30,9 @@ export function InstructionsDialog({
   return (
     <div
       data-testid="sheet-backdrop"
-      className="fixed inset-0 z-40 grid place-items-end bg-black/70 p-3 sm:place-items-center sm:p-4"
+      // Centred, not at the bottom: a double tap on Start then lands on the game,
+      // not on the tab bar under where the box was (QA, 2026-11-25).
+      className="fixed inset-0 z-40 grid place-items-center bg-black/70 p-3 sm:p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

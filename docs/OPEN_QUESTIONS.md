@@ -19,6 +19,16 @@ Move answered ones to the bottom with the answer.
 | Q34 | Team selfies: who puts the stickers on, the host in Controls or the captain on their phone? | Spec 31 | The host, in Controls, so the finale is a surprise (Khai first said "from the admin side") |
 | Q35 | Buzzer round: what questions, how many, and how many points each? | Spec 12 | Build with a short sample set marked hidden; Khai writes the real ones in the event file (10 to 15 questions, 100 points each) |
 | Q36 | Turn showdowns now play at least three rounds in whole laps (two teams play 4). Is 150 split over those rounds right? | ADR-045 | Yes: 150 over the rounds, so the game is worth the same however many teams; Memory Path's 50/40/25 becomes the same shares of each round |
+| Q37 | Persona QA (2026-11-25): leaving a solo game midway forfeits the run with no warning, and a reload starts a fresh run. Should untimed puzzles (Pathfinder, Secret Word, Picture Slide) pick up where you left off? | Spec 16 | No change: a run left is a run lost |
+| Q38 | Unlimited replays with best-counts let teens grind Trivia and Secret Word to near 100. Cap runs (say 3), or keep unlimited? | Event file | Unlimited, as now |
+| Q39 | Should Trivia show the right answer after a wrong one, and Secret Word reveal the word at the end? (S19-AC4 hides it now.) | Specs 18, 19 | Trivia: no change. Secret Word: stays hidden |
+| Q40 | Rapid Recall and Trivia felt too fast for a grandparent. Slow them, or add a pause between rounds? | Spec 16 | No change |
+| Q41 | Restarting a showdown pays its points again (Last Second ran 4 times and paid 4 times). Pay only the best run, only the first, or warn the host? | Spec 24 | Pay every run, as now |
+| Q42 | Scoring skill gaps: in Memory Path one wrong arrow scores 19 against 30 for nearly crossing; in Staff Angle a guess within 12° scores 87 to 98%; in Last Second stopping at 2 s left scores 40 against 50 for 0.09 s. Steepen these? | Specs 25, 27, 28 | No change |
+| Q43 | Phone-timed stops accept a stop up to 3 s after it was timed, so a devtools user can stop after zero and claim an earlier time. Tighten to 1.5 s (riskier on bad wifi)? Tap Masher and Stack Attack also trust the phone's count. | Spec 25 | Keep 3 s: honest phones on party wifi matter more |
+| Q44 | Words: "Coach", "Danny", "captain" and "controller" confused the parent and grandparent. Plainer wording? | Copy | No change |
+| Q45 | Team colors: slate reads as the grey "no answer", orange sits next to red, and there's no colorblind-safe set. Change the palette? | Spec 29 | No change |
+| Q46 | The TV: QR code small, secondary text about 24 px, the results card's guess bigger than its points, a 0-0 podium crowning one team, and the Latest points ticker showing the increase rather than the score. Do a TV readability pass? | Spec 24 | Do it after the party's games are final |
 
 ## Answered
 

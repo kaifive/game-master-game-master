@@ -69,7 +69,8 @@ describe("Fly-by Count", () => {
     let s = g.step(g.state, "t1", { answer: n }, shown + 10);
     s = g.step(s, "t2", { answer: n + 1 }, shown + 20);
     s = g.step(s, "t3", { answer: n - 2 }, shown + 30);
-    expect(g.refuse(s, "t1", { answer: 3 }, shown + 40)).toBe("You've locked in.");
+    // A team can change its number until time's up; the last one counts (QA, 2026-11-25).
+    expect(g.step(s, "t1", { answer: 3 }, shown + 40).answers.t1).toBe(3);
     // One sent as the time ran out may land a moment late (LATE_MS); after that, no.
     expect(g.refuse(s, "t4", { answer: 3 }, shown + ANSWER_MS + LATE_MS - 1)).toBe("accepted");
     expect(g.refuse(s, "t4", { answer: 3 }, shown + ANSWER_MS + LATE_MS + 1)).toBe("Time's up.");

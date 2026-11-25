@@ -40,8 +40,10 @@ export async function teamPhaseWithCaptains(page: Page, names: readonly string[]
   await page.getByLabel("Passphrase").fill(PASS);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.getByRole("link", { name: /Nova Wushu Holiday Party/ }).click();
-  if (await page.getByRole("button", { name: "End early" }).isVisible())
+  if (await page.getByRole("button", { name: "End early" }).isVisible()) {
     await page.getByRole("button", { name: "End early" }).click();
+    await page.getByRole("button", { name: "Yes, end it" }).click();
+  }
   if (await page.getByRole("button", { name: "Back to individual" }).isVisible()) {
     await page.getByRole("button", { name: "Back to individual" }).click();
     await page.getByRole("button", { name: "Yes, go back" }).click();

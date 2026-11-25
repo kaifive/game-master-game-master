@@ -43,11 +43,12 @@ test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1 S26-AC2 S12-AC1 S1
   await page.getByRole("button", { name: "Start round 1" }).click();
   await expect(capA.getByText("Watch the TV and count!")).toBeVisible();
   // No Lock in: what's typed goes in as the time runs out (Khai, 2026-11-24).
-  await expect(capA.getByText("Your answer goes in when time's up.")).toBeVisible({
+  await expect(capA.getByText("You can change it until time's up.")).toBeVisible({
     timeout: 15_000,
   });
   await capA.getByRole("button", { name: "7", exact: true }).click();
-  await expect(capA.getByText("Locked in: 7")).toBeVisible({ timeout: 15_000 });
+  // Sent as it's typed; the pad keeps it, changeable until time's up.
+  await expect(capA.getByRole("status", { name: "Your number" })).toHaveText("7");
   await expect(tv.getByRole("list", { name: "Locked in" })).toContainText(/In/);
 
   // Results: the TV reveals the count and every team's answer (S24-AC1).
@@ -60,6 +61,7 @@ test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1 S26-AC2 S12-AC1 S1
   await expect(page.getByText("Phase: Team")).toBeVisible();
   // End early: the TV shows the standings between showdowns (S11-AC1, S24-AC9).
   await page.getByRole("button", { name: "End early" }).click();
+  await page.getByRole("button", { name: "Yes, end it" }).click();
   await expect(tv.getByRole("heading", { name: "Showdowns" })).toBeVisible();
 
   // A nerve game: Stocking Stuffer, one team opens and one banks (S26-AC2).
@@ -77,6 +79,7 @@ test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1 S26-AC2 S12-AC1 S1
   await page.getByRole("button", { name: "Show results" }).click();
   await expect(tv.getByText("Banked this round")).toBeVisible();
   await page.getByRole("button", { name: "End early" }).click();
+  await page.getByRole("button", { name: "Yes, end it" }).click();
   await expect(tv.getByRole("heading", { name: "Showdowns" })).toBeVisible();
 
   // The buzzer round: red until opened, then two captains buzz; the first is wrong, the second right (spec 12).
@@ -104,6 +107,7 @@ test("S11-AC1 S11-AC4 S24-AC1 S24-AC2 S24-AC3 S24-AC9 S25-AC1 S26-AC2 S12-AC1 S1
   await expect(tv.getByText("Jian")).toBeVisible();
   await expect(capA.getByText("Right! The points are yours.")).toBeVisible();
   await page.getByRole("button", { name: "End early" }).click();
+  await page.getByRole("button", { name: "Yes, end it" }).click();
   await expect(tv.getByRole("heading", { name: "Showdowns" })).toBeVisible();
   await page.getByRole("button", { name: "Leaderboard" }).click();
   await expect(tv.getByRole("region", { name: "Join the party" })).toBeVisible();

@@ -49,11 +49,11 @@ describe("perception showdowns on the phone and TV (spec 28)", () => {
     expect(screen.getByText("Get ready!")).toBeInTheDocument();
   });
 
-  test("S28-AC4: the captain's phone says it's locked in, and nothing more, until the reveal", () => {
+  test("S28-AC4: a reloaded captain's phone shows the staff where it sent it, still turnable, with no number shown", () => {
     const r = round("staffangle", [["t1", { answer: 40 }, T0 + 500]]);
     show("staffangle", r.view(cap("t1"), T0 + 600), T0 + 600);
-    expect(screen.getByText("Locked in")).toBeInTheDocument();
-    expect(screen.queryByText(/40/)).toBeNull();
+    expect(screen.getByRole("slider", { name: /staff/ })).toHaveAttribute("aria-valuenow", "40");
+    expect(screen.queryByText(/40°/)).toBeNull();
   });
 
   test("S28-AC3: Staff Angle has no buttons to step the staff and no Lock in; the turned staff goes in as time runs out", async () => {
@@ -68,7 +68,11 @@ describe("perception showdowns on the phone and TV (spec 28)", () => {
     expect(screen.queryByRole("button", { name: "Lock in" })).toBeNull();
     staff.focus();
     await user.keyboard("{ArrowLeft}{ArrowLeft}");
-    expect(send).not.toHaveBeenCalled();
+    // Each turn is sent a moment later, and again as the time runs out.
+    await waitFor(() => {
+      expect(send).toHaveBeenCalledWith({ answer: Number(staff.getAttribute("aria-valuenow")) });
+    });
+    send.mockClear();
     t = s.closesAt - 300;
     await waitFor(() => {
       expect(send).toHaveBeenCalledWith({ answer: Number(staff.getAttribute("aria-valuenow")) });

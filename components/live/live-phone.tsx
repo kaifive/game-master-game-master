@@ -9,21 +9,37 @@ import { LIVE_RENDERERS } from "./renderers";
 import type { ActiveLiveView, LiveRenderer } from "./types";
 import { useLive } from "./use-live";
 
-/** Not the captain: watch the TV, with your team's points (S24-AC3). */
+/**
+ * The rest of the team, and the captain once it's over: what's happening on
+ * the TV, in words, with the team's points (S24-AC3). A round's result shows
+ * here too, for anyone who can't read the TV from where they are (QA,
+ * 2026-11-25).
+ */
 export function WatchTheTv({ view }: { view: ActiveLiveView }) {
   const mine = view.teams.find((t) => t.id === view.you?.teamId);
+  const { step } = view.session;
+  const captain = view.you?.captain === true;
   return (
     <section aria-label="Watch the TV" className="grid gap-3 text-center">
-      <p className="m-0 font-gm-display text-3xl font-bold">Watch the TV!</p>
-      {view.session.step === "intro" && <p className="m-0 text-lg">{view.demo}</p>}
+      <p className="m-0 font-gm-display text-3xl font-bold">
+        {step === "results" && mine
+          ? `+${String(mine.roundPoints ?? 0)} this round`
+          : step === "final"
+            ? "That's the game!"
+            : "Watch the TV!"}
+      </p>
+      {step === "intro" && <p className="m-0 text-lg">{view.demo}</p>}
       {mine ? (
         <div className="grid gap-1 rounded-gm bg-gm-surface p-4 ring-1 ring-gm-border">
           <span className="text-lg font-bold">{mine.name}</span>
-          <span className="text-gm-text-muted">Your captain&apos;s phone is the controller.</span>
+          {!captain && step !== "final" && (
+            <span className="text-lg">Your captain plays on their phone. Cheer them on!</span>
+          )}
           <span className="font-gm-display text-3xl font-bold tabular-nums">{mine.score}</span>
+          <span className="text-gm-text-muted">points this game</span>
         </div>
       ) : (
-        <p className="m-0 text-gm-text-muted">Teams with a captain play in showdowns.</p>
+        <p className="m-0 text-lg">Teams with a captain play here. Watch the fun on the TV!</p>
       )}
     </section>
   );

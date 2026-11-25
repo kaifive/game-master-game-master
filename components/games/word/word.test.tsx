@@ -30,6 +30,8 @@ describe("Secret Word screen (spec 19)", () => {
     for (const l of ["S", "P", "E", "A"]) await user.click(screen.getByRole("button", { name: l }));
     await user.click(screen.getByRole("button", { name: "Enter" }));
     expect(onMove).not.toHaveBeenCalled();
+    // Enter on a short word says why nothing happened.
+    expect(screen.getByRole("status")).toHaveTextContent("5 letters, please");
     await user.click(screen.getByRole("button", { name: "R" }));
     await user.click(screen.getByRole("button", { name: "X" })); // a sixth letter is ignored
     expect(

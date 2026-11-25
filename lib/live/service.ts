@@ -178,7 +178,15 @@ export const AdminLiveAction = z.discriminatedUnion("action", [
 ]);
 
 /** Why a game can't start with this many teams, or null when it can (S24-AC11). */
-function teamsProblem(m: Pick<Machine, "game">, teams: number): string | null {
+function teamsProblem(
+  m: Pick<Machine, "game">,
+  teams: number,
+  phase: string | undefined,
+  ended?: boolean,
+): string | null {
+  // Showdowns are team games: not in the individual phase, nor once the night is over (QA, 2026-11-25).
+  if (ended === true) return "The party has ended.";
+  if (phase !== undefined && phase !== "team") return "Start the team phase first.";
   if (teams === 0) return "Make some teams with captains first.";
   if (teams > MAX_TEAMS) return `Showdowns are built for up to ${String(MAX_TEAMS)} teams.`;
   const need = minTeams(m);
@@ -200,7 +208,9 @@ export async function adminLiveView(deps: LiveDeps, event: EventConfig) {
         id: g.id,
         title: g.title,
         type: g.type,
-        blocked: showdown ? teamsProblem({ game: showdown }, playing) : null,
+        blocked: showdown
+          ? teamsProblem({ game: showdown }, playing, summary?.phase, summary?.ended)
+          : null,
       };
     }),
     played: (summary?.teams ?? []).map((t) =>
@@ -265,9 +275,10 @@ export async function adminLiveAction(
     const game = liveGames(deps, event).find((g) => g.id === body.gameId);
     const showdown = game ? deps.showdown(game.type) : undefined;
     if (!game || !showdown) throw new AppError("NOT_FOUND", "That live game isn't in this event.");
-    const teams = teamsFrom(await deps.teams(event.slug));
+    const summary = await deps.teams(event.slug);
+    const teams = teamsFrom(summary);
     const m: Machine = { game: showdown, content: showdown.content.parse(game.content) };
-    const problem = teamsProblem(m, teams.length);
+    const problem = teamsProblem(m, teams.length, summary?.phase, summary?.ended);
     if (problem) throw new AppError("CONFLICT", problem);
     const box = { refused: false };
     await deps.live.update(event.slug, (cur) => {
@@ -301,6 +312,11 @@ export async function adminLiveAction(
       at && (s.step !== at.step || s.round !== at.round)
         ? { ok: true, session: s, award: null }
         : machineNext(m, s, now),
+    );
+    // Next puts the showdown back on the TV: a round never starts behind the
+    // leaderboard (QA, 2026-11-25).
+    await deps.live.update(event.slug, (cur) =>
+      cur.screen === "showdown" || !cur.session ? null : { ...cur, screen: "showdown" },
     );
   } else if (body.action === "host") {
     const act = body.act;
@@ -397,3 +413,55 @@ export async function playerLiveAction(
 
 /** Clears live state with test data (spec 07). */
 export const clearLive = (deps: Pick<LiveDeps, "live">, slug: string) => deps.live.clear(slug);
+
+/**
+ * Why the host can't go back to the individual phase now: not while a
+ * showdown runs, since its team points would keep coming with no team board
+ * to show them (QA, 2026-11-25).
+ */
+export async function phaseChangeProblem(
+  live: LiveRepo,
+  slug: string,
+  phase: string,
+): Promise<string | null> {
+  if (phase === "team") return null;
+  const state = await live.read(slug);
+  return state.session ? "End the showdown first." : null;
+}
+
+/** The night is over: any showdown ends, and the TV shows the leaderboard, where the finale is. */
+export async function finishLive(live: LiveRepo, slug: string): Promise<void> {
+  await live.update(slug, (cur) => ({
+    ...withFinished(cur, cur.session),
+    session: null,
+    screen: "leaderboard",
+  }));
+}
+
+/**
+ * The host handed a team to a new captain mid-showdown (a phone died, someone
+ * left): the running showdown follows at once, so the new captain's phone is
+ * the controller from its next poll (QA, 2026-11-25).
+ */
+export async function followCaptain(
+  live: LiveRepo,
+  slug: string,
+  teamId: string,
+  captainId: string,
+): Promise<void> {
+  await live.update(slug, (cur) => {
+    const s = cur.session;
+    if (!s?.teams.some((t) => t.id === teamId && t.captainId !== captainId)) return null;
+    const captainDevices = Object.fromEntries(
+      Object.entries(s.captainDevices).filter(([id]) => id !== teamId),
+    );
+    return {
+      ...cur,
+      session: {
+        ...s,
+        teams: s.teams.map((t) => (t.id === teamId ? { ...t, captainId } : t)),
+        captainDevices,
+      },
+    };
+  });
+}

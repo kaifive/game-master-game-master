@@ -47,6 +47,15 @@ export const StatusBadge = ({ status }: { status: EventStatus }) => (
 export const field =
   "min-h-11 w-full min-w-0 rounded-gm border border-gm-border bg-gm-surface px-3 text-base text-gm-text placeholder:text-gm-text-muted";
 
+/** An admin button's look, for a button that does its own thing (End early's second ask). */
+export const adminButtonLook = (tone: "primary" | "secondary" | "danger") =>
+  cx(
+    "inline-flex min-h-11 items-center justify-center rounded-gm px-4 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50",
+    tone === "primary" && "bg-gm-accent text-gm-text-on-accent hover:bg-gm-accent-hover",
+    tone === "secondary" && "border border-gm-border bg-gm-surface text-gm-text hover:bg-gm-bg",
+    tone === "danger" && "border border-gm-danger bg-gm-surface text-gm-danger hover:bg-gm-bg",
+  );
+
 export function AdminButton({
   children,
   onClick,
@@ -61,17 +70,7 @@ export function AdminButton({
   type?: "button" | "submit";
 }) {
   return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      className={cx(
-        "inline-flex min-h-11 items-center justify-center rounded-gm px-4 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50",
-        tone === "primary" && "bg-gm-accent text-gm-text-on-accent hover:bg-gm-accent-hover",
-        tone === "secondary" && "border border-gm-border bg-gm-surface text-gm-text hover:bg-gm-bg",
-        tone === "danger" && "border border-gm-danger bg-gm-surface text-gm-danger hover:bg-gm-bg",
-      )}
-    >
+    <button type={type} onClick={onClick} disabled={disabled} className={adminButtonLook(tone)}>
       {children}
     </button>
   );

@@ -137,14 +137,15 @@ export function ColorWheel({
           }}
         />
       </div>
+      {/* Nothing to lock in until a color's been picked: a first tap here sent grey (QA, 2026-11-25). */}
       <Button
         size="lg"
-        disabled={busy}
+        disabled={busy || !touched}
         onClick={() => {
           onLock(hex);
         }}
       >
-        Lock in this color
+        {touched ? "Lock in this color" : "Pick a color first"}
       </Button>
     </div>
   );

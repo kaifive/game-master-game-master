@@ -163,6 +163,29 @@ describe("captain and member phones (spec 24)", () => {
     expect(within(watch).getByText("40")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Tap" })).not.toBeInTheDocument();
   });
+
+  test("S24-AC3: at a round's results the rest of the team sees what the team scored, on the phone", () => {
+    wrap(
+      <LivePanel
+        view={active({
+          you: { teamId: "t1", captain: false },
+          session: { ...active().session, step: "results" },
+          teams: [
+            { id: "t1", name: "Reds", color: 1, score: 75, roundPoints: 35 },
+            { id: "t2", name: "Blues", color: 2, score: 10, roundPoints: 0 },
+          ],
+        })}
+        serverNow={() => 0}
+        send={vi.fn()}
+        busy={false}
+        error={null}
+        renderers={{ tap: stand }}
+      />,
+    );
+    const watch = screen.getByRole("region", { name: "Watch the TV" });
+    expect(within(watch).getByText("+35 this round")).toBeInTheDocument();
+    expect(within(watch).getByText("75")).toBeInTheDocument();
+  });
 });
 
 describe("the TV (spec 24)", () => {
@@ -226,6 +249,7 @@ describe("the TV (spec 24)", () => {
       act,
       busy: false,
       next: "Start round 1",
+      nextInMs: null,
       at: { step: "intro", round: 0 },
       blocked: { fly: null, path: "This game needs at least 2 teams." },
     };
@@ -243,10 +267,30 @@ describe("the TV (spec 24)", () => {
     await user.click(screen.getByRole("button", { name: "Start round 1" }));
     // Next says the step it was pressed on, so a late press does nothing.
     expect(act).toHaveBeenCalledWith({ action: "next", at: { step: "intro", round: 0 } });
+    // End early asks twice, so a slip next to Next can't end the showdown.
     await user.click(screen.getByRole("button", { name: "End early" }));
+    expect(act).not.toHaveBeenLastCalledWith({ action: "end" });
+    await user.click(screen.getByRole("button", { name: "Yes, end it" }));
     expect(act).toHaveBeenCalledWith({ action: "end" });
     await user.click(screen.getByRole("button", { name: "Leaderboard" }));
     expect(act).toHaveBeenCalledWith({ action: "screen", screen: "leaderboard" });
+  });
+
+  test("S24-AC1: the TV's Next waits out the round's 3-2-1, so a double tap can't close a round no one has played", async () => {
+    vi.useFakeTimers();
+    const host = {
+      act: vi.fn(),
+      busy: false,
+      next: "Show results",
+      nextInMs: 2500,
+      at: { step: "play", round: 1 },
+      blocked: {},
+    };
+    wrap(<TvHostBar host={host} running screen="showdown" />);
+    expect(screen.getByRole("button", { name: "Show results" })).toBeDisabled();
+    await act(() => vi.advanceTimersByTimeAsync(2600));
+    expect(screen.getByRole("button", { name: "Show results" })).toBeEnabled();
+    vi.useRealTimers();
   });
 
   test("S24-AC4: the demo shows the room in front of the TV, someone calling out an answer", () => {
@@ -320,9 +364,20 @@ describe("Controls (spec 11, spec 24)", () => {
       </PackRoot>,
     );
     expect(screen.getByText(/Playing · round 1 of 3/)).toBeInTheDocument();
+    // Mid-round the TV can't be switched to the leaderboard: the round would vanish from the room.
+    rerender(
+      <PackRoot styleRef={holiday2026.style}>
+        <LiveCard view={{ ...running, screen: "showdown" }} act={act} busy={false} />
+      </PackRoot>,
+    );
+    expect(screen.getByRole("button", { name: "Leaderboard" })).toBeDisabled();
+    expect(screen.getByText("Leaderboard after the round.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Show results" }));
     expect(act).toHaveBeenLastCalledWith({ action: "next", at: { step: "play", round: 1 } });
+    // End early asks twice, so a slip next to Next can't end the showdown.
     await user.click(screen.getByRole("button", { name: "End early" }));
+    expect(act).not.toHaveBeenLastCalledWith({ action: "end" });
+    await user.click(screen.getByRole("button", { name: "Yes, end it" }));
     expect(act).toHaveBeenLastCalledWith({ action: "end" });
   });
 

@@ -363,6 +363,15 @@ describe("S08-AC7: sorting the games", () => {
     expect(ids.slice(-2)).toEqual(["guessing-jar", "spot-and-snipe"]);
   });
 
+  test("S08-AC7: a scored game being played again still counts as scored, with Again", () => {
+    const rows = hubRows(event, "live", { trivia: { status: "playing", best: 90, runs: 2 } }, null);
+    expect(rows.find((r) => r.game.id === "trivia")).toMatchObject({
+      group: "scored",
+      best: 90,
+      note: "Again",
+    });
+  });
+
   test("S08-AC18: a playable game says Play, and Again once started (never Continue); a live game waits; an unbuilt one isn't listed", () => {
     const rows = hubRows(event, "live", {}, null);
     const byId = Object.fromEntries(rows.map((r) => [r.game.id, r]));

@@ -16,7 +16,7 @@ Every game here follows spec 24: the host's steps, Who's played, the TV demo, 1 
 
 1. Content: `rounds`, each with a count range, how long the fly-by lasts, the grid size and how many kinds of present (1 to 3); defaults are 3 rounds that get harder (6 to 12 presents over 4 s, all one kind; 10 to 18 over 3.5 s in two kinds; 15 to 25 over 3 s in three kinds). The layout comes from the session's seed; the count is never sent to phones before the reveal. A round's answer is never the same as the round before's (Khai, 2026-11-24).
 2. Kinds: red with a gold bow, white with a red ribbon, and green with white stripes, so each has a mark besides its color. With one kind the question is "How many presents?". With more, everyone knows from the start it'll ask about one kind, but which one ("How many red presents?") shows only once they've flown past, so teams must count every kind (Khai, 2026-11-24, merging in Color Count).
-3. Play: the presents fly across the TV in rows and columns with gaps (some rows offset), sized so every row fits the screen, under "Count the presents!" (or "Count every kind!"). When they've passed, every team's player types a number on the captain's phone within 10 seconds; there's no Lock in: what's typed goes in as the time runs out (spec 24).
+3. Play: the presents fly across the TV in rows and columns with gaps (some rows offset), sized so every row fits the screen, under "Count the presents!" (or "Count every kind!"). When they've passed, every team's player types a number on the captain's phone within 10 seconds; there's no Lock in: each change is sent as it's typed and the last one counts (spec 24).
 4. Results: the TV shows the count ("There were 7 red presents") and each team's number. **Points per round: a round's share of 150 (50 a round over three) times how close: exact scores it all, and it falls away evenly to nothing at a miss of half the true number (at least 5), so near misses still score (ADR-045).**
 
 ### Snow Sum (`snowsum`)
@@ -50,8 +50,8 @@ Each game's content is validated in the event file and its round state lives in 
 
 ## Acceptance criteria
 
-- [x] AC-1: Fly-by Count deals rounds from the seed, never sends the count early, takes one number per team within 10 s (sent as the time runs out), and scores up to 50 a round on how close it is, near misses too.
-- [x] AC-2: Snow Sum deals seeded snowflake sums, adding only in round 1, taking away too in round 2 and doubling too in round 3, takes one total per team within 10 s (sent as the time runs out), and scores up to 50 a round on how close it is.
+- [x] AC-1: Fly-by Count deals rounds from the seed, never sends the count early, takes a number per team within 10 s (each change sent as it's typed; the last one counts), and scores up to 50 a round on how close it is, near misses too.
+- [x] AC-2: Snow Sum deals seeded snowflake sums, adding only in round 1, taking away too in round 2 and doubling too in round 3, takes a total per team within 10 s (each change sent as it's typed; the last one counts), and scores up to 50 a round on how close it is.
 - [x] AC-3: Fly-by Count's later rounds mix red, white and green presents, each with its own mark, ask about one kind only once they've flown past, and never repeat the last round's answer.
 - [x] AC-4: Blind Stop plays three rounds, shows the clock for 3 s then a "?", takes each team's phone-timed stop, and scores each stop up to 50 on its own closeness to 10.00, nothing at 3 s off.
 - [x] AC-5: Last Second runs a visible countdown, takes each team's phone-timed stop, busts teams that didn't stop by zero, and scores the rest up to 50 a round on how late they stopped, busts 0.

@@ -184,8 +184,9 @@ export function TapsGame({ view: served, onMove }: GameRendererProps) {
         )}
         aria-label={`Tap! ${String(taps)} taps`}
       >
-        {/* Just the taps, never "of 50" (Khai, 2026-11-14). Before the start it says what it's for. */}
-        {!tapping && taps === 0 && !sent.current ? "Tap!" : film ? Math.min(taps, frames) : taps}
+        {/* Just the taps, never "of 50" (Khai, 2026-11-14). It says "Tap!" until the
+            first tap, so a slow starter knows it's the button (QA, 2026-11-25). */}
+        {taps === 0 && !sent.current ? "Tap!" : film ? Math.min(taps, frames) : taps}
       </button>
     </section>
   );

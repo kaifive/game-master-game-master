@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { AdminLiveAct } from "@/lib/live";
 import { CheckIcon } from "@/components/icons/game";
 import { cx } from "@/lib/ui";
 import { Swatch } from "./games/shared";
 import type { TeamTotal } from "./live-tv";
+import { useHeld } from "./use-live";
 
 /** A showdown on the TV's menu (spec 24). */
 export type MenuGame = { id: string; title: string; type: string };
@@ -17,6 +19,8 @@ export type TvHost = {
   blocked: Record<string, string | null>;
   /** What Next does now, while a showdown runs. */
   next: string | null;
+  /** How long Next waits while the round counts down (QA, 2026-11-25). */
+  nextInMs: number | null;
   /** The step Next would be pressed on, so a late press does nothing. */
   at: { step: string; round: number } | null;
 };
@@ -152,6 +156,46 @@ export function GameMenu({
 }
 
 /**
+ * End early, asked twice: the first tap turns it into "Yes, end it" for a few
+ * seconds, so a slip next to Next can't end a showdown (QA, 2026-11-25).
+ */
+export function EndEarly({
+  onEnd,
+  disabled,
+  className,
+}: {
+  onEnd: () => void;
+  disabled: boolean;
+  className: string;
+}) {
+  const [asking, setAsking] = useState(false);
+  useEffect(() => {
+    if (!asking) return;
+    const t = setTimeout(() => {
+      setAsking(false);
+    }, 4000);
+    return () => {
+      clearTimeout(t);
+    };
+  }, [asking]);
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => {
+        if (asking) {
+          setAsking(false);
+          onEnd();
+        } else setAsking(true);
+      }}
+      className={className}
+    >
+      {asking ? "Yes, end it" : "End early"}
+    </button>
+  );
+}
+
+/**
  * The host's buttons on the TV, small in a corner, while signed in: Next and
  * End during a showdown, and switching between the board and the showdowns.
  */
@@ -164,6 +208,9 @@ export function TvHostBar({
   running: boolean;
   screen: "leaderboard" | "showdown";
 }) {
+  // Not the leaderboard mid-round: the round would vanish from the room (QA, 2026-11-25).
+  const midRound = running && host.at?.step === "play" && screen === "showdown";
+  const held = useHeld(host.nextInMs);
   const button =
     "min-h-11 rounded-gm px-4 font-bold ring-1 ring-gm-border bg-gm-surface hover:bg-gm-surface-raised disabled:opacity-50";
   return (
@@ -174,7 +221,7 @@ export function TvHostBar({
       {running && host.next && (
         <button
           type="button"
-          disabled={host.busy}
+          disabled={host.busy || held}
           onClick={() => {
             host.act(host.at ? { action: "next", at: host.at } : { action: "next" });
           }}
@@ -183,21 +230,19 @@ export function TvHostBar({
           {host.next}
         </button>
       )}
-      {running && (
-        <button
-          type="button"
+      {running && host.at?.step !== "final" && (
+        <EndEarly
           disabled={host.busy}
-          onClick={() => {
+          onEnd={() => {
             host.act({ action: "end" });
           }}
           className={button}
-        >
-          End early
-        </button>
+        />
       )}
       <button
         type="button"
-        disabled={host.busy}
+        disabled={host.busy || midRound}
+        title={midRound ? "Leaderboard after the round" : undefined}
         onClick={() => {
           host.act({
             action: "screen",

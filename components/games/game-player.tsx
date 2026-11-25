@@ -10,6 +10,7 @@ import { useDevice } from "@/components/players/device";
 import { useSlots } from "@/components/slots/registry";
 import { gamesApi, type Instructions, type PlayResponse } from "@/lib/games";
 import { flyPoints } from "./fly";
+import { cx } from "@/lib/ui";
 import { InstructionsDialog } from "./instructions";
 import { rendererFor } from "./renderers";
 
@@ -153,6 +154,16 @@ function Result({
     };
   }, [gain, reduced, refreshPlays]);
 
+  const [awake, setAwake] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAwake(true);
+    }, RESULT_GUARD_MS);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, []);
+
   return (
     <section aria-label="Your score" className="grid justify-items-center gap-4 py-6 text-center">
       <span ref={icon} hidden>
@@ -177,8 +188,13 @@ function Result({
           {newBest ? "New best!" : `Your best: ${String(play.best)}`}
         </p>
       )}
-      {/* The way back sits by Play again, not only in the header (Khai, 2026-11-10). */}
-      <div className="flex flex-wrap justify-center gap-3">
+      {/* The way back sits by Play again, not only in the header (Khai, 2026-11-10).
+          They wake a moment after the score shows, so the taps of a tap-anywhere game
+          don't land on them (QA, 2026-11-25). */}
+      <div
+        className={cx("flex flex-wrap justify-center gap-3", !awake && "pointer-events-none")}
+        aria-busy={!awake}
+      >
         {onAgain && (
           <Button size="lg" onClick={onAgain}>
             Play again
@@ -191,6 +207,9 @@ function Result({
     </section>
   );
 }
+
+/** How long the result's buttons ignore taps, so a game's last taps don't press them. */
+export const RESULT_GUARD_MS = 900;
 
 /** A solo game on the phone: instructions, play, result (spec 08). */
 export function GamePlayer({
@@ -207,6 +226,8 @@ export function GamePlayer({
   const renderer = rendererFor(type);
   const [phase, setPhase] = useState<Phase>({ kind: "checking" });
   const [busy, setBusy] = useState(false);
+  // A move that never reached the server, to send again (QA, 2026-11-25).
+  const [retry, setRetry] = useState<{ message: string; run: () => void } | null>(null);
   // The instructions box: open on arrival, closed by tapping outside it, opened again by the ⓘ.
   const [sheet, setSheet] = useState(true);
   const [askedHowTo, setAskedHowTo] = useState(howTo);
@@ -326,11 +347,19 @@ export function GamePlayer({
   const move = async (m: unknown, options: { notBefore?: number } = {}) => {
     if (phase.kind !== "playing" || !playerId) return;
     setBusy(true);
+    setRetry(null);
     const res = await gamesApi.move(slug, gameId, await token(), {
       playerId,
       step: phase.play.step,
       move: m,
     });
+    // A request lost on the way (party wifi): the game stays as it was, with a
+    // Retry that sends the same move again (QA, 2026-11-25: it used to end the game).
+    if (!res.ok && res.offline) {
+      setBusy(false);
+      setRetry({ message: res.message, run: () => void move(m, options) });
+      return;
+    }
     // A game that banks points mid-run (Geocache) updates the header total at once.
     if (res.ok && res.data.status === "playing" && res.data.best > phase.play.best)
       void refreshPlays();
@@ -377,6 +406,17 @@ export function GamePlayer({
 
   return (
     <div className="grid gap-4">
+      {retry && (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-gm bg-gm-surface p-3 ring-1 ring-gm-danger"
+        >
+          <p className="m-0 font-bold text-gm-danger">That didn&apos;t send. Check your wifi.</p>
+          <Button onClick={retry.run} disabled={busy}>
+            Try again
+          </Button>
+        </div>
+      )}
       {phase.kind === "error" && (
         <p role="alert" className="m-0 font-bold text-gm-danger">
           {phase.message}

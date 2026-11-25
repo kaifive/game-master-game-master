@@ -95,7 +95,7 @@ describe("count showdowns on the phone and TV (spec 25)", () => {
     expect(screen.queryByRole("button", { name: "1" })).toBeNull();
   });
 
-  test("S25-AC1: typing 1 then 2 sends 12 as the time runs out, with no Lock in; rub out takes a digit back", async () => {
+  test("S25-AC1: typing 1 then 2 sends 12 as it's typed and again as the time runs out, with no Lock in; rub out takes a digit back", async () => {
     const user = userEvent.setup();
     const r = round("flyby");
     let t = (r.s.showEndsAt ?? 0) + 500;
@@ -106,7 +106,11 @@ describe("count showdowns on the phone and TV (spec 25)", () => {
     await user.click(screen.getByRole("button", { name: "Rub out" }));
     await user.click(screen.getByRole("button", { name: "2" }));
     expect(screen.getByRole("status", { name: "Your number" })).toHaveTextContent("12");
-    expect(send).not.toHaveBeenCalled();
+    // Each change is sent a moment after it's typed, so a slow network loses nothing.
+    await waitFor(() => {
+      expect(send).toHaveBeenLastCalledWith({ answer: 12 });
+    });
+    send.mockClear();
     t = (r.s.closesAt ?? 0) - 300;
     await waitFor(() => {
       expect(send).toHaveBeenCalledWith({ answer: 12 });
@@ -126,12 +130,13 @@ describe("count showdowns on the phone and TV (spec 25)", () => {
     });
   });
 
-  test("S25-AC1: once locked in, the phone says what it sent; the TV shows who's in but not what", () => {
+  test("S25-AC1: a reloaded phone shows the number it sent, and can still change it; the TV shows who's in but not what", () => {
     const r0 = round("flyby");
     const at = (r0.s.showEndsAt ?? 0) + 500;
     const r = round("flyby", [["t1", { answer: 7 }, at]]);
     phone("flyby", r.view(cap, at), at);
-    expect(screen.getByText("Locked in: 7")).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "Your number" })).toHaveTextContent("7");
+    expect(screen.getByRole("button", { name: "1" })).toBeEnabled();
     onTv("flyby", r.view(tv, at), at);
     const locked = screen.getByRole("list", { name: "Locked in" });
     expect(within(locked).getAllByRole("listitem")[0]).toHaveTextContent(/Reds\s*In/);

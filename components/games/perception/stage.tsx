@@ -27,6 +27,10 @@ export type StageProps = {
   timer: ReactNode;
   /** In a showdown the room watches the show on the TV; the phone says so. */
   showOn: "phone" | "tv";
+  /** A showdown answer already sent, so a reloaded phone starts from it. */
+  initial?: unknown;
+  /** Each change as it's made: a showdown phone sends it, and the last one counts. */
+  onDraft?: (answer: unknown) => void;
 };
 
 /** The words a task asks with. */
@@ -69,8 +73,10 @@ function Ask({ children }: { children: ReactNode }) {
 
 /** What every input gets besides its scene: the time left, for sending as it runs out. */
 type InputProps = Pick<StageProps, "timer" | "busy" | "onAnswer"> & {
+  onDraft: StageProps["onDraft"] | undefined;
   left: number;
   lockButton: boolean;
+  initial: number | null;
 };
 
 /** Lock in, solo; on a showdown phone, a line saying it goes in at the end. */
@@ -94,13 +100,16 @@ function AngleInput({
   onAnswer,
   left,
   lockButton,
+  initial,
+  onDraft,
 }: InputProps & { scene: AngleScene }) {
   // The staff starts lying flat, so no angle is handed over for free.
-  const [angle, setAngleNow] = useState(0);
-  const [touched, setTouched] = useState(false);
+  const [angle, setAngleNow] = useState(initial ?? 0);
+  const [touched, setTouched] = useState(initial !== null);
   const setAngle = (a: number) => {
     setAngleNow(a);
     setTouched(true);
+    onDraft?.(a);
   };
   // A staff that's been turned is sent as the time runs out (Khai, 2026-11-24).
   useAutoSubmit(left, touched && !busy, () => {
@@ -129,8 +138,14 @@ function RibbonInput({
   onAnswer,
   left,
   lockButton,
+  initial,
+  onDraft,
 }: InputProps & { scene: RibbonScene }) {
-  const [cut, setCut] = useState<number | null>(null);
+  const [cut, setCutNow] = useState<number | null>(initial);
+  const setCut = (c: number) => {
+    setCutNow(c);
+    onDraft?.(c);
+  };
   useAutoSubmit(left, cut !== null && !busy, () => {
     if (cut !== null) onAnswer(cut);
   });
@@ -181,7 +196,8 @@ function WatchTv({ title, line }: { title: string; line: string }) {
 }
 
 export function PerceptionStage(props: StageProps) {
-  const { type, scene, elapsed, showMs, answerMs, busy, onAnswer, timer, showOn } = props;
+  const { type, scene, elapsed, showMs, answerMs, busy, onAnswer, timer, showOn, onDraft } = props;
+  const initial = typeof props.initial === "number" ? props.initial : null;
   const showing = elapsed < showMs;
   // Time left to answer, so inputs send what they have as it runs out.
   const left = showMs + answerMs - elapsed;
@@ -217,7 +233,7 @@ export function PerceptionStage(props: StageProps) {
     );
   }
   if (!scene) return null;
-  const input = { timer, busy, onAnswer, left, lockButton };
+  const input = { timer, busy, onAnswer, left, lockButton, initial, onDraft };
   if (type === "staffangle") return <AngleInput scene={scene as AngleScene} {...input} />;
   return <RibbonInput scene={scene as RibbonScene} {...input} />;
 }

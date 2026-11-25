@@ -9,6 +9,9 @@ import { MemoryLiveRepo } from "./repo.memory";
 import {
   adminLiveAction,
   adminLiveView,
+  finishLive,
+  followCaptain,
+  phaseChangeProblem,
   phoneLiveView,
   playerLiveAction,
   type LiveDeps,
@@ -315,6 +318,50 @@ describe("showdown screen and Who's played (spec 24)", () => {
     const back = await adminLiveAction(deps, event, { action: "screen", screen: "leaderboard" });
     expect(back).toMatchObject({ active: true, screen: "leaderboard" });
     expect((await phoneLiveView(deps, event, null, null)).screen).toBe("leaderboard");
+  });
+
+  it("S24-AC9: Next puts the showdown back on the TV; ending the night ends a showdown, shows the leaderboard and allows no more", async () => {
+    await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
+    await adminLiveAction(deps, event, { action: "screen", screen: "leaderboard" });
+    const next = await adminLiveAction(deps, event, { action: "next" });
+    expect(next.screen).toBe("showdown");
+    await finishLive(deps.live, event.slug);
+    const after = await adminLiveView(deps, event);
+    expect(after).toMatchObject({ active: false, screen: "leaderboard" });
+    const ended = { ...deps, teams: () => Promise.resolve({ ...summary, ended: true }) };
+    expect(
+      await failure(adminLiveAction(ended, event, { action: "start", gameId: "tap-off" })),
+    ).toEqual({ status: 409, message: "The party has ended." });
+  });
+
+  it("S24-AC3: when the host hands a team to a new captain mid-showdown, the new captain's phone is the controller", async () => {
+    await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
+    const you = async (id: string) => {
+      const v = await phoneLiveView(deps, event, id, `dev-${id}`);
+      return v.active ? v.you : null;
+    };
+    expect(await you("m1")).toMatchObject({
+      captain: false,
+    });
+    await followCaptain(deps.live, event.slug, "t1", "m1");
+    expect(await you("m1")).toMatchObject({ captain: true });
+    expect(await you("c1")).toMatchObject({
+      captain: false,
+    });
+  });
+
+  it("S24-AC11: showdowns need the team phase, and the host can't leave it while one runs", async () => {
+    const individual = { ...summary, phase: "individual" as const };
+    const solo = { ...deps, teams: () => Promise.resolve(individual) };
+    expect(
+      await failure(adminLiveAction(solo, event, { action: "start", gameId: "tap-off" })),
+    ).toEqual({ status: 409, message: "Start the team phase first." });
+    expect(await phaseChangeProblem(deps.live, event.slug, "individual")).toBeNull();
+    await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
+    expect(await phaseChangeProblem(deps.live, event.slug, "individual")).toBe(
+      "End the showdown first.",
+    );
+    expect(await phaseChangeProblem(deps.live, event.slug, "team")).toBeNull();
   });
 
   it("S24-AC9: the menu marks a showdown played once it has shown a round's results, not when it's started and ended at once", async () => {

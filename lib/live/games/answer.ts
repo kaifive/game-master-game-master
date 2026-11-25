@@ -3,8 +3,8 @@ import { LATE_MS, type MoveResult } from "../model";
 
 /**
  * The answer window shared by the counting showdowns (spec 25): the TV shows
- * something from `startsAt` to `showEndsAt`, then every team locks in one
- * number before `closesAt`. Answers stay secret until the reveal (S24-AC7).
+ * something from `startsAt` to `showEndsAt`, then every team sends a number
+ * before `closesAt`, changing it as often as it likes: the last one counts. Answers stay secret until the reveal (S24-AC7).
  */
 export type AnswerWindow = {
   startsAt: number;
@@ -32,7 +32,7 @@ export const answerWindow = (
 
 export const NumberMove = z.object({ answer: z.number().int() });
 
-/** One locked-in number per team, after the show and inside the window. */
+/** A team's number, after the show and inside the window; a later one replaces it. */
 export function lockIn<S extends AnswerWindow>(
   s: S,
   teamId: string,
@@ -46,7 +46,8 @@ export function lockIn<S extends AnswerWindow>(
   if (now < s.showEndsAt) return { ok: false, message: "Watch the TV first!" };
   // Sent as the time ran out, it may land a moment after (LATE_MS).
   if (now > s.closesAt + LATE_MS) return { ok: false, message: "Time's up." };
-  if (s.answers[teamId] !== undefined) return { ok: false, message: "You've locked in." };
+  // A team can change its answer until time's up; the last one sent counts, so a
+  // request lost on slow wifi is made good by the next (QA, 2026-11-25).
   if (answer < range.min || answer > range.max)
     return {
       ok: false,

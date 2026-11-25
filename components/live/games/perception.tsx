@@ -20,6 +20,7 @@ import {
   PhoneResult,
   Reveal,
   TimeLeft,
+  useDraftAnswer,
   useServerTime,
 } from "./shared";
 
@@ -129,10 +130,9 @@ function controller(type: string) {
   return function Controller({ game, serverNow, revealed, send, busy, view }: LiveControllerProps) {
     const g = game as PerceptionView | null;
     const now = useServerTime(serverNow, !revealed);
+    const draft = useDraftAnswer(send);
     if (!g) return null;
     if (revealed) return <PhoneResult view={view} />;
-    if (g.answered)
-      return <PhoneNote title="Locked in">Now watch the TV for the answer.</PhoneNote>;
     if (now < g.startsAt || (g.scene === null && g.phase === "show"))
       return <PhoneNote title="Get ready!">{getReadyLine(type)}</PhoneNote>;
     if (now > g.closesAt)
@@ -146,6 +146,8 @@ function controller(type: string) {
         answerMs={g.closesAt - g.showEndsAt}
         busy={busy}
         onAnswer={(answer) => void send({ answer })}
+        onDraft={draft}
+        initial={g.mine}
         showOn="tv"
         timer={<TimeLeft closesAt={g.closesAt} now={now} total={g.closesAt - g.showEndsAt} />}
       />

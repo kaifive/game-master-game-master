@@ -134,7 +134,9 @@ export function hubRows(
         best: null,
         pending: true,
       };
-    if (play?.status === "finished") {
+    // A replay in progress keeps the game counted: its best still stands (QA, 2026-11-25).
+    const replaying = play?.status === "playing" && play.runs > 1 && play.best > 0;
+    if (play?.status === "finished" || (replaying && open)) {
       const again = open && event.replayable && !play.once;
       return {
         game,

@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useId, useState } from "react";
-import { AdminButton, Card, field } from "@/components/admin/ui";
+import { AdminButton, adminButtonLook, Card, field } from "@/components/admin/ui";
+import { EndEarly } from "./game-menu";
 import { CheckIcon } from "@/components/icons/game";
 import { adminLiveApi, type AdminLiveAct, type AdminLiveView, type Roster } from "@/lib/live";
 import { cx } from "@/lib/ui";
 import { LIVE_RENDERERS } from "./renderers";
-import { useLive } from "./use-live";
+import { useHeld, useLive } from "./use-live";
 
 const STEP_NAME: Record<string, string> = {
   intro: "How to play",
@@ -19,8 +20,13 @@ type Act = (a: AdminLiveAct) => void;
 
 const swatch = (color: number) => `var(--gm-team-${String(color)})`;
 
-/** What the TV shows: the leaderboard or the showdown, switched any time (S24-AC9). */
+/**
+ * What the TV shows: the leaderboard or the showdown (S24-AC9). Not the
+ * leaderboard while a round is being played, which would hide it from the
+ * room (QA, 2026-11-25).
+ */
 function ScreenSwitch({ view, act, busy }: { view: AdminLiveView; act: Act; busy: boolean }) {
+  const playing = view.active && view.session.step === "play";
   const options = [
     { screen: "leaderboard", label: "Leaderboard" },
     { screen: "showdown", label: "Showdown" },
@@ -33,7 +39,7 @@ function ScreenSwitch({ view, act, busy }: { view: AdminLiveView; act: Act; busy
           key={o.screen}
           type="button"
           aria-pressed={view.screen === o.screen}
-          disabled={busy}
+          disabled={busy || (playing && o.screen === "leaderboard" && view.screen !== o.screen)}
           onClick={() => {
             act({ action: "screen", screen: o.screen });
           }}
@@ -47,6 +53,9 @@ function ScreenSwitch({ view, act, busy }: { view: AdminLiveView; act: Act; busy
           {o.label}
         </button>
       ))}
+      {playing && view.screen === "showdown" && (
+        <span className="text-sm text-gm-text-muted">Leaderboard after the round.</span>
+      )}
     </div>
   );
 }
@@ -225,6 +234,7 @@ export function WhosPlayed({ view, act, busy }: { view: AdminLiveView; act: Act;
  * and see each team's points.
  */
 export function LiveCard({ view, act, busy }: { view: AdminLiveView; act: Act; busy: boolean }) {
+  const held = useHeld(view.active ? view.nextInMs : null);
   return (
     <Card title={view.active ? `Showdown: ${view.session.title}` : "Showdown"}>
       <div className="grid gap-4">
@@ -248,7 +258,7 @@ export function LiveCard({ view, act, busy }: { view: AdminLiveView; act: Act; b
             <div className="flex flex-wrap gap-3">
               {view.next && (
                 <AdminButton
-                  disabled={busy}
+                  disabled={busy || held}
                   onClick={() => {
                     act({
                       action: "next",
@@ -259,15 +269,16 @@ export function LiveCard({ view, act, busy }: { view: AdminLiveView; act: Act; b
                   {view.next}
                 </AdminButton>
               )}
-              <AdminButton
-                tone="danger"
-                disabled={busy}
-                onClick={() => {
-                  act({ action: "end" });
-                }}
-              >
-                End early
-              </AdminButton>
+              {/* Asked twice, and not on the last step, where Next ends it (QA, 2026-11-25). */}
+              {view.session.step !== "final" && (
+                <EndEarly
+                  disabled={busy}
+                  onEnd={() => {
+                    act({ action: "end" });
+                  }}
+                  className={adminButtonLook("danger")}
+                />
+              )}
             </div>
             <ul aria-label="Teams in the showdown" className="m-0 grid list-none gap-2 p-0">
               {view.teams.map((t) => (
