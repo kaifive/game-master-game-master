@@ -163,6 +163,29 @@ describe("captain and member phones (spec 24)", () => {
     expect(within(watch).getByText("40")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Tap" })).not.toBeInTheDocument();
   });
+
+  test("S24-AC3: at a round's results the rest of the team sees what the team scored, on the phone", () => {
+    wrap(
+      <LivePanel
+        view={active({
+          you: { teamId: "t1", captain: false },
+          session: { ...active().session, step: "results" },
+          teams: [
+            { id: "t1", name: "Reds", color: 1, score: 75, roundPoints: 35 },
+            { id: "t2", name: "Blues", color: 2, score: 10, roundPoints: 0 },
+          ],
+        })}
+        serverNow={() => 0}
+        send={vi.fn()}
+        busy={false}
+        error={null}
+        renderers={{ tap: stand }}
+      />,
+    );
+    const watch = screen.getByRole("region", { name: "Watch the TV" });
+    expect(within(watch).getByText("+35 this round")).toBeInTheDocument();
+    expect(within(watch).getByText("75")).toBeInTheDocument();
+  });
 });
 
 describe("the TV (spec 24)", () => {
