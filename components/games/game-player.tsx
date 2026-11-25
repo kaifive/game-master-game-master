@@ -207,6 +207,8 @@ export function GamePlayer({
   const renderer = rendererFor(type);
   const [phase, setPhase] = useState<Phase>({ kind: "checking" });
   const [busy, setBusy] = useState(false);
+  // A move that never reached the server, to send again (QA, 2026-11-25).
+  const [retry, setRetry] = useState<{ message: string; run: () => void } | null>(null);
   // The instructions box: open on arrival, closed by tapping outside it, opened again by the ⓘ.
   const [sheet, setSheet] = useState(true);
   const [askedHowTo, setAskedHowTo] = useState(howTo);
@@ -326,11 +328,19 @@ export function GamePlayer({
   const move = async (m: unknown, options: { notBefore?: number } = {}) => {
     if (phase.kind !== "playing" || !playerId) return;
     setBusy(true);
+    setRetry(null);
     const res = await gamesApi.move(slug, gameId, await token(), {
       playerId,
       step: phase.play.step,
       move: m,
     });
+    // A request lost on the way (party wifi): the game stays as it was, with a
+    // Retry that sends the same move again (QA, 2026-11-25: it used to end the game).
+    if (!res.ok && res.offline) {
+      setBusy(false);
+      setRetry({ message: res.message, run: () => void move(m, options) });
+      return;
+    }
     // A game that banks points mid-run (Geocache) updates the header total at once.
     if (res.ok && res.data.status === "playing" && res.data.best > phase.play.best)
       void refreshPlays();
@@ -377,6 +387,17 @@ export function GamePlayer({
 
   return (
     <div className="grid gap-4">
+      {retry && (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-gm bg-gm-surface p-3 ring-1 ring-gm-danger"
+        >
+          <p className="m-0 font-bold text-gm-danger">That didn&apos;t send. Check your wifi.</p>
+          <Button onClick={retry.run} disabled={busy}>
+            Try again
+          </Button>
+        </div>
+      )}
       {phase.kind === "error" && (
         <p role="alert" className="m-0 font-bold text-gm-danger">
           {phase.message}

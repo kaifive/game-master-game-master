@@ -38,7 +38,8 @@ export async function deviceToken(identity: Identity): Promise<string> {
   return firebaseDeviceToken();
 }
 
-export type ApiResult<T> = { ok: true; data: T } | { ok: false; message: string };
+/** `offline`: the request never got an answer (dropped wifi), so it's worth trying again. */
+export type ApiResult<T> = { ok: true; data: T } | { ok: false; message: string; offline?: true };
 
 export async function apiCall<T>(
   url: string,
@@ -56,6 +57,7 @@ export async function apiCall<T>(
     return {
       ok: false,
       message: "We couldn't reach the server. Check your connection and try again.",
+      offline: true,
     };
   }
 }
