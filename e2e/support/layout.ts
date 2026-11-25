@@ -4,7 +4,8 @@ import type { Page } from "@playwright/test";
  * Layout problems on the page as it stands (layout sweep, Khai 2026-11-24):
  * sideways scroll, anything off screen or cut off by a box that hides its
  * overflow, and text drawn over other text. Mark something clipped on purpose
- * (a demo's flakes falling in) with `data-allow-clip`.
+ * (a demo's flakes falling in) with `data-allow-clip`. Anything in a box that
+ * scrolls, and messages that flash over a screen (role=status), are left out.
  */
 export async function layoutProblems(page: Page): Promise<string[]> {
   return page.evaluate(() => {
@@ -31,13 +32,21 @@ export async function layoutProblems(page: Page): Promise<string[]> {
     const items = [...document.querySelectorAll("main *")].filter(
       (el) => (hasText(el) || el.matches("button, [role=img], svg")) && shown(el),
     );
+    /** Inside a box that scrolls: part hidden is how it works (Block Fit's tray). */
+    const inScroller = (el: Element) => {
+      for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+        const s = getComputedStyle(p);
+        if (/(auto|scroll)/.test(s.overflowX + s.overflowY)) return true;
+      }
+      return false;
+    };
     for (const el of items) {
       const r = el.getBoundingClientRect();
-      if (el.closest("[data-allow-clip]")) continue;
+      if (el.closest("[data-allow-clip]") || inScroller(el)) continue;
       if (r.right > innerWidth + 2 || r.left < -2) out.push(`off screen sideways: ${name(el)}`);
       for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
         const s = getComputedStyle(p);
-        if (/(hidden|clip|auto|scroll)/.test(s.overflow + s.overflowX + s.overflowY)) {
+        if (/(hidden|clip)/.test(s.overflow + s.overflowX + s.overflowY)) {
           const b = p.getBoundingClientRect();
           const cut = Math.max(
             b.left - r.left,
@@ -50,7 +59,8 @@ export async function layoutProblems(page: Page): Promise<string[]> {
         }
       }
     }
-    const texts = items.filter(hasText);
+    // A message that flashes over the board on purpose ("Not in the word list") is a status.
+    const texts = items.filter((el) => hasText(el) && !el.closest("[role=status], [aria-live]"));
     for (let i = 0; i < texts.length; i++)
       for (let j = i + 1; j < texts.length; j++) {
         const a = texts[i];
