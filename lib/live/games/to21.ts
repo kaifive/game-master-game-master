@@ -5,13 +5,12 @@ import { roundShare } from "./scoring";
 
 /**
  * Snowball to 21 (spec 27, S27-AC3): a shared count goes up by 1, 2 or 3 a
- * turn; the team that makes the round's number exactly (21, then others)
- * wins it. At least three rounds, in whole laps, so every team starts as
+ * turn; the team that makes it exactly 21 wins the round. At least three rounds, in whole laps, so every team starts as
  * often as the others (S24-AC6).
  */
 const Content = z.object({
-  /** The number to make, round by round: a new one each round (Khai, 2026-11-24). */
-  targets: z.array(z.number().int().min(5).max(50)).min(1).default([21, 17, 25, 13, 29, 19]),
+  /** The number to make: 21 every round (Khai, 2026-11-25). */
+  target: z.number().int().min(5).max(50).default(21),
   turnMs: z.number().int().min(3000).max(30_000).default(10_000),
   /** What the round's winner scores; left out, its share of 150. Every other team gets half (ADR-045). */
   points: z.number().int().min(1).max(500).optional(),
@@ -68,7 +67,7 @@ function view(s: To21State, _c: unknown, { role, now }: ViewCtx) {
 
 const game: ShowdownGame<C, To21State> = {
   content: Content,
-  demo: "Add 1, 2 or 3. Hit the number exactly to win!",
+  demo: "Add 1, 2 or 3. Make exactly 21 to win!",
   timeout: "Out of time? 10 seconds, or you add 1.",
   rounds: (_c, teams) => lapRounds(teams),
   deal: (c, { round, teams, startsAt }) => ({
@@ -78,7 +77,7 @@ const game: ShowdownGame<C, To21State> = {
     at: 0,
     turnStartedAt: startsAt,
     count: 0,
-    target: c.targets[(round - 1) % c.targets.length] ?? 21,
+    target: c.target,
     turnMs: c.turnMs,
     history: [],
     winner: null,

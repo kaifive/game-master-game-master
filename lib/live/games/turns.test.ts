@@ -37,10 +37,12 @@ function rig<S>(game: AnyShowdown, content: unknown = {}) {
 }
 
 describe("Snowball to 21", () => {
-  it("S27-AC3: one round per team, each starting one; 1, 2 or 3 a turn, never past 21; 1 if too slow; making 21 scores the round's share of 150 and every other team half", () => {
+  it("S27-AC3: whole laps, each team starting equally often, always to 21; 1, 2 or 3 a turn, never past 21; 1 if too slow; making 21 scores the round's share of 150 and every other team half", () => {
     const g = rig<To21State>(to21);
     expect(to21.rounds(g.c, 4)).toBe(4);
     expect([1, 2, 3].map((r) => g.deal(r).order[0])).toEqual(["t1", "t2", "t3"]);
+    // 21 every round (Khai, 2026-11-25).
+    expect([1, 2, 3, 4].map((r) => g.deal(r).target)).toEqual([21, 21, 21, 21]);
     // Nobody's turn during the count before the start: no live buttons (blind review).
     expect(g.view(g.deal(), cap("t1"), T0 - 500)).toMatchObject({ turn: null, myTurn: false });
     let s = g.deal();
