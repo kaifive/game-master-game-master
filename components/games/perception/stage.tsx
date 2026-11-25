@@ -119,7 +119,7 @@ function AngleInput({
     <section aria-label="Your answer" className="grid gap-4">
       <Ask>{askFor("staffangle", scene)}</Ask>
       {timer}
-      <StaffDial angle={angle} onAngle={setAngle} />
+      <StaffDial angle={angle} onAngle={setAngle} max={scene.max ?? 180} />
       <Send
         lockButton={lockButton}
         disabled={busy}

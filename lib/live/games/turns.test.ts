@@ -142,7 +142,13 @@ describe("Memory Path", () => {
       s = g.step(s, "t3", { dir: dirTo(i) }, after + 6000 + i);
     expect(s.winner).toBe("t3");
     // Of three rounds' 50: across 50, some squares right 40, none 25 (Khai, 2026-11-24).
-    expect(g.score(s)).toEqual({ t1: 40, t2: 25, t3: 50 });
+    // Crossing pays the round's 50; going out pays 10% plus up to 60% by squares got right.
+    const squares = s.path.length - 1;
+    expect(g.score(s)).toEqual({
+      t1: Math.round(50 * (0.1 + (0.6 * 3) / squares)),
+      t2: 5,
+      t3: 50,
+    });
     expect((g.view(s, tv, after + 9000, true).shown as Square[]).length).toBe(s.path.length);
   });
 });
@@ -280,7 +286,8 @@ const roundGames: [string, AnyShowdown, Record<string, Bot>, (n: number) => numb
     TO21,
     (n) => [Math.round(share(n)), Math.round(Math.round(share(n)) / 2)],
   ],
-  ["Memory Path", path, PATH, (n) => [1, 0.8, 0.5].map((f) => Math.round(share(n) * f))],
+  // A crossing's share, or less by how far along a team got (Khai, 2026-11-25).
+  ["Memory Path", path, PATH, () => null],
   // Any present's value, up to the round's share.
   ["Present Shuffle", shuffle, SHUFFLE, () => null],
 ];

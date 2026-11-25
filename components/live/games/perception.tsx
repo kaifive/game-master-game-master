@@ -66,7 +66,7 @@ function AnswerScene({
       </p>
       {type === "staffangle" && (
         <Frame width="40vh">
-          <StaffDial angle={null} />
+          <StaffDial angle={null} max={(scene as AngleScene | null)?.max ?? 180} />
         </Frame>
       )}
       {type === "ribbon" && <RibbonStrip cut={null} className="h-[14vh]" />}
@@ -83,7 +83,12 @@ function TruthScene({ view, g, type }: { view: ActiveLiveView; g: PerceptionView
   if (type === "staffangle")
     return (
       <Frame width="36vh">
-        <StaffDial angle={null} target={(scene as AngleScene).target} marks={marks(view, g)} />
+        <StaffDial
+          angle={null}
+          target={(scene as AngleScene).target}
+          max={(scene as AngleScene).max ?? 180}
+          marks={marks(view, g)}
+        />
       </Frame>
     );
   return (
