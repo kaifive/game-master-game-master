@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { PackRoot } from "@/components/packs/judges-table/root";
@@ -23,12 +23,19 @@ const SLUG = holiday2026.slug;
 const RESTARTS = 1;
 
 /** A stand-in for the player routes, backed by the memory repo. */
-function fakeServer(banned: string[] = []) {
+function fakeServer(banned: string[] = [], captain = false) {
   const repo = new MemoryPlayerRepo({ banned: banned.map((uid) => ({ slug: SLUG, uid })) });
   const reply = (status: number, body: unknown) => Promise.resolve(Response.json(body, { status }));
   const fetch = vi.fn(async (url: string, init: RequestInit = {}) => {
     const uid = new Headers(init.headers).get("authorization")?.replace("Bearer dev:", "") ?? "";
-    if (url.includes("/plays")) return reply(200, { plays: {}, total: 0 });
+    if (url.includes("/plays"))
+      return reply(200, {
+        plays: {},
+        total: 0,
+        ...(captain
+          ? { seat: { phase: "team", team: { id: "t1", name: "Reds", color: 1 }, isCaptain: true } }
+          : {}),
+      });
     const d = await repo.device(SLUG, uid);
     if (url.endsWith("/device"))
       return reply(200, {
@@ -182,6 +189,15 @@ describe("PlayerHub", () => {
     await user.keyboard("{Escape}");
     expect(closed).toHaveBeenCalled();
     // The limit is used up, so the option is gone.
+    expect(screen.queryByRole("button", { name: "Not you? Start over" })).toBeNull();
+  });
+
+  test("S02-AC7: a captain is told up front that captains can't start over, with no Start over to try", async () => {
+    fakeServer([], true);
+    hub({ code: "WUSH7", sheet: true });
+    await joinAs("Mai");
+    const sheet = await screen.findByRole("dialog", { name: "Mai" });
+    expect(await within(sheet).findByText(/Team captains can't start over/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Not you? Start over" })).toBeNull();
   });
 

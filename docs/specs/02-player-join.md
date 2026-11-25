@@ -73,7 +73,7 @@ Player phone, in the event's style pack: until joined, a `Panel` with a name box
 - [x] AC-4: Nicknames are unique per event ignoring case, spacing and accents; a taken name gets "That name is taken. Pick another name."
 - [x] AC-5: The name filter blocks listed words through look-alikes, separators, repeats and accents, blocks short words only as whole words (so "Cassie" passes), applies the event's `blockedNames`, and shows its message while the name is typed.
 - [x] AC-6: A phone has one player per event; there is no Add player or Switch player, and a second name without starting over is refused.
-- [x] AC-7: Start over confirms what will be lost (donations only when the event has teams), needs no code, forfeits the old player and frees their name, and is limited by `restartsPerDevice`.
+- [x] AC-7: Start over confirms what will be lost (donations only when the event has teams), needs no code, forfeits the old player and frees their name, and is limited by `restartsPerDevice`. A captain sees why they can't start over in place of the button, not after typing a new name.
 - [x] AC-8: Joining again with the same name on the same device returns the same player.
 - [x] AC-9: A banned device can't join and sees "This phone can't join this event."
 - [x] AC-10: Joining is open while the event is upcoming or live and refused once it has ended.
