@@ -40,10 +40,9 @@ describe("perception showdowns (spec 28)", () => {
     answer("t1", target);
     answer("t2", target + 10);
     answer("t3", target - 10);
-    expect(game.move(s, c, { teamId: "t1", move: { answer: 5 }, now: T0 + 1100 })).toMatchObject({
-      ok: false,
-      message: "You've answered.",
-    });
+    // A team can change its answer until time's up; the last one counts (QA, 2026-11-25).
+    const changed = game.move(s, c, { teamId: "t1", move: { answer: 5 }, now: T0 + 1100 });
+    expect(changed.ok && (changed.state as typeof s).answers.t1).toBe(5);
     // 10° off of 45 is 78% close: 39 of the round's 50, whatever the others did.
     expect(game.score(s, c, teams)).toEqual({ t1: 50, t2: 39, t3: 39, t4: 0 });
   });

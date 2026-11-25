@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { NumberEntry } from "@/components/games/number-entry";
 import { CheckIcon } from "@/components/icons/game";
 import { useSlots } from "@/components/slots/registry";
@@ -219,7 +219,8 @@ export function PhoneResult({ view }: { view: ActiveLiveView }) {
 
 /**
  * The number pad for the counting showdowns: a white card shows the number
- * as it's typed, and goes in as the time runs out. `negative` adds a minus key.
+ * as it's typed. Each change is sent, and the last one before time's up counts;
+ * a reloaded phone shows what it sent. `negative` adds a minus key.
  */
 export function NumberPad({
   prompt,
@@ -238,14 +239,17 @@ export function NumberPad({
   negative?: boolean;
   max?: number;
 }) {
-  if (w.mine !== null)
-    return (
-      <PhoneNote title={`Locked in: ${String(w.mine)}`}>Now watch the TV for the answer.</PhoneNote>
-    );
+  const draft = useDraftAnswer(send);
   if (now > w.closesAt)
-    return <PhoneNote title="Time's up">Watch the TV for the answer.</PhoneNote>;
+    return (
+      <PhoneNote title={w.mine === null ? "Time's up" : `You said ${String(w.mine)}`}>
+        Watch the TV for the answer.
+      </PhoneNote>
+    );
   return (
     <NumberEntry
+      initial={w.mine}
+      onChange={draft}
       prompt={prompt}
       closesIn={w.closesAt - now}
       timer={<TimeLeft closesAt={w.closesAt} now={now} total={w.closesAt - w.showEndsAt} />}
@@ -344,5 +348,34 @@ export function TurnBanner({
       </p>
       <TimeLeft closesAt={endsAt} now={now} total={total} />
     </div>
+  );
+}
+
+/** How long a showdown phone waits after a change before sending it. */
+export const DRAFT_MS = 400;
+
+/**
+ * Sends a showdown answer shortly after each change, so the server always has
+ * the latest: the last one before time's up counts. A request lost on slow
+ * wifi is made good by the next change or by the send as time runs out (QA,
+ * 2026-11-25: answers sent only at the end were lost on a slow network).
+ */
+export function useDraftAnswer(send: (move: unknown) => Promise<void>) {
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+  return useCallback(
+    (answer: unknown) => {
+      if (timer.current) clearTimeout(timer.current);
+      if (answer === null || answer === undefined) return;
+      timer.current = setTimeout(() => {
+        void send({ answer });
+      }, DRAFT_MS);
+    },
+    [send],
   );
 }

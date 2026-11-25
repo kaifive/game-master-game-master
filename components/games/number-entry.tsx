@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { BackspaceIcon } from "@/components/icons/game";
 import { useAutoSubmit } from "./auto-submit";
 
@@ -8,7 +8,7 @@ import { useAutoSubmit } from "./auto-submit";
 export function SendsAtTheEnd() {
   return (
     <p className="m-0 text-center text-lg font-bold text-gm-text-muted">
-      Your answer goes in when time&apos;s up.
+      You can change it until time&apos;s up.
     </p>
   );
 }
@@ -28,6 +28,8 @@ export function NumberEntry({
   max = 99,
   closesIn,
   lockButton = true,
+  initial = null,
+  onChange,
 }: {
   prompt: ReactNode;
   /** Time left to answer, in ms: what's typed is sent as it runs out. */
@@ -43,9 +45,26 @@ export function NumberEntry({
    * the timer runs out (Khai, 2026-11-24).
    */
   lockButton?: boolean;
+  /** What's on the pad to start with (a showdown answer already sent, after a reload). */
+  initial?: number | null;
+  /** Each change, as it's typed (a showdown phone sends it, so nothing's lost late). */
+  onChange?: (value: number | null) => void;
 }) {
-  const [typed, setTyped] = useState("");
+  const [typed, setTyped] = useState(initial === null ? "" : String(initial));
   const value = typed === "" || typed === "-" ? null : Number(typed);
+  // Tell the showdown phone each change, not the first draw.
+  const changed = useRef(onChange);
+  const first = useRef(true);
+  useEffect(() => {
+    changed.current = onChange;
+  }, [onChange]);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    changed.current?.(value);
+  }, [value]);
   useAutoSubmit(closesIn, value !== null && !busy, () => {
     if (value !== null) onLock(value);
   });

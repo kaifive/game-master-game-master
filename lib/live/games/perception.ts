@@ -38,6 +38,8 @@ export function perceptionShowdown<T, A>(core: PerceptionCore<T, A>): AnyShowdow
       // Before the start, nothing; after, only what this phase may show (S28-AC4).
       scene: now < s.startsAt && !revealed ? null : core.scene(s.task, phase),
       answered: mine !== null && s.answers[mine] !== undefined,
+      /** This team's own answer so far, so a reloaded phone shows it. */
+      mine: mine !== null ? (s.answers[mine] ?? null) : null,
       lockedIn: Object.keys(s.answers),
       truth: revealed ? core.truth(s.task) : null,
       answers: revealed ? { ...s.answers } : null,
@@ -79,7 +81,7 @@ export function perceptionShowdown<T, A>(core: PerceptionCore<T, A>): AnyShowdow
       if (now < s.startsAt) return { ok: false, message: "Not yet!" };
       if (now < s.showEndsAt && !core.claims) return { ok: false, message: "Watch first!" };
       if (now > s.closesAt + CLAIM_SLACK_MS) return { ok: false, message: "Time's up." };
-      if (s.answers[teamId] !== undefined) return { ok: false, message: "You've answered." };
+      // The last answer sent before time's up counts (QA, 2026-11-25).
       if (!core.valid(s.task, answer)) return { ok: false, message: "That answer doesn't fit." };
       // Phone-timed answers can't claim a moment that hasn't happened yet (S28-AC5).
       if (core.claims && core.claims(answer) > now - s.startsAt + CLAIM_SLACK_MS)
@@ -113,6 +115,7 @@ export type PerceptionView = {
   phase: Phase;
   scene: unknown;
   answered: boolean;
+  mine: unknown;
   lockedIn: string[];
   truth: string | null;
   /** Every team's answer, at the reveal only, to draw on the scene. */

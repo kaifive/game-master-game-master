@@ -53,7 +53,7 @@ TV; the event file chooses per game (ADR-040).
 
 1. A ribbon stretches across the screen with no marks on it. The screen says a fraction
    ("Cut it one third of the way along"). The player taps where to cut and can move it.
-   Solo locks it in; a showdown phone sends the cut as the time runs out.
+   Solo locks it in; a showdown phone sends the cut after each tap, and the last one before time's up counts.
 2. Levels: halves, thirds and quarters; fifths and eighths; any fraction in tenths, said
    as a percentage ("Cut it 70% of the way along"). 10 s to answer.
 3. Closeness: 1 minus the miss as a share of 15% of the ribbon, never below 0.
@@ -71,7 +71,7 @@ rounds live in the live session (spec 11).
 - **TV (showdown):** the task big enough for the room, who has answered, then the reveal
   with the right answer marked by a white star and each team's drawn on the scene in its color, each team's
   answer, how close, and the points.
-- **Captain phone (showdown):** the same input as solo, with no Lock in: what's on it goes in as the time runs out.
+- **Captain phone (showdown):** the same input as solo, with no Lock in: each change is sent, the last one counts, and a reloaded phone shows it.
 - **Demo:** each game's looping TV demo and one line of text (spec 24).
 
 ## Acceptance criteria
