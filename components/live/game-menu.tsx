@@ -164,6 +164,8 @@ export function TvHostBar({
   running: boolean;
   screen: "leaderboard" | "showdown";
 }) {
+  // Not the leaderboard mid-round: the round would vanish from the room (QA, 2026-11-25).
+  const midRound = running && host.at?.step === "play" && screen === "showdown";
   const button =
     "min-h-11 rounded-gm px-4 font-bold ring-1 ring-gm-border bg-gm-surface hover:bg-gm-surface-raised disabled:opacity-50";
   return (
@@ -197,7 +199,8 @@ export function TvHostBar({
       )}
       <button
         type="button"
-        disabled={host.busy}
+        disabled={host.busy || midRound}
+        title={midRound ? "Leaderboard after the round" : undefined}
         onClick={() => {
           host.act({
             action: "screen",

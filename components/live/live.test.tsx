@@ -343,6 +343,14 @@ describe("Controls (spec 11, spec 24)", () => {
       </PackRoot>,
     );
     expect(screen.getByText(/Playing · round 1 of 3/)).toBeInTheDocument();
+    // Mid-round the TV can't be switched to the leaderboard: the round would vanish from the room.
+    rerender(
+      <PackRoot styleRef={holiday2026.style}>
+        <LiveCard view={{ ...running, screen: "showdown" }} act={act} busy={false} />
+      </PackRoot>,
+    );
+    expect(screen.getByRole("button", { name: "Leaderboard" })).toBeDisabled();
+    expect(screen.getByText("Leaderboard after the round.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Show results" }));
     expect(act).toHaveBeenLastCalledWith({ action: "next", at: { step: "play", round: 1 } });
     await user.click(screen.getByRole("button", { name: "End early" }));
