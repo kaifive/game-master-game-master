@@ -112,6 +112,8 @@ test("S24-AC8 S11-AC2 S11-AC5: every showdown plays through on the TV and two ph
       const where = `${g.title} round ${String(round)} ${step}`;
       if (`${step}${String(round)}` !== lastStep) {
         lastStep = `${step}${String(round)}`;
+        // Progress, so a stuck run shows where it stopped.
+        console.warn(`${new Date().toISOString().slice(11, 19)} ${where}`);
         playSince = Date.now();
         if (step !== "play") await look(where);
         // The TV catches up with the round's results within a few polls.
