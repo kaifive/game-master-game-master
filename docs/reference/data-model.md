@@ -64,6 +64,12 @@ events/{slug}
   joinCode: string                        on the QR poster and display
   adminLastSeenAt: timestamp              for "new since you last looked"
 
+events/{slug}/guests/list   spec 32, ADR-047: the whole guest list, one document, server-written
+  guests: [{ id, name, family: string | null, key, checkedIn, checkedInAt: number | null,
+             source: "list" | "door", extra: number, won: number }]
+  key = normalized "family|name", for merging uploads
+  updatedAt
+
 events/{slug}/unlocks/{gameId}_{playerId | "event"}
   via: string                code that unlocked it
   at: timestamp
@@ -185,6 +191,14 @@ leaderboard/{slug}           written only by the server after each ledger entry,
   recent/{time_entryId}: { id, playerId, nickname, points, reason, at, from? }   keyed by time, newest last;
                              playerId and nickname are the team's for team awards; from = a donation's giver
   teams/{teamId}: { name, color, points }     team score; name and color written on every team change
+
+guests/{slug}                spec 32, ADR-047: mirror of the guest list as one JSON string,
+                             written by the server after every change; read only by the API
+
+live/{slug}.screen           "leaderboard" | "showdown" | "raffle" (spec 32 adds raffle)
+live/{slug}.raffle           spec 32: { drawId, raffleId, status: "idle" | "flipping" | "landing"
+                             | "landed", startedAt, landsAt, winner: { guestId, name } | null,
+                             skipped: guestId[] } | null
 
 teams/{slug}                 spec 03, ADR-031: what phones see of teams, as one JSON string
   { phase, maxTeamSize, teams: [{ id, name, named, color, captain, members, room }],

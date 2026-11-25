@@ -67,6 +67,7 @@ A feature item needs its spec at `Ready` before it starts.
 
 - [x] Spec 29, team colors: the captain picks the team's color when naming it, used in every game
 - [x] Spec 31, team selfies: taken when naming the team; the host adds stickers; the winners' selfie at the finale
+- [ ] Spec 32, check-in and raffle: RSVP CSV, check-in page with its own code, walk-ins, extra tickets, the TV raffle screen
 - [x] QA round D (Khai, 2026-11-24): TV crash fixes, removals (ADR-044), results as soon as a round is over, no Lock in on showdown phones, 150 points a game scored on how close, short demos
 - [x] QA round E (Khai, 2026-11-24): per-game fixes (Snow Sum, Blind Stop, Auction, Stocking Stuffer, Memory Path, Present Shuffle, Snowball to 21, Staff Angle)
 - [ ] Load test: 60 simulated players, display and controls; check free-tier usage
