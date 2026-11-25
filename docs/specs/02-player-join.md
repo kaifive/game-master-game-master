@@ -69,7 +69,7 @@ Player phone, in the event's style pack: until joined, a `Panel` with a name box
 
 - [x] AC-1: A new phone is signed in as a device on first visit, and after a reload the hub still shows that device's players.
 - [x] AC-2: A player joins with a nickname and the event's join code; with `?code=` in the URL the code is filled in and its box hidden; a wrong code gets "That code isn't right for this event."
-- [x] AC-3: Nicknames are trimmed and spaces collapsed, must be 2–16 characters, and allow only letters, numbers, spaces and `' - . _`, each failure with a plain message.
+- [x] AC-3: Nicknames are trimmed and spaces collapsed, must be 2–16 characters, and allow only letters, numbers, emoji, spaces and `' - . _` with at least one letter or number (emoji allowed since QA, 2026-11-25), each failure with a plain message.
 - [x] AC-4: Nicknames are unique per event ignoring case, spacing and accents; a taken name gets "That name is taken. Pick another name."
 - [x] AC-5: The name filter blocks listed words through look-alikes, separators, repeats and accents, blocks short words only as whole words (so "Cassie" passes), applies the event's `blockedNames`, and shows its message while the name is typed.
 - [x] AC-6: A phone has one player per event; there is no Add player or Switch player, and a second name without starting over is refused.

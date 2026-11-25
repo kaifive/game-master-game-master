@@ -27,11 +27,19 @@ describe("checkNickname", () => {
     expect(checkNickname("é".normalize("NFD").repeat(16))).toMatchObject({ ok: true });
   });
 
-  it("S02-AC3: rejects other characters and punctuation-only names", () => {
-    const message = "Use letters, numbers, spaces and ' - . _ only.";
+  it("S02-AC3: rejects other characters and names with no letter or number", () => {
+    const message = "Use letters, numbers, emoji, spaces and ' - . _ only.";
     expect(checkNickname("Mai<3")).toEqual({ ok: false, message });
-    expect(checkNickname("Mai 🎄")).toEqual({ ok: false, message });
     expect(checkNickname("..--")).toEqual({ ok: false, message });
+    expect(checkNickname("🎄🎄")).toEqual({ ok: false, message });
+  });
+
+  it("S02-AC3: takes emoji beside letters, skin tones and joined emoji too, each counted as one", () => {
+    expect(checkNickname("Mai 🎄")).toMatchObject({ ok: true, nickname: "Mai 🎄" });
+    expect(checkNickname("Bao 👍🏽")).toMatchObject({ ok: true });
+    expect(checkNickname("Ana 👨‍👩‍👧")).toMatchObject({ ok: true });
+    expect(checkNickname("Mai 🎄").ok && checkNickname("Mai 🎄 ").ok).toBe(true);
+    expect(nicknameKey("Mai 🎄")).not.toBe(nicknameKey("Mai"));
   });
 
   it("S02-AC5: blocked names get 'Pick another name.', including the event's own words", () => {
