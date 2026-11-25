@@ -491,11 +491,14 @@ function PresentBoard({
   view,
   now,
   small = false,
+  tight = false,
 }: {
   g: ShuffleView;
   view: ActiveLiveView;
   now: number;
   small?: boolean;
+  /** Results with many teams: a shorter board, so the cards fit under it. */
+  tight?: boolean;
 }) {
   const n = g.count;
   const cols = gridCols(n);
@@ -510,7 +513,7 @@ function PresentBoard({
     <div
       aria-label="The presents"
       role="img"
-      className={cx("relative mx-auto", small ? "h-[44vh]" : "h-[58vh]")}
+      className={cx("relative mx-auto", tight ? "h-[32vh]" : small ? "h-[44vh]" : "h-[58vh]")}
       style={{ aspectRatio: `${String(cols)} / ${String(rows)}` }}
     >
       {settled
@@ -571,11 +574,12 @@ function PresentAt({
         transform: `translate(${String(x * 100)}%, ${String(y * 100)}%)`,
       }}
     >
-      <span className="relative block aspect-square h-full">
+      {/* Sized by the present, so the label fits a small board too. */}
+      <span className="[container-type:size] relative block aspect-square h-full">
         {/* Every present looks the same, so only following it tells them apart (Khai, 2026-11-24). */}
         <Present i={0} className={cx("h-full", value !== undefined && "opacity-40")} />
         {value !== undefined && (
-          <span className="absolute inset-[18%] grid place-items-center rounded-gm bg-gm-tile-present font-gm-display text-[clamp(1.4rem,5vh,3.6rem)] font-bold text-gm-tile-present-ink shadow-md">
+          <span className="absolute inset-[18%] grid place-items-center rounded-gm bg-gm-tile-present font-gm-display text-[min(3.6rem,40cqh)] leading-none font-bold text-gm-tile-present-ink shadow-md">
             {value}
           </span>
         )}
@@ -598,10 +602,20 @@ function ShuffleTv({ view, game, serverNow, revealed }: LiveTvProps) {
     return <GetReady startsAt={g.startsAt} now={now} line="Find the biggest present!" />;
   return (
     <div
-      // Board beside the results, so neither is cut off (Khai, 2026-11-24).
-      className="grid grid-cols-[auto_1fr] items-center gap-[3vh_3vw]"
+      // The board beside the results, so neither is cut off (Khai, 2026-11-24); with
+      // more than three teams the result cards need the width, so they go under it.
+      className={cx(
+        "grid items-center gap-[3vh_3vw]",
+        revealed && view.teams.length > 3 ? "grid-cols-1" : "grid-cols-[auto_minmax(0,1fr)]",
+      )}
     >
-      <PresentBoard g={g} view={view} now={now} small={revealed} />
+      <PresentBoard
+        g={g}
+        view={view}
+        now={now}
+        small={revealed}
+        tight={revealed && view.teams.length > 3}
+      />
       <div className="grid content-center gap-[2.4vh]">
         {revealed ? (
           <Reveal view={view} note={(t) => (g.picks[t] === null ? "Too slow" : null)} />

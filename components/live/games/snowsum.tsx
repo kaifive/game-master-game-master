@@ -179,7 +179,11 @@ function Controller({ view, game, serverNow, revealed, send, busy }: LiveControl
 function Demo({ still }: { still: boolean }) {
   const flakes = ["+3", "+2", "×2"];
   return (
-    <div className="grid h-full w-full grid-cols-3 place-items-center px-[6%] text-[clamp(0.8rem,3vh,1.8rem)]">
+    // The flakes fall in from above the demo screen: clipped on purpose.
+    <div
+      data-allow-clip
+      className="grid h-full w-full grid-cols-3 place-items-center px-[6%] text-[clamp(0.8rem,3vh,1.8rem)]"
+    >
       {flakes.map((f, i) => (
         <Snowflake
           key={f}

@@ -225,7 +225,11 @@ function Controller({ view, game, serverNow, revealed, send, busy }: LiveControl
 /** Five presents drift across; someone in the room calls out the count (S24-AC4). */
 function Demo({ still }: { still: boolean }) {
   return (
-    <div className="relative grid h-full w-full place-items-center overflow-hidden text-[clamp(1.6rem,6vh,4rem)]">
+    // The presents fly in and out past the demo screen's edges: clipped on purpose.
+    <div
+      data-allow-clip
+      className="relative grid h-full w-full place-items-center overflow-hidden text-[clamp(1.6rem,6vh,4rem)]"
+    >
       <div
         className={cx(
           "flex gap-[0.5em]",

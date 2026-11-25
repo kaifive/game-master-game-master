@@ -250,7 +250,10 @@ export function LiveCard({ view, act, busy }: { view: AdminLiveView; act: Act; b
                 <AdminButton
                   disabled={busy}
                   onClick={() => {
-                    act({ action: "next" });
+                    act({
+                      action: "next",
+                      at: { step: view.session.step, round: view.session.round },
+                    });
                   }}
                 >
                   {view.next}

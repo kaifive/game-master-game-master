@@ -249,6 +249,25 @@ describe("live service (spec 11)", () => {
     ]);
   });
 
+  it("S24-AC1: a Next pressed as the round closes itself doesn't skip its results", async () => {
+    await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
+    await adminLiveAction(deps, event, { action: "next", at: { step: "intro", round: 0 } });
+    // The round runs out and a read closes it while the host taps Show results.
+    clock += START_LEAD_MS + TAP_WINDOW_MS + LATE_MS + 10;
+    await phoneLiveView(deps, event, null, null);
+    const late = await adminLiveAction(deps, event, {
+      action: "next",
+      at: { step: "play", round: 1 },
+    });
+    expect(late).toMatchObject({ session: { step: "results", round: 1 } });
+    // Pressed on the results, it goes on as usual (Tap Off has one round).
+    const on = await adminLiveAction(deps, event, {
+      action: "next",
+      at: { step: "results", round: 1 },
+    });
+    expect(on).toMatchObject({ session: { step: "final" } });
+  });
+
   it("S11-AC7 S24-AC5: round points go to teams through the ledger once, even if results are reached twice", async () => {
     await adminLiveAction(deps, event, { action: "start", gameId: "tap-off" });
     await adminLiveAction(deps, event, { action: "next" });
