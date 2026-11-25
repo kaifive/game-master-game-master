@@ -297,12 +297,23 @@ export function StopButton({
           press();
         }
       }}
-      className="mx-auto grid aspect-square w-[min(78vw,20rem)] touch-none place-items-center rounded-full bg-gm-buzzer font-gm-display text-6xl font-bold text-gm-buzzer-ink shadow-xl select-none disabled:bg-gm-buzzer-locked motion-safe:active:scale-[0.97]"
+      className={cx(
+        PRESS_AREA,
+        "bg-gm-buzzer text-7xl text-gm-buzzer-ink disabled:bg-gm-buzzer-locked motion-safe:active:scale-[0.99]",
+      )}
     >
       {stopped === null ? label : showTime ? fmtSeconds(stopped) : "Stopped!"}
     </button>
   );
 }
+
+/**
+ * The shape of every big press on a phone (the buzzer, Stop): the whole
+ * screen below the header, not a circle, so it can't be missed (Khai,
+ * 2026-11-25).
+ */
+export const PRESS_AREA =
+  "grid h-[max(62dvh,18rem)] w-full touch-none place-items-center rounded-gm font-gm-display font-bold shadow-xl select-none";
 
 /** Whose turn it is, on the TV: the team, big, and the time it has left. */
 export function TurnBanner({
