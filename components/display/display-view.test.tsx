@@ -111,6 +111,10 @@ describe("DisplayView", () => {
     expect(within(champions).getByRole("img", { name: "Reds, dressed up" })).toBeInTheDocument();
     expect(within(champions).getByRole("img", { name: "Blues, dressed up" })).toBeInTheDocument();
     expect(screen.queryByRole("list", { name: "Team standings" })).toBeNull();
+    // Beside them, every team's final place, not a dead QR code or the latest points.
+    expect(screen.getByRole("list", { name: "Final standings" })).toHaveTextContent("Reds");
+    expect(screen.queryByRole("region", { name: "Join the party" })).toBeNull();
+    expect(screen.queryByRole("list", { name: "Latest points" })).toBeNull();
   });
 
   test("S05-AC3: shows the QR code, the short URL and the join code", () => {

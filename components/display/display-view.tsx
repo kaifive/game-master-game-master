@@ -176,6 +176,33 @@ function Latest({ recent }: { recent: DisplayStandings["recent"] }) {
 
 const LATEST = 3;
 
+/** Beside the champions at the end of the night: every team's final place, then the top players. */
+function FinalStandings({ data }: { data: DisplayStandings }) {
+  const teams = data.teams.map((t) => ({
+    id: t.id,
+    rank: t.rank,
+    name: t.name,
+    score: t.points,
+    team: t.color,
+  }));
+  const players = data.players.map((p) => ({
+    id: p.id,
+    rank: p.rank,
+    name: p.nickname,
+    score: p.points,
+  }));
+  return (
+    <div className="grid min-h-0 content-start gap-5 overflow-hidden">
+      {teams.length > 0 && (
+        <Results label="Final standings" rows={teams} podium={false} columns={1} />
+      )}
+      {players.length > 0 && (
+        <Results label="Top players" rows={players.slice(0, 5)} podium={false} columns={1} />
+      )}
+    </div>
+  );
+}
+
 function Board({ data }: { data: DisplayStandings }) {
   if (data.hidden)
     return (
@@ -274,6 +301,7 @@ function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers, showdowns 
         },
       }
     : null;
+  const ended = Boolean(data?.finale && data.finale.teams.length > 0);
   const hostBar = host && live.view && (
     <TvHostBar host={host} running={live.view.active} screen={live.view.screen} />
   );
@@ -302,22 +330,27 @@ function Screen({ slug, name, joinUrl, shortUrl, joinCode, renderers, showdowns 
           {data && <Board data={data} />}
         </main>
         <aside className="grid min-h-0 grid-rows-[auto_auto_1fr] content-start gap-5 overflow-hidden">
-          <section
-            aria-label="Join the party"
-            className="grid gap-2 rounded-gm bg-gm-surface p-4 text-center shadow-xl ring-1 ring-gm-border"
-          >
-            <p className="m-0 font-gm-display text-2xl font-bold">Scan to join</p>
-            <BigQr value={joinUrl} shortUrl={shortUrl} joinCode={joinCode} />
-            <p className="m-0 text-base break-all text-gm-text-muted">{shortUrl}</p>
-            <p className="m-0 text-base">
-              Code{" "}
-              <span className="font-gm-display text-3xl font-bold tracking-[0.2em] text-gm-accent-ink">
-                {joinCode}
-              </span>
-            </p>
-          </section>
+          {/* The night is over: everyone's final place, not a dead QR code (QA, 2026-11-25). */}
+          {ended && data ? (
+            <FinalStandings data={data} />
+          ) : (
+            <section
+              aria-label="Join the party"
+              className="grid gap-2 rounded-gm bg-gm-surface p-4 text-center shadow-xl ring-1 ring-gm-border"
+            >
+              <p className="m-0 font-gm-display text-2xl font-bold">Scan to join</p>
+              <BigQr value={joinUrl} shortUrl={shortUrl} joinCode={joinCode} />
+              <p className="m-0 text-base break-all text-gm-text-muted">{shortUrl}</p>
+              <p className="m-0 text-base">
+                Code{" "}
+                <span className="font-gm-display text-3xl font-bold tracking-[0.2em] text-gm-accent-ink">
+                  {joinCode}
+                </span>
+              </p>
+            </section>
+          )}
           <ToastChainView />
-          {data && !data.hidden && <Latest recent={data.recent} />}
+          {data && !data.hidden && !ended && <Latest recent={data.recent} />}
         </aside>
       </div>
       {hostBar}
